@@ -802,6 +802,53 @@ export function migrateSave(s: GameState, data: GameData): string[] {
     setupAcademies(s, data, rng);
     notes.push("구단마다 2군 로스터가 생겼습니다. 선수단 화면에서 콜업할 수 있습니다.");
   }
+  notes.push(...oneStaffRecordPerPerson(s, data));
   s.version = SAVE_VERSION;
+  return notes;
+}
+
+/**
+ * One person, one staff record. Older data had three coaches twice, under ids that differ only in case
+ * (kkOma/KkOma, cvMax/CvMax, bon0/Bon0), and the player-coach Bible as a coach as well as a player, so one person
+ * could be signed twice: as head coach and coach of one club, or by two clubs. The record that holds a contract
+ * is kept (the user's first, then a head coach's) under the id the data now uses; the other one leaves its club.
+ */
+function oneStaffRecordPerPerson(s: GameState, data: GameData): string[] {
+  const notes: string[] = [];
+  const byKey = new Map(data.staff.map((d) => [d.id.toLowerCase(), d]));
+  const playerKeys = new Set(Object.keys(s.players).map((id) => id.toLowerCase()));
+  const groups = new Map<string, Staff[]>();
+  for (const st of Object.values(s.staff)) {
+    const key = st.id.toLowerCase();
+    groups.set(key, [...(groups.get(key) ?? []), st]);
+  }
+  const roleKo = (st: Staff) => (st.role === "Head Coach" ? "감독" : "코치");
+  const leave = (st: Staff, why: string) => {
+    const t = st.team ? s.teams[st.team] : null;
+    if (t) t.staff = t.staff.filter((x) => x !== st.id);
+    if (t && t.id === s.user) notes.push(`${roleKo(st)} '${st.name}'를 코칭스태프에서 뺐습니다. ${why}`);
+    delete s.staff[st.id];
+  };
+  for (const [key, list] of groups) {
+    const d = byKey.get(key);
+    if (!d) {
+      // the data now keeps this player-coach as a player only
+      if (playerKeys.has(key)) for (const st of list) leave(st, "선수로도 등록된 같은 사람이라 선수 기록만 남겼습니다.");
+      continue;
+    }
+    if (list.length === 1 && list[0].id === d.id) continue;
+    const score = (st: Staff) => (st.team === s.user ? 4 : 0) + (st.team ? 2 : 0) + (st.role === "Head Coach" ? 1 : 0);
+    const keep = [...list].sort((a, b) => score(b) - score(a) || Number(b.id === d.id) - Number(a.id === d.id))[0];
+    for (const st of list) {
+      if (st !== keep) leave(st, `${roleKo(keep)} '${keep.name}'와 같은 사람이 중복 등록돼 있었습니다.`);
+    }
+    // the merged data (record, fame, attrs) for the one person; a signed coach keeps his job and contract
+    const merged: Staff = { ...staffFromData(d), team: keep.team, contract: keep.contract, talk: keep.talk };
+    if (keep.team) merged.role = keep.role;
+    delete s.staff[keep.id];
+    s.staff[d.id] = merged;
+    const t = keep.team ? s.teams[keep.team] : null;
+    if (t) t.staff = t.staff.map((x) => (x === keep.id ? d.id : x));
+  }
   return notes;
 }

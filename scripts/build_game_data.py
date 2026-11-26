@@ -435,15 +435,27 @@ def add_fame(players):
         p["fame"] = int(round(clamp(fame, 1, 100)))
 
 
-def build_staff(tr_rows, rc_rows, rows, winners, people):
-    membership = defaultdict(list)  # staff link -> [(page, team)]
+def build_staff(tr_rows, rc_rows, rows, winners, people, players):
+    # Leaguepedia spells some handles with another case on some pages (kkOma / KkOma, cvMax / CvMax, bon0 / Bon0).
+    # That is one person, so everything is keyed by the lower-case link and one spelling becomes the id.
+    membership = defaultdict(list)  # lower-case staff link -> [(page, team)]
+    spellings = defaultdict(Counter)  # lower-case staff link -> spellings seen on roster pages
+    latest = {}  # lower-case link -> (page rank, role) of the person's latest roster row, as player or staff
     for row in tr_rows:
         if "Showmatch" in row["Page"]:
             continue
+        rank = page_rank(row["Page"])
         for link, role in zip((row["Links"] or "").split(";;"), (row["Roles"] or "").split(";;")):
             link, role = link.strip(), role.strip()
-            if link and role not in ROLES:
-                membership[link].append((row["Page"], canon_team(row["Team"])))
+            if not link:
+                continue
+            key = link.lower()
+            if key not in latest or rank >= latest[key][0]:
+                latest[key] = (rank, role)
+            if role not in ROLES:
+                membership[key].append((row["Page"], canon_team(row["Team"])))
+                spellings[key][link] += 1
+    player_ids = {p["id"].lower() for p in players}
     # game results per (page, team)
     results = defaultdict(lambda: [0, 0])
     seen = set()
@@ -456,17 +468,25 @@ def build_staff(tr_rows, rc_rows, rows, winners, people):
     last_role = {}
     for r in sorted(rc_rows, key=lambda r: r["Date"] or ""):
         if r.get("Direction") == "Join" and r.get("Role"):
-            last_role[r["Player"]] = r["Role"]
+            last_role[r["Player"].lower()] = r["Role"]
+    legacy_by_key = {k.lower(): v for k, v in LEGACY.items()}
     staff = []
-    for link, member in membership.items():
+    for key, member in membership.items():
+        person = people.get(key, {})
+        seen = spellings[key]
+        link = person.get("ID") if person.get("ID") in seen else seen.most_common(1)[0][0]
         member.sort(key=lambda m: page_rank(m[0]))
         last_page, last_team = member[-1]
-        rc_role = last_role.get(link, "Coach")
+        rc_role = last_role.get(key, "Coach")
         role = STAFF_ROLE_MAP.get(rc_role)
         if role is None:
             role = "Coach" if "Coach" in rc_role else None
         if role is None:
             continue  # managers, streamers, directors are not coaching staff
+        # a player-coach whose latest roster row has him playing (Bible, LCK CL 2025) is a player, not staff
+        if key in player_ids and latest[key][1] in ROLES:
+            print(f"  staff: {link} left out, his latest roster row is as a player ({latest[key][1]})")
+            continue
         w = sum(results[m][0] for m in set(member))
         l = sum(results[m][1] for m in set(member))
         titles = 0
@@ -480,8 +500,7 @@ def build_staff(tr_rows, rc_rows, rows, winners, people):
                 year = re.search(r"20\d\d", page).group(0)
                 if (year, team) in teams_by_year:
                     titles += 1
-        person = people.get(link, {})
-        legacy = LEGACY.get(link, {})
+        legacy = legacy_by_key.get(key, {})
         tier = 1 if any(m[0].startswith("LCK/") for m in member) else 2
         win_rate = w / (w + l) if w + l else 0.5
         fame = (25 if tier == 1 else 8) + 8 * titles + 9 * legacy.get("worlds", 0) + 1.5 * legacy.get("lck", 0) \
@@ -570,7 +589,7 @@ def build_teams(tr_rows, players, staff, winners, fetch_logos: bool):
     logo_dir.mkdir(parents=True, exist_ok=True)
     team_rows = {r["Name"]: r for r in load("teams")}
     player_ids = {p["id"].lower(): p["id"] for p in players}
-    staff_ids = {s["id"] for s in staff}
+    staff_ids = {s["id"].lower(): s["id"] for s in staff}
     titles_2526 = defaultdict(Counter)
     for page, team in winners.items():
         titles_2526[team][TITLE_EVENTS[page]] += 1
@@ -586,8 +605,8 @@ def build_teams(tr_rows, players, staff, winners, fetch_logos: bool):
                 if role in ROLES and link.lower() in player_ids:
                     roster.append(player_ids[link.lower()])
                     roster_roles.append(role)
-                elif role not in ROLES and link in staff_ids:
-                    staff_list.append(link)
+                elif role not in ROLES and link.lower() in staff_ids and staff_ids[link.lower()] not in staff_list:
+                    staff_list.append(staff_ids[link.lower()])
         logo_owner = parent or tid  # academies use the parent club's logo
         path = logo_dir / f"{logo_owner}.png"
         if fetch_logos and not path.exists() and logo_owner in WIKI_LOGOS:
@@ -604,6 +623,14 @@ def build_teams(tr_rows, players, staff, winners, fetch_logos: bool):
             "titles": {k: titles.get(k, 0) for k in ("lck", "msi", "worlds", "cup", "firstStand", "ewc")},
         })
     return teams
+
+
+def check_one_record_per_person(players, staff):
+    """The game treats every id as a separate person: two ids for one person let him sign twice."""
+    ids = Counter(x["id"].lower() for x in players + staff)
+    twice = sorted(k for k, n in ids.items() if n > 1)
+    if twice:
+        raise SystemExit(f"one person has more than one player/staff record (ids differ only in case or are in both): {twice}")
 
 
 def sanity(players, staff, teams):
@@ -644,8 +671,9 @@ def main() -> int:
     players += roster_only_players(players, tr_rows, people)
     add_fame(players)
     players.sort(key=lambda p: (p["tier"], -p["ovr"]))
-    staff = build_staff(tr_rows, load("rc_staff"), rows, winners, people)
+    staff = build_staff(tr_rows, load("rc_staff"), rows, winners, people, players)
     staff.sort(key=lambda s: (s["tier"], -s["fame"]))
+    check_one_record_per_person(players, staff)
     teams = build_teams(tr_rows, players, staff, winners, fetch_logos=not args.no_logos)
 
     today = date.today().isoformat()
