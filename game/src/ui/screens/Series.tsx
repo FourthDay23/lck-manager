@@ -411,6 +411,8 @@ function CompCompare({ d }: { d: DraftState }) {
 
 // ---------------- match ----------------
 const SPEEDS = [1, 2, 4, 8, 16];
+/** Game seconds a teamfight keeps running in real time after it ends, so the last kills and spells play out. */
+const REAL_AFTER = 2;
 const BIG_ICON: Partial<Record<GameEvent["type"], string>> = {
   first_blood: "퍼스트 블러드", solo: "솔로 킬", double: "더블 킬", triple: "트리플 킬", quadra: "쿼드라 킬", penta: "펜타 킬",
   ace: "에이스", steal: "스틸!", baron: "바론", soul: "드래곤의 영혼", elder: "장로 드래곤", inhib: "억제기", first_turret: "첫 포탑", nexus: "승리",
@@ -431,6 +433,8 @@ export function MatchView({ e, userSide, tactic, setTactic, onEnd }: { e: Engine
   const evSeen = useRef(0);
   const st = useRef({ speed, paused, slowmo });
   st.current = { speed, paused, slowmo };
+  /** true while a teamfight is playing in real time (set by the match loop) */
+  const realTime = useRef(false);
   useEffect(() => {
     const r = new MatchRenderer(canvas.current!, e, data.ddVersion, userSide);
     rend.current = r;
@@ -438,20 +442,42 @@ export function MatchView({ e, userSide, tactic, setTactic, onEnd }: { e: Engine
     let acc = 0;
     let raf = 0;
     let uiT = 0;
+    // a teamfight (what the broadcast calls 한타): one fight with four or more champions from both teams.
+    // While one is on, and for a moment after so the kills land, the game runs in real time: 1 s of game per 1 s.
+    const teamfight = () => {
+      for (const id of e.fights.keys()) {
+        let n = 0, sides = 0;
+        for (const u of e.units) if (u.alive && u.fightId === id) { n++; sides |= 1 << u.side; }
+        if (n >= 4 && sides === 3) return true;
+      }
+      return false;
+    };
+    let realUntil = -1;
     const loop = (now: number) => {
       const dt = Math.min(100, now - last);
       last = now;
       if (!st.current.paused && !e.over) {
         let gps = 8 * st.current.speed; // game seconds per real second; 1x = 8
-        const bigFight = [...e.fights.values()].some((f) => (f.size ?? 0) >= 5);
-        if (st.current.slowmo && bigFight) gps = Math.min(gps, 6);
+        if (st.current.slowmo && teamfight()) realUntil = e.t + REAL_AFTER;
+        realTime.current = st.current.slowmo && e.t < realUntil;
+        if (realTime.current) gps = 1;
         acc += (dt / 1000) * gps;
         let steps = 0;
         while (acc >= 0.25 && steps < 400) {
+          r.beforeStep();
           e.step();
           acc -= 0.25;
           steps++;
+          // a teamfight that starts in the middle of a fast frame: the rest of this frame already runs in real time,
+          // so the engage and the first kills are not fast-forwarded
+          if (!realTime.current && st.current.slowmo && teamfight()) {
+            realUntil = e.t + REAL_AFTER;
+            realTime.current = true;
+            acc /= gps; // the leftover real time, now at 1 game second per second
+            gps = 1;
+          }
         }
+        r.lerp = Math.min(1, acc / 0.25);
       }
       r.draw(now);
       if (now - uiT > 200) {
@@ -478,6 +504,7 @@ export function MatchView({ e, userSide, tactic, setTactic, onEnd }: { e: Engine
   const skipToEnd = () => {
     e.runToEnd();
     rend.current?.syncFx();
+    if (rend.current) rend.current.lerp = 1; // the jump to the end is not something to glide through
     setTick((x) => x + 1);
   };
   const team = (side: 0 | 1) => (
@@ -523,6 +550,7 @@ export function MatchView({ e, userSide, tactic, setTactic, onEnd }: { e: Engine
           <div class="frame board">
             <canvas ref={canvas} class="px" />
             <div class="live-tag"><i />{cam === "auto" ? `LIVE · ${rend.current?.shotLabel ?? ""}` : "LIVE"}</div>
+            {realTime.current && !paused && !e.over && <div class="live-tag" style={{ top: 34, color: "#ffd36b" }}>한타 · 실제 속도</div>}
             {(() => {
               // why the broadcast camera just cut here (auto camera only)
               const c = cam === "auto" ? rend.current?.cut : null;
@@ -557,7 +585,7 @@ export function MatchView({ e, userSide, tactic, setTactic, onEnd }: { e: Engine
             <span style={{ width: 10 }} />
             <button class="btn small" onClick={() => setPaused(!paused)}>{paused ? "▶" : "❚❚"}</button>
             {SPEEDS.map((x) => <button class={`btn small ${speed === x ? "on" : ""}`} title={`실제 경기 시간의 ${8 * x}배 빠르기 (귀환 8초가 ${(8 / (8 * x)).toFixed(x >= 4 ? 2 : 1)}초)`} onClick={() => setSpeed(x)}>{x}x</button>)}
-            <button class={`btn small ${slowmo ? "on" : ""}`} onClick={() => setSlowmo(!slowmo)} title="5명 넘게 붙는 한타에서 자동으로 느려집니다">한타 슬로</button>
+            <button class={`btn small ${slowmo ? "on" : ""}`} onClick={() => setSlowmo(!slowmo)} title="양 팀 4명 이상이 붙는 한타는 고른 배속과 상관없이 실제 게임 속도(게임 1초 = 실제 1초)로 보여 줍니다. 끝난 뒤 2초까지.">한타 실시간</button>
             <button class="btn small" onClick={skipToEnd}>끝까지</button>
             <span class="muted" style={{ fontSize: 10 }}>{speed}x = 실제의 {8 * speed}배</span>
           </div>

@@ -8,11 +8,8 @@ import type { Engine, Fx, Unit } from "./engine";
 import type { Vec } from "./map";
 import type { VfxKind } from "../data/types";
 import { spellImg } from "../data/load";
-
-const TEAM = ["#4aa3ff", "#ff5a5a"] as const;
-const TEAM_HI = ["#d2eaff", "#ffd6d6"] as const;
-const INK = "#05070d";
-const GOLD = "#ffd36b";
+import { SIG, SIG_LIFE, drawSig, TEAM, TEAM_HI, INK, GOLD } from "./vfx-sig";
+import type { Sig } from "./vfx-sig";
 
 /**
  * Optional fields this layer reads on top of the engine's Fx (contract agreed with the engine side).
@@ -41,6 +38,10 @@ export interface LiveFx extends FxIn {
   fade: number;
   /** the champion's colour, brightened */
   accent: string;
+  /** a signature look for this spell (vfx-sig.ts), drawn instead of the shared shape */
+  sig?: Sig;
+  /** a skyfall aimed at its own caster has been moved onto the first champion it hit */
+  retargeted?: boolean;
 }
 
 /** The parts of MatchRenderer the skill layer draws with. */
@@ -51,7 +52,8 @@ export interface FxHost {
   sx(x: number): number;
   sy(y: number): number;
   len(w: number): number;
-  unitPos(u: Unit, now: number): Vec;
+  /** where the unit is drawn (between engine steps), with the knock-up bob unless bob is false */
+  unitPos(u: Unit, now: number, bob?: boolean): Vec;
 }
 
 interface Tag { unit: number; side: 0 | 1; key: string; icon?: string; name?: string; ult: boolean; born: number; life: number }
@@ -66,6 +68,10 @@ const LIFE: Partial<Record<Kind, number>> = {
 const TRAVEL: Partial<Record<Kind, number>> = {
   line: 0.5, global: 0.4, target: 0.45, circle: 0.35, cone: 0.15, dash: 0.25, wall: 0.15, zone: 0.12, knockup: 0.1,
 };
+/** Share of the lifetime at which an effect of this kind lands; hits and signature motifs use the same value. */
+function travelOf(kind: Kind): number {
+  return TRAVEL[kind] ?? 0.08;
+}
 /** How far into its life a held zone/wall stays (both start fading at 0.75). */
 const HOLD = 0.7;
 /** Secondary effects drawn where the main one lands (a bolt that leaves a zone, a dash that ends in a slam…). */
@@ -86,7 +92,7 @@ export class SkillFx {
   private tags: Tag[] = [];
   private icons = new Map<string, HTMLImageElement>();
 
-  constructor(private h: FxHost) {}
+  constructor(readonly h: FxHost) {}
 
   reset() {
     this.tags = [];
@@ -129,29 +135,44 @@ export class SkillFx {
       }
       // damage lands at cast time in the engine: a hit that already killed shows now, together with the kill effect
       const victim = f.to !== undefined ? e.units[f.to] : undefined;
-      const at = victim && !victim.alive ? now : Math.max(now, src ? src.born + (TRAVEL[src.kind] ?? 0.08) * src.life : now);
+      const at = victim && !victim.alive ? now : Math.max(now, src ? src.born + travelOf(src.kind) * src.life : now);
       const out: LiveFx[] = [{ ...f, born: at, life, scale, fade: 1, accent }];
       // no key on the lift: it must not be mistaken for the spell by the next victim's lookup, nor get the ult ring.
       // A knock-up spell already lifts its main target from the cast, so only the other victims get one here.
       const lifted = src?.kind === "knockup" && src.to === f.to;
+      // a skyfall aimed at its own caster (Karthus R, Annie R) lands on the first champion it hit; one aimed at an ally
+      // (Galio R lands on the ally it flew to, so it looks self-aimed too) stays where it is
+      const aimU = src?.to !== undefined ? e.units[src.to] : undefined;
+      const allyAimed = !!aimU && src!.to !== src!.from && aimU.side === src!.side;
+      // a global cast on the caster itself (Galio R saving himself) is centred on him; a summon on itself (Annie R) is not
+      const selfCentred = !!src && src.to === src.from && src.kind === "global";
+      if (src?.sig?.motif === "skyfall" && !src.retargeted && !allyAimed && !selfCentred && Math.hypot(src.tx - src.x, src.ty - src.y) < 1) {
+        src.tx = f.x;
+        src.ty = f.y;
+        src.retargeted = true;
+      }
       if (f.also === "knockup" && !lifted) out.push({ ...f, kind: "knockup", key: undefined, born: at, life: LIFE.knockup!, scale, fade: 1, accent });
       return out;
     }
-    const out: LiveFx[] = [{ ...f, born: now, life, scale, fade, accent }];
+    const sig = f.key && !f.pve && f.from !== undefined ? SIG[`${e.units[f.from]?.champ.id}.${f.key}`] : undefined;
+    const sLife = sig ? life * SIG_LIFE[sig.motif] : life;
+    const out: LiveFx[] = [{ ...f, born: now, life: sLife, scale, fade, accent, sig }];
     if (f.key && f.from !== undefined && !f.pve) {
       this.tags = this.tags.filter((t) => t.unit !== f.from);
       this.tags.push({ unit: f.from, side: f.side, key: f.key, icon: f.icon, name: f.text, ult, born: now, life: ult ? 1600 : 950 });
       if (f.icon) this.icon(f.icon);
     }
-    if (f.also && SECOND.has(f.also)) {
+    // a signature motif shows its own landing, so it replaces the secondary effect unless told to keep it
+    if (f.also && SECOND.has(f.also) && (!sig || sig.keepAlso)) {
       // dashes and blinks land where the caster ended up; everything else where it was aimed
       const atCaster = f.kind === "dash" || f.kind === "blink";
       const kind = f.also;
       out.push({
         ...f, kind, key: undefined,
+        x: atCaster ? f.tx : f.x, y: atCaster ? f.ty : f.y,
         tx: atCaster ? f.x : f.tx, ty: atCaster ? f.y : f.ty,
         to: kind === "heal" || kind === "shield" ? f.from : f.to,
-        born: now + (TRAVEL[f.kind] ?? 0.1) * life, life: LIFE[kind] ?? 520, scale, fade, accent,
+        born: now + (TRAVEL[f.kind] ?? 0.1) * sLife, life: LIFE[kind] ?? 520, scale, fade, accent,
       });
     }
     return out;
@@ -170,7 +191,7 @@ export class SkillFx {
 
   // ---- drawing helpers: shapes get a dark outline underneath so they read on the busy map ----
 
-  private stroke(path: () => void, color: string, w: number, a: number, ink = true) {
+  stroke(path: () => void, color: string, w: number, a: number, ink = true) {
     if (a <= 0) return;
     const c = this.h.ctx;
     if (ink) {
@@ -185,16 +206,16 @@ export class SkillFx {
     c.beginPath(); path(); c.stroke();
   }
 
-  private ring(x: number, y: number, r: number, color: string, w: number, a: number, ink = true) {
+  ring(x: number, y: number, r: number, color: string, w: number, a: number, ink = true) {
     this.stroke(() => this.h.ctx.arc(x, y, Math.max(1, r), 0, Math.PI * 2), color, w, a, ink);
   }
 
-  private seg(x0: number, y0: number, x1: number, y1: number, color: string, w: number, a: number, ink = true) {
+  seg(x0: number, y0: number, x1: number, y1: number, color: string, w: number, a: number, ink = true) {
     const c = this.h.ctx;
     this.stroke(() => { c.moveTo(x0, y0); c.lineTo(x1, y1); }, color, w, a, ink);
   }
 
-  private disc(x: number, y: number, r: number, color: string, a: number) {
+  disc(x: number, y: number, r: number, color: string, a: number) {
     if (a <= 0 || r <= 0) return;
     const c = this.h.ctx;
     c.globalAlpha = Math.min(1, a);
@@ -203,7 +224,7 @@ export class SkillFx {
   }
 
   /** Outlined square centred on x,y, optionally with a differently coloured core. */
-  private box(x: number, y: number, s: number, color: string, a: number, core?: string) {
+  box(x: number, y: number, s: number, color: string, a: number, core?: string) {
     if (a <= 0 || s < 1) return;
     const c = this.h.ctx;
     const S = Math.max(1, Math.round(s));
@@ -220,14 +241,14 @@ export class SkillFx {
   }
 
   /** Screen position of a unit (or a fallback world point), following knock-up bobbing unless `bob` is off. */
-  private at(e: Engine, i: number | undefined, now: number, wx: number, wy: number, bob = true) {
+  at(e: Engine, i: number | undefined, now: number, wx: number, wy: number, bob = true) {
     const u = i !== undefined ? e.units[i] : undefined;
     if (!u) return { x: this.h.sx(wx), y: this.h.sy(wy), alive: true };
-    const p = bob ? this.h.unitPos(u, now) : u;
+    const p = this.h.unitPos(u, now, bob);
     return { x: this.h.sx(p.x), y: this.h.sy(p.y), alive: u.alive };
   }
 
-  private unitSize() {
+  unitSize() {
     return this.h.cam.size < 9000 ? 22 : 15; // same as MatchRenderer.drawUnits
   }
 
@@ -245,6 +266,10 @@ export class SkillFx {
     for (const f of live) {
       if (now < f.born) continue;
       const t = Math.min(1, (now - f.born) / f.life);
+      if (f.sig) {
+        drawSig(this, e, f, f.sig, now, t, travelOf(f.kind), "under");
+        continue;
+      }
       const team = TEAM[f.side], a0 = f.fade;
       switch (f.kind) {
         case "circle": {
@@ -333,7 +358,12 @@ export class SkillFx {
       // ultimates: a gold ring bursts off the caster
       if (f.key === "R" && !f.pve && f.kind !== "hit" && t < 0.45) {
         const k = t / 0.45;
-        this.ring(x0, y0, usz / 2 + 3 + k * 14, GOLD, 2, 1 - k);
+        const cp = this.at(e, f.from, now, f.x, f.y, false); // on the caster as drawn (units are drawn between steps)
+        this.ring(cp.x, cp.y, usz / 2 + 3 + k * 14, GOLD, 2, 1 - k);
+      }
+      if (f.sig) {
+        drawSig(this, e, f, f.sig, now, t, travelOf(f.kind), "over");
+        continue;
       }
       switch (f.kind) {
         case "line": {

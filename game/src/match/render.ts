@@ -120,6 +120,8 @@ export class MatchRenderer {
     this.live = [];
     this.parts = [];
     this.skills.reset();
+    this.stepFrom = [];
+    this.lerp = 1;
     for (const u of e.units) champImage(this.version, u.champ.id);
   }
 
@@ -769,16 +771,37 @@ export class MatchRenderer {
     }
   }
 
-  unitPos(u: Unit, now: number): Vec {
-    // knock-up bob
-    let up = 0;
-    for (const f of this.live) {
-      if (f.kind === "knockup" && f.to === u.i) {
-        const t = (now - f.born) / f.life;
-        if (t >= 0 && t < 1) up = Math.sin(t * Math.PI) * 220; // hits are scheduled ahead (born in the future)
+  /** Unit positions before the latest engine step, and how far (0..1) the clock has run toward the next step.
+   *  Units are drawn between the two, so slow play (a teamfight in real time is only 4 engine steps a second)
+   *  still moves smoothly. The match loop calls beforeStep() before each step and sets lerp after stepping. */
+  private stepFrom: Vec[] = [];
+  lerp = 1;
+  beforeStep() {
+    this.stepFrom = this.e.units.map((u) => ({ x: u.x, y: u.y }));
+  }
+
+  /** Where to draw a unit: between engine steps (see lerp), plus the knock-up bob unless `bob` is off. */
+  unitPos(u: Unit, now: number, bob = true): Vec {
+    let x = u.x, y = u.y;
+    const p = this.stepFrom[u.i];
+    if (p && this.lerp < 1) {
+      const dx = u.x - p.x, dy = u.y - p.y;
+      // a dash, flash or respawn jumps: draw it where it landed rather than sliding across
+      if (dx * dx + dy * dy < 400 * 400) {
+        x = p.x + dx * this.lerp;
+        y = p.y + dy * this.lerp;
       }
     }
-    return { x: u.x, y: u.y + up };
+    let up = 0;
+    if (bob) {
+      for (const f of this.live) {
+        if (f.kind === "knockup" && f.to === u.i) {
+          const t = (now - f.born) / f.life;
+          if (t >= 0 && t < 1) up = Math.sin(t * Math.PI) * 220; // hits are scheduled ahead (born in the future)
+        }
+      }
+    }
+    return { x, y: y + up };
   }
 
   private drawUnits(now: number) {
