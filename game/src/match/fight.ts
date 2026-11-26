@@ -14,6 +14,9 @@ import { ENGINE_FLAGS } from "./engine";
 import type { SpellData } from "../data/types";
 import type { CcType, ChampionKit, FightRole, SpellKit, SpellUse } from "./kit-types";
 import { kitFor } from "./kits";
+import * as Stats from "./stats";
+import * as Procs from "./procs";
+import { buffOf, setCCHook, setFightShields, shieldLeft } from "./procs-lib";
 import * as Nav from "./nav";
 import * as Macro from "./macro";
 import type { Stance } from "./macro";
@@ -94,6 +97,8 @@ interface UState {
   marks: Map<number, number>;
   /** stays to finish a low enemy although its team is pulling out (trading back) */
   commitUntil: number;
+  /** a hook that landed: the caster follows it to `aim` once it has flown (HOOK_TRAVEL), see upkeep */
+  hook: { at: number; aim: number; len: number; walls: boolean } | null;
 }
 
 interface EngagePlan { u: number; k: number; aim: number; count: number }
@@ -160,6 +165,8 @@ export interface FightStats {
 }
 
 interface Mod {
+  /** hurt() for combat effects (procs.ts): damage from items, runes, summoner spells and passives */
+  deal: Procs.Deal;
   u: UState[];
   f: Map<number, FInfo>;
   stats: FightStats;
@@ -185,8 +192,16 @@ function newStats(): FightStats {
 // ---------------------------------------------------------------- setup
 
 export function init(e: Engine): void {
-  const m: Mod = { u: e.units.map((u) => makeUnit(e, u)), f: new Map(), stats: newStats(), log: null, cur: 0, tower: e.turrets.map(() => ({ target: -1, fxAt: 0 })) };
+  const m: Mod = {
+    deal: () => {}, u: e.units.map((u) => makeUnit(e, u)), f: new Map(), stats: newStats(), log: null, cur: 0,
+    tower: e.turrets.map(() => ({ target: -1, fxAt: 0 })),
+  };
+  m.deal = (src, v, amount, kind) => hurt(e, m, src, v, amount, kind);
   e.mods.fight = m;
+  // crowd control from combat effects (Nautilus' root, Braum's stun ...) goes through applyCC
+  setCCHook((e2, src, v, type, dur) => { applyCC(e2, mod(e2), src, v, { type: type as CcType, dur }); });
+  // shields from combat effects and these here drain one pool: expiring ones see each other (shieldLeft)
+  setFightShields((e2, u) => mod(e2).u[u.i]?.shields ?? []);
 }
 
 function mod(e: Engine): Mod {
@@ -228,13 +243,16 @@ function makeUnit(e: Engine, u: Unit): UState {
     const r = sk.range > 3000 ? 0 : sk.range;
     if (sk.uses.includes("poke") || sk.uses.includes("dps") || sk.uses.includes("burst")) poke = Math.max(poke, Math.min(1400, r));
   });
-  const { aa, sp } = dmgProfile(u, kit, kitScale(u, kit));
+  // real numbers (engine.realStats) need neither: the spell ratios and attack stats are the champion's own
+  const real = e.realStats();
+  const ks = real ? 1 : kitScale(u, kit);
+  const { aa, sp } = real ? { aa: 1, sp: [1, 1, 1, 1] } : dmgProfile(u, kit, ks);
   return {
-    kit, role: kit.role, melee, range, poke, aaMul: aa, spMul: sp, kitScale: kitScale(u, kit), lat: u.i % 2 ? 1 : -1, target: -1, lockUntil: 0,
+    kit, role: kit.role, melee, range, poke, aaMul: aa, spMul: sp, kitScale: ks, lat: u.i % 2 ? 1 : -1, target: -1, lockUntil: 0,
     rootUntil: 0, slowUntil: 0, silenceUntil: 0, blindUntil: 0, groundUntil: 0, ccEnd: 0, buffUntil: 0, buffKind: "",
     untargetUntil: 0, bail: false, bailAt: 0, pathTo: null, pathAt: -9, hitChampAt: -9, shields: [], joinAt: 0,
     uses: effectiveUses(kit, melee), helpers: [], invulnUntil: 0, reviveUntil: 0, airUntil: 0, arenaUntil: 0,
-    arena: { x: 0, y: 0, r: 0 }, marks: new Map(), commitUntil: 0,
+    arena: { x: 0, y: 0, r: 0 }, marks: new Map(), commitUntil: 0, hook: null,
   };
   void e;
 }
@@ -336,16 +354,39 @@ function spellBase(e: Engine, u: Unit, sp: SpellData) {
   return e.spellDmg(u, sp) / (sp.power || 1);
 }
 
-function spellDamage(e: Engine, M: Mod, u: Unit, k: number): number {
+/**
+ * Damage of one cast of spell k. Real numbers (engine.realStats): the spell's own ratios at its rank, after v's armor /
+ * magic resist (v = null: a typical target, for the AI's estimates); the kit's damage weight only says whether the AI
+ * treats the spell as a damage spell. Older path: the engine's formula with the kit's weight.
+ */
+function spellDamage(e: Engine, M: Mod, u: Unit, k: number, v: Unit | null = null): number {
   const sp = u.champ.spells[k];
   const sk = M.u[u.i].kit.spells[k];
   if (!sp || !sk || sk.dmg <= 0) return 0;
   const us = M.u[u.i];
+  if (e.realStats()) {
+    if (Stats.noDamage(u, k)) return 0;
+    const raw = Stats.hasDamage(u, k) ? Stats.spellRaw(e, u, k, v) : Stats.fallbackRaw(u, sk.dmg);
+    const net = v ? Stats.mitigate(e, u, v, raw) : (raw.p + raw.m) * 0.62 + raw.t;
+    return net * e.realMul(u, "sp") * FIGHT_TUNE.spellMul;
+  }
   return spellBase(e, u, sp) * sk.dmg * us.kitScale * us.spMul[k] * FIGHT_TUNE.spellMul;
 }
 
-function hurt(e: Engine, M: Mod, src: Unit | null, v: Unit, amount: number) {
+/** Heal / shield size of a support spell when the data has none: the engine's level curve x the kit's weight. */
+function legacySupport(e: Engine, u: Unit, weight: number) {
+  return (20 + u.level * 13) * weight * e.skill(u) * FIGHT_TUNE.supportMul * (1 + Stats.stats(e, u).hsp);
+}
+
+/** Already-mitigated damage. With real numbers it first passes the combat effects (amplifiers, damage reduction,
+ *  lifelines, spell storing), then saves (Guardian Angel, Zhonya's, passives), and afterwards life steal / riders. */
+function hurt(e: Engine, M: Mod, src: Unit | null, v: Unit, amount: number, kind: Procs.Kind = "spell") {
   if (!v.alive || amount <= 0) return;
+  const real = e.realStats();
+  if (real) {
+    amount = Procs.incoming(e, src, v, amount, kind, M.deal);
+    if (amount <= 0 || !v.alive) return;
+  }
   const vs = M.u[v.i];
   if (e.t < vs.invulnUntil) amount = Math.min(amount, Math.max(0, v.hp + v.shield - 1));
   if (e.t < vs.reviveUntil && amount >= v.hp + v.shield) {
@@ -356,6 +397,7 @@ function hurt(e: Engine, M: Mod, src: Unit | null, v: Unit, amount: number) {
     return;
   }
   if (amount <= 0) return;
+  if (real && amount >= v.hp + v.shield && Procs.onLethal(e, v, src, M.deal)) return;
   const fid = v.fightId;
   const info = fid ? M.f.get(fid) : undefined;
   const f = fid ? e.fights.get(fid) : undefined;
@@ -368,10 +410,13 @@ function hurt(e: Engine, M: Mod, src: Unit | null, v: Unit, amount: number) {
     }
   }
   e.damage(src, v, amount);
+  // an effect below may finish v through a nested hurt(), which counts that kill itself
+  const died = !v.alive;
+  if (real) Procs.onDealt(e, src, v, amount, kind, M.deal);
   if (f) f.last = e.t;
   if (info && info.firstDmg < 0) info.firstDmg = e.t;
   if (src) M.u[src.i].hitChampAt = e.t;
-  if (!v.alive) {
+  if (died) {
     M.stats.kills++;
     const n = info ? info.members.size : 0;
     const b = n <= 0 ? "none" : n <= 2 ? "2" : n <= 4 ? "3-4" : n <= 7 ? "5-7" : "8-10";
@@ -454,6 +499,8 @@ function targetable(e: Engine, M: Mod, f: Unit, from: Unit): boolean {
   if (!f.alive) return false;
   const s = M.u[f.i];
   if (e.t < s.untargetUntil) return false;
+  // in a stasis save (Guardian Angel, Zhonya's, Sion's reanimation): nothing to hit
+  if (buffOf(e, f, "stasis") > 0) return false;
   if (e.t < s.buffUntil && s.buffKind === "stealth" && dist(f, from) > 350) return false;
   return true;
 }
@@ -472,6 +519,8 @@ export function combat(e: Engine): void {
   for (const [id, f] of [...e.fights]) runFight(e, M, id, f);
   M.cur = 0;
   turretShots(e, M);
+  // combat effects: damage over time, auras, item actives, summoner spells, expiring shields
+  if (e.realStats()) Procs.tick(e, DT, M.deal);
   // kills from lane pokes (engine.laneDuels) do not go through hurt()
   const k1 = e.kills[0] + e.kills[1];
   const missed = k1 - k0 - (M.stats.kills - kBefore);
@@ -493,6 +542,19 @@ function upkeep(e: Engine, M: Mod) {
       s.target = -1;
       s.commitUntil = 0;
     }
+    if (s.hook && (!u.alive || e.t >= s.hook.at)) {
+      // the hook has reached its target: the caster is carried to it (Thresh Q, Nautilus Q, Leona E...)
+      const h = s.hook;
+      s.hook = null;
+      const v = e.units[h.aim];
+      // the tether breaks if the caster is pulling out, the target vanished (stealth, untargetable) or was moved far away
+      if (u.alive && v && targetable(e, M, v, u) && !s.bail && dist(u, v) <= h.len + 300) {
+        const n = norm(v.x - u.x, v.y - u.y);
+        const len = Math.max(0, Math.min(h.len, dist(u, v) - 110));
+        const from = len > 40 ? dashMove(e, M, u, { x: u.x + n.x * len, y: u.y + n.y * len }, h.len, h.walls) : null;
+        if (from) log(e, M, `  ${nm(u)} follows the hook to ${nm(v)} (dash ${Math.round(dist(from, u))}u)`, u.fightId || 0);
+      }
+    }
     if (!s.shields.length) continue;
     if (!u.alive) {
       s.shields = [];
@@ -500,7 +562,8 @@ function upkeep(e: Engine, M: Mod) {
     }
     s.shields = s.shields.filter((sh) => {
       if (e.t < sh.until) return true;
-      u.shield = Math.max(0, u.shield - sh.amt);
+      // only what this shield still holds goes away (shields absorb in expiry order; procs.ts shields count too)
+      u.shield = Math.max(0, u.shield - shieldLeft(e, u, sh));
       return false;
     });
   }
@@ -812,7 +875,11 @@ function runFight(e: Engine, M: Mod, id: number, f: { x: number; y: number; star
     let near = Infinity;
     for (const o of side[1 - u.side]) if (o.alive && !M.u[o.i].bail) near = Math.min(near, dist(o, u));
     const home = e.nearestOwnTurret(u)!;
-    if (near > 1350 || (dist(u, home) < 500 && near > 700) || e.t - s.bailAt > 12) {
+    // a lane fight cannot be joined, so once nobody chases its runner any more it is over for the runner too (else the
+    // winner stood idle until the runner was 1,350 u away)
+    const unchased = info.kind !== "skirmish" && e.t - s.bailAt >= 0.5 &&
+      !side[1 - u.side].some((o) => o.alive && !M.u[o.i].bail && M.u[o.i].target === u.i);
+    if (unchased || near > 1350 || (dist(u, home) < 500 && near > 700) || e.t - s.bailAt > 12) {
       dropOut(e, M, u);
       setCalm(u, e.t + 5);
       e.setGoal(u, home);
@@ -956,6 +1023,9 @@ function think(e: Engine, M: Mod, info: FInfo, f: Vec, side: [Unit[], Unit[]], g
   if (info.phase[0] === "retreat" && info.phase[1] === "retreat" && info.brawlAt < 0) M.stats.ends.standoff = (M.stats.ends.standoff ?? 0);
 }
 
+/** a lane loser below this hp fraction retreats inside the fight (chaseable); healthier ones just walk off */
+const LANE_CHASE_HP = 0.45;
+
 function lanePullOut(e: Engine, M: Mod, info: FInfo, side: [Unit[], Unit[]]) {
   const age = e.t - (e.fights.get(info.id)?.start ?? e.t);
   if (age < 2) return;
@@ -966,8 +1036,16 @@ function lanePullOut(e: Engine, M: Mod, info: FInfo, side: [Unit[], Unit[]]) {
     if (pw[s] < pw[1 - s] * (e.minute() > 24 ? 0.7 : 0.85) && e.rng.chance(0.45)) {
       log(e, M, `  #${info.id} ${s ? "RED" : "BLUE"} backs off (lost the trade)`);
       M.stats.retreats++;
+      setPhase(e, M, info, s, "retreat");
       for (const u of side[s]) {
         if (hpF(u) < 0.25 && e.tryFlash(u)) M.stats.flashes++;
+        if (hpF(u) < LANE_CHASE_HP) {
+          // low: runs home inside the fight, where the winner may chase it (see act / chaseOk); one already running
+          // keeps its start time (the chase window and the 12 s cap count from it)
+          const us = M.u[u.i];
+          if (!us.bail) { us.bail = true; us.bailAt = e.t; }
+          continue;
+        }
         dropOut(e, M, u);
         setCalm(u, e.t + 5);
         e.setGoal(u, e.nearestOwnTurret(u)!);
@@ -1067,14 +1145,10 @@ function act(e: Engine, M: Mod, u: Unit, info: FInfo, side: [Unit[], Unit[]], ge
   const ph = info.phase[u.side];
   if (!s.bail && ph !== "retreat" && shouldBail(e, M, u, info, foes, allies, geo)) {
     log(e, M, `  ↩ ${nm(u)} bails at ${Math.round(hpF(u) * 100)}% hp`);
-    if (info.kind !== "skirmish") {
-      // lane fights: walk off like the old engine (flash when nearly dead), no chase
-      if (hpF(u) < 0.2 && e.tryFlash(u)) M.stats.flashes++;
-      dropOut(e, M, u);
-      setCalm(u, e.t + 5);
-      e.setGoal(u, e.nearestOwnTurret(u)!);
-      return;
-    }
+    // lane fights too: the runner stays in the fight while it runs, so the winner can chase it down (chaseOk: not
+    // deep under its turret, not for long). Before, a lane loser left the fight on the spot and real-stat damage
+    // (much less burst than the old % model) almost never killed in lane: 2 % of lane all-ins ended in a kill.
+    if (info.kind !== "skirmish" && hpF(u) < 0.2 && e.tryFlash(u)) M.stats.flashes++;
     s.bail = true;
     s.bailAt = e.t;
   }
@@ -1339,8 +1413,11 @@ function basicAttack(e: Engine, M: Mod, u: Unit, t: Unit, info: FInfo, mul: numb
   if (e.t < us.blindUntil || !t.alive) return;
   let m = mul * us.aaMul * FIGHT_TUNE.aaMul;
   if (e.t < us.buffUntil && (us.buffKind === "as" || us.buffKind === "ad")) m *= 1.3;
-  const dmg = e.aaDps(u) * DT * e.rng.range(0.75, 1.25) * m;
-  hurt(e, M, u, t, dmg);
+  const real = e.realStats();
+  const dmg = e.aaDps(u) * DT * e.rng.range(0.75, 1.25) * m * (real ? Stats.armorMul(e, u, t) : 1);
+  hurt(e, M, u, t, dmg, "aa");
+  // on-hit effects count the attacks landed this step (attack speed x step, fewer while kiting)
+  if (real && t.alive) Procs.onAttack(e, u, t, Stats.stats(e, u).as * DT * mul * (e.t < us.buffUntil && us.buffKind === "as" ? 1.3 : 1), M.deal);
   if (!info.opened && info.phase[0] === "brawl" && info.phase[1] === "brawl") info.opened = "aa";
   if (!us.melee && e.rng.chance(0.35)) e.fx_({ kind: "aa", side: u.side, x: u.x, y: u.y, tx: t.x, ty: t.y, color: u.side ? "#ff8a8a" : "#8ab8ff", r: 0, w: 0, from: u.i, to: t.i });
 }
@@ -1556,7 +1633,7 @@ function evalSpell(e: Engine, M: Mod, u: Unit, info: FInfo, k: number, sk: Spell
         if (mode !== "brawl" || dmg <= 0) break;
         for (const f of live) {
           if (!inReach(f) || (blocked && isDash)) continue;
-          if (f.hp + f.shield <= dmg * 1.05 || hpF(f) < 0.22) offer({ k, aim: f, ally: null, score: 3.4 + (f === target ? 0.2 : 0), why: "execute" });
+          if (f.hp + f.shield <= spellDamage(e, M, u, k, f) * 1.05 || hpF(f) < 0.22) offer({ k, aim: f, ally: null, score: 3.4 + (f === target ? 0.2 : 0), why: "execute" });
         }
         break;
       }
@@ -1583,7 +1660,7 @@ function evalSpell(e: Engine, M: Mod, u: Unit, info: FInfo, k: number, sk: Spell
           if (hpF(aim) < 0.15 && !sk.uses.includes("execute")) break;
           if (aim.hp < e.aaDps(u) * 1.2) break;
         }
-        const kills = aim.hp + aim.shield <= dmg;
+        const kills = aim.hp + aim.shield <= spellDamage(e, M, u, k, aim);
         let sc = use === "burst" ? 1.7 : use === "poke" ? (mode === "position" ? 1.6 : 1.2) : use === "waveclear" ? 0.9 : 1.3;
         if (kills) sc += 1.5;
         if (sk.cc && hard && aim.stunUntil - e.t > (sk.delay || 0.25) + 0.3) sc -= 0.3;
@@ -1650,6 +1727,11 @@ function evalSpell(e: Engine, M: Mod, u: Unit, info: FInfo, k: number, sk: Spell
 /** vfx kinds the renderer draws on the caster's own side: never aimed at an enemy (`to` = ally or caster) */
 const FRIENDLY_FX = new Set<string>(["shield", "heal", "self", "stealth", "summon"]);
 
+/** skillshots whose kit dash only happens when they land ("champion id:spell index", 0 = Q … 3 = R) */
+const HOOK_DASH = new Set<string>(["Thresh:0", "Nautilus:0", "Leona:2", "Amumu:0", "LeeSin:0", "Vex:3"]);
+/** seconds a landed hook flies before the caster follows it (the renderer draws the hook's flight in about 0.4 s) */
+const HOOK_TRAVEL = 0.4;
+
 /** Self-cast spells: an aura around the caster, an empowered attack on the current target, or a pure buff. */
 function selfMode(us: UState, sk: SpellKit): "aura" | "empower" | "buff" | "global" {
   const rad = sk.radius || 0;
@@ -1677,12 +1759,17 @@ function selfEffects(e: Engine, M: Mod, u: Unit, sk: SpellKit, sp: SpellData, k:
   }
   const sup = sk.support ?? 0;
   if (sup > 0 && (us.uses[k].includes("shield") || us.uses[k].includes("heal"))) {
-    const amount = spellBase(e, u, sp) * sup * FIGHT_TUNE.supportMul;
+    const real = e.realStats();
+    const raw = !real
+      ? spellBase(e, u, sp) * sup * FIGHT_TUNE.supportMul
+      : Stats.hasSupport(u, k) ? Stats.supportAmount(e, u, k) * FIGHT_TUNE.supportMul : legacySupport(e, u, sup);
     if (us.uses[k].includes("heal") && hpF(u) < 0.85) {
+      const amount = real ? Procs.selfSupport(e, u, raw, false) : raw;
       const before = u.hp;
       u.hp = Math.min(u.maxHp, u.hp + amount);
       out.push(`heals self ${Math.round(u.hp - before)}`);
     } else {
+      const amount = real ? Procs.selfSupport(e, u, raw, true) : raw;
       u.shield += amount;
       us.shields.push({ amt: amount, until: e.t + 2.5 });
       out.push(`shields self ${Math.round(amount)}`);
@@ -1693,7 +1780,13 @@ function selfEffects(e: Engine, M: Mod, u: Unit, sk: SpellKit, sp: SpellData, k:
 
 /** Shield / heal / buff an ally. */
 function supportOn(e: Engine, M: Mod, u: Unit, sk: SpellKit, sp: SpellData, ally: Unit, why: SpellUse | "save"): string {
-  const amount = spellBase(e, u, sp) * (sk.support ?? (sk.dmg || 1)) * FIGHT_TUNE.supportMul;
+  let amount = spellBase(e, u, sp) * (sk.support ?? (sk.dmg || 1)) * FIGHT_TUNE.supportMul;
+  if (e.realStats() && (why === "heal" || why === "shield" || (why === "peel" && (sk.support ?? 0) > 0))) {
+    // the spell's real heal / shield (heal and shield power included), then support items and healing received
+    const k = u.champ.spells.indexOf(sp);
+    amount = k >= 0 && Stats.hasSupport(u, k) ? Stats.supportAmount(e, u, k) * FIGHT_TUNE.supportMul : legacySupport(e, u, sk.support ?? (sk.dmg || 1));
+    amount = Procs.onSupport(e, u, ally, amount, M.deal, why !== "heal");
+  }
   const as = M.u[ally.i];
   if (ally !== u) as.helpers.push({ i: u.i, until: e.t + 5 });
   if (why === "heal") {
@@ -1726,7 +1819,8 @@ interface HitResult { hit: Unit[]; hitMain: boolean; cc: string[]; dmg: number }
 
 /** Roll each victim, then one "hit" fx, damage and CC per champion actually hit. */
 function landHits(e: Engine, M: Mod, u: Unit, k: number, sk: SpellKit, sp: SpellData, victims: Unit[], aim: Unit | null, phase: Phase, at?: Vec): HitResult {
-  const dmg = spellDamage(e, M, u, k);
+  const real = e.realStats();
+  const dmg = spellDamage(e, M, u, k, real ? aim : null);
   const res: HitResult = { hit: [], hitMain: false, cc: [], dmg };
   const centre = at ?? aim ?? u;
   for (const v of victims) {
@@ -1736,8 +1830,13 @@ function landHits(e: Engine, M: Mod, u: Unit, k: number, sk: SpellKit, sp: Spell
     if (v === aim) res.hitMain = true;
     res.hit.push(v);
     e.hitFx(u, v, sp);
+    // a spell shield (Banshee's Veil, Edge of Night) takes the whole spell: no damage, no crowd control
+    if (real && Procs.spellShield(e, v)) continue;
+    // real numbers: each victim's own resistances (and its health, for % health spells)
+    const dv = real ? spellDamage(e, M, u, k, v) : dmg;
     // the main target takes the full hit; others caught in the area a little less (edges, partial overlap)
-    if (dmg > 0) hurt(e, M, u, v, dmg * e.rng.range(0.85, 1.15) * (aim && v !== aim ? FIGHT_TUNE.aoeMul : 1));
+    if (dv > 0) hurt(e, M, u, v, dv * e.rng.range(0.85, 1.15) * (aim && v !== aim ? FIGHT_TUNE.aoeMul : 1), "spell");
+    if (real && dv > 0 && v.alive) Procs.onSpellHit(e, u, v, k, M.deal);
     const vs = M.u[v.i];
     // conditional CC: only on a target already airborne / carrying this caster's mark
     const gated = sk.requires === "airborne" ? e.t >= vs.airUntil : sk.requires === "mark" ? !(e.t - (vs.marks.get(u.i) ?? -99) < 4) : false;
@@ -1781,6 +1880,8 @@ function spend(e: Engine, M: Mod, u: Unit, k: number, why: string) {
   u.cds[k] = e.t + e.cdOf(u, sk?.cd ? { ...sp, cd: sk.cd } : sp, k);
   us.lockUntil = e.t + 0.45;
   M.stats.casts[why] = (M.stats.casts[why] ?? 0) + 1;
+  // Spellblade, ultimate-cast items, "after casting" passives
+  if (e.realStats()) Procs.onCast(e, u, k, M.deal);
 }
 
 /** Buffs a spell puts on allies (Sivir R speed, Rell E, Lulu W...): everyone within the radius, or the one ally. */
@@ -1970,7 +2071,7 @@ function castSpell(e: Engine, M: Mod, u: Unit, info: FInfo, c: Choice, foes: Uni
     let fx: Fx;
     if (isDashFx) fx = e.emitSpellFx(u, sp, aim, from!, false);
     else if (friendlyFx) fx = e.emitSpellFx(u, sp, u, u, false);
-    else fx = e.emitSpellFx(u, sp, aim, mode === "empower" && aim ? aim : u, false);
+    else fx = e.emitSpellFx(u, sp, aim, (mode === "empower" || mode === "global") && aim ? aim : u, false);
     if (mode === "buff" || !victims.length) {
       if (!friendlyFx && aim && mode !== "buff") fx.miss = true;
       log(e, M, `  ${nm(u)} ${sp.key} ${sp.name} (${c.why}) self: ${what || "no effect"}`);
@@ -1985,6 +2086,11 @@ function castSpell(e: Engine, M: Mod, u: Unit, info: FInfo, c: Choice, foes: Uni
   // ---- aimed at an enemy (target / direction / area)
   const aim = c.aim;
   if (!aim) return false;
+  // a summon aimed at an enemy (Annie R's Tibbers) is drawn at the target, not on the caster; a summon that carries the
+  // caster (Zed W shadow, Nidalee W) stays on the caster's side as before
+  const ownSideFx = friendlyFx && !(sp.vfx === "summon" && !sk.dash);
+  const hook = HOOK_DASH.has(`${u.champ.id}:${k}`);
+  let hookLanding = false;
   let from: Vec | null = null;
   let fx: Fx | null = null;
   if (sk.dash && sk.dash.to !== "ally") {
@@ -2006,9 +2112,13 @@ function castSpell(e: Engine, M: Mod, u: Unit, info: FInfo, c: Choice, foes: Uni
     if (isDashFx) {
       from = dashMove(e, M, u, to, sk.dash.len, sk.dash.overWalls);
       if (!from) return false; // never draw a dash that did not move
+    } else if (hook) {
+      // a hook that carries the caster only when it lands (Thresh Q, Nautilus Q, Leona E): cast now, follow it in upkeep
+      fx = e.emitSpellFx(u, sp, aim, aim, false);
+      hookLanding = true;
     } else {
       // a skillshot that carries the caster (e.g. a line that dashes): cast from the start, then move
-      fx = friendlyFx ? e.emitSpellFx(u, sp, u, u, false) : e.emitSpellFx(u, sp, aim, aim, false);
+      fx = ownSideFx ? e.emitSpellFx(u, sp, u, u, false) : e.emitSpellFx(u, sp, aim, aim, false);
       from = dashMove(e, M, u, to, sk.dash.len, sk.dash.overWalls);
     }
   } else if (isDashFx) {
@@ -2022,7 +2132,7 @@ function castSpell(e: Engine, M: Mod, u: Unit, info: FInfo, c: Choice, foes: Uni
   putOnCd();
   if (!fx) {
     if (isDashFx) fx = e.emitSpellFx(u, sp, aim, from!, false);
-    else if (friendlyFx) fx = e.emitSpellFx(u, sp, u, u, false);
+    else if (ownSideFx) fx = e.emitSpellFx(u, sp, u, u, false);
     else fx = e.emitSpellFx(u, sp, aim, aim, false);
   }
   if (sk.shape === "zone" || sk.shape === "wall" || sp.vfx === "zone" || sp.vfx === "wall") fx.until = e.t + 2.5;
@@ -2034,8 +2144,10 @@ function castSpell(e: Engine, M: Mod, u: Unit, info: FInfo, c: Choice, foes: Uni
     victims = victims.filter((v) => dist(u, v) <= reachNow || (!isDashFx && v === aim));
   }
   const r = landHits(e, M, u, k, sk, sp, victims, aim, phase);
-  if (!r.hitMain && !friendlyFx) fx.miss = true;
-  afterCast(e, M, u, info, c, k, sk, sp, victims.length, r, phase, from ? ` (dash ${Math.round(dist(from, u))}u)` : "");
+  if (!r.hitMain && !ownSideFx) fx.miss = true;
+  const hooked = hookLanding && r.hitMain && !!sk.dash;
+  if (hooked) us.hook = { at: e.t + HOOK_TRAVEL, aim: aim.i, len: sk.dash!.len, walls: sk.dash!.overWalls };
+  afterCast(e, M, u, info, c, k, sk, sp, victims.length, r, phase, from ? ` (dash ${Math.round(dist(from, u))}u)` : hooked ? " (hooked)" : "");
   return true;
 }
 
@@ -2048,9 +2160,15 @@ function applyCC(e: Engine, M: Mod, src: Unit, v: Unit, cc: { type: CcType; dur:
     vs.arena = { x: c.x, y: c.y, r: Math.max(250, radius ?? 325) };
     M.stats.cc++;
     v.lastHitBy.set(src.i, t);
+    if (e.realStats()) Procs.onCC(e, src, v, cc.type, cc.dur, M.deal);
     return `arena ${cc.dur.toFixed(1)}s`;
   }
-  const dur = clamp(cc.dur, 0.2, 2.5);
+  // tenacity (Mercury's Treads, Cleanse ...) shortens crowd control; Aftershock, Glacial Augment ... react to it
+  const real = e.realStats();
+  // tenacity does not shorten airborne (knockup / knockback / pull) or suppression, as in LoL
+  const airborne = cc.type === "knockup" || cc.type === "knockback" || cc.type === "pull" || cc.type === "suppress";
+  const dur = clamp(cc.dur * (real && !airborne ? 1 - Procs.tenacity(e, v) : 1), 0.2, 2.5);
+  if (real) Procs.onCC(e, src, v, cc.type, dur, M.deal);
   M.stats.cc++;
   v.lastHitBy.set(src.i, t); // crowd control counts toward the assist
   let tag = cc.type;
@@ -2094,7 +2212,7 @@ function turretShots(e: Engine, M: Mod) {
     }
     if (!best) { ts.target = -1; return; }
     ts.target = best.i;
-    hurt(e, M, null, best, (180 + m * 6) * DT * FIGHT_TUNE.towerMul);
+    hurt(e, M, null, best, (180 + m * 6) * DT * FIGHT_TUNE.towerMul, "proc");
     if (e.t >= ts.fxAt) {
       ts.fxAt = e.t + 0.8;
       e.fx_({ kind: "tower", side: t.side, x: t.pos.x, y: t.pos.y, tx: best.x, ty: best.y, color: t.side ? "#ff6b6b" : "#6ba8ff", r: 0, w: 0, to: best.i });

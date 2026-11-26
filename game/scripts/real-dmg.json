@@ -1,0 +1,1236 @@
+{
+ "games": 502,
+ "champions": {
+  "Aatrox": {
+   "games": 25,
+   "perMin": 549.5,
+   "share": [
+    0.854,
+    0.114,
+    0.032
+   ]
+  },
+  "Ahri": {
+   "games": 61,
+   "perMin": 707.4,
+   "share": [
+    0.084,
+    0.721,
+    0.194
+   ]
+  },
+  "Akali": {
+   "games": 48,
+   "perMin": 606.2,
+   "share": [
+    0.058,
+    0.883,
+    0.059
+   ]
+  },
+  "Alistar": {
+   "games": 57,
+   "perMin": 135.1,
+   "share": [
+    0.133,
+    0.813,
+    0.055
+   ]
+  },
+  "Ambessa": {
+   "games": 100,
+   "perMin": 614.0,
+   "share": [
+    0.954,
+    0.027,
+    0.019
+   ]
+  },
+  "Anivia": {
+   "games": 65,
+   "perMin": 580.0,
+   "share": [
+    0.073,
+    0.915,
+    0.012
+   ]
+  },
+  "Annie": {
+   "games": 77,
+   "perMin": 712.5,
+   "share": [
+    0.055,
+    0.933,
+    0.012
+   ]
+  },
+  "Aphelios": {
+   "games": 25,
+   "perMin": 755.1,
+   "share": [
+    0.935,
+    0.049,
+    0.016
+   ]
+  },
+  "Ashe": {
+   "games": 73,
+   "perMin": 656.1,
+   "share": [
+    0.908,
+    0.084,
+    0.008
+   ]
+  },
+  "AurelionSol": {
+   "games": 1,
+   "perMin": 464.6,
+   "share": [
+    0.009,
+    0.991,
+    0.0
+   ]
+  },
+  "Aurora": {
+   "games": 78,
+   "perMin": 777.8,
+   "share": [
+    0.069,
+    0.883,
+    0.048
+   ]
+  },
+  "Azir": {
+   "games": 70,
+   "perMin": 715.0,
+   "share": [
+    0.025,
+    0.966,
+    0.009
+   ]
+  },
+  "Bard": {
+   "games": 97,
+   "perMin": 231.3,
+   "share": [
+    0.284,
+    0.666,
+    0.051
+   ]
+  },
+  "Blitzcrank": {
+   "games": 5,
+   "perMin": 194.6,
+   "share": [
+    0.341,
+    0.644,
+    0.015
+   ]
+  },
+  "Braum": {
+   "games": 16,
+   "perMin": 222.2,
+   "share": [
+    0.118,
+    0.849,
+    0.033
+   ]
+  },
+  "Caitlyn": {
+   "games": 73,
+   "perMin": 764.1,
+   "share": [
+    0.959,
+    0.024,
+    0.018
+   ]
+  },
+  "Camille": {
+   "games": 31,
+   "perMin": 342.0,
+   "share": [
+    0.627,
+    0.051,
+    0.322
+   ]
+  },
+  "Cassiopeia": {
+   "games": 56,
+   "perMin": 652.7,
+   "share": [
+    0.021,
+    0.966,
+    0.013
+   ]
+  },
+  "Chogath": {
+   "games": 10,
+   "perMin": 370.5,
+   "share": [
+    0.202,
+    0.498,
+    0.3
+   ]
+  },
+  "Corki": {
+   "games": 72,
+   "perMin": 788.5,
+   "share": [
+    0.671,
+    0.203,
+    0.126
+   ]
+  },
+  "DrMundo": {
+   "games": 14,
+   "perMin": 707.3,
+   "share": [
+    0.285,
+    0.628,
+    0.087
+   ]
+  },
+  "Draven": {
+   "games": 2,
+   "perMin": 576.9,
+   "share": [
+    0.936,
+    0.042,
+    0.022
+   ]
+  },
+  "Ekko": {
+   "games": 1,
+   "perMin": 553.2,
+   "share": [
+    0.166,
+    0.777,
+    0.057
+   ]
+  },
+  "Elise": {
+   "games": 10,
+   "perMin": 382.7,
+   "share": [
+    0.113,
+    0.777,
+    0.111
+   ]
+  },
+  "Ezreal": {
+   "games": 132,
+   "perMin": 840.8,
+   "share": [
+    0.638,
+    0.343,
+    0.019
+   ]
+  },
+  "Fiora": {
+   "games": 1,
+   "perMin": 538.0,
+   "share": [
+    0.541,
+    0.033,
+    0.427
+   ]
+  },
+  "Galio": {
+   "games": 46,
+   "perMin": 536.7,
+   "share": [
+    0.008,
+    0.983,
+    0.009
+   ]
+  },
+  "Gangplank": {
+   "games": 1,
+   "perMin": 804.5,
+   "share": [
+    0.704,
+    0.247,
+    0.049
+   ]
+  },
+  "Gnar": {
+   "games": 105,
+   "perMin": 648.6,
+   "share": [
+    0.81,
+    0.18,
+    0.009
+   ]
+  },
+  "Gragas": {
+   "games": 8,
+   "perMin": 552.0,
+   "share": [
+    0.09,
+    0.905,
+    0.005
+   ]
+  },
+  "Gwen": {
+   "games": 33,
+   "perMin": 727.1,
+   "share": [
+    0.137,
+    0.67,
+    0.193
+   ]
+  },
+  "Hecarim": {
+   "games": 2,
+   "perMin": 354.8,
+   "share": [
+    0.786,
+    0.174,
+    0.04
+   ]
+  },
+  "Hwei": {
+   "games": 6,
+   "perMin": 746.5,
+   "share": [
+    0.034,
+    0.953,
+    0.013
+   ]
+  },
+  "Illaoi": {
+   "games": 2,
+   "perMin": 765.2,
+   "share": [
+    0.933,
+    0.067,
+    0.0
+   ]
+  },
+  "Irelia": {
+   "games": 2,
+   "perMin": 421.5,
+   "share": [
+    0.73,
+    0.27,
+    0.0
+   ]
+  },
+  "JarvanIV": {
+   "games": 151,
+   "perMin": 429.8,
+   "share": [
+    0.778,
+    0.111,
+    0.111
+   ]
+  },
+  "Jax": {
+   "games": 27,
+   "perMin": 589.8,
+   "share": [
+    0.531,
+    0.442,
+    0.026
+   ]
+  },
+  "Jayce": {
+   "games": 104,
+   "perMin": 747.7,
+   "share": [
+    0.811,
+    0.17,
+    0.019
+   ]
+  },
+  "Jhin": {
+   "games": 110,
+   "perMin": 706.2,
+   "share": [
+    0.923,
+    0.064,
+    0.012
+   ]
+  },
+  "Jinx": {
+   "games": 6,
+   "perMin": 803.7,
+   "share": [
+    0.96,
+    0.03,
+    0.009
+   ]
+  },
+  "KSante": {
+   "games": 92,
+   "perMin": 457.2,
+   "share": [
+    0.868,
+    0.09,
+    0.042
+   ]
+  },
+  "Kaisa": {
+   "games": 26,
+   "perMin": 721.2,
+   "share": [
+    0.55,
+    0.431,
+    0.019
+   ]
+  },
+  "Kalista": {
+   "games": 37,
+   "perMin": 711.3,
+   "share": [
+    0.699,
+    0.163,
+    0.138
+   ]
+  },
+  "Karma": {
+   "games": 87,
+   "perMin": 296.9,
+   "share": [
+    0.09,
+    0.897,
+    0.012
+   ]
+  },
+  "Kennen": {
+   "games": 20,
+   "perMin": 715.5,
+   "share": [
+    0.231,
+    0.75,
+    0.02
+   ]
+  },
+  "Khazix": {
+   "games": 4,
+   "perMin": 669.2,
+   "share": [
+    0.79,
+    0.053,
+    0.158
+   ]
+  },
+  "Kindred": {
+   "games": 1,
+   "perMin": 572.6,
+   "share": [
+    0.755,
+    0.137,
+    0.108
+   ]
+  },
+  "Kled": {
+   "games": 9,
+   "perMin": 507.7,
+   "share": [
+    0.903,
+    0.062,
+    0.034
+   ]
+  },
+  "KogMaw": {
+   "games": 7,
+   "perMin": 858.4,
+   "share": [
+    0.341,
+    0.589,
+    0.07
+   ]
+  },
+  "Leblanc": {
+   "games": 10,
+   "perMin": 770.4,
+   "share": [
+    0.063,
+    0.859,
+    0.078
+   ]
+  },
+  "LeeSin": {
+   "games": 90,
+   "perMin": 464.5,
+   "share": [
+    0.821,
+    0.133,
+    0.046
+   ]
+  },
+  "Leona": {
+   "games": 26,
+   "perMin": 166.2,
+   "share": [
+    0.228,
+    0.705,
+    0.067
+   ]
+  },
+  "Lillia": {
+   "games": 1,
+   "perMin": 750.6,
+   "share": [
+    0.029,
+    0.814,
+    0.157
+   ]
+  },
+  "Lissandra": {
+   "games": 12,
+   "perMin": 620.1,
+   "share": [
+    0.063,
+    0.92,
+    0.017
+   ]
+  },
+  "Locke": {
+   "games": 14,
+   "perMin": 561.1,
+   "share": [
+    0.035,
+    0.858,
+    0.106
+   ]
+  },
+  "Lucian": {
+   "games": 88,
+   "perMin": 869.2,
+   "share": [
+    0.777,
+    0.212,
+    0.012
+   ]
+  },
+  "Lulu": {
+   "games": 97,
+   "perMin": 199.3,
+   "share": [
+    0.155,
+    0.822,
+    0.023
+   ]
+  },
+  "Lux": {
+   "games": 14,
+   "perMin": 326.6,
+   "share": [
+    0.097,
+    0.885,
+    0.018
+   ]
+  },
+  "Malphite": {
+   "games": 6,
+   "perMin": 372.5,
+   "share": [
+    0.341,
+    0.568,
+    0.09
+   ]
+  },
+  "Malzahar": {
+   "games": 1,
+   "perMin": 669.3,
+   "share": [
+    0.05,
+    0.918,
+    0.032
+   ]
+  },
+  "Maokai": {
+   "games": 13,
+   "perMin": 552.9,
+   "share": [
+    0.037,
+    0.805,
+    0.157
+   ]
+  },
+  "Mel": {
+   "games": 29,
+   "perMin": 731.6,
+   "share": [
+    0.06,
+    0.933,
+    0.007
+   ]
+  },
+  "Milio": {
+   "games": 69,
+   "perMin": 156.5,
+   "share": [
+    0.198,
+    0.793,
+    0.009
+   ]
+  },
+  "MissFortune": {
+   "games": 38,
+   "perMin": 831.5,
+   "share": [
+    0.949,
+    0.035,
+    0.016
+   ]
+  },
+  "MonkeyKing": {
+   "games": 69,
+   "perMin": 422.3,
+   "share": [
+    0.868,
+    0.093,
+    0.039
+   ]
+  },
+  "Mordekaiser": {
+   "games": 2,
+   "perMin": 793.2,
+   "share": [
+    0.149,
+    0.831,
+    0.02
+   ]
+  },
+  "Morgana": {
+   "games": 1,
+   "perMin": 253.8,
+   "share": [
+    0.112,
+    0.872,
+    0.016
+   ]
+  },
+  "Naafiri": {
+   "games": 60,
+   "perMin": 549.8,
+   "share": [
+    0.885,
+    0.003,
+    0.111
+   ]
+  },
+  "Nami": {
+   "games": 35,
+   "perMin": 270.8,
+   "share": [
+    0.118,
+    0.867,
+    0.015
+   ]
+  },
+  "Nasus": {
+   "games": 2,
+   "perMin": 439.9,
+   "share": [
+    0.713,
+    0.287,
+    0.0
+   ]
+  },
+  "Nautilus": {
+   "games": 84,
+   "perMin": 182.1,
+   "share": [
+    0.273,
+    0.697,
+    0.03
+   ]
+  },
+  "Neeko": {
+   "games": 79,
+   "perMin": 364.7,
+   "share": [
+    0.087,
+    0.903,
+    0.01
+   ]
+  },
+  "Nidalee": {
+   "games": 6,
+   "perMin": 608.8,
+   "share": [
+    0.323,
+    0.569,
+    0.108
+   ]
+  },
+  "Nocturne": {
+   "games": 76,
+   "perMin": 469.0,
+   "share": [
+    0.798,
+    0.063,
+    0.139
+   ]
+  },
+  "Olaf": {
+   "games": 47,
+   "perMin": 559.0,
+   "share": [
+    0.678,
+    0.006,
+    0.317
+   ]
+  },
+  "Orianna": {
+   "games": 84,
+   "perMin": 669.5,
+   "share": [
+    0.053,
+    0.939,
+    0.008
+   ]
+  },
+  "Ornn": {
+   "games": 12,
+   "perMin": 364.3,
+   "share": [
+    0.346,
+    0.654,
+    0.0
+   ]
+  },
+  "Pantheon": {
+   "games": 126,
+   "perMin": 529.6,
+   "share": [
+    0.86,
+    0.047,
+    0.093
+   ]
+  },
+  "Poppy": {
+   "games": 23,
+   "perMin": 277.3,
+   "share": [
+    0.833,
+    0.115,
+    0.052
+   ]
+  },
+  "Pyke": {
+   "games": 12,
+   "perMin": 232.4,
+   "share": [
+    0.703,
+    0.0,
+    0.297
+   ]
+  },
+  "Qiyana": {
+   "games": 11,
+   "perMin": 504.5,
+   "share": [
+    0.802,
+    0.073,
+    0.125
+   ]
+  },
+  "Rakan": {
+   "games": 47,
+   "perMin": 156.3,
+   "share": [
+    0.227,
+    0.721,
+    0.052
+   ]
+  },
+  "Rammus": {
+   "games": 1,
+   "perMin": 239.9,
+   "share": [
+    0.36,
+    0.526,
+    0.115
+   ]
+  },
+  "RekSai": {
+   "games": 18,
+   "perMin": 657.9,
+   "share": [
+    0.558,
+    0.232,
+    0.21
+   ]
+  },
+  "Rell": {
+   "games": 29,
+   "perMin": 165.7,
+   "share": [
+    0.189,
+    0.736,
+    0.074
+   ]
+  },
+  "Renata": {
+   "games": 37,
+   "perMin": 176.2,
+   "share": [
+    0.254,
+    0.677,
+    0.069
+   ]
+  },
+  "Renekton": {
+   "games": 83,
+   "perMin": 573.2,
+   "share": [
+    0.8,
+    0.194,
+    0.007
+   ]
+  },
+  "Rumble": {
+   "games": 89,
+   "perMin": 722.8,
+   "share": [
+    0.035,
+    0.951,
+    0.015
+   ]
+  },
+  "Ryze": {
+   "games": 147,
+   "perMin": 641.4,
+   "share": [
+    0.039,
+    0.955,
+    0.005
+   ]
+  },
+  "Sejuani": {
+   "games": 9,
+   "perMin": 415.3,
+   "share": [
+    0.53,
+    0.366,
+    0.104
+   ]
+  },
+  "Senna": {
+   "games": 6,
+   "perMin": 714.1,
+   "share": [
+    0.883,
+    0.09,
+    0.027
+   ]
+  },
+  "Seraphine": {
+   "games": 81,
+   "perMin": 265.0,
+   "share": [
+    0.143,
+    0.851,
+    0.006
+   ]
+  },
+  "Shen": {
+   "games": 43,
+   "perMin": 236.8,
+   "share": [
+    0.551,
+    0.404,
+    0.045
+   ]
+  },
+  "Shyvana": {
+   "games": 2,
+   "perMin": 403.1,
+   "share": [
+    0.43,
+    0.384,
+    0.186
+   ]
+  },
+  "Sion": {
+   "games": 74,
+   "perMin": 579.5,
+   "share": [
+    0.573,
+    0.414,
+    0.013
+   ]
+  },
+  "Sivir": {
+   "games": 55,
+   "perMin": 853.3,
+   "share": [
+    0.984,
+    0.004,
+    0.011
+   ]
+  },
+  "Skarner": {
+   "games": 36,
+   "perMin": 443.2,
+   "share": [
+    0.614,
+    0.3,
+    0.087
+   ]
+  },
+  "Smolder": {
+   "games": 1,
+   "perMin": 1105.5,
+   "share": [
+    0.615,
+    0.123,
+    0.262
+   ]
+  },
+  "Sona": {
+   "games": 1,
+   "perMin": 379.2,
+   "share": [
+    0.164,
+    0.836,
+    0.0
+   ]
+  },
+  "Soraka": {
+   "games": 3,
+   "perMin": 231.8,
+   "share": [
+    0.15,
+    0.85,
+    0.0
+   ]
+  },
+  "Sylas": {
+   "games": 20,
+   "perMin": 651.5,
+   "share": [
+    0.048,
+    0.947,
+    0.006
+   ]
+  },
+  "Syndra": {
+   "games": 47,
+   "perMin": 724.1,
+   "share": [
+    0.037,
+    0.898,
+    0.065
+   ]
+  },
+  "TahmKench": {
+   "games": 4,
+   "perMin": 200.3,
+   "share": [
+    0.094,
+    0.881,
+    0.025
+   ]
+  },
+  "Taliyah": {
+   "games": 67,
+   "perMin": 625.8,
+   "share": [
+    0.043,
+    0.952,
+    0.005
+   ]
+  },
+  "Thresh": {
+   "games": 14,
+   "perMin": 168.2,
+   "share": [
+    0.148,
+    0.801,
+    0.051
+   ]
+  },
+  "Tristana": {
+   "games": 7,
+   "perMin": 511.8,
+   "share": [
+    0.892,
+    0.087,
+    0.021
+   ]
+  },
+  "Trundle": {
+   "games": 36,
+   "perMin": 391.0,
+   "share": [
+    0.779,
+    0.183,
+    0.038
+   ]
+  },
+  "TwistedFate": {
+   "games": 34,
+   "perMin": 545.8,
+   "share": [
+    0.157,
+    0.827,
+    0.016
+   ]
+  },
+  "Udyr": {
+   "games": 1,
+   "perMin": 403.6,
+   "share": [
+    0.178,
+    0.822,
+    0.0
+   ]
+  },
+  "Varus": {
+   "games": 48,
+   "perMin": 869.0,
+   "share": [
+    0.725,
+    0.263,
+    0.011
+   ]
+  },
+  "Vayne": {
+   "games": 24,
+   "perMin": 625.1,
+   "share": [
+    0.745,
+    0.021,
+    0.234
+   ]
+  },
+  "Vex": {
+   "games": 1,
+   "perMin": 932.1,
+   "share": [
+    0.099,
+    0.901,
+    0.0
+   ]
+  },
+  "Vi": {
+   "games": 103,
+   "perMin": 358.6,
+   "share": [
+    0.962,
+    0.004,
+    0.034
+   ]
+  },
+  "Viktor": {
+   "games": 55,
+   "perMin": 868.1,
+   "share": [
+    0.017,
+    0.972,
+    0.011
+   ]
+  },
+  "Xayah": {
+   "games": 30,
+   "perMin": 639.3,
+   "share": [
+    0.982,
+    0.006,
+    0.012
+   ]
+  },
+  "XinZhao": {
+   "games": 134,
+   "perMin": 486.2,
+   "share": [
+    0.897,
+    0.056,
+    0.046
+   ]
+  },
+  "Yone": {
+   "games": 27,
+   "perMin": 573.8,
+   "share": [
+    0.713,
+    0.156,
+    0.131
+   ]
+  },
+  "Yorick": {
+   "games": 47,
+   "perMin": 600.4,
+   "share": [
+    0.676,
+    0.319,
+    0.005
+   ]
+  },
+  "Yunara": {
+   "games": 118,
+   "perMin": 773.8,
+   "share": [
+    0.591,
+    0.382,
+    0.027
+   ]
+  },
+  "Yuumi": {
+   "games": 15,
+   "perMin": 309.5,
+   "share": [
+    0.035,
+    0.956,
+    0.009
+   ]
+  },
+  "Zaahen": {
+   "games": 39,
+   "perMin": 691.1,
+   "share": [
+    0.887,
+    0.102,
+    0.011
+   ]
+  },
+  "Zac": {
+   "games": 1,
+   "perMin": 499.7,
+   "share": [
+    0.041,
+    0.82,
+    0.139
+   ]
+  },
+  "Zed": {
+   "games": 1,
+   "perMin": 404.3,
+   "share": [
+    0.965,
+    0.006,
+    0.029
+   ]
+  },
+  "Zeri": {
+   "games": 11,
+   "perMin": 826.9,
+   "share": [
+    0.745,
+    0.23,
+    0.025
+   ]
+  },
+  "Ziggs": {
+   "games": 38,
+   "perMin": 917.2,
+   "share": [
+    0.024,
+    0.972,
+    0.003
+   ]
+  },
+  "Zoe": {
+   "games": 12,
+   "perMin": 712.2,
+   "share": [
+    0.072,
+    0.825,
+    0.103
+   ]
+  },
+  "Zyra": {
+   "games": 1,
+   "perMin": 902.6,
+   "share": [
+    0.014,
+    0.983,
+    0.003
+   ]
+  }
+ },
+ "keystones": {
+  "8005": {
+   "games": 182,
+   "var1PerMin": 52.1
+  },
+  "8008": {
+   "games": 692,
+   "var1PerMin": 14.9
+  },
+  "8010": {
+   "games": 1146,
+   "var1PerMin": 10.5
+  },
+  "8021": {
+   "games": 254,
+   "var1PerMin": 62.9
+  },
+  "8112": {
+   "games": 439,
+   "var1PerMin": 47.1
+  },
+  "8214": {
+   "games": 440,
+   "var1PerMin": 27.3
+  },
+  "8229": {
+   "games": 329,
+   "var1PerMin": 51.4
+  },
+  "8230": {
+   "games": 273,
+   "var1PerMin": 0.4
+  },
+  "8351": {
+   "games": 22,
+   "var1PerMin": 1.7
+  },
+  "8360": {
+   "games": 177,
+   "var1PerMin": 0.3
+  },
+  "8369": {
+   "games": 56,
+   "var1PerMin": 24.3
+  },
+  "8437": {
+   "games": 470,
+   "var1PerMin": 27.7
+  },
+  "8439": {
+   "games": 176,
+   "var1PerMin": 12.3
+  },
+  "8465": {
+   "games": 65,
+   "var1PerMin": 70.7
+  },
+  "8992": {
+   "games": 245,
+   "var1PerMin": 51.9
+  },
+  "9923": {
+   "games": 54,
+   "var1PerMin": 1.0
+  }
+ },
+ "rolePairs": {
+  "Top": [
+   "flash",
+   "teleport"
+  ],
+  "Jungle": [
+   "flash",
+   "smite"
+  ],
+  "Mid": [
+   "flash",
+   "teleport"
+  ],
+  "Bot": [
+   "barrier",
+   "flash"
+  ],
+  "Support": [
+   "flash",
+   "heal"
+  ]
+ }
+}

@@ -21,6 +21,7 @@ import * as Macro from "./macro";
 import * as Fight from "./fight";
 import * as Items from "./items";
 import type { SideLoadout } from "./items";
+import * as Stats from "./stats";
 import type { Strategy } from "./strategy";
 import { defaultStrategy } from "./strategy";
 
@@ -256,6 +257,8 @@ export class Engine {
     if (ENGINE_FLAGS.macro) Macro.init(this);
     if (ENGINE_FLAGS.fight) Fight.init(this);
     Items.init(this, cfg.loadout);
+    // real numbers: level-1 health includes the rune shards and the starter item, known only after Items.init
+    if (this.realStats()) for (const u of this.units) u.hp = u.maxHp = this.maxHp(u);
   }
 
   // ---------- stats ----------
@@ -273,19 +276,44 @@ export class Engine {
   skill(u: Unit) {
     return clamp(1 + (u.rating - 75) / 80, 0.7, 1.35);
   }
+  /**
+   * Real LoL numbers drive the fight (stats.ts: champion stats by level + owned items, attack speed, armor / magic
+   * resist, spell ratios; procs.ts: item passives, keystones, summoner spells, champion passives) whenever items.json
+   * is loaded. Without it the older class-and-gold formulas below run.
+   */
+  realStats(): boolean {
+    return Stats.STATS_FLAGS.real && !!this.data.items;
+  }
+  /** What the engine adds on top of the real numbers: player skill, baron / elder / soul, the build's LCK edge. */
+  realMul(u: Unit, ch: "aa" | "sp") {
+    const buff = ch === "aa"
+      ? (u.baronUntil > this.t ? 1.25 : 1) * (u.elderUntil > this.t ? 1.25 : 1)
+      : (u.baronUntil > this.t ? 1.2 : 1) * (u.elderUntil > this.t ? 1.25 : 1);
+    return Items.edgeMul(this, u, ch) * this.skill(u) * buff * this.soulMul(u.side);
+  }
   maxHp(u: Unit) {
+    if (this.realStats()) return Stats.stats(this, u).hp * Items.edgeMul(this, u, "hp");
     const tags = u.champ.tags;
     const tank = tags.includes("Tank") ? 1.45 : tags.includes("Fighter") ? 1.2 : tags.includes("Support") ? 1.05 : 0.92;
     const ip = this.itemPower(u, "hp");
     return (640 + u.level * 95) * tank * (1 + ip * (tank > 1.1 ? 0.2 : 0.12)) * Items.mul(this, u, "hp");
   }
+  /** Basic attack damage per second before the target's armor. */
   aaDps(u: Unit) {
+    if (this.realStats()) return Stats.aaRaw(this, u) * this.realMul(u, "aa");
     const tags = u.champ.tags;
     const mark = tags.includes("Marksman") ? 1.55 : tags.includes("Fighter") ? 1.15 : tags.includes("Support") ? 0.6 : 0.85;
     const buff = (u.baronUntil > this.t ? 1.25 : 1) * (u.elderUntil > this.t ? 1.25 : 1);
     return (24 + u.level * 6) * mark * (1 + this.itemPower(u, "aa") * 0.18) * Items.mul(this, u, "aa") * this.skill(u) * this.phaseMul(u) * buff * this.soulMul(u.side);
   }
+  /** Damage of one cast before the target's resistances (real path: against a typical target). */
   spellDmg(u: Unit, sp: SpellData) {
+    if (this.realStats()) {
+      const k = u.champ.spells.indexOf(sp);
+      if (k < 0 || Stats.noDamage(u, k)) return 0;
+      const raw = Stats.hasDamage(u, k) ? Stats.spellRaw(this, u, k, null) : Stats.fallbackRaw(u, sp.power || 1);
+      return (raw.p + raw.m + raw.t) * this.realMul(u, "sp");
+    }
     const tags = u.champ.tags;
     const caster = tags.includes("Mage") || tags.includes("Assassin") ? 1.35 : tags.includes("Support") ? 0.7 : 1;
     const buff = (u.baronUntil > this.t ? 1.2 : 1) * (u.elderUntil > this.t ? 1.25 : 1);
@@ -295,6 +323,19 @@ export class Engine {
     return (this.soul === side ? 1.08 : 1) * (1 + this.dragons[side].length * 0.015);
   }
   power(u: Unit) {
+    if (this.realStats()) {
+      // damage over ~6 s (attacks + each spell at most twice, the ultimate once) x durability (armor / magic resist);
+      // that part only changes between steps, so it is worked out once per step (it is read very often)
+      const base = Stats.perStep(this, `pw${u.i}`, () => {
+        let spells = 0;
+        u.champ.spells.forEach((sp, k) => {
+          const d = this.spellDmg(u, sp);
+          if (d > 0) spells += d * Math.min(k === 3 ? 1 : 2, 6 / Math.max(2, this.cdOf(u, sp, k)));
+        });
+        return (this.aaDps(u) * 6 + spells) * Math.sqrt(Stats.effectiveHp(this, u) / 1900);
+      });
+      return base * (u.hp / u.maxHp + 0.35);
+    }
     return (this.aaDps(u) * 6 + this.spellDmg(u, u.champ.spells[0] ?? ({ power: 1 } as SpellData)) * 2) * (u.hp / u.maxHp + 0.35) * Math.sqrt(this.maxHp(u) / 1200);
   }
   minute() {
@@ -1071,6 +1112,11 @@ export class Engine {
   }
 
   cdOf(u: Unit, sp: SpellData, k: number) {
+    if (this.realStats()) {
+      // the spell's cooldown at its rank with ability haste; the kit's / champions.json's when the data has none
+      const real = Stats.cooldown(this, u, k) ?? (sp.cd || (k === 3 ? 100 : 10)) * 100 / (100 + Stats.stats(this, u).haste);
+      return Math.max(k === 3 ? 20 : 2, real);
+    }
     const base = sp.cd || (k === 3 ? 100 : 10);
     const haste = 1 - Math.min(0.4, u.level * 0.012 + this.itemPower(u) * 0.03);
     return Math.max(k === 3 ? 40 : 3, base * haste);
