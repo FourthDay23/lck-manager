@@ -13,6 +13,7 @@ import { Bar, Modal, TeamLogo } from "./components";
 import { autosave } from "./App";
 import { monthlyWages } from "../core/ledger";
 import { monthlyIncomePreview } from "../core/economy";
+import { MoneyStepper } from "./Negotiation";
 
 /** Talks to hire a head coach or coach: interview, then salary, years and bonus. */
 export function StaffNegotiationModal({ sid }: { sid: string }) {
@@ -113,19 +114,19 @@ export function StaffNegotiationModal({ sid }: { sid: string }) {
           {step === "offer" && (
             <div class="frame dark pad">
               <div>{role} 요구: <b class="gold">{money(ask)}</b>/년 <span class="muted">(시장 기준 {money(staffAsk(st))})</span></div>
-              <div class="row">
-                <span style={{ width: 60 }}>연봉</span>
-                <input type="range" min={2000} max={Math.max(4000, Math.round(ask * 1.6))} step={100} value={offer.salary} onInput={(e) => setOffer({ ...offer, salary: Number((e.target as HTMLInputElement).value) })} style={{ width: 260 }} />
-                <b>{money(offer.salary)}</b>
+              <div class="row" style={{ alignItems: "flex-start" }}>
+                <span style={{ width: 60, paddingTop: 4 }}>연봉</span>
+                <MoneyStepper value={offer.salary} min={2000} max={Math.max(4000, Math.round(ask * 1.6))} step={100} big={1000} onChange={(v) => setOffer({ ...offer, salary: v })}
+                  presets={[{ label: "요구액", value: ask }, { label: "−5%", value: ask * 0.95 }, { label: "−10%", value: ask * 0.9 }]} />
               </div>
               <div class="row">
                 <span style={{ width: 60 }}>기간</span>
                 {[1, 2, 3].map((y) => <button class={`btn small ${offer.years === y ? "on" : ""}`} onClick={() => setOffer({ ...offer, years: y })}>{y}년</button>)}
               </div>
-              <div class="row">
-                <span style={{ width: 60 }}>계약금</span>
-                <input type="range" min={0} max={Math.round(ask)} step={500} value={offer.bonus} onInput={(e) => setOffer({ ...offer, bonus: Number((e.target as HTMLInputElement).value) })} style={{ width: 260 }} />
-                <b>{money(offer.bonus)}</b>
+              <div class="row" style={{ alignItems: "flex-start" }}>
+                <span style={{ width: 60, paddingTop: 4 }}>계약금</span>
+                <MoneyStepper value={offer.bonus} min={0} max={Math.round(ask)} step={500} big={2500} onChange={(v) => setOffer({ ...offer, bonus: v })}
+                  presets={[{ label: "없음", value: 0 }, { label: "연봉 10%", value: offer.salary * 0.1 }, { label: "25%", value: offer.salary * 0.25 }, { label: "50%", value: offer.salary * 0.5 }]} />
               </div>
               <div class="muted" style={{ fontSize: 11 }}>계약금은 연봉으로 환산해 '계약금/기간 × 0.8'만큼 쳐줍니다. 너무 낮게 부르면 인내심이 두 칸 깎입니다.</div>
               <div class="frame pad" style={{ marginTop: 6, background: "#121522" }}>

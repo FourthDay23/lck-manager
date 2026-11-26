@@ -5,6 +5,7 @@ import { ovr } from "../../core/player";
 import { money } from "../../core/format";
 import { Avatar, Ovr, PName, RoleTag, TeamLogo } from "../components";
 import { autosave } from "../App";
+import { MoneyStepper } from "../Negotiation";
 
 export function TradeScreen() {
   const s = S();
@@ -70,10 +71,10 @@ export function TradeScreen() {
         </div>
       </div>
       <div class="frame pad">
-        <div class="row">
-          <span>현금 얹기 (우리가 지급)</span>
-          <input type="range" min={0} max={Math.max(0, Math.min(me.cash, 200000))} step={1000} value={cash} onInput={(e) => setCash(Number((e.target as HTMLInputElement).value))} style={{ width: 280 }} />
-          <b>{money(cash)}</b>
+        <div class="row" style={{ alignItems: "flex-start" }}>
+          <span style={{ paddingTop: 4 }}>현금 얹기 (우리가 지급)</span>
+          <MoneyStepper value={cash} min={0} max={Math.max(0, Math.min(me.cash, 200000))} step={1000} big={10000} onChange={setCash}
+            presets={[{ label: "없음", value: 0 }]} />
           <button class="btn primary" disabled={!open || (!give.length && !get.length)} onClick={propose}>제안하기</button>
         </div>
         {verdict && <div class="muted">상대 반응 예상: {verdict.ratio >= 1.02 ? "수락할 것 같습니다" : verdict.ratio >= 0.9 ? "조금 모자랍니다" : verdict.ratio >= 0.7 ? "손해라고 봅니다" : "관심 없음"} (가치 비율 {verdict.ratio.toFixed(2)})</div>}

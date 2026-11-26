@@ -26,8 +26,9 @@ const BONUS_TIP = {
     "월 급여 부담을 늘리지 않고 요구액을 맞출 때 쓰세요. 연봉을 요구액보다 너무 낮게 부르면 선수의 인내심이 두 칸 깎입니다.",
 };
 
-/** A money slider with -/+ buttons (small and big steps) and quick values; the slider alone is too fiddly. */
-function MoneyStepper({ value, min, max, step, big, onChange, presets }: {
+/** A money slider with -/+ buttons (small and big steps) and quick values; the slider alone is too fiddly.
+ *  Also used by StaffNegotiation and the trade screen. */
+export function MoneyStepper({ value, min, max, step, big, onChange, presets }: {
   value: number; min: number; max: number; step: number; big: number; onChange: (v: number) => void;
   presets?: { label: string; value: number }[];
 }) {
