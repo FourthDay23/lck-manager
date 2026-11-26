@@ -22,6 +22,7 @@ import { CAPTION_MS, MatchRenderer } from "../../match/render";
 import "../caption.css";
 import "../draft.css";
 import { ItemStrip, LoadoutPicker, RuneBadge } from "../Loadout";
+import { LivePlayerStats, RecordStats } from "../PlayerStats";
 import { Scorebar } from "../Scorebar";
 import type { SeriesInfo } from "../Scorebar";
 import { standings } from "../../core/schedule";
@@ -54,7 +55,7 @@ function fearlessOf(sr: Series): string[] {
 
 export function recordFromEngine(e: Engine, d: DraftState): GameRecord {
   const box: GameRecord["box"] = {};
-  for (const u of e.units) if (u.pid) box[u.pid] = { k: u.k, d: u.d, a: u.a, cs: Math.round(u.cs), champ: u.champ.id };
+  for (const u of e.units) if (u.pid) box[u.pid] = { k: u.k, d: u.d, a: u.a, cs: Math.round(u.cs), champ: u.champ.id, gold: Math.round(u.gold), dmg: Math.round(u.dmg), lvl: u.level };
   const win = e.winner ?? 0;
   const mvpU = e.units.filter((u) => u.side === win).sort((a, b) => (b.k * 3 + b.a * 1.5 - b.d + b.dmg / 3000) - (a.k * 3 + a.a * 1.5 - a.d + a.dmg / 3000))[0];
   return {
@@ -263,6 +264,7 @@ export function GameResult({ g }: { g: GameRecord }) {
         <table class="t"><thead><tr><th colSpan={4} style={{ color: "var(--blue)" }}>블루 {s.teams[g.blue].name} · 골드 {(g.gold[0] / 1000).toFixed(1)}k</th></tr></thead><tbody>{rows(g.blue, g.picks.blue)}</tbody></table>
         <table class="t"><thead><tr><th colSpan={4} style={{ color: "var(--red)" }}>레드 {s.teams[g.red].name} · 골드 {(g.gold[1] / 1000).toFixed(1)}k</th></tr></thead><tbody>{rows(g.red, g.picks.red)}</tbody></table>
       </div>
+      <RecordStats g={g} />
     </div>
   );
 }
@@ -566,8 +568,6 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
       ))}
     </div>
   );
-  const timers = e.timers();
-  const campTimers = e.camps.filter((c) => !c.alive && c.spawnAt - e.t < 300 && (c.kind === "blue" || c.kind === "red" || c.kind === "scuttle"));
   return (
     <div>
       <Scorebar e={e} series={series} />
@@ -647,19 +647,9 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
         {team(1)}
       </div>
       <div class="grid2" style={{ marginTop: 6 }}>
+        {/* objective timers live in the scoreboard (Scorebar) and camp timers on the zoomed map */}
         <div class="frame pad">
-          <h3>오브젝트 타이머</h3>
-          <div class="timers">
-            {timers.map((t) => (
-              <span class={`tm ${t.alive ? "up" : ""}`}>
-                {t.label} {t.alive ? "등장" : t.at === null ? "—" : t.at > e.t ? fmtClock(t.at - e.t) : ""}
-              </span>
-            ))}
-          </div>
-          <h3 style={{ marginTop: 6 }}>정글 리젠</h3>
-          <div class="timers">
-            {campTimers.length ? campTimers.map((c) => <span class="tm">{c.side === 0 ? "블루팀" : "레드팀"} {c.kind === "blue" ? "블루" : c.kind === "red" ? "레드" : "바위게"} {fmtClock(c.spawnAt - e.t)}</span>) : <span class="muted" style={{ fontSize: 11 }}>모두 살아 있음 (맵을 확대하면 캠프마다 남은 시간이 보입니다)</span>}
-          </div>
+          <LivePlayerStats e={e} />
         </div>
         <div class="frame pad">
           <h3>경기 기록</h3>

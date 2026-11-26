@@ -24,5 +24,7 @@
 .pl .item-strip { grid-column: 1 / -1; }
 .pl .item-strip img, .pl .item-strip .item-slot { width: 33px; height: 33px; flex: none; }
 .pl .item-strip .item-slot { display: inline-block; background: #0b0d14; box-shadow: inset 0 0 0 1px #262c44; }
+/* a component bought toward the next item: smaller inside a dashed slot, so it reads as "on the way" */
+.pl .item-strip img.item-part { box-sizing: border-box; padding: 5px; background: #0b0d14; outline: 1px dashed rgba(201, 164, 90, 0.7); outline-offset: -1px; box-shadow: none; opacity: 0.9; }
 .pl .pl-face { position: relative; width: 38px; height: 38px; }
 .pl .pl-face img.rune-badge { position: absolute; right: -6px; bottom: -6px; width: 20px; height: 20px; border-radius: 50%; background: #3a4366; box-shadow: 0 0 0 1px #c9a45a, 0 0 0 2px #0b0d14; }

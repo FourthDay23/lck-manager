@@ -24,7 +24,9 @@ import { FOUNTAIN } from "./map";
 import { POWER_SCALE } from "../core/quick";
 
 export interface ItemStats { ad?: number; ap?: number; hp?: number; armor?: number; mr?: number; as?: number; crit?: number; haste?: number; leth?: number; mpen?: number; ms?: number }
-export interface ItemDef { name: string; cost: number; kind: "legendary" | "boots" | "support"; stats: ItemStats; n: number; w: number; removed?: boolean; iconVer?: string }
+export interface ItemDef { name: string; cost: number; kind: "legendary" | "boots" | "support"; stats: ItemStats; n: number; w: number; removed?: boolean; iconVer?: string; from?: number[] }
+/** A component item (not a finished build item): name, full cost, its own components (Data Dragon `from`). */
+export interface PartDef { name: string; cost: number; from: number[] }
 export interface KeystoneDef { name: string; tree: number; treeName: string; icon: string; n: number; w: number }
 export interface BuildOpt { core: number[]; boots?: number; n: number; w: number }
 export interface KeystoneOpt { id: number; sub: number; n: number; w: number }
@@ -55,6 +57,8 @@ export interface ItemData {
   games: number;
   patches: string[];
   items: Record<string, ItemDef>;
+  /** every component of the finished items, down the recipe tree */
+  parts?: Record<string, PartDef>;
   keystones: Record<string, KeystoneDef>;
   trees: Record<string, { name: string; icon: string }>;
   champs: Record<string, ChampItems>;
@@ -468,6 +472,41 @@ export function pending(e: Engine, u: Unit): { next: number | null; spent: numbe
   const budget = Math.max(0, s.shopGold - 500) * ROLE_GOLD_SCALE[u.role];
   const spent = Math.max(0, budget - s.cum[s.owned]);
   return { next: s.owned < s.path.length ? s.path[s.owned] : null, spent };
+}
+
+/**
+ * Components bought toward an item with `gold` (real-gold scale): its recipe parts in Data Dragon order while the
+ * gold covers each one's full cost; the first part it cannot afford is broken into its own parts, as far as the gold
+ * goes. (Real players also buy cheap parts first; the order is close enough for the HUD.)
+ */
+export function partsBought(data: ItemData, itemId: number, gold: number): number[] {
+  const from = data.items[String(itemId)]?.from ?? data.parts?.[String(itemId)]?.from ?? [];
+  const cost = (id: number) => data.parts?.[String(id)]?.cost ?? data.items[String(id)]?.cost ?? Infinity;
+  const out: number[] = [];
+  let left = gold;
+  for (const c of from) {
+    if (left >= cost(c)) {
+      out.push(c);
+      left -= cost(c);
+      continue;
+    }
+    out.push(...partsBought(data, c, left));
+    break;
+  }
+  return out;
+}
+
+/** The next item and the components of it the unit has already bought (shown in the HUD next to finished items). */
+export function building(e: Engine, u: Unit): { next: number | null; parts: number[] } | null {
+  const st = states.get(e);
+  const p = pending(e, u);
+  if (!st || !p || p.next === null) return p ? { next: null, parts: [] } : null;
+  return { next: p.next, parts: partsBought(st.items, p.next, p.spent) };
+}
+
+/** Name and cost of any item id (finished item or component), for tooltips. */
+export function itemName(data: ItemData, id: number): string {
+  return data.items[String(id)]?.name ?? data.parts?.[String(id)]?.name ?? String(id);
 }
 
 /** Shop visits of a unit so far (scripts/items-check.ts compares them with the real games). */

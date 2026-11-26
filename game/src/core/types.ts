@@ -152,7 +152,8 @@ export interface GameRecord {
   picks: { blue: string[]; red: string[] };
   bans: { blue: string[]; red: string[] };
   mvp: string | null;
-  box?: Record<string, { k: number; d: number; a: number; cs: number; champ: string }>;
+  /** per player; gold / dmg (damage dealt to champions) / lvl only for games played through the match engine */
+  box?: Record<string, { k: number; d: number; a: number; cs: number; champ: string; gold?: number; dmg?: number; lvl?: number }>;
 }
 
 export interface Series {

@@ -33,6 +33,8 @@ Finished items (all from Data Dragon fields, nothing hand-listed except the supp
   A legendary or boots is completed at its ITEM_PURCHASED timestamp; an ITEM_UNDO with beforeId cancels the
   latest live purchase of that id. Only the first completion of each id counts, and only the first tier-2
   boots / support form per player-game.
+  Each finished item lists its direct components (`from`, Data Dragon); `parts` has every component item down the
+  tree ({name, cost, from}), so the game can show the components bought toward the next item.
 
 Per champion (and per role in roleDefaults)
   role          the champion's most played role in these games.
@@ -880,7 +882,26 @@ def main() -> int:
             it, entry = data[sid], {"removed": True, "iconVer": ver}
         kind = "support" if iid in support_forms else ("boots" if kind_of(iid) == "boots" else "legendary")
         items_out[sid] = {"name": it["name"], "cost": it["gold"]["total"], "kind": kind, "stats": item_stats(it),
-                          "n": item_n[iid], "w": item_w[iid], **entry}
+                          "n": item_n[iid], "w": item_w[iid], "from": [int(x) for x in it.get("from", [])], **entry}
+
+    # ---- components: what each finished item is built from, all the way down (the match HUD shows the parts a
+    # player has bought toward the next item)
+    parts = {}
+
+    def add_part(pid: str, src: dict) -> None:
+        if pid in parts or pid in items_out:
+            return
+        p = src.get(pid) or items_ko.get(pid)
+        if not p:
+            return
+        parts[pid] = {"name": p["name"], "cost": p["gold"]["total"], "from": [int(x) for x in p.get("from", [])]}
+        for c in p.get("from", []):
+            add_part(str(c), src)
+
+    for sid, v in items_out.items():
+        src = items_ko if sid in items_ko else removed[int(sid)][1]
+        for c in v["from"]:
+            add_part(str(c), src)
 
     # ---- keystones / trees
     trees, keystone_info = {}, {}
@@ -923,7 +944,7 @@ def main() -> int:
 
     out = {"version": version, "games": len(games),
            "patches": [f"{a}.{b}" for a, b in sorted(patches)],
-           "items": items_out, "keystones": keystones, "trees": trees, "champs": champs,
+           "items": items_out, "parts": parts, "keystones": keystones, "trees": trees, "champs": champs,
            "roleDefaults": role_defaults, "bounty": bounty}
     write_retry(OUT, json.dumps(out, ensure_ascii=False, separators=(",", ":")))
 

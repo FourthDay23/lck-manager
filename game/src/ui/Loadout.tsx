@@ -5,7 +5,7 @@ import { ROLES, ROLE_KO } from "../data/types";
 import type { Role } from "../data/types";
 import type { DraftState, Side } from "../match/draft";
 import type { Engine, Unit } from "../match/engine";
-import { champItems, hasOwnRecord, itemImg, optionEdge, runeImg, unitItems } from "../match/items";
+import { building, champItems, hasOwnRecord, itemImg, itemName, optionEdge, runeImg, unitItems } from "../match/items";
 import type { ItemData, Loadout } from "../match/items";
 import { ChampIcon } from "./components";
 import "./loadout.css";
@@ -17,9 +17,9 @@ function edgeTag(e: number) {
   return <span class={v > 0 ? "pos" : "neg"}>{v > 0 ? "+" : ""}{v}%p</span>;
 }
 
-export function ItemIcon({ items, id, size = 18 }: { items: ItemData; id: number; size?: number }) {
-  const it = items.items[String(id)];
-  return <img class="item-ic" src={itemImg(items, id)} width={size} height={size} title={it ? `${it.name} (${it.cost}골드)` : String(id)} alt="" loading="lazy" />;
+export function ItemIcon({ items, id, size = 18, cls = "", note = "" }: { items: ItemData; id: number; size?: number; cls?: string; note?: string }) {
+  const cost = items.items[String(id)]?.cost ?? items.parts?.[String(id)]?.cost;
+  return <img class={`item-ic ${cls}`} src={itemImg(items, id)} width={size} height={size} title={`${itemName(items, id)}${cost ? ` (${cost}골드)` : ""}${note}`} alt="" />;
 }
 
 export function RuneIcon({ items, id, size = 18 }: { items: ItemData; id: number | null; size?: number }) {
@@ -81,14 +81,20 @@ export function LoadoutPicker({ d, side, onChange }: { d: DraftState; side: Side
   );
 }
 
-/** During a match: the six item slots of one unit, finished items in purchase order, empty slots after them. */
+/** During a match: the six item slots of one unit. Finished items in purchase order, then the components already
+ *  bought toward the next item (smaller, on a framed slot), then empty slots. */
 export function ItemStrip({ e, u }: { e: Engine; u: Unit }) {
   const x = unitItems(e, u);
   if (!x) return null;
-  const empty = Math.max(0, 6 - x.items.length);
+  const done = x.items.slice(0, 6);
+  const b = building(e, u);
+  const parts = (b?.parts ?? []).slice(0, 6 - done.length);
+  const nextName = b?.next != null ? itemName(x.data, b.next) : "";
+  const empty = Math.max(0, 6 - done.length - parts.length);
   return (
     <div class="item-strip">
-      {x.items.slice(0, 6).map((id) => <ItemIcon items={x.data} id={id} size={33} />)}
+      {done.map((id) => <ItemIcon items={x.data} id={id} size={33} />)}
+      {parts.map((id) => <ItemIcon items={x.data} id={id} size={33} cls="item-part" note={nextName ? ` · ${nextName} 재료` : ""} />)}
       {Array.from({ length: empty }, () => <span class="item-slot" />)}
     </div>
   );

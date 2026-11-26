@@ -1,0 +1,11 @@
+/* per-player bar charts (ui/PlayerStats.tsx) */
+.ps-tabs { gap: 4px; margin: 6px 0; flex-wrap: wrap; }
+.ps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ps-col { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ps-row { display: grid; grid-template-columns: 22px 64px 1fr 44px; gap: 6px; align-items: center; font-size: 11px; }
+.ps-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ps-bar { height: 10px; background: #0b0d14; box-shadow: inset 0 0 0 1px #262c44; }
+.ps-bar i { display: block; height: 100%; }
+.ps-bar i.blue { background: var(--blue); }
+.ps-bar i.red { background: var(--red); }
+.ps-val { text-align: right; font-variant-numeric: tabular-nums; }
