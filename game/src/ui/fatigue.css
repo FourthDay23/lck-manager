@@ -1,0 +1,19 @@
+/* fatigue management: bars, status words, intensity controls */
+.fbar { display: inline-flex; align-items: center; gap: 6px; min-width: 112px; }
+.fbar .track { position: relative; width: 52px; height: 7px; background: #0b0d14; box-shadow: 0 0 0 1px #262c40; }
+.fbar .track i { position: absolute; left: 0; top: 0; bottom: 0; }
+.fbar .track b { position: absolute; top: -2px; bottom: -2px; width: 1px; background: #8e94aa; opacity: 0.6; }
+.fbar .n { width: 20px; text-align: right; font-variant-numeric: tabular-nums; }
+.fbar .w { font-size: 11px; width: 26px; }
+.f-good { color: #5ad07a; }
+.f-ok { color: #f2c14e; }
+.f-tired { color: #ffb13b; }
+.f-limit { color: #ff5a5a; }
+.fatigue-panel .stat-line { display: flex; flex-wrap: wrap; gap: 14px; align-items: baseline; margin-bottom: 6px; }
+.fatigue-panel .stat-line .big { font-family: "Galmuri14", "Galmuri11"; font-size: 18px; }
+.fatigue-panel .opt { display: inline-flex; flex-direction: column; align-items: flex-start; margin-right: 4px; }
+.fatigue-panel .opt .btn { min-width: 64px; }
+.fatigue-panel .opt small { color: var(--dim); font-size: 10px; padding-left: 4px; }
+.fatigue-panel ul { margin: 4px 0 0; padding-left: 16px; color: var(--muted); font-size: 12px; }
+.fatigue-panel ul li { margin: 1px 0; }
+.tag.autorest { background: #2a1e10; color: #ffb13b; }

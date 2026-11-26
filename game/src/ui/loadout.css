@@ -1,0 +1,15 @@
+/* builds and keystones (Loadout.tsx) */
+.loadout { margin: 8px 0; padding: 6px 8px; background: #0f1220; box-shadow: inset 0 0 0 1px #262c44; }
+.lo-row { display: grid; grid-template-columns: 28px 120px 1fr 1.3fr; gap: 6px; align-items: center; padding: 3px 0; border-top: 1px solid #1c2134; }
+.lo-row:first-of-type { border-top: 0; }
+.lo-name { font-size: 12px; line-height: 1.2; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.lo-name .muted { font-size: 10px; }
+.lo-opts { display: flex; flex-wrap: nowrap; gap: 4px; min-width: 0; overflow: hidden; }
+.lo-opt { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; background: #151a2b; color: var(--muted); border: 0; box-shadow: inset 0 0 0 1px #2a3150; cursor: pointer; font: inherit; font-size: 10px; white-space: nowrap; }
+.lo-opt:hover { box-shadow: inset 0 0 0 1px var(--gold); }
+.lo-opt.on { color: var(--text, #e6e8f0); box-shadow: inset 0 0 0 2px var(--gold); background: #22263a; }
+.lo-opt span { margin-left: 2px; }
+.item-ic, .rune-ic { display: inline-block; vertical-align: middle; image-rendering: auto; }
+.item-ic { box-shadow: 0 0 0 1px #05070d; }
+.rune-ic { border-radius: 50%; background: #0b0d14; }
+.item-strip { display: flex; gap: 1px; align-items: center; height: 15px; margin-top: 1px; }

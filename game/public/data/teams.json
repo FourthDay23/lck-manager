@@ -1,0 +1,865 @@
+{
+ "generated": "2026-11-26",
+ "eventWinners": {
+  "LCK/2025 Season/Cup": "Hanwha Life Esports",
+  "2025 Mid-Season Invitational": "Gen.G",
+  "LCK/2025 Season/Season Playoffs": "Gen.G",
+  "LCK/2026 Season/Cup": "Gen.G",
+  "2026 Mid-Season Invitational": "Hanwha Life Esports",
+  "LCK/2026 Season/Season Playoffs": "Gen.G",
+  "2025 First Stand": "Hanwha Life Esports",
+  "2025 Season World Championship/Main Event": "T1",
+  "2026 First Stand": "Bilibili Gaming",
+  "2026 Season World Championship/Main Event": "Bilibili Gaming",
+  "Esports World Cup 2025": "Gen.G",
+  "Esports World Cup 2026": "Dplus Kia"
+ },
+ "teams": [
+  {
+   "id": "T1",
+   "name": "T1",
+   "nameKo": "T1",
+   "short": "T1",
+   "tier": 1,
+   "parent": null,
+   "academy": "T1EA",
+   "colors": [
+    "#e2012d",
+    "#101010"
+   ],
+   "logo": "logos/T1.png",
+   "wealth": 5,
+   "fans": 2500000,
+   "lastRoster": [
+    "Doran (Choi Hyeon-jun)",
+    "Oner",
+    "Faker",
+    "Peyz",
+    "Keria"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Tom (Im Jae-hyeon)",
+    "Easyhoon",
+    "Mata"
+   ],
+   "titles": {
+    "lck": 10,
+    "msi": 2,
+    "worlds": 6,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 1
+   }
+  },
+  {
+   "id": "GEN",
+   "name": "Gen.G",
+   "nameKo": "젠지",
+   "short": "GEN",
+   "tier": 1,
+   "parent": null,
+   "academy": "GENGA",
+   "colors": [
+    "#aa8a00",
+    "#101010"
+   ],
+   "logo": "logos/GEN.png",
+   "wealth": 5,
+   "fans": 1100000,
+   "lastRoster": [
+    "Kiin",
+    "Canyon",
+    "Chovy",
+    "Ruler",
+    "Duro"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Ryu",
+    "Lyn",
+    "Nova (Park Chan-ho)"
+   ],
+   "titles": {
+    "lck": 6,
+    "msi": 2,
+    "worlds": 0,
+    "cup": 1,
+    "firstStand": 0,
+    "ewc": 1
+   }
+  },
+  {
+   "id": "HLE",
+   "name": "Hanwha Life Esports",
+   "nameKo": "한화생명e스포츠",
+   "short": "HLE",
+   "tier": 1,
+   "parent": null,
+   "academy": "HLEC",
+   "colors": [
+    "#f37021",
+    "#101010"
+   ],
+   "logo": "logos/HLE.png",
+   "wealth": 5,
+   "fans": 800000,
+   "lastRoster": [
+    "Zeus",
+    "Kanavi",
+    "Zeka (Kim Geon-woo)",
+    "Gumayusi",
+    "Delight"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Homme",
+    "Mowgli",
+    "Sin (Yeon Hyeong-mo)"
+   ],
+   "titles": {
+    "lck": 1,
+    "msi": 1,
+    "worlds": 0,
+    "cup": 1,
+    "firstStand": 1,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "DK",
+   "name": "Dplus Kia",
+   "nameKo": "디플러스 기아",
+   "short": "DK",
+   "tier": 1,
+   "parent": null,
+   "academy": "DKC",
+   "colors": [
+    "#000000",
+    "#f0f0f0"
+   ],
+   "logo": "logos/DK.png",
+   "wealth": 4,
+   "fans": 900000,
+   "lastRoster": [
+    "Siwoo",
+    "Lucid (Choi Yong-hyeok)",
+    "ShowMaker",
+    "Smash (Shin Geum-jae)",
+    "Career"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "CvMax",
+    "PoohManDu",
+    "Hachani"
+   ],
+   "titles": {
+    "lck": 3,
+    "msi": 0,
+    "worlds": 1,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 1
+   }
+  },
+  {
+   "id": "KT",
+   "name": "KT Rolster",
+   "nameKo": "kt 롤스터",
+   "short": "KT",
+   "tier": 1,
+   "parent": null,
+   "academy": "KTC",
+   "colors": [
+    "#e60012",
+    "#101010"
+   ],
+   "logo": "logos/KT.png",
+   "wealth": 4,
+   "fans": 650000,
+   "lastRoster": [
+    "PerfecT (Lee Seung-min)",
+    "Cuzz",
+    "Bdd",
+    "Jiwoo",
+    "Effort"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Score",
+    "Museong",
+    "Sonstar"
+   ],
+   "titles": {
+    "lck": 2,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "BFX",
+   "name": "BNK FEARX",
+   "nameKo": "BNK 피어엑스",
+   "short": "BFX",
+   "tier": 1,
+   "parent": null,
+   "academy": "BFXY",
+   "colors": [
+    "#fce700",
+    "#101010"
+   ],
+   "logo": "logos/BFX.png",
+   "wealth": 2,
+   "fans": 250000,
+   "lastRoster": [
+    "Clear (Song Hyeon-min)",
+    "Raptor (Jeon Eo-jin)",
+    "VicLa",
+    "Taeyoon (Kim Tae-yoon)",
+    "Kellin"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Lira",
+    "Rather"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "DNS",
+   "name": "DN SOOPers",
+   "nameKo": "DN 수퍼스",
+   "short": "DNS",
+   "tier": 1,
+   "parent": null,
+   "academy": "DNSC",
+   "colors": [
+    "#0a51f1",
+    "#101828"
+   ],
+   "logo": "logos/DNS.png",
+   "wealth": 3,
+   "fans": 300000,
+   "lastRoster": [
+    "DuDu (Lee Dong-ju)",
+    "Sharvel",
+    "Clozer",
+    "deokdam",
+    "Peter (Jeong Yoon-su)"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Ggoong",
+    "Minit"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "NS",
+   "name": "Nongshim RedForce",
+   "nameKo": "농심 레드포스",
+   "short": "NS",
+   "tier": 1,
+   "parent": null,
+   "academy": "NSEA",
+   "colors": [
+    "#de2027",
+    "#ffffff"
+   ],
+   "logo": "logos/NS.png",
+   "wealth": 3,
+   "fans": 300000,
+   "lastRoster": [
+    "Kingen",
+    "Sponge",
+    "Scout",
+    "Diable",
+    "Lehends"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "DanDy",
+    "Chelly (Park Seung-jin)",
+    "Crazy (Kim Jae-hee)"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "BRO",
+   "name": "HANJIN BRION",
+   "nameKo": "한진 브리온",
+   "short": "BRO",
+   "tier": 1,
+   "parent": null,
+   "academy": "BROC",
+   "colors": [
+    "#004c29",
+    "#f0f0f0"
+   ],
+   "logo": "logos/BRO.png",
+   "wealth": 2,
+   "fans": 220000,
+   "lastRoster": [
+    "Casting",
+    "GIDEON",
+    "Roamer",
+    "Teddy",
+    "Namgung"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Ssong",
+    "Duke (Lee Ho-seong)"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "KRX",
+   "name": "Kiwoom DRX",
+   "nameKo": "키움 DRX",
+   "short": "KRX",
+   "tier": 1,
+   "parent": null,
+   "academy": "KRXC",
+   "colors": [
+    "#d40881",
+    "#001c58"
+   ],
+   "logo": "logos/KRX.png",
+   "wealth": 3,
+   "fans": 450000,
+   "lastRoster": [
+    "Frog (Lee Min-hoi)",
+    "Willer",
+    "Ucal",
+    "LazyFeel",
+    "Aiming",
+    "Andil",
+    "Minous"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Bot",
+    "Support",
+    "Support"
+   ],
+   "lastStaff": [
+    "Joker (Cho Jae-eup)",
+    "Naehyun",
+    "Saroo"
+   ],
+   "titles": {
+    "lck": 2,
+    "msi": 0,
+    "worlds": 1,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "T1EA",
+   "name": "T1 Esports Academy",
+   "nameKo": "T1 이스포츠 아카데미",
+   "short": "T1.EA",
+   "tier": 2,
+   "parent": "T1",
+   "academy": null,
+   "colors": [
+    "#e2012d",
+    "#101010"
+   ],
+   "logo": "logos/T1.png",
+   "wealth": 2,
+   "fans": 120000,
+   "lastRoster": [
+    "Haetae",
+    "Painter",
+    "Guti (Moon Jeong-hwan)",
+    "Eclipse (Kim Min-jun)",
+    "Cloud (Moon Hyeon-ho)"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "DooTi",
+    "Nagne"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "GENGA",
+   "name": "Gen.G Global Academy",
+   "nameKo": "젠지 글로벌 아카데미",
+   "short": "GEN.GA",
+   "tier": 2,
+   "parent": "GEN",
+   "academy": null,
+   "colors": [
+    "#aa8a00",
+    "#101010"
+   ],
+   "logo": "logos/GEN.png",
+   "wealth": 2,
+   "fans": 50000,
+   "lastRoster": [
+    "Ripple",
+    "Courage (Jeon Hyun-min)",
+    "Kemish",
+    "MUDAI",
+    "Lumos"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Jerry (Kang Sung-jun)"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "HLEC",
+   "name": "Hanwha Life Esports Challengers",
+   "nameKo": "한화생명e스포츠 챌린저스",
+   "short": "HLE.C",
+   "tier": 2,
+   "parent": "HLE",
+   "academy": null,
+   "colors": [
+    "#f37021",
+    "#101010"
+   ],
+   "logo": "logos/HLE.png",
+   "wealth": 2,
+   "fans": 40000,
+   "lastRoster": [
+    "Panther (Park Ji-ho)",
+    "Jackal (Lee Su-min)",
+    "Cracker (Lee Jeong-wook)",
+    "Pyeonsik",
+    "Bluffing"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Sensation"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "DKC",
+   "name": "Dplus Kia Challengers",
+   "nameKo": "디플러스 기아 챌린저스",
+   "short": "DK.C",
+   "tier": 2,
+   "parent": "DK",
+   "academy": null,
+   "colors": [
+    "#000000",
+    "#f0f0f0"
+   ],
+   "logo": "logos/DK.png",
+   "wealth": 2,
+   "fans": 45000,
+   "lastRoster": [
+    "Jaehyuk",
+    "Solid (Nam Hyeon-seo)",
+    "Garden (Seol Jeong-won)",
+    "Wayne (Hwang Seo-hyeon)",
+    "Loopy"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Woong (Kim Sun-woong)",
+    "Sungmin"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "KTC",
+   "name": "KT Rolster Challengers",
+   "nameKo": "kt 롤스터 챌린저스",
+   "short": "KT.C",
+   "tier": 2,
+   "parent": "KT",
+   "academy": null,
+   "colors": [
+    "#e60012",
+    "#101010"
+   ],
+   "logo": "logos/KT.png",
+   "wealth": 2,
+   "fans": 35000,
+   "lastRoster": [
+    "Sero",
+    "Sylvie",
+    "Hwichan",
+    "FenRir (Park Kang-jun)",
+    "Pollu"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Spark (Kang Byung-ryul)",
+    "Lilac (Jeon Ho-jin)"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "BFXY",
+   "name": "BNK FEARX Youth",
+   "nameKo": "BNK 피어엑스 유스",
+   "short": "BFX.Y",
+   "tier": 2,
+   "parent": "BFX",
+   "academy": null,
+   "colors": [
+    "#fce700",
+    "#101010"
+   ],
+   "logo": "logos/BFX.png",
+   "wealth": 1,
+   "fans": 15000,
+   "lastRoster": [
+    "Kangin",
+    "Grizzly",
+    "MG (Lee Ji-hoon)",
+    "Slayer (Kim Jin-young)",
+    "Luon"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Key (Kim Han-gi)"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "DNSC",
+   "name": "DN SOOPers Challengers",
+   "nameKo": "DN 수퍼스 챌린저스",
+   "short": "DNS.C",
+   "tier": 2,
+   "parent": "DNS",
+   "academy": null,
+   "colors": [
+    "#0a51f1",
+    "#101828"
+   ],
+   "logo": "logos/DNS.png",
+   "wealth": 1,
+   "fans": 20000,
+   "lastRoster": [
+    "Lancer",
+    "DDoiV",
+    "Flip (Kim Sang-wook)",
+    "Enosh",
+    "Quantum (Son Jeong-hwan)"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "RapidStar",
+    "Cube (Kim Chang-seong)"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "NSEA",
+   "name": "Nongshim Esports Academy",
+   "nameKo": "농심 이스포츠 아카데미",
+   "short": "NS.EA",
+   "tier": 2,
+   "parent": "NS",
+   "academy": null,
+   "colors": [
+    "#de2027",
+    "#ffffff"
+   ],
+   "logo": "logos/NS.png",
+   "wealth": 1,
+   "fans": 20000,
+   "lastRoster": [
+    "Janus (Eom Ye-jun)",
+    "MihawK",
+    "SeTab",
+    "Lucy (Hyun Soo-hoon)",
+    "Pleata"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Bon0"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "BROC",
+   "name": "HANJIN BRION Challengers",
+   "nameKo": "한진 브리온 챌린저스",
+   "short": "BRO.C",
+   "tier": 2,
+   "parent": "BRO",
+   "academy": null,
+   "colors": [
+    "#004c29",
+    "#f0f0f0"
+   ],
+   "logo": "logos/BRO.png",
+   "wealth": 1,
+   "fans": 15000,
+   "lastRoster": [
+    "DDahyuk",
+    "Dinai",
+    "Tempester",
+    "OddEye",
+    "PlanB"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Ssumday"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  },
+  {
+   "id": "KRXC",
+   "name": "Kiwoom DRX Challengers",
+   "nameKo": "키움 DRX 챌린저스",
+   "short": "KRX.C",
+   "tier": 2,
+   "parent": "KRX",
+   "academy": null,
+   "colors": [
+    "#d40881",
+    "#001c58"
+   ],
+   "logo": "logos/KRX.png",
+   "wealth": 1,
+   "fans": 30000,
+   "lastRoster": [
+    "Frog (Lee Min-hoi)",
+    "Winner (Woo Joo-sung)",
+    "AKaJe",
+    "Vincenzo (Ha Seung-min)",
+    "Minous"
+   ],
+   "lastRosterRoles": [
+    "Top",
+    "Jungle",
+    "Mid",
+    "Bot",
+    "Support"
+   ],
+   "lastStaff": [
+    "Frozen (Kim Tae-il)",
+    "Catch (Yun Sang-ho)"
+   ],
+   "titles": {
+    "lck": 0,
+    "msi": 0,
+    "worlds": 0,
+    "cup": 0,
+    "firstStand": 0,
+    "ewc": 0
+   }
+  }
+ ]
+}

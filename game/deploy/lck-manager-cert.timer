@@ -1,0 +1,10 @@
+[Unit]
+Description=lck-manager.kro.kr 인증서 발급 확인 (1분마다)
+
+[Timer]
+OnCalendar=*:*:15
+AccuracySec=1s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

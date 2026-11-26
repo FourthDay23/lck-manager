@@ -1,0 +1,5632 @@
+{
+ "generated": "2026-11-26",
+ "calibration": {
+  "intercept": 75.77,
+  "slope": 54.05,
+  "lckPlayers": 37,
+  "residualSd": 6.75
+ },
+ "teams": [
+  {
+   "id": "BLG",
+   "name": "Bilibili Gaming",
+   "short": "BLG",
+   "region": "LPL",
+   "colors": [
+    "#34d0f4",
+    "#fa7299"
+   ],
+   "logo": "logos/BLG.png",
+   "strength": 90,
+   "intlWinRate": 0.668,
+   "events": [
+    "2025 Mid-Season Invitational",
+    "2025 Season World Championship/Main Event",
+    "2026 First Stand",
+    "2026 Mid-Season Invitational",
+    "2026 Season World Championship/Main Event",
+    "Esports World Cup 2025",
+    "Esports World Cup 2026"
+   ],
+   "roster": [
+    {
+     "id": "Bin (Chen Ze-Bin)",
+     "name": "Bin",
+     "realName": "陈泽彬",
+     "role": "Top",
+     "nat": "CN",
+     "birth": "2003-09-28",
+     "ovr": 86,
+     "attrs": {
+      "laning": 92,
+      "teamfight": 80,
+      "macro": 89,
+      "mechanics": 87,
+      "consistency": 93,
+      "pool": 85
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Rumble",
+       "g": 11,
+       "w": 6
+      },
+      {
+       "c": "Gnar",
+       "g": 11,
+       "w": 10
+      },
+      {
+       "c": "Ambessa",
+       "g": 10,
+       "w": 7
+      },
+      {
+       "c": "Renekton",
+       "g": 10,
+       "w": 7
+      },
+      {
+       "c": "Jax",
+       "g": 9,
+       "w": 7
+      },
+      {
+       "c": "KSante",
+       "g": 8,
+       "w": 4
+      },
+      {
+       "c": "Sion",
+       "g": 7,
+       "w": 4
+      },
+      {
+       "c": "Gwen",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Jayce",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Yorick",
+       "g": 3,
+       "w": 2
+      }
+     ],
+     "intlGames": 88
+    },
+    {
+     "id": "Xun",
+     "name": "Xun",
+     "realName": "彭立勋",
+     "role": "Jungle",
+     "nat": "CN",
+     "birth": "2002-02-05",
+     "ovr": 89,
+     "attrs": {
+      "laning": 89,
+      "teamfight": 91,
+      "macro": 92,
+      "mechanics": 93,
+      "consistency": 95,
+      "pool": 85
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Pantheon",
+       "g": 8,
+       "w": 5
+      },
+      {
+       "c": "JarvanIV",
+       "g": 7,
+       "w": 5
+      },
+      {
+       "c": "Naafiri",
+       "g": 7,
+       "w": 6
+      },
+      {
+       "c": "Poppy",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Vi",
+       "g": 5,
+       "w": 4
+      },
+      {
+       "c": "LeeSin",
+       "g": 5,
+       "w": 5
+      },
+      {
+       "c": "XinZhao",
+       "g": 3,
+       "w": 3
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Nocturne",
+       "g": 3,
+       "w": 3
+      },
+      {
+       "c": "Skarner",
+       "g": 3,
+       "w": 1
+      }
+     ],
+     "intlGames": 56
+    },
+    {
+     "id": "Knight (Zhuo Ding)",
+     "name": "Knight",
+     "realName": "卓定",
+     "role": "Mid",
+     "nat": "CN",
+     "birth": "2000-05-22",
+     "ovr": 93,
+     "attrs": {
+      "laning": 90,
+      "teamfight": 97,
+      "macro": 93,
+      "mechanics": 99,
+      "consistency": 94,
+      "pool": 95
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Orianna",
+       "g": 11,
+       "w": 11
+      },
+      {
+       "c": "Aurora",
+       "g": 10,
+       "w": 3
+      },
+      {
+       "c": "Viktor",
+       "g": 7,
+       "w": 3
+      },
+      {
+       "c": "Taliyah",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "Annie",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Ahri",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Galio",
+       "g": 5,
+       "w": 4
+      },
+      {
+       "c": "Akali",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Ryze",
+       "g": 5,
+       "w": 4
+      },
+      {
+       "c": "Leblanc",
+       "g": 4,
+       "w": 2
+      }
+     ],
+     "intlGames": 88
+    },
+    {
+     "id": "Viper (Park Do-hyeon)",
+     "name": "Viper",
+     "realName": "박도현",
+     "role": "Bot",
+     "nat": "KR",
+     "birth": "2000-10-19",
+     "ovr": 89,
+     "attrs": {
+      "laning": 83,
+      "teamfight": 93,
+      "macro": 89,
+      "mechanics": 94,
+      "consistency": 91,
+      "pool": 83
+     },
+     "inPlayersJson": true,
+     "champs": [
+      {
+       "c": "Ezreal",
+       "g": 16,
+       "w": 13
+      },
+      {
+       "c": "Ashe",
+       "g": 12,
+       "w": 9
+      },
+      {
+       "c": "Sivir",
+       "g": 7,
+       "w": 6
+      },
+      {
+       "c": "Varus",
+       "g": 6,
+       "w": 6
+      },
+      {
+       "c": "Kaisa",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Yunara",
+       "g": 5,
+       "w": 5
+      },
+      {
+       "c": "Xayah",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Ziggs",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Caitlyn",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Jhin",
+       "g": 3,
+       "w": 2
+      }
+     ],
+     "intlGames": 87
+    },
+    {
+     "id": "ON",
+     "name": "ON",
+     "realName": "骆文俊",
+     "role": "Support",
+     "nat": "CN",
+     "birth": "2003-05-12",
+     "ovr": 85,
+     "attrs": {
+      "laning": 85,
+      "teamfight": 84,
+      "macro": 91,
+      "mechanics": 87,
+      "consistency": 82,
+      "pool": 89
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Neeko",
+       "g": 10,
+       "w": 7
+      },
+      {
+       "c": "Alistar",
+       "g": 10,
+       "w": 8
+      },
+      {
+       "c": "Nautilus",
+       "g": 8,
+       "w": 8
+      },
+      {
+       "c": "Seraphine",
+       "g": 7,
+       "w": 5
+      },
+      {
+       "c": "Rakan",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "Shen",
+       "g": 6,
+       "w": 5
+      },
+      {
+       "c": "Bard",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "Renata",
+       "g": 5,
+       "w": 0
+      },
+      {
+       "c": "Camille",
+       "g": 5,
+       "w": 4
+      },
+      {
+       "c": "Leona",
+       "g": 4,
+       "w": 2
+      }
+     ],
+     "intlGames": 88
+    }
+   ]
+  },
+  {
+   "id": "KC",
+   "name": "Karmine Corp",
+   "short": "KC",
+   "region": "LEC",
+   "colors": [
+    "#000000",
+    "#f0f0f0"
+   ],
+   "logo": "logos/KC.png",
+   "strength": 79,
+   "intlWinRate": 0.546,
+   "events": [
+    "2025 First Stand",
+    "2026 Mid-Season Invitational",
+    "2026 Season World Championship/Main Event",
+    "2026 Season World Championship/Play-In",
+    "Esports World Cup 2026"
+   ],
+   "roster": [
+    {
+     "id": "Canna",
+     "name": "Canna",
+     "realName": "김창동",
+     "role": "Top",
+     "nat": "KR",
+     "birth": "2000-02-11",
+     "ovr": 83,
+     "attrs": {
+      "laning": 84,
+      "teamfight": 83,
+      "macro": 85,
+      "mechanics": 83,
+      "consistency": 83,
+      "pool": 85
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Rumble",
+       "g": 12,
+       "w": 5
+      },
+      {
+       "c": "Jayce",
+       "g": 10,
+       "w": 8
+      },
+      {
+       "c": "Gnar",
+       "g": 7,
+       "w": 3
+      },
+      {
+       "c": "Renekton",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "Ambessa",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Aatrox",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Sion",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Vayne",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Galio",
+       "g": 3,
+       "w": 3
+      },
+      {
+       "c": "Kennen",
+       "g": 2,
+       "w": 1
+      }
+     ],
+     "intlGames": 64
+    },
+    {
+     "id": "Yike",
+     "name": "Yike",
+     "realName": "Martin Sundelin",
+     "role": "Jungle",
+     "nat": "SE",
+     "birth": "2000-11-11",
+     "ovr": 76,
+     "attrs": {
+      "laning": 77,
+      "teamfight": 73,
+      "macro": 78,
+      "mechanics": 76,
+      "consistency": 74,
+      "pool": 77
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "MonkeyKing",
+       "g": 9,
+       "w": 5
+      },
+      {
+       "c": "LeeSin",
+       "g": 9,
+       "w": 3
+      },
+      {
+       "c": "Vi",
+       "g": 7,
+       "w": 4
+      },
+      {
+       "c": "Naafiri",
+       "g": 7,
+       "w": 3
+      },
+      {
+       "c": "Qiyana",
+       "g": 6,
+       "w": 4
+      },
+      {
+       "c": "Pantheon",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "XinZhao",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Sejuani",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Ivern",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "JarvanIV",
+       "g": 3,
+       "w": 2
+      }
+     ],
+     "intlGames": 64
+    },
+    {
+     "id": "kyeahoo",
+     "name": "kyeahoo",
+     "realName": "강예후",
+     "role": "Mid",
+     "nat": "KR",
+     "birth": "2005-08-13",
+     "ovr": 73,
+     "attrs": {
+      "laning": 71,
+      "teamfight": 77,
+      "macro": 71,
+      "mechanics": 75,
+      "consistency": 74,
+      "pool": 69
+     },
+     "inPlayersJson": true,
+     "champs": [
+      {
+       "c": "Cassiopeia",
+       "g": 8,
+       "w": 5
+      },
+      {
+       "c": "Orianna",
+       "g": 7,
+       "w": 4
+      },
+      {
+       "c": "Anivia",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "Syndra",
+       "g": 6,
+       "w": 4
+      },
+      {
+       "c": "Viktor",
+       "g": 6,
+       "w": 4
+      },
+      {
+       "c": "Annie",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Ahri",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Taliyah",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Ryze",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Galio",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 45
+    },
+    {
+     "id": "Caliste",
+     "name": "Caliste",
+     "realName": "Caliste Henry-Hennebert",
+     "role": "Bot",
+     "nat": "FR",
+     "birth": "2006-08-28",
+     "ovr": 85,
+     "attrs": {
+      "laning": 93,
+      "teamfight": 81,
+      "macro": 88,
+      "mechanics": 83,
+      "consistency": 83,
+      "pool": 88
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ezreal",
+       "g": 12,
+       "w": 4
+      },
+      {
+       "c": "Jhin",
+       "g": 5,
+       "w": 1
+      },
+      {
+       "c": "Varus",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Ashe",
+       "g": 5,
+       "w": 4
+      },
+      {
+       "c": "Zeri",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Kaisa",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Ziggs",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Xayah",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "MissFortune",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Draven",
+       "g": 3,
+       "w": 1
+      }
+     ],
+     "intlGames": 64
+    },
+    {
+     "id": "Busio",
+     "name": "Busio",
+     "realName": "Alan Cwalina",
+     "role": "Support",
+     "nat": "US",
+     "birth": "2003-10-22",
+     "ovr": 76,
+     "attrs": {
+      "laning": 71,
+      "teamfight": 75,
+      "macro": 78,
+      "mechanics": 79,
+      "consistency": 76,
+      "pool": 83
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Alistar",
+       "g": 10,
+       "w": 4
+      },
+      {
+       "c": "Rell",
+       "g": 7,
+       "w": 4
+      },
+      {
+       "c": "Nautilus",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Bard",
+       "g": 5,
+       "w": 4
+      },
+      {
+       "c": "Leona",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Seraphine",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Rakan",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Renata",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Neeko",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Lulu",
+       "g": 4,
+       "w": 4
+      }
+     ],
+     "intlGames": 70
+    }
+   ]
+  },
+  {
+   "id": "IG",
+   "name": "Invictus Gaming",
+   "short": "iG",
+   "region": "LPL",
+   "colors": [
+    "#d6261f",
+    "#f5c400"
+   ],
+   "logo": null,
+   "strength": 77,
+   "intlWinRate": 0.494,
+   "events": [
+    "2025 Season World Championship/Play-In",
+    "2026 Season World Championship/Main Event"
+   ],
+   "roster": [
+    {
+     "id": "TheShy",
+     "name": "TheShy",
+     "realName": "강승록",
+     "role": "Top",
+     "nat": "KR",
+     "birth": "1999-11-11",
+     "ovr": 71,
+     "attrs": {
+      "laning": 66,
+      "teamfight": 71,
+      "macro": 71,
+      "mechanics": 72,
+      "consistency": 71,
+      "pool": 72
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Rumble",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Gnar",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Ornn",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "KSante",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Kled",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "RekSai",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Sion",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Varus",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Vayne",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Zaahen",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 17
+    },
+    {
+     "id": "Wei (Yan Yang-Wei)",
+     "name": "Wei",
+     "realName": "闫扬威",
+     "role": "Jungle",
+     "nat": "CN",
+     "birth": "2002-11-09",
+     "ovr": 82,
+     "attrs": {
+      "laning": 83,
+      "teamfight": 84,
+      "macro": 86,
+      "mechanics": 85,
+      "consistency": 80,
+      "pool": 79
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Vi",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Nocturne",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Qiyana",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Naafiri",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Pantheon",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Jayce",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "JarvanIV",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "LeeSin",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Trundle",
+       "g": 1,
+       "w": 1
+      }
+     ],
+     "intlGames": 17
+    },
+    {
+     "id": "Rookie",
+     "name": "Rookie",
+     "realName": "송의진",
+     "role": "Mid",
+     "nat": "KR",
+     "birth": "1997-03-11",
+     "ovr": 76,
+     "attrs": {
+      "laning": 67,
+      "teamfight": 84,
+      "macro": 77,
+      "mechanics": 81,
+      "consistency": 74,
+      "pool": 73
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Orianna",
+       "g": 3,
+       "w": 3
+      },
+      {
+       "c": "Annie",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Sylas",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Syndra",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Aurora",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Ryze",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Hwei",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Viktor",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Taliyah",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Locke",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 17
+    },
+    {
+     "id": "JiaQi",
+     "name": "JiaQi",
+     "realName": "资嘉琪",
+     "role": "Bot",
+     "nat": "CN",
+     "birth": "2004-05-31",
+     "ovr": 83,
+     "attrs": {
+      "laning": 88,
+      "teamfight": 84,
+      "macro": 86,
+      "mechanics": 84,
+      "consistency": 80,
+      "pool": 78
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Yunara",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Jhin",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Kaisa",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Zeri",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Ashe",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Caitlyn",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Xayah",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Lucian",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Ezreal",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 13
+    },
+    {
+     "id": "Meiko",
+     "name": "Meiko",
+     "realName": "田野",
+     "role": "Support",
+     "nat": "CN",
+     "birth": "1998-06-06",
+     "ovr": 74,
+     "attrs": {
+      "laning": 74,
+      "teamfight": 74,
+      "macro": 76,
+      "mechanics": 74,
+      "consistency": 72,
+      "pool": 74
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Nautilus",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Lulu",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Alistar",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Neeko",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Karma",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Leona",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Yuumi",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Seraphine",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Lux",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Rakan",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 17
+    }
+   ]
+  },
+  {
+   "id": "AL",
+   "name": "Anyone's Legend",
+   "short": "AL",
+   "region": "LPL",
+   "colors": [
+    "#852423",
+    "#b92829"
+   ],
+   "logo": "logos/AL.png",
+   "strength": 76,
+   "intlWinRate": 0.504,
+   "events": [
+    "2025 Mid-Season Invitational",
+    "2025 Season World Championship/Main Event",
+    "2026 Season World Championship/Main Event"
+   ],
+   "roster": [
+    {
+     "id": "Breathe",
+     "name": "Breathe",
+     "realName": "陈晨",
+     "role": "Top",
+     "nat": "CN",
+     "birth": "2001-02-19",
+     "ovr": 65,
+     "attrs": {
+      "laning": 66,
+      "teamfight": 64,
+      "macro": 65,
+      "mechanics": 64,
+      "consistency": 67,
+      "pool": 61
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Olaf",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Rumble",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Ambessa",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 4
+    },
+    {
+     "id": "Tarzan (Lee Seung-yong)",
+     "name": "Tarzan",
+     "realName": "이승용",
+     "role": "Jungle",
+     "nat": "KR",
+     "birth": "1999-08-23",
+     "ovr": 82,
+     "attrs": {
+      "laning": 79,
+      "teamfight": 88,
+      "macro": 80,
+      "mechanics": 82,
+      "consistency": 85,
+      "pool": 82
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "JarvanIV",
+       "g": 7,
+       "w": 5
+      },
+      {
+       "c": "XinZhao",
+       "g": 6,
+       "w": 5
+      },
+      {
+       "c": "Trundle",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 5,
+       "w": 5
+      },
+      {
+       "c": "Poppy",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Pantheon",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Skarner",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Maokai",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Vi",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Qiyana",
+       "g": 3,
+       "w": 1
+      }
+     ],
+     "intlGames": 49
+    },
+    {
+     "id": "Shanks",
+     "name": "Shanks",
+     "realName": "崔校军",
+     "role": "Mid",
+     "nat": "CN",
+     "birth": "2001-05-13",
+     "ovr": 75,
+     "attrs": {
+      "laning": 71,
+      "teamfight": 79,
+      "macro": 72,
+      "mechanics": 74,
+      "consistency": 77,
+      "pool": 77
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ryze",
+       "g": 7,
+       "w": 4
+      },
+      {
+       "c": "Annie",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "Orianna",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "Taliyah",
+       "g": 5,
+       "w": 4
+      },
+      {
+       "c": "Azir",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Cassiopeia",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Akali",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Galio",
+       "g": 3,
+       "w": 3
+      },
+      {
+       "c": "Sylas",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "TwistedFate",
+       "g": 2,
+       "w": 0
+      }
+     ],
+     "intlGames": 49
+    },
+    {
+     "id": "Hope (Wang Jie)",
+     "name": "Hope",
+     "realName": "王杰",
+     "role": "Bot",
+     "nat": "CN",
+     "birth": "2000-09-29",
+     "ovr": 73,
+     "attrs": {
+      "laning": 67,
+      "teamfight": 77,
+      "macro": 74,
+      "mechanics": 73,
+      "consistency": 73,
+      "pool": 74
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Varus",
+       "g": 6,
+       "w": 4
+      },
+      {
+       "c": "Lucian",
+       "g": 6,
+       "w": 4
+      },
+      {
+       "c": "Jhin",
+       "g": 6,
+       "w": 5
+      },
+      {
+       "c": "Ezreal",
+       "g": 5,
+       "w": 1
+      },
+      {
+       "c": "Corki",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Jinx",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Kaisa",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "MissFortune",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Sivir",
+       "g": 3,
+       "w": 3
+      },
+      {
+       "c": "Yunara",
+       "g": 3,
+       "w": 1
+      }
+     ],
+     "intlGames": 49
+    },
+    {
+     "id": "Kael (Kim Jin-hong)",
+     "name": "Kael",
+     "realName": "김진홍",
+     "role": "Support",
+     "nat": "KR",
+     "birth": "2004-02-11",
+     "ovr": 83,
+     "attrs": {
+      "laning": 82,
+      "teamfight": 84,
+      "macro": 82,
+      "mechanics": 79,
+      "consistency": 88,
+      "pool": 84
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Leona",
+       "g": 8,
+       "w": 5
+      },
+      {
+       "c": "Neeko",
+       "g": 7,
+       "w": 4
+      },
+      {
+       "c": "Braum",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "Bard",
+       "g": 5,
+       "w": 4
+      },
+      {
+       "c": "Rell",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Blitzcrank",
+       "g": 3,
+       "w": 3
+      },
+      {
+       "c": "Poppy",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Alistar",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Rakan",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "TahmKench",
+       "g": 2,
+       "w": 0
+      }
+     ],
+     "intlGames": 49
+    }
+   ]
+  },
+  {
+   "id": "TL",
+   "name": "Team Liquid",
+   "short": "TL",
+   "region": "LTA",
+   "colors": [
+    "#081723",
+    "#071423"
+   ],
+   "logo": "logos/TL.png",
+   "strength": 75,
+   "intlWinRate": 0.432,
+   "events": [
+    "2025 First Stand",
+    "2026 Mid-Season Invitational",
+    "2026 Season World Championship/Main Event"
+   ],
+   "roster": [
+    {
+     "id": "Morgan",
+     "name": "Morgan",
+     "realName": "박루한",
+     "role": "Top",
+     "nat": "KR",
+     "birth": "2001-09-26",
+     "ovr": 74,
+     "attrs": {
+      "laning": 74,
+      "teamfight": 77,
+      "macro": 71,
+      "mechanics": 73,
+      "consistency": 79,
+      "pool": 67
+     },
+     "inPlayersJson": true,
+     "champs": [
+      {
+       "c": "Ornn",
+       "g": 3,
+       "w": 3
+      },
+      {
+       "c": "Renekton",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Gnar",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Rumble",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Yasuo",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Zaahen",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "TwistedFate",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Galio",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "KSante",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Camille",
+       "g": 1,
+       "w": 1
+      }
+     ],
+     "intlGames": 19
+    },
+    {
+     "id": "Josedeodo",
+     "name": "Josedeodo",
+     "realName": "Brandon&nbsp;Joel Villegas",
+     "role": "Jungle",
+     "nat": "AR",
+     "birth": "2000-05-22",
+     "ovr": 79,
+     "attrs": {
+      "laning": 78,
+      "teamfight": 81,
+      "macro": 79,
+      "mechanics": 81,
+      "consistency": 79,
+      "pool": 77
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Nocturne",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "LeeSin",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "XinZhao",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Pantheon",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "JarvanIV",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Poppy",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Shyvana",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Olaf",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Naafiri",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 19
+    },
+    {
+     "id": "Quid",
+     "name": "Quid",
+     "realName": "임현승",
+     "role": "Mid",
+     "nat": "KR",
+     "birth": "2004-04-27",
+     "ovr": 75,
+     "attrs": {
+      "laning": 72,
+      "teamfight": 79,
+      "macro": 74,
+      "mechanics": 76,
+      "consistency": 72,
+      "pool": 75
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Akali",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Taliyah",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Sylas",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Galio",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Ryze",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Viktor",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Orianna",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Aurora",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Yasuo",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Ahri",
+       "g": 1,
+       "w": 1
+      }
+     ],
+     "intlGames": 24
+    },
+    {
+     "id": "Yeon (Sean Sung)",
+     "name": "Yeon",
+     "realName": "성연호",
+     "role": "Bot",
+     "nat": "US",
+     "birth": "2001-01-07",
+     "ovr": 73,
+     "attrs": {
+      "laning": 71,
+      "teamfight": 77,
+      "macro": 72,
+      "mechanics": 75,
+      "consistency": 68,
+      "pool": 76
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Varus",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Lucian",
+       "g": 4,
+       "w": 4
+      },
+      {
+       "c": "Ezreal",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Ziggs",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Kalista",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Kaisa",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Senna",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Xayah",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Ashe",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Caitlyn",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 29
+    },
+    {
+     "id": "CoreJJ",
+     "name": "CoreJJ",
+     "realName": "조용인",
+     "role": "Support",
+     "nat": "KR",
+     "birth": "1994-06-22",
+     "ovr": 77,
+     "attrs": {
+      "laning": 77,
+      "teamfight": 76,
+      "macro": 76,
+      "mechanics": 76,
+      "consistency": 78,
+      "pool": 77
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Rakan",
+       "g": 6,
+       "w": 2
+      },
+      {
+       "c": "Nautilus",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Nami",
+       "g": 3,
+       "w": 3
+      },
+      {
+       "c": "Rell",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Pantheon",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Renata",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Bard",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Poppy",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Leona",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Neeko",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 29
+    }
+   ]
+  },
+  {
+   "id": "LOS",
+   "name": "LØS",
+   "short": "LOS",
+   "region": "LTA",
+   "colors": [
+    "#7b2ff7",
+    "#f0f0f0"
+   ],
+   "logo": null,
+   "strength": 73,
+   "intlWinRate": 0.5,
+   "events": [
+    "2026 Season World Championship/Main Event"
+   ],
+   "roster": [
+    {
+     "id": "Zest (Kim Dong-min)",
+     "name": "Zest",
+     "realName": "김동민",
+     "role": "Top",
+     "nat": "KR",
+     "birth": "2003-11-05",
+     "ovr": 85,
+     "attrs": {
+      "laning": 96,
+      "teamfight": 84,
+      "macro": 88,
+      "mechanics": 88,
+      "consistency": 78,
+      "pool": 83
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Jayce",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Gnar",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Tristana",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "KSante",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Kennen",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Rumble",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Aurora",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Ambessa",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Renekton",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Vayne",
+       "g": 1,
+       "w": 1
+      }
+     ],
+     "intlGames": 15
+    },
+    {
+     "id": "Curse (Raí Yamada)",
+     "name": "Curse",
+     "realName": "Raí Yamada",
+     "role": "Jungle",
+     "nat": "BR",
+     "birth": "2005-05-18",
+     "ovr": 67,
+     "attrs": {
+      "laning": 63,
+      "teamfight": 64,
+      "macro": 70,
+      "mechanics": 63,
+      "consistency": 68,
+      "pool": 68
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "JarvanIV",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Vi",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Pantheon",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Nocturne",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Trundle",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Qiyana",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Chogath",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 15
+    },
+    {
+     "id": "Feisty",
+     "name": "Feisty",
+     "realName": "정성훈",
+     "role": "Mid",
+     "nat": "KR",
+     "birth": "2003-12-19",
+     "ovr": 71,
+     "attrs": {
+      "laning": 73,
+      "teamfight": 70,
+      "macro": 71,
+      "mechanics": 66,
+      "consistency": 76,
+      "pool": 68
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Syndra",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Taliyah",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Orianna",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Galio",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Cassiopeia",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Leblanc",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Ryze",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 15
+    },
+    {
+     "id": "Duduhh",
+     "name": "Duduhh",
+     "realName": "Wallyson&nbsp;Francisco Queiroz da Silva",
+     "role": "Bot",
+     "nat": "BR",
+     "birth": "2008-04-18",
+     "ovr": 65,
+     "attrs": {
+      "laning": 65,
+      "teamfight": 61,
+      "macro": 70,
+      "mechanics": 60,
+      "consistency": 65,
+      "pool": 68
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Kalista",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Ashe",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Tristana",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Ezreal",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Kaisa",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Caitlyn",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Cassiopeia",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Anivia",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Lucian",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Varus",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 15
+    },
+    {
+     "id": "Ackerman (Gabriel Aparicio)",
+     "name": "Ackerman",
+     "realName": "Gabriel&nbsp;Agustín Aparicio",
+     "role": "Support",
+     "nat": "AR",
+     "birth": "2002-11-29",
+     "ovr": 79,
+     "attrs": {
+      "laning": 82,
+      "teamfight": 78,
+      "macro": 82,
+      "mechanics": 80,
+      "consistency": 80,
+      "pool": 75
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Renata",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Seraphine",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Karma",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Nautilus",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Rell",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Rakan",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Camille",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Neeko",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 15
+    }
+   ]
+  },
+  {
+   "id": "MVK",
+   "name": "MVK Esports",
+   "short": "MVK",
+   "region": "LCP",
+   "colors": [
+    "#fe5900",
+    "#101010"
+   ],
+   "logo": "logos/MVK.png",
+   "strength": 73,
+   "intlWinRate": 0.462,
+   "events": [
+    "2026 Season World Championship/Play-In"
+   ],
+   "roster": [
+    {
+     "id": "Kratos (Ngô Đức Khánh)",
+     "name": "Kratos",
+     "realName": "Ngô Đức Khánh",
+     "role": "Top",
+     "nat": "VN",
+     "birth": "2005-04-22",
+     "ovr": 74,
+     "attrs": {
+      "laning": 81,
+      "teamfight": 65,
+      "macro": 80,
+      "mechanics": 71,
+      "consistency": 75,
+      "pool": 72
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Olaf",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Rumble",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Zaahen",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Yorick",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Ambessa",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "TwistedFate",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Gnar",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "KSante",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Yone",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 13
+    },
+    {
+     "id": "Gury",
+     "name": "Gury",
+     "realName": "Lương Hải Long",
+     "role": "Jungle",
+     "nat": "VN",
+     "birth": "2003-10-28",
+     "ovr": 78,
+     "attrs": {
+      "laning": 82,
+      "teamfight": 74,
+      "macro": 84,
+      "mechanics": 77,
+      "consistency": 79,
+      "pool": 74
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "JarvanIV",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Vi",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "LeeSin",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Maokai",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Jayce",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Malphite",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Aatrox",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 11
+    },
+    {
+     "id": "Chika",
+     "name": "Chika",
+     "realName": "Võ Lê Nhân",
+     "role": "Mid",
+     "nat": "VN",
+     "birth": "2006-01-26",
+     "ovr": 68,
+     "attrs": {
+      "laning": 69,
+      "teamfight": 63,
+      "macro": 72,
+      "mechanics": 70,
+      "consistency": 60,
+      "pool": 70
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "KogMaw",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Cassiopeia",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Viktor",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "KSante",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Rumble",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Mel",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Ryze",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Akali",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Hwei",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Locke",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 13
+    },
+    {
+     "id": "Harky",
+     "name": "Harky",
+     "realName": "Nguyễn Văn Hữu",
+     "role": "Bot",
+     "nat": "VN",
+     "birth": "2005-08-21",
+     "ovr": 77,
+     "attrs": {
+      "laning": 84,
+      "teamfight": 75,
+      "macro": 79,
+      "mechanics": 72,
+      "consistency": 77,
+      "pool": 73
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Lucian",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Ashe",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Jhin",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Ezreal",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Tristana",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Ziggs",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Corki",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Twitch",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 13
+    },
+    {
+     "id": "SiuLoong",
+     "name": "SiuLoong",
+     "realName": "Nguyễn Hoàng Lam",
+     "role": "Support",
+     "nat": "VN",
+     "birth": "2005-09-15",
+     "ovr": 71,
+     "attrs": {
+      "laning": 73,
+      "teamfight": 63,
+      "macro": 73,
+      "mechanics": 72,
+      "consistency": 74,
+      "pool": 68
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Milio",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Seraphine",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Camille",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Lulu",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Pyke",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Bard",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Leona",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Shen",
+       "g": 1,
+       "w": 1
+      }
+     ],
+     "intlGames": 13
+    }
+   ]
+  },
+  {
+   "id": "C9",
+   "name": "Cloud9",
+   "short": "C9",
+   "region": "LTA",
+   "colors": [
+    "#00aff1",
+    "#101010"
+   ],
+   "logo": "logos/C9.png",
+   "strength": 71,
+   "intlWinRate": 0.294,
+   "events": [
+    "2026 Season World Championship/Play-In",
+    "Esports World Cup 2025"
+   ],
+   "roster": [
+    {
+     "id": "Thanatos (Park Seung-kyu)",
+     "name": "Thanatos",
+     "realName": "박승규",
+     "role": "Top",
+     "nat": "KR",
+     "birth": "2004-05-01",
+     "ovr": 73,
+     "attrs": {
+      "laning": 73,
+      "teamfight": 73,
+      "macro": 72,
+      "mechanics": 70,
+      "consistency": 82,
+      "pool": 69
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "KSante",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Renekton",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Gnar",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Camille",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Olaf",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Zaahen",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Rumble",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Aatrox",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Gwen",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 11
+    },
+    {
+     "id": "Blaber",
+     "name": "Blaber",
+     "realName": "Robert Huang",
+     "role": "Jungle",
+     "nat": "US",
+     "birth": "2000-01-04",
+     "ovr": 78,
+     "attrs": {
+      "laning": 83,
+      "teamfight": 81,
+      "macro": 78,
+      "mechanics": 77,
+      "consistency": 77,
+      "pool": 75
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Sejuani",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Trundle",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "XinZhao",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "JarvanIV",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Lillia",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Qiyana",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "LeeSin",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Naafiri",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 11
+    },
+    {
+     "id": "Loki (Lee Sang-min)",
+     "name": "Loki",
+     "realName": "이상민",
+     "role": "Mid",
+     "nat": "KR",
+     "birth": "2005-03-26",
+     "ovr": 65,
+     "attrs": {
+      "laning": 66,
+      "teamfight": 62,
+      "macro": 67,
+      "mechanics": 62,
+      "consistency": 66,
+      "pool": 58
+     },
+     "inPlayersJson": true,
+     "champs": [
+      {
+       "c": "Locke",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Sylas",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Yone",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Akali",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Annie",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Syndra",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Orianna",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Taliyah",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 11
+    },
+    {
+     "id": "Tactical",
+     "name": "Tactical",
+     "realName": "나문용",
+     "role": "Bot",
+     "nat": "US",
+     "birth": "2000-08-18",
+     "ovr": 77,
+     "attrs": {
+      "laning": 84,
+      "teamfight": 71,
+      "macro": 77,
+      "mechanics": 76,
+      "consistency": 77,
+      "pool": 73
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ezreal",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Ziggs",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Kalista",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Jhin",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Yunara",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Lucian",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Caitlyn",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 9
+    },
+    {
+     "id": "Vulcan (Philippe Laflamme)",
+     "name": "Vulcan",
+     "realName": "Philippe Laflamme",
+     "role": "Support",
+     "nat": "CA",
+     "birth": "1999-04-20",
+     "ovr": 72,
+     "attrs": {
+      "laning": 74,
+      "teamfight": 68,
+      "macro": 71,
+      "mechanics": 67,
+      "consistency": 79,
+      "pool": 72
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Alistar",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Bard",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Karma",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Renata",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Lulu",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Shen",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Milio",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Nautilus",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Rell",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 11
+    }
+   ]
+  },
+  {
+   "id": "G2",
+   "name": "G2 Esports",
+   "short": "G2",
+   "region": "LEC",
+   "colors": [
+    "#000000",
+    "#f0f0f0"
+   ],
+   "logo": "logos/G2.png",
+   "strength": 71,
+   "intlWinRate": 0.441,
+   "events": [
+    "2025 Mid-Season Invitational",
+    "2025 Season World Championship/Main Event",
+    "2026 First Stand",
+    "2026 Mid-Season Invitational",
+    "2026 Season World Championship/Main Event",
+    "Esports World Cup 2025",
+    "Esports World Cup 2026"
+   ],
+   "roster": [
+    {
+     "id": "BrokenBlade",
+     "name": "BrokenBlade",
+     "realName": "Sergen Çelik",
+     "role": "Top",
+     "nat": "DE",
+     "birth": "2000-01-19",
+     "ovr": 72,
+     "attrs": {
+      "laning": 66,
+      "teamfight": 71,
+      "macro": 71,
+      "mechanics": 72,
+      "consistency": 72,
+      "pool": 84
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "KSante",
+       "g": 12,
+       "w": 5
+      },
+      {
+       "c": "Sion",
+       "g": 7,
+       "w": 2
+      },
+      {
+       "c": "Jax",
+       "g": 6,
+       "w": 4
+      },
+      {
+       "c": "Ornn",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Renekton",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Gnar",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Rumble",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Galio",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Chogath",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Kled",
+       "g": 3,
+       "w": 3
+      }
+     ],
+     "intlGames": 80
+    },
+    {
+     "id": "SkewMond",
+     "name": "SkewMond",
+     "realName": "Rudy Semaan",
+     "role": "Jungle",
+     "nat": "FR",
+     "birth": "2004-08-09",
+     "ovr": 76,
+     "attrs": {
+      "laning": 73,
+      "teamfight": 77,
+      "macro": 72,
+      "mechanics": 78,
+      "consistency": 76,
+      "pool": 82
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "JarvanIV",
+       "g": 10,
+       "w": 5
+      },
+      {
+       "c": "Trundle",
+       "g": 9,
+       "w": 6
+      },
+      {
+       "c": "XinZhao",
+       "g": 8,
+       "w": 4
+      },
+      {
+       "c": "Maokai",
+       "g": 7,
+       "w": 3
+      },
+      {
+       "c": "Vi",
+       "g": 7,
+       "w": 3
+      },
+      {
+       "c": "Pantheon",
+       "g": 7,
+       "w": 4
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 6,
+       "w": 0
+      },
+      {
+       "c": "DrMundo",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Naafiri",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Poppy",
+       "g": 3,
+       "w": 2
+      }
+     ],
+     "intlGames": 80
+    },
+    {
+     "id": "Caps",
+     "name": "Caps",
+     "realName": "Rasmus Borregaard Winther",
+     "role": "Mid",
+     "nat": "DK",
+     "birth": "1999-11-17",
+     "ovr": 74,
+     "attrs": {
+      "laning": 71,
+      "teamfight": 74,
+      "macro": 69,
+      "mechanics": 75,
+      "consistency": 71,
+      "pool": 84
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Syndra",
+       "g": 8,
+       "w": 4
+      },
+      {
+       "c": "Aurora",
+       "g": 7,
+       "w": 3
+      },
+      {
+       "c": "Viktor",
+       "g": 6,
+       "w": 2
+      },
+      {
+       "c": "Ahri",
+       "g": 6,
+       "w": 1
+      },
+      {
+       "c": "Annie",
+       "g": 6,
+       "w": 4
+      },
+      {
+       "c": "Ryze",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Leblanc",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "TwistedFate",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Cassiopeia",
+       "g": 4,
+       "w": 0
+      },
+      {
+       "c": "Azir",
+       "g": 4,
+       "w": 3
+      }
+     ],
+     "intlGames": 80
+    },
+    {
+     "id": "Hans Sama",
+     "name": "Hans Sama",
+     "realName": "Steven Liv",
+     "role": "Bot",
+     "nat": "FR",
+     "birth": "1999-09-02",
+     "ovr": 66,
+     "attrs": {
+      "laning": 63,
+      "teamfight": 61,
+      "macro": 68,
+      "mechanics": 62,
+      "consistency": 64,
+      "pool": 76
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Varus",
+       "g": 9,
+       "w": 6
+      },
+      {
+       "c": "Ezreal",
+       "g": 9,
+       "w": 3
+      },
+      {
+       "c": "Senna",
+       "g": 7,
+       "w": 3
+      },
+      {
+       "c": "Xayah",
+       "g": 7,
+       "w": 4
+      },
+      {
+       "c": "Corki",
+       "g": 6,
+       "w": 2
+      },
+      {
+       "c": "Lucian",
+       "g": 6,
+       "w": 4
+      },
+      {
+       "c": "Yunara",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "Sivir",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Ashe",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Kaisa",
+       "g": 4,
+       "w": 0
+      }
+     ],
+     "intlGames": 80
+    },
+    {
+     "id": "Labrov",
+     "name": "Labrov",
+     "realName": "Λάμπρος Παπουτσάκης",
+     "role": "Support",
+     "nat": "GR",
+     "birth": "2002-02-12",
+     "ovr": 71,
+     "attrs": {
+      "laning": 65,
+      "teamfight": 72,
+      "macro": 69,
+      "mechanics": 71,
+      "consistency": 69,
+      "pool": 78
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Nautilus",
+       "g": 10,
+       "w": 3
+      },
+      {
+       "c": "Rakan",
+       "g": 9,
+       "w": 5
+      },
+      {
+       "c": "Rell",
+       "g": 8,
+       "w": 3
+      },
+      {
+       "c": "Leona",
+       "g": 6,
+       "w": 2
+      },
+      {
+       "c": "Alistar",
+       "g": 6,
+       "w": 4
+      },
+      {
+       "c": "Braum",
+       "g": 6,
+       "w": 5
+      },
+      {
+       "c": "Bard",
+       "g": 6,
+       "w": 4
+      },
+      {
+       "c": "Karma",
+       "g": 6,
+       "w": 2
+      },
+      {
+       "c": "Lulu",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Neeko",
+       "g": 4,
+       "w": 0
+      }
+     ],
+     "intlGames": 80
+    }
+   ]
+  },
+  {
+   "id": "LYON",
+   "name": "LYON",
+   "short": "LYON",
+   "region": "LTA",
+   "colors": [
+    "#7b2ff7",
+    "#f0f0f0"
+   ],
+   "logo": null,
+   "strength": 71,
+   "intlWinRate": 0.457,
+   "events": [
+    "2026 First Stand",
+    "2026 Mid-Season Invitational",
+    "2026 Season World Championship/Main Event",
+    "Esports World Cup 2026"
+   ],
+   "roster": [
+    {
+     "id": "Dhokla",
+     "name": "Dhokla",
+     "realName": "Niship Doshi",
+     "role": "Top",
+     "nat": "IN",
+     "birth": "1997-07-17",
+     "ovr": 66,
+     "attrs": {
+      "laning": 63,
+      "teamfight": 60,
+      "macro": 63,
+      "mechanics": 61,
+      "consistency": 67,
+      "pool": 78
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "KSante",
+       "g": 8,
+       "w": 3
+      },
+      {
+       "c": "Gnar",
+       "g": 7,
+       "w": 5
+      },
+      {
+       "c": "Jayce",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Ambessa",
+       "g": 4,
+       "w": 0
+      },
+      {
+       "c": "Rumble",
+       "g": 4,
+       "w": 0
+      },
+      {
+       "c": "Olaf",
+       "g": 3,
+       "w": 3
+      },
+      {
+       "c": "Jax",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Aurora",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Renekton",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Shen",
+       "g": 2,
+       "w": 0
+      }
+     ],
+     "intlGames": 51
+    },
+    {
+     "id": "Inspired",
+     "name": "Inspired",
+     "realName": "Kacper Słoma",
+     "role": "Jungle",
+     "nat": "PL",
+     "birth": "2002-01-24",
+     "ovr": 70,
+     "attrs": {
+      "laning": 75,
+      "teamfight": 64,
+      "macro": 67,
+      "mechanics": 65,
+      "consistency": 74,
+      "pool": 75
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "MonkeyKing",
+       "g": 10,
+       "w": 7
+      },
+      {
+       "c": "LeeSin",
+       "g": 8,
+       "w": 4
+      },
+      {
+       "c": "XinZhao",
+       "g": 7,
+       "w": 3
+      },
+      {
+       "c": "Nocturne",
+       "g": 7,
+       "w": 3
+      },
+      {
+       "c": "Trundle",
+       "g": 6,
+       "w": 5
+      },
+      {
+       "c": "Pantheon",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Vi",
+       "g": 4,
+       "w": 0
+      },
+      {
+       "c": "Sejuani",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "JarvanIV",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Qiyana",
+       "g": 4,
+       "w": 1
+      }
+     ],
+     "intlGames": 71
+    },
+    {
+     "id": "Saint (Kang Sung-in)",
+     "name": "Saint",
+     "realName": "강성인",
+     "role": "Mid",
+     "nat": "KR",
+     "birth": "2005-01-01",
+     "ovr": 72,
+     "attrs": {
+      "laning": 73,
+      "teamfight": 68,
+      "macro": 76,
+      "mechanics": 67,
+      "consistency": 73,
+      "pool": 77
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Viktor",
+       "g": 8,
+       "w": 6
+      },
+      {
+       "c": "Ahri",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Sylas",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Ryze",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Taliyah",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Cassiopeia",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Leblanc",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Syndra",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Galio",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Akali",
+       "g": 2,
+       "w": 1
+      }
+     ],
+     "intlGames": 46
+    },
+    {
+     "id": "Berserker (Kim Min-cheol)",
+     "name": "Berserker",
+     "realName": "김민철",
+     "role": "Bot",
+     "nat": "KR",
+     "birth": "2003-05-25",
+     "ovr": 72,
+     "attrs": {
+      "laning": 71,
+      "teamfight": 72,
+      "macro": 65,
+      "mechanics": 67,
+      "consistency": 80,
+      "pool": 73
+     },
+     "inPlayersJson": true,
+     "champs": [
+      {
+       "c": "Ezreal",
+       "g": 9,
+       "w": 5
+      },
+      {
+       "c": "Lucian",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "Yunara",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Corki",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Ziggs",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Jhin",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Varus",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Ashe",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Caitlyn",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Mel",
+       "g": 2,
+       "w": 0
+      }
+     ],
+     "intlGames": 46
+    },
+    {
+     "id": "Isles",
+     "name": "Isles",
+     "realName": "Jonah Rosario",
+     "role": "Support",
+     "nat": "AU",
+     "birth": "2001-03-07",
+     "ovr": 78,
+     "attrs": {
+      "laning": 76,
+      "teamfight": 74,
+      "macro": 79,
+      "mechanics": 72,
+      "consistency": 85,
+      "pool": 83
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Alistar",
+       "g": 7,
+       "w": 4
+      },
+      {
+       "c": "Lulu",
+       "g": 6,
+       "w": 4
+      },
+      {
+       "c": "Nautilus",
+       "g": 5,
+       "w": 0
+      },
+      {
+       "c": "Milio",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Pyke",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Poppy",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Nami",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Neeko",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Leona",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Camille",
+       "g": 2,
+       "w": 2
+      }
+     ],
+     "intlGames": 46
+    }
+   ]
+  },
+  {
+   "id": "TES",
+   "name": "Top Esports",
+   "short": "TES",
+   "region": "LPL",
+   "colors": [
+    "#ff3e23",
+    "#101010"
+   ],
+   "logo": "logos/TES.png",
+   "strength": 70,
+   "intlWinRate": 0.381,
+   "events": [
+    "2025 First Stand",
+    "2025 Season World Championship/Main Event",
+    "2026 Mid-Season Invitational",
+    "2026 Season World Championship/Main Event"
+   ],
+   "roster": [
+    {
+     "id": "369",
+     "name": "369",
+     "realName": "白家浩",
+     "role": "Top",
+     "nat": "CN",
+     "birth": "2001-07-12",
+     "ovr": 73,
+     "attrs": {
+      "laning": 74,
+      "teamfight": 72,
+      "macro": 69,
+      "mechanics": 72,
+      "consistency": 76,
+      "pool": 74
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ambessa",
+       "g": 8,
+       "w": 3
+      },
+      {
+       "c": "Rumble",
+       "g": 6,
+       "w": 1
+      },
+      {
+       "c": "Aatrox",
+       "g": 5,
+       "w": 4
+      },
+      {
+       "c": "KSante",
+       "g": 5,
+       "w": 1
+      },
+      {
+       "c": "Renekton",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Gnar",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Jayce",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Sion",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Kennen",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Gragas",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 37
+    },
+    {
+     "id": "Tian",
+     "name": "Tian",
+     "realName": "高天亮",
+     "role": "Jungle",
+     "nat": "CN",
+     "birth": "2000-07-24",
+     "ovr": 74,
+     "attrs": {
+      "laning": 79,
+      "teamfight": 74,
+      "macro": 73,
+      "mechanics": 74,
+      "consistency": 73,
+      "pool": 73
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "JarvanIV",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Nocturne",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Maokai",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Vi",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Qiyana",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Naafiri",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "XinZhao",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Skarner",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "LeeSin",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 19
+    },
+    {
+     "id": "Creme",
+     "name": "Creme",
+     "realName": "林坚",
+     "role": "Mid",
+     "nat": "CN",
+     "birth": "2003-12-14",
+     "ovr": 70,
+     "attrs": {
+      "laning": 64,
+      "teamfight": 70,
+      "macro": 65,
+      "mechanics": 74,
+      "consistency": 70,
+      "pool": 75
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Aurora",
+       "g": 8,
+       "w": 2
+      },
+      {
+       "c": "Orianna",
+       "g": 6,
+       "w": 3
+      },
+      {
+       "c": "Yone",
+       "g": 6,
+       "w": 0
+      },
+      {
+       "c": "Ryze",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Sylas",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Hwei",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Akali",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Viktor",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Azir",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Cassiopeia",
+       "g": 2,
+       "w": 1
+      }
+     ],
+     "intlGames": 46
+    },
+    {
+     "id": "JackeyLove",
+     "name": "JackeyLove",
+     "realName": "喻文波",
+     "role": "Bot",
+     "nat": "CN",
+     "birth": "2000-11-18",
+     "ovr": 66,
+     "attrs": {
+      "laning": 62,
+      "teamfight": 67,
+      "macro": 66,
+      "mechanics": 65,
+      "consistency": 58,
+      "pool": 74
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Varus",
+       "g": 7,
+       "w": 5
+      },
+      {
+       "c": "Corki",
+       "g": 5,
+       "w": 1
+      },
+      {
+       "c": "Kalista",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Ezreal",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Yunara",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Ashe",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Jhin",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Lucian",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "MissFortune",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Sivir",
+       "g": 2,
+       "w": 0
+      }
+     ],
+     "intlGames": 46
+    },
+    {
+     "id": "Zhuo",
+     "name": "Zhuo",
+     "realName": "王旭卓",
+     "role": "Support",
+     "nat": "CN",
+     "birth": "2001-02-13",
+     "ovr": 75,
+     "attrs": {
+      "laning": 74,
+      "teamfight": 75,
+      "macro": 76,
+      "mechanics": 72,
+      "consistency": 78,
+      "pool": 72
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Renata",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Milio",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Alistar",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Rell",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Seraphine",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Nautilus",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Lulu",
+       "g": 1,
+       "w": 1
+      }
+     ],
+     "intlGames": 10
+    }
+   ]
+  },
+  {
+   "id": "CFO",
+   "name": "CTBC Flying Oyster",
+   "short": "CFO",
+   "region": "LCP",
+   "colors": [
+    "#16a2a8",
+    "#101828"
+   ],
+   "logo": null,
+   "strength": 69,
+   "intlWinRate": 0.439,
+   "events": [
+    "2025 First Stand",
+    "2025 Mid-Season Invitational",
+    "2025 Season World Championship/Main Event",
+    "2026 Season World Championship/Main Event",
+    "Esports World Cup 2025"
+   ],
+   "roster": [
+    {
+     "id": "Rest",
+     "name": "Rest",
+     "realName": "徐士傑",
+     "role": "Top",
+     "nat": "TW",
+     "birth": "1998-12-11",
+     "ovr": 58,
+     "attrs": {
+      "laning": 55,
+      "teamfight": 53,
+      "macro": 56,
+      "mechanics": 52,
+      "consistency": 63,
+      "pool": 64
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Rumble",
+       "g": 7,
+       "w": 2
+      },
+      {
+       "c": "KSante",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Renekton",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Ambessa",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "RekSai",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Karma",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Jayce",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Ornn",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Yorick",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Gnar",
+       "g": 1,
+       "w": 1
+      }
+     ],
+     "intlGames": 25
+    },
+    {
+     "id": "Shad0w",
+     "name": "Shad0w",
+     "realName": "赵志强",
+     "role": "Jungle",
+     "nat": "IT",
+     "birth": "2001-02-25",
+     "ovr": 78,
+     "attrs": {
+      "laning": 83,
+      "teamfight": 81,
+      "macro": 78,
+      "mechanics": 75,
+      "consistency": 80,
+      "pool": 73
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Qiyana",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "XinZhao",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "LeeSin",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Naafiri",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Trundle",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Vi",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "JarvanIV",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 11
+    },
+    {
+     "id": "POUT",
+     "name": "Pout",
+     "realName": "한인웅",
+     "role": "Mid",
+     "nat": "KR",
+     "birth": "2003-10-03",
+     "ovr": 64,
+     "attrs": {
+      "laning": 66,
+      "teamfight": 60,
+      "macro": 67,
+      "mechanics": 58,
+      "consistency": 70,
+      "pool": 61
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ryze",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Viktor",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Akali",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Syndra",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 5
+    },
+    {
+     "id": "Doggo",
+     "name": "Doggo",
+     "realName": "邱梓銓",
+     "role": "Bot",
+     "nat": "TW",
+     "birth": "2003-01-14",
+     "ovr": 73,
+     "attrs": {
+      "laning": 68,
+      "teamfight": 75,
+      "macro": 70,
+      "mechanics": 73,
+      "consistency": 77,
+      "pool": 77
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ezreal",
+       "g": 10,
+       "w": 5
+      },
+      {
+       "c": "Caitlyn",
+       "g": 5,
+       "w": 3
+      },
+      {
+       "c": "Kaisa",
+       "g": 5,
+       "w": 0
+      },
+      {
+       "c": "Corki",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "MissFortune",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Jhin",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Tristana",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Sivir",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Lucian",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Aphelios",
+       "g": 2,
+       "w": 2
+      }
+     ],
+     "intlGames": 46
+    },
+    {
+     "id": "Kino",
+     "name": "Kino",
+     "realName": "朱吳欣榮",
+     "role": "Support",
+     "nat": "TW",
+     "birth": "1998-04-12",
+     "ovr": 74,
+     "attrs": {
+      "laning": 75,
+      "teamfight": 76,
+      "macro": 76,
+      "mechanics": 69,
+      "consistency": 77,
+      "pool": 70
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Alistar",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Lulu",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Karma",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 5
+    }
+   ]
+  },
+  {
+   "id": "MKOI",
+   "name": "Movistar KOI",
+   "short": "MKOI",
+   "region": "LEC",
+   "colors": [
+    "#4b9cee",
+    "#4a9cec"
+   ],
+   "logo": "logos/MKOI.png",
+   "strength": 68,
+   "intlWinRate": 0.318,
+   "events": [
+    "2025 Mid-Season Invitational",
+    "2025 Season World Championship/Main Event",
+    "2026 Season World Championship/Main Event",
+    "Esports World Cup 2025",
+    "Esports World Cup 2026"
+   ],
+   "roster": [
+    {
+     "id": "Myrwn",
+     "name": "Myrwn",
+     "realName": "Alex Pastor Villarejo",
+     "role": "Top",
+     "nat": "ES",
+     "birth": "2003-06-13",
+     "ovr": 63,
+     "attrs": {
+      "laning": 62,
+      "teamfight": 58,
+      "macro": 61,
+      "mechanics": 55,
+      "consistency": 66,
+      "pool": 73
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ambessa",
+       "g": 5,
+       "w": 1
+      },
+      {
+       "c": "KSante",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Ornn",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Renekton",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Gnar",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Aurora",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Gwen",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Galio",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Akali",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Aatrox",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 36
+    },
+    {
+     "id": "Elyoya",
+     "name": "Elyoya",
+     "realName": "Javier Prades Batalla",
+     "role": "Jungle",
+     "nat": "ES",
+     "birth": "2000-03-13",
+     "ovr": 73,
+     "attrs": {
+      "laning": 70,
+      "teamfight": 75,
+      "macro": 71,
+      "mechanics": 70,
+      "consistency": 74,
+      "pool": 75
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "XinZhao",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Trundle",
+       "g": 4,
+       "w": 0
+      },
+      {
+       "c": "JarvanIV",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Qiyana",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Sejuani",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "LeeSin",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Poppy",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Vi",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Naafiri",
+       "g": 2,
+       "w": 1
+      }
+     ],
+     "intlGames": 36
+    },
+    {
+     "id": "Jojopyun",
+     "name": "Jojopyun",
+     "realName": "Joseph&nbsp;Joon Pyun",
+     "role": "Mid",
+     "nat": "CA",
+     "birth": "2004-10-01",
+     "ovr": 69,
+     "attrs": {
+      "laning": 71,
+      "teamfight": 68,
+      "macro": 66,
+      "mechanics": 63,
+      "consistency": 68,
+      "pool": 75
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ryze",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Taliyah",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Galio",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Cassiopeia",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Yone",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Ahri",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Anivia",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Orianna",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Azir",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "TwistedFate",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 36
+    },
+    {
+     "id": "Supa",
+     "name": "Supa",
+     "realName": "David Martínez García",
+     "role": "Bot",
+     "nat": "ES",
+     "birth": "2000-10-23",
+     "ovr": 69,
+     "attrs": {
+      "laning": 72,
+      "teamfight": 65,
+      "macro": 64,
+      "mechanics": 66,
+      "consistency": 71,
+      "pool": 72
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ezreal",
+       "g": 9,
+       "w": 3
+      },
+      {
+       "c": "Kaisa",
+       "g": 4,
+       "w": 2
+      },
+      {
+       "c": "Kalista",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Corki",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Varus",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Sivir",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Caitlyn",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Xayah",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Yunara",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Zeri",
+       "g": 2,
+       "w": 1
+      }
+     ],
+     "intlGames": 36
+    },
+    {
+     "id": "Alvaro (Álvaro Fernández)",
+     "name": "Alvaro",
+     "realName": "Álvaro Fernández del Amo",
+     "role": "Support",
+     "nat": "ES",
+     "birth": "2003-07-15",
+     "ovr": 75,
+     "attrs": {
+      "laning": 74,
+      "teamfight": 80,
+      "macro": 71,
+      "mechanics": 75,
+      "consistency": 76,
+      "pool": 77
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Alistar",
+       "g": 6,
+       "w": 2
+      },
+      {
+       "c": "Rakan",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Rell",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Karma",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Renata",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Braum",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Nautilus",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Lulu",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Bard",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Neeko",
+       "g": 2,
+       "w": 1
+      }
+     ],
+     "intlGames": 36
+    }
+   ]
+  },
+  {
+   "id": "FUR",
+   "name": "FURIA",
+   "short": "FUR",
+   "region": "LTA",
+   "colors": [
+    "#020202",
+    "#d8d8d8"
+   ],
+   "logo": "logos/FUR.png",
+   "strength": 62,
+   "intlWinRate": 0.252,
+   "events": [
+    "2025 Mid-Season Invitational",
+    "2026 Mid-Season Invitational",
+    "2026 Season World Championship/Play-In",
+    "Esports World Cup 2025",
+    "Esports World Cup 2026"
+   ],
+   "roster": [
+    {
+     "id": "Guigo",
+     "name": "Guigo",
+     "realName": "Guilherme Araújo Ruiz",
+     "role": "Top",
+     "nat": "BR",
+     "birth": "2002-01-28",
+     "ovr": 63,
+     "attrs": {
+      "laning": 60,
+      "teamfight": 62,
+      "macro": 61,
+      "mechanics": 61,
+      "consistency": 57,
+      "pool": 69
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ambessa",
+       "g": 7,
+       "w": 2
+      },
+      {
+       "c": "Jax",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "Sion",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Gnar",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Aatrox",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "KSante",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Rumble",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Olaf",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Ornn",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Galio",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 33
+    },
+    {
+     "id": "Tatu (Pedro Seixas)",
+     "name": "Tatu",
+     "realName": "Pedro Seixas Brito",
+     "role": "Jungle",
+     "nat": "BR",
+     "birth": "2006-06-13",
+     "ovr": 66,
+     "attrs": {
+      "laning": 60,
+      "teamfight": 65,
+      "macro": 60,
+      "mechanics": 64,
+      "consistency": 69,
+      "pool": 72
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "XinZhao",
+       "g": 5,
+       "w": 2
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Skarner",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Vi",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Pantheon",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Trundle",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Naafiri",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "LeeSin",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Nasus",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Sejuani",
+       "g": 2,
+       "w": 1
+      }
+     ],
+     "intlGames": 33
+    },
+    {
+     "id": "Tutsz",
+     "name": "Tutsz",
+     "realName": "Arthur Peixoto Machado",
+     "role": "Mid",
+     "nat": "BR",
+     "birth": "2002-12-16",
+     "ovr": 60,
+     "attrs": {
+      "laning": 59,
+      "teamfight": 54,
+      "macro": 57,
+      "mechanics": 54,
+      "consistency": 63,
+      "pool": 67
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ryze",
+       "g": 4,
+       "w": 0
+      },
+      {
+       "c": "Taliyah",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Akali",
+       "g": 3,
+       "w": 2
+      },
+      {
+       "c": "Ahri",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Syndra",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Orianna",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Annie",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Sylas",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Aurora",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Galio",
+       "g": 2,
+       "w": 0
+      }
+     ],
+     "intlGames": 33
+    },
+    {
+     "id": "Ayu (Andrey Saraiva)",
+     "name": "Ayu",
+     "realName": "Andrey Saraiva",
+     "role": "Bot",
+     "nat": "BR",
+     "birth": "2005-10-06",
+     "ovr": 62,
+     "attrs": {
+      "laning": 59,
+      "teamfight": 60,
+      "macro": 55,
+      "mechanics": 60,
+      "consistency": 65,
+      "pool": 71
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Ezreal",
+       "g": 4,
+       "w": 0
+      },
+      {
+       "c": "Lucian",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Ashe",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Ziggs",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Corki",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Yasuo",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Jhin",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Cassiopeia",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Senna",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Yunara",
+       "g": 2,
+       "w": 1
+      }
+     ],
+     "intlGames": 33
+    },
+    {
+     "id": "JoJo (Gabriel Dzelme)",
+     "name": "JoJo",
+     "realName": "Gabriel Dzelme de Oliveira",
+     "role": "Support",
+     "nat": "BR",
+     "birth": "1998-11-11",
+     "ovr": 73,
+     "attrs": {
+      "laning": 72,
+      "teamfight": 76,
+      "macro": 68,
+      "mechanics": 71,
+      "consistency": 74,
+      "pool": 74
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Rell",
+       "g": 6,
+       "w": 1
+      },
+      {
+       "c": "Seraphine",
+       "g": 4,
+       "w": 3
+      },
+      {
+       "c": "Leona",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Alistar",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Rakan",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Karma",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Milio",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Bard",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Lulu",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Nami",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 33
+    }
+   ]
+  },
+  {
+   "id": "DCG",
+   "name": "Deep Cross Gaming",
+   "short": "DCG",
+   "region": "LCP",
+   "colors": [
+    "#0e65cd",
+    "#000000"
+   ],
+   "logo": "logos/DCG.png",
+   "strength": 61,
+   "intlWinRate": 0.0,
+   "events": [
+    "2026 Mid-Season Invitational"
+   ],
+   "roster": [
+    {
+     "id": "Flauren",
+     "name": "Flauren",
+     "realName": "魯澤堅",
+     "role": "Top",
+     "nat": "HK",
+     "birth": "2006-10-30",
+     "ovr": 68,
+     "attrs": {
+      "laning": 70,
+      "teamfight": 68,
+      "macro": 65,
+      "mechanics": 66,
+      "consistency": 70,
+      "pool": 64
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Jax",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Ambessa",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Sion",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Rumble",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Gnar",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 6
+    },
+    {
+     "id": "Pop9",
+     "name": "Pop9",
+     "realName": "吳羿翰",
+     "role": "Jungle",
+     "nat": "TW",
+     "birth": "2003-03-24",
+     "ovr": 67,
+     "attrs": {
+      "laning": 69,
+      "teamfight": 68,
+      "macro": 66,
+      "mechanics": 66,
+      "consistency": 62,
+      "pool": 65
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "JarvanIV",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "LeeSin",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Qiyana",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Olaf",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 6
+    },
+    {
+     "id": "HongSuo",
+     "name": "HongSuo",
+     "realName": "郭貝益",
+     "role": "Mid",
+     "nat": "TW",
+     "birth": "2003-03-18",
+     "ovr": 69,
+     "attrs": {
+      "laning": 76,
+      "teamfight": 68,
+      "macro": 68,
+      "mechanics": 68,
+      "consistency": 64,
+      "pool": 67
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Galio",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Leblanc",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Ryze",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Cassiopeia",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Taliyah",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Orianna",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 6
+    },
+    {
+     "id": "Feng (Chen Chun-Feng)",
+     "name": "Feng",
+     "realName": "陳駿豐",
+     "role": "Bot",
+     "nat": "TW",
+     "birth": "2003-08-13",
+     "ovr": 60,
+     "attrs": {
+      "laning": 54,
+      "teamfight": 64,
+      "macro": 58,
+      "mechanics": 57,
+      "consistency": 59,
+      "pool": 58
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Senna",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Jhin",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Ezreal",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Kalista",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 6
+    },
+    {
+     "id": "ShiauC",
+     "name": "ShiauC",
+     "realName": "劉家豪",
+     "role": "Support",
+     "nat": "TW",
+     "birth": "1999-07-12",
+     "ovr": 66,
+     "attrs": {
+      "laning": 77,
+      "teamfight": 64,
+      "macro": 66,
+      "mechanics": 70,
+      "consistency": 58,
+      "pool": 61
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Camille",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Nautilus",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Pyke",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Rakan",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 6
+    }
+   ]
+  },
+  {
+   "id": "TSW",
+   "name": "Team Secret Whales",
+   "short": "TSW",
+   "region": "LCP",
+   "colors": [
+    "#000000",
+    "#f0f0f0"
+   ],
+   "logo": "logos/TSW.png",
+   "strength": 60,
+   "intlWinRate": 0.178,
+   "events": [
+    "2025 Season World Championship/Main Event",
+    "2026 First Stand",
+    "2026 Mid-Season Invitational",
+    "2026 Season World Championship/Main Event"
+   ],
+   "roster": [
+    {
+     "id": "Pun",
+     "name": "Pun",
+     "realName": "Nguyễn Đăng Khoa",
+     "role": "Top",
+     "nat": "VN",
+     "birth": "2002-07-29",
+     "ovr": 63,
+     "attrs": {
+      "laning": 58,
+      "teamfight": 66,
+      "macro": 61,
+      "mechanics": 62,
+      "consistency": 59,
+      "pool": 69
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Volibear",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Sion",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Ornn",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Jax",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Renekton",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Olaf",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "Shen",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Gwen",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Sett",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Yorick",
+       "g": 1,
+       "w": 1
+      }
+     ],
+     "intlGames": 26
+    },
+    {
+     "id": "Hizto",
+     "name": "Hizto",
+     "realName": "Lê Văn Hoàng Hải",
+     "role": "Jungle",
+     "nat": "VN",
+     "birth": "2007-09-15",
+     "ovr": 66,
+     "attrs": {
+      "laning": 70,
+      "teamfight": 65,
+      "macro": 59,
+      "mechanics": 67,
+      "consistency": 70,
+      "pool": 64
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "JarvanIV",
+       "g": 6,
+       "w": 1
+      },
+      {
+       "c": "Naafiri",
+       "g": 6,
+       "w": 1
+      },
+      {
+       "c": "LeeSin",
+       "g": 5,
+       "w": 1
+      },
+      {
+       "c": "Vi",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "XinZhao",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Qiyana",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "DrMundo",
+       "g": 2,
+       "w": 1
+      },
+      {
+       "c": "MonkeyKing",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 30
+    },
+    {
+     "id": "Dire",
+     "name": "Dire",
+     "realName": "Trần Duy Đức",
+     "role": "Mid",
+     "nat": "VN",
+     "birth": "2006-11-22",
+     "ovr": 58,
+     "attrs": {
+      "laning": 56,
+      "teamfight": 53,
+      "macro": 54,
+      "mechanics": 53,
+      "consistency": 57,
+      "pool": 66
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Aurora",
+       "g": 6,
+       "w": 1
+      },
+      {
+       "c": "Ryze",
+       "g": 5,
+       "w": 1
+      },
+      {
+       "c": "Sylas",
+       "g": 4,
+       "w": 1
+      },
+      {
+       "c": "Galio",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Akali",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Viktor",
+       "g": 2,
+       "w": 2
+      },
+      {
+       "c": "Locke",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Ahri",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Leblanc",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Hwei",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 30
+    },
+    {
+     "id": "Eddie",
+     "name": "Eddie",
+     "realName": "Hoàng Công Nghĩa",
+     "role": "Bot",
+     "nat": "VN",
+     "birth": "2003-06-17",
+     "ovr": 64,
+     "attrs": {
+      "laning": 68,
+      "teamfight": 60,
+      "macro": 59,
+      "mechanics": 57,
+      "consistency": 68,
+      "pool": 67
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Kaisa",
+       "g": 6,
+       "w": 2
+      },
+      {
+       "c": "Caitlyn",
+       "g": 6,
+       "w": 1
+      },
+      {
+       "c": "Ezreal",
+       "g": 5,
+       "w": 1
+      },
+      {
+       "c": "MissFortune",
+       "g": 3,
+       "w": 0
+      },
+      {
+       "c": "Corki",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Aphelios",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Sivir",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Yunara",
+       "g": 1,
+       "w": 1
+      },
+      {
+       "c": "Varus",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Jhin",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 30
+    },
+    {
+     "id": "Bie",
+     "name": "Bie",
+     "realName": "Trần Đức Hiếu",
+     "role": "Support",
+     "nat": "VN",
+     "birth": "1999-12-09",
+     "ovr": 66,
+     "attrs": {
+      "laning": 71,
+      "teamfight": 59,
+      "macro": 63,
+      "mechanics": 66,
+      "consistency": 73,
+      "pool": 66
+     },
+     "inPlayersJson": false,
+     "champs": [
+      {
+       "c": "Nautilus",
+       "g": 7,
+       "w": 2
+      },
+      {
+       "c": "Elise",
+       "g": 5,
+       "w": 1
+      },
+      {
+       "c": "Karma",
+       "g": 3,
+       "w": 1
+      },
+      {
+       "c": "Rakan",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Thresh",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Bard",
+       "g": 2,
+       "w": 0
+      },
+      {
+       "c": "Rell",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Alistar",
+       "g": 1,
+       "w": 0
+      },
+      {
+       "c": "Camille",
+       "g": 1,
+       "w": 0
+      }
+     ],
+     "intlGames": 24
+    }
+   ]
+  }
+ ]
+}

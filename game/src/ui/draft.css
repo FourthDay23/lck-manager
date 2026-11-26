@@ -1,0 +1,8 @@
+/* ban/pick: coach suggestions stay on one line with a fixed height (scroll sideways when there are many) */
+.sug-panel { margin-top: 6px; }
+.sug-panel h3 { margin: 0 0 4px; }
+.sug-row { display: flex; flex-wrap: nowrap; gap: 10px; align-items: center; height: 36px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+.sug-item { display: flex; flex: none; align-items: center; gap: 4px; max-width: 170px; cursor: pointer; }
+.sug-item > span { font-size: 11px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sug-item > span .muted { display: inline-block; max-width: 132px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+.sug-item:hover img { box-shadow: 0 0 0 2px var(--gold); }

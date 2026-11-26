@@ -1,0 +1,307 @@
+{
+ "source": "LCK 2026, Riot match-v5 timelines from Leaguepedia (502 games); timers from the League of Legends Wiki",
+ "objectives": {
+  "dragon": {
+   "firstSpawn": 300,
+   "respawn": 300,
+   "note": "5:00 first spawn, 5:00 respawn. 2026 data: earliest kill 5:22, shortest gap between kills 5:07",
+   "earliestKill2026": 322
+  },
+  "grubs": {
+   "firstSpawn": 480,
+   "respawn": null,
+   "count": 3,
+   "note": "one camp of 3 Void Grubs at 8:00, the second wave was cut in 2025 (https://www.leagueoflegends.com/news/dev/dev-2026-season-one-gameplay-preview/). 2026 data: earliest kill 8:05, exactly 3 grubs taken in all 502 games",
+   "earliestKill2026": 485
+  },
+  "herald": {
+   "firstSpawn": 900,
+   "respawn": null,
+   "note": "Rift Herald at 15:00, one spawn. 2026 data: earliest kill 15:13, exactly 1 per game",
+   "earliestKill2026": 913
+  },
+  "baron": {
+   "firstSpawn": 1200,
+   "respawn": 360,
+   "note": "Baron back to 20:00 in patch 26.1 (https://www.leagueoflegends.com/news/dev/dev-2026-season-one-gameplay-preview/); 6:00 respawn. 2026 data: earliest kill 20:18, shortest gap 6:08",
+   "earliestKill2026": 1218
+  },
+  "atakhan": {
+   "firstSpawn": null,
+   "respawn": null,
+   "removed": true,
+   "note": "Atakhan was removed in patch 26.1 (https://www.leagueoflegends.com/news/dev/dev-2026-season-one-gameplay-preview/); no ATAKHAN kill in the 502 LCK 2026 games",
+   "earliestKill2026": null
+  },
+  "elder": {
+   "firstSpawn": null,
+   "respawn": 360,
+   "note": "Elder Dragon spawns after a team takes the dragon soul (6:00 after the soul dragon), 6:00 respawn. 2026 data: earliest kill 28:54, shortest gap 6:18",
+   "earliestKill2026": 1734
+  }
+ },
+ "camps": {
+  "blue": {
+   "firstSpawn": 55,
+   "respawn": 300
+  },
+  "red": {
+   "firstSpawn": 55,
+   "respawn": 300
+  },
+  "gromp": {
+   "firstSpawn": 55,
+   "respawn": 135
+  },
+  "wolves": {
+   "firstSpawn": 55,
+   "respawn": 135
+  },
+  "raptors": {
+   "firstSpawn": 55,
+   "respawn": 135
+  },
+  "krugs": {
+   "firstSpawn": 55,
+   "respawn": 135
+  },
+  "scuttle": {
+   "firstSpawn": 175,
+   "respawn": 150
+  },
+  "note": "Respawn times are the long-standing LoL Wiki values (buffs 5:00, small camps 2:15, Scuttle 2:30). First spawns: the 2026 preview moves every first camp spawn 35 s earlier (https://www.leagueoflegends.com/news/dev/dev-2026-season-one-gameplay-preview/), so 1:30 -> 0:55 and Scuttle 3:30 -> 2:55. Checked in the 2026 timelines: junglers have 0 camp CS at 1:00 and 11.2 at 2:00. Gromp/Krugs may still spawn a few seconds after the other camps; not verified."
+ },
+ "patch26": [
+  "first minion wave at 0:30 (was 1:05); 2026 data: mid laners already have 0.45 CS at 1:00",
+  "Atakhan, Feats of Strength and Forced Power Play removed; first blood (100 g) and first tower (300 g) bonuses back",
+  "role quests: Top gets Teleport and bonus XP, Mid a boots upgrade and 4 s Recall, ADC gold and a 7th item slot",
+  "turret shields are permanent; inner and inhibitor turrets have shields too",
+  "epic monsters +15% HP, stats scale with champion level; most epic monster gold reduced"
+ ],
+ "gameLength": {
+  "mean": 1933.2,
+  "p10": 1552.1,
+  "p50": 1877.0,
+  "p90": 2363.1,
+  "n": 502
+ },
+ "firstBlood": {
+  "mean": 305.7,
+  "p10": 135.9,
+  "p50": 256.0,
+  "p90": 530.7,
+  "n": 502
+ },
+ "firstTower": {
+  "mean": 943.7,
+  "p10": 762.9,
+  "p50": 947.1,
+  "p90": 1104.2,
+  "n": 502
+ },
+ "killsPerMin": [
+  0.012,
+  0.056,
+  0.287,
+  0.438,
+  0.319,
+  0.436,
+  0.544,
+  0.444,
+  0.753,
+  0.546,
+  0.458,
+  0.954,
+  0.779,
+  0.801,
+  0.783,
+  1.062,
+  0.894,
+  0.986,
+  0.914,
+  0.904,
+  0.968,
+  0.976,
+  1.311,
+  1.291,
+  1.359,
+  1.45,
+  1.417,
+  1.569,
+  1.701,
+  1.702,
+  1.869,
+  1.588,
+  1.611,
+  1.969,
+  1.351,
+  1.983,
+  1.78,
+  2.279,
+  1.709,
+  1.489,
+  1.971,
+  2.357,
+  1.773,
+  2.125,
+  2.385
+ ],
+ "killsPerMinNote": "index 0 = minute 1; mean champion kills (both teams) among games still running at that minute",
+ "soloKillRate": {
+  "Top": 0.322,
+  "Jungle": 0.125,
+  "Mid": 0.232,
+  "Bot": 0.105,
+  "Support": 0.024
+ },
+ "soloKillLane": {
+  "Top": 0.161,
+  "Jungle": 0.035,
+  "Mid": 0.106,
+  "Bot": 0.043,
+  "Support": 0.008
+ },
+ "soloKillNote": "per player per game: kills by that role with no assisting participant; soloKillLane counts only victims of the same role",
+ "multikills": {
+  "double": 3.321,
+  "triple": 0.633,
+  "quadra": 0.106,
+  "penta": 0.026
+ },
+ "aceRate": 1.034,
+ "dragonTypes": {
+  "WATER_DRAGON": 0.186,
+  "HEXTECH_DRAGON": 0.173,
+  "CHEMTECH_DRAGON": 0.172,
+  "AIR_DRAGON": 0.166,
+  "FIRE_DRAGON": 0.154,
+  "EARTH_DRAGON": 0.148
+ },
+ "soulRate": 0.456,
+ "soulTypes": {
+  "Ocean": 52,
+  "Cloud": 39,
+  "Chemtech": 39,
+  "Hextech": 38,
+  "Infernal": 33,
+  "Mountain": 28
+ },
+ "measured": {
+  "games": 502,
+  "earliestKill": {
+   "baron": 1218,
+   "dragon": 322,
+   "elder": 1734,
+   "grubs": 485,
+   "herald": 913
+  },
+  "minRespawnGap": {
+   "dragon": 307,
+   "baron": 368,
+   "elder": 378
+  },
+  "killsPerGame": {
+   "dragon": 4.39,
+   "baron": 1.31,
+   "herald": 1.0,
+   "grubs": 3.0,
+   "atakhan": 0.0,
+   "elder": 0.09
+  },
+  "grubsTakenPerGame": {
+   "3": 502
+  }
+ },
+ "draft": {
+  "order": [
+   [
+    "B",
+    "ban"
+   ],
+   [
+    "R",
+    "ban"
+   ],
+   [
+    "B",
+    "ban"
+   ],
+   [
+    "R",
+    "ban"
+   ],
+   [
+    "B",
+    "ban"
+   ],
+   [
+    "R",
+    "ban"
+   ],
+   [
+    "B",
+    "pick"
+   ],
+   [
+    "R",
+    "pick"
+   ],
+   [
+    "R",
+    "pick"
+   ],
+   [
+    "B",
+    "pick"
+   ],
+   [
+    "B",
+    "pick"
+   ],
+   [
+    "R",
+    "pick"
+   ],
+   [
+    "R",
+    "ban"
+   ],
+   [
+    "B",
+    "ban"
+   ],
+   [
+    "R",
+    "ban"
+   ],
+   [
+    "B",
+    "ban"
+   ],
+   [
+    "R",
+    "pick"
+   ],
+   [
+    "B",
+    "pick"
+   ],
+   [
+    "B",
+    "pick"
+   ],
+   [
+    "R",
+    "pick"
+   ]
+  ],
+  "orderNote": "Standard 20-step tournament draft. In 2026 'B' means the team drafting first and 'R' the team drafting second: with First Selection the pick order is no longer tied to the blue side.",
+  "firstSelection": "2026 First Selection: the team holding priority picks ONE of (a) map side or (b) draft order (first or second); the other team then decides the remaining one. Game 1 priority goes to the higher seed (otherwise coin toss); in later games the loser of the previous game holds it. Applied in LCK from the 2026 LCK Cup.",
+  "fearless": "Hard Fearless Draft (LCK since 2025, kept for 2026): a champion picked by either team in an earlier game of the series cannot be picked by either team for the rest of that series. Bans do not carry over. Bo3 in the regular rounds, Bo5 in the playoffs; applied in every game of the series (no reset for game 5, following how LCK ran it in 2025; the 2026 rulebook text itself was not read).",
+  "source": [
+   "https://lolesports.com/ko-KR/news/season-start-2026-lol-esports",
+   "https://www.hankyung.com/article/202601091682i",
+   "https://www.gosugamers.net/lol/news/77812-lol-esports-2026-introduces-new-draft-rule-first-selection-and-a-bo5-heavy-first-stand"
+  ]
+ }
+}

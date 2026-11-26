@@ -1,0 +1,15 @@
+.start { max-width: 1120px; margin: 0 auto; padding: 26px 18px; }
+.start-tools { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-bottom: 10px; }
+.start-body { display: grid; grid-template-columns: minmax(0, 860px); justify-content: center; gap: 12px; }
+.start-body.picked { grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); }
+.start-title { font-size: 22px; margin-bottom: 2px; text-align: center; }
+.start-sub { text-align: center; margin-bottom: 12px; }
+.team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.start-body:not(.picked) .team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.newgame { animation: newgameIn 0.25s steps(4) both; align-self: start; }
+@keyframes newgameIn { from { transform: translateX(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+.diff-badge { display: inline-block; font-size: 11px; padding: 0 6px; background: #252b40; color: var(--muted); }
+.diff-badge.d1 { background: #163020; color: #8ef0a8; }
+.diff-badge.d2 { background: #142a40; color: #9ad0ff; }
+.diff-badge.d3 { background: #3a3014; color: var(--gold); }
+.diff-badge.d4 { background: #3a1820; color: #ff9a9a; }

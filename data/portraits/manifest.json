@@ -1,0 +1,5276 @@
+[
+ {
+  "section": "LCK",
+  "group": "T1  T1",
+  "kind": "player",
+  "id": "Doran (Choi Hyeon-jun)",
+  "name": "Doran",
+  "role": "Top",
+  "team": "T1",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1209748653
+ },
+ {
+  "section": "LCK",
+  "group": "T1  T1",
+  "kind": "player",
+  "id": "Oner",
+  "name": "Oner",
+  "role": "Jungle",
+  "team": "T1",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 4,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2645722569
+ },
+ {
+  "section": "LCK",
+  "group": "T1  T1",
+  "kind": "player",
+  "id": "Faker",
+  "name": "Faker",
+  "role": "Mid",
+  "team": "T1",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 7,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 374070773
+ },
+ {
+  "section": "LCK",
+  "group": "T1  T1",
+  "kind": "player",
+  "id": "Peyz",
+  "name": "Peyz",
+  "role": "Bot",
+  "team": "T1",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 4,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1773567213
+ },
+ {
+  "section": "LCK",
+  "group": "T1  T1",
+  "kind": "player",
+  "id": "Keria",
+  "name": "Keria",
+  "role": "Support",
+  "team": "T1",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1162364571
+ },
+ {
+  "section": "LCK",
+  "group": "T1  T1",
+  "kind": "staff",
+  "id": "Tom (Im Jae-hyeon)",
+  "name": "Tom",
+  "role": "Head Coach",
+  "team": "T1",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": -3,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1888021467
+ },
+ {
+  "section": "LCK",
+  "group": "T1  T1",
+  "kind": "staff",
+  "id": "kkOma",
+  "name": "kkOma",
+  "role": "Head Coach",
+  "team": "T1",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": -6,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 410249379
+ },
+ {
+  "section": "LCK",
+  "group": "T1  T1",
+  "kind": "staff",
+  "id": "Easyhoon",
+  "name": "Easyhoon",
+  "role": "Coach",
+  "team": "T1",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": -6,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2422282331
+ },
+ {
+  "section": "LCK",
+  "group": "T1  T1",
+  "kind": "staff",
+  "id": "Mata",
+  "name": "Mata",
+  "role": "Coach",
+  "team": "T1",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 3,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1896044155
+ },
+ {
+  "section": "LCK",
+  "group": "T1  T1",
+  "kind": "staff",
+  "id": "KkOma",
+  "name": "kkOma",
+  "role": "Coach",
+  "team": "T1",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1405062071
+ },
+ {
+  "section": "LCK",
+  "group": "젠지  Gen.G",
+  "kind": "player",
+  "id": "Kiin",
+  "name": "Kiin",
+  "role": "Top",
+  "team": "GEN",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": 5,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 383383
+ },
+ {
+  "section": "LCK",
+  "group": "젠지  Gen.G",
+  "kind": "player",
+  "id": "Canyon",
+  "name": "Canyon",
+  "role": "Jungle",
+  "team": "GEN",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": 7,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2982341165
+ },
+ {
+  "section": "LCK",
+  "group": "젠지  Gen.G",
+  "kind": "player",
+  "id": "Chovy",
+  "name": "Chovy",
+  "role": "Mid",
+  "team": "GEN",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": 7,
+  "style": 1,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3904952063
+ },
+ {
+  "section": "LCK",
+  "group": "젠지  Gen.G",
+  "kind": "player",
+  "id": "Ruler",
+  "name": "Ruler",
+  "role": "Bot",
+  "team": "GEN",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": 1,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2534453789
+ },
+ {
+  "section": "LCK",
+  "group": "젠지  Gen.G",
+  "kind": "player",
+  "id": "Duro",
+  "name": "Duro",
+  "role": "Support",
+  "team": "GEN",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": 5,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 165888159
+ },
+ {
+  "section": "LCK",
+  "group": "젠지  Gen.G",
+  "kind": "staff",
+  "id": "Ryu",
+  "name": "Ryu",
+  "role": "Head Coach",
+  "team": "GEN",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3392791419
+ },
+ {
+  "section": "LCK",
+  "group": "젠지  Gen.G",
+  "kind": "staff",
+  "id": "Helper (Kwon Yeong-jae)",
+  "name": "Helper",
+  "role": "Head Coach",
+  "team": "GEN",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": 2,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2309552223
+ },
+ {
+  "section": "LCK",
+  "group": "젠지  Gen.G",
+  "kind": "staff",
+  "id": "Lyn",
+  "name": "Lyn",
+  "role": "Coach",
+  "team": "GEN",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": -2,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2675617923
+ },
+ {
+  "section": "LCK",
+  "group": "젠지  Gen.G",
+  "kind": "staff",
+  "id": "Nova (Park Chan-ho)",
+  "name": "Nova",
+  "role": "Coach",
+  "team": "GEN",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": -1,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2675617923
+ },
+ {
+  "section": "LCK",
+  "group": "한화생명e스포츠  Hanwha Life Esports",
+  "kind": "player",
+  "id": "Zeus",
+  "name": "Zeus",
+  "role": "Top",
+  "team": "HLE",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 3838711541
+ },
+ {
+  "section": "LCK",
+  "group": "한화생명e스포츠  Hanwha Life Esports",
+  "kind": "player",
+  "id": "Kanavi",
+  "name": "Kanavi",
+  "role": "Jungle",
+  "team": "HLE",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3763914645
+ },
+ {
+  "section": "LCK",
+  "group": "한화생명e스포츠  Hanwha Life Esports",
+  "kind": "player",
+  "id": "Zeka (Kim Geon-woo)",
+  "name": "Zeka",
+  "role": "Mid",
+  "team": "HLE",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": -7,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2648779779
+ },
+ {
+  "section": "LCK",
+  "group": "한화생명e스포츠  Hanwha Life Esports",
+  "kind": "player",
+  "id": "Gumayusi",
+  "name": "Gumayusi",
+  "role": "Bot",
+  "team": "HLE",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 633046739
+ },
+ {
+  "section": "LCK",
+  "group": "한화생명e스포츠  Hanwha Life Esports",
+  "kind": "player",
+  "id": "Delight",
+  "name": "Delight",
+  "role": "Support",
+  "team": "HLE",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3077537983
+ },
+ {
+  "section": "LCK",
+  "group": "한화생명e스포츠  Hanwha Life Esports",
+  "kind": "player",
+  "id": "Peanut",
+  "name": "Peanut",
+  "role": "Jungle",
+  "team": "HLE",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": 3,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3057554941
+ },
+ {
+  "section": "LCK",
+  "group": "한화생명e스포츠  Hanwha Life Esports",
+  "kind": "staff",
+  "id": "Homme",
+  "name": "Homme",
+  "role": "Head Coach",
+  "team": "HLE",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3725448203
+ },
+ {
+  "section": "LCK",
+  "group": "한화생명e스포츠  Hanwha Life Esports",
+  "kind": "staff",
+  "id": "Mowgli",
+  "name": "Mowgli",
+  "role": "Head Coach",
+  "team": "HLE",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": -2,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 3800796255
+ },
+ {
+  "section": "LCK",
+  "group": "한화생명e스포츠  Hanwha Life Esports",
+  "kind": "staff",
+  "id": "Sin (Yeon Hyeong-mo)",
+  "name": "Sin",
+  "role": "Coach",
+  "team": "HLE",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": -1,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1225362581
+ },
+ {
+  "section": "LCK",
+  "group": "한화생명e스포츠  Hanwha Life Esports",
+  "kind": "staff",
+  "id": "Shine (Shin Dong-wook)",
+  "name": "Shine",
+  "role": "Coach",
+  "team": "HLE",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": 1,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1322188445
+ },
+ {
+  "section": "LCK",
+  "group": "디플러스 기아  Dplus Kia",
+  "kind": "player",
+  "id": "Siwoo",
+  "name": "Siwoo",
+  "role": "Top",
+  "team": "DK",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -1,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1335329025
+ },
+ {
+  "section": "LCK",
+  "group": "디플러스 기아  Dplus Kia",
+  "kind": "player",
+  "id": "Lucid (Choi Yong-hyeok)",
+  "name": "Lucid",
+  "role": "Jungle",
+  "team": "DK",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 7,
+  "style": 3,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3059070199
+ },
+ {
+  "section": "LCK",
+  "group": "디플러스 기아  Dplus Kia",
+  "kind": "player",
+  "id": "ShowMaker",
+  "name": "ShowMaker",
+  "role": "Mid",
+  "team": "DK",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -4,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2166596603
+ },
+ {
+  "section": "LCK",
+  "group": "디플러스 기아  Dplus Kia",
+  "kind": "player",
+  "id": "Smash (Shin Geum-jae)",
+  "name": "Smash",
+  "role": "Bot",
+  "team": "DK",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 4,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 704890965
+ },
+ {
+  "section": "LCK",
+  "group": "디플러스 기아  Dplus Kia",
+  "kind": "player",
+  "id": "Career",
+  "name": "Career",
+  "role": "Support",
+  "team": "DK",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -7,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1418447269
+ },
+ {
+  "section": "LCK",
+  "group": "디플러스 기아  Dplus Kia",
+  "kind": "player",
+  "id": "BeryL",
+  "name": "BeryL",
+  "role": "Support",
+  "team": "DK",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 6,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3682337919
+ },
+ {
+  "section": "LCK",
+  "group": "디플러스 기아  Dplus Kia",
+  "kind": "staff",
+  "id": "Bengi",
+  "name": "Bengi",
+  "role": "Head Coach",
+  "team": "DK",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 1,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 160639247
+ },
+ {
+  "section": "LCK",
+  "group": "디플러스 기아  Dplus Kia",
+  "kind": "staff",
+  "id": "cvMax",
+  "name": "cvMax",
+  "role": "Head Coach",
+  "team": "DK",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 2,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 213541809
+ },
+ {
+  "section": "LCK",
+  "group": "디플러스 기아  Dplus Kia",
+  "kind": "staff",
+  "id": "CvMax",
+  "name": "cvMax",
+  "role": "Coach",
+  "team": "DK",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 0,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3672928287
+ },
+ {
+  "section": "LCK",
+  "group": "디플러스 기아  Dplus Kia",
+  "kind": "staff",
+  "id": "Hachani",
+  "name": "Hachani",
+  "role": "Coach",
+  "team": "DK",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -1,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 422747393
+ },
+ {
+  "section": "LCK",
+  "group": "디플러스 기아  Dplus Kia",
+  "kind": "staff",
+  "id": "PoohManDu",
+  "name": "PoohManDu",
+  "role": "Coach",
+  "team": "DK",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -4,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2069867047
+ },
+ {
+  "section": "LCK",
+  "group": "kt 롤스터  KT Rolster",
+  "kind": "player",
+  "id": "PerfecT (Lee Seung-min)",
+  "name": "PerfecT",
+  "role": "Top",
+  "team": "KT",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": -2,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 403224349
+ },
+ {
+  "section": "LCK",
+  "group": "kt 롤스터  KT Rolster",
+  "kind": "player",
+  "id": "Cuzz",
+  "name": "Cuzz",
+  "role": "Jungle",
+  "team": "KT",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": 3,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 812990185
+ },
+ {
+  "section": "LCK",
+  "group": "kt 롤스터  KT Rolster",
+  "kind": "player",
+  "id": "Bdd",
+  "name": "Bdd",
+  "role": "Mid",
+  "team": "KT",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": -1,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 424197353
+ },
+ {
+  "section": "LCK",
+  "group": "kt 롤스터  KT Rolster",
+  "kind": "player",
+  "id": "Jiwoo",
+  "name": "Jiwoo",
+  "role": "Bot",
+  "team": "KT",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3988627575
+ },
+ {
+  "section": "LCK",
+  "group": "kt 롤스터  KT Rolster",
+  "kind": "player",
+  "id": "Effort",
+  "name": "Effort",
+  "role": "Support",
+  "team": "KT",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 3669919359
+ },
+ {
+  "section": "LCK",
+  "group": "kt 롤스터  KT Rolster",
+  "kind": "staff",
+  "id": "Score",
+  "name": "Score",
+  "role": "Head Coach",
+  "team": "KT",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": 3,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 812990185
+ },
+ {
+  "section": "LCK",
+  "group": "kt 롤스터  KT Rolster",
+  "kind": "staff",
+  "id": "Museong",
+  "name": "Museong",
+  "role": "Coach",
+  "team": "KT",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": -1,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 4015276907
+ },
+ {
+  "section": "LCK",
+  "group": "kt 롤스터  KT Rolster",
+  "kind": "staff",
+  "id": "Sonstar",
+  "name": "Sonstar",
+  "role": "Coach",
+  "team": "KT",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": -7,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 3481016043
+ },
+ {
+  "section": "LCK",
+  "group": "BNK 피어엑스  BNK FEARX",
+  "kind": "player",
+  "id": "Clear (Song Hyeon-min)",
+  "name": "Clear",
+  "role": "Top",
+  "team": "BFX",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": 3,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1797241767
+ },
+ {
+  "section": "LCK",
+  "group": "BNK 피어엑스  BNK FEARX",
+  "kind": "player",
+  "id": "Raptor (Jeon Eo-jin)",
+  "name": "Raptor",
+  "role": "Jungle",
+  "team": "BFX",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": 6,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 782461649
+ },
+ {
+  "section": "LCK",
+  "group": "BNK 피어엑스  BNK FEARX",
+  "kind": "player",
+  "id": "VicLa",
+  "name": "VicLa",
+  "role": "Mid",
+  "team": "BFX",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": -6,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 934069729
+ },
+ {
+  "section": "LCK",
+  "group": "BNK 피어엑스  BNK FEARX",
+  "kind": "player",
+  "id": "Taeyoon (Kim Tae-yoon)",
+  "name": "Taeyoon",
+  "role": "Bot",
+  "team": "BFX",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": -1,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3756858255
+ },
+ {
+  "section": "LCK",
+  "group": "BNK 피어엑스  BNK FEARX",
+  "kind": "player",
+  "id": "Kellin",
+  "name": "Kellin",
+  "role": "Support",
+  "team": "BFX",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": 1,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1222597871
+ },
+ {
+  "section": "LCK",
+  "group": "BNK 피어엑스  BNK FEARX",
+  "kind": "player",
+  "id": "Daystar",
+  "name": "Daystar",
+  "role": "Mid",
+  "team": "BFX",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1193239927
+ },
+ {
+  "section": "LCK",
+  "group": "BNK 피어엑스  BNK FEARX",
+  "kind": "staff",
+  "id": "Rather",
+  "name": "Rather",
+  "role": "Head Coach",
+  "team": "BFX",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": -2,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 2903388565
+ },
+ {
+  "section": "LCK",
+  "group": "BNK 피어엑스  BNK FEARX",
+  "kind": "staff",
+  "id": "Lira",
+  "name": "Lira",
+  "role": "Coach",
+  "team": "BFX",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": -6,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3756858255
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "player",
+  "id": "DuDu (Lee Dong-ju)",
+  "name": "DuDu",
+  "role": "Top",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": -3,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 2876489465
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "player",
+  "id": "Sharvel",
+  "name": "Sharvel",
+  "role": "Jungle",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": -4,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2069072259
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "player",
+  "id": "Clozer",
+  "name": "Clozer",
+  "role": "Mid",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 2,
+  "style": 1,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1759706427
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "player",
+  "id": "deokdam",
+  "name": "deokdam",
+  "role": "Bot",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 0,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1893325477
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "player",
+  "id": "Peter (Jeong Yoon-su)",
+  "name": "Peter",
+  "role": "Support",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 5,
+  "style": 3,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1778293279
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "player",
+  "id": "Pyosik",
+  "name": "Pyosik",
+  "role": "Jungle",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": -7,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3170247435
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "player",
+  "id": "BuLLDoG (Lee Tae-young)",
+  "name": "BuLLDoG",
+  "role": "Mid",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 0,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1472636599
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "player",
+  "id": "Life",
+  "name": "Life",
+  "role": "Support",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 7,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3798939751
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "staff",
+  "id": "Ggoong",
+  "name": "Ggoong",
+  "role": "Head Coach",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 2,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3543073361
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "staff",
+  "id": "FanTaSy (Jeong Myeong-hoon)",
+  "name": "FanTaSy",
+  "role": "Head Coach",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": -7,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 2524205649
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "staff",
+  "id": "oDin (Ju Yeong-dal)",
+  "name": "oDin",
+  "role": "Head Coach",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 0,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3249391643
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "staff",
+  "id": "Minit",
+  "name": "Minit",
+  "role": "Coach",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": -4,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3528244157
+ },
+ {
+  "section": "LCK",
+  "group": "DN 수퍼스  DN SOOPers",
+  "kind": "staff",
+  "id": "Punch",
+  "name": "Punch",
+  "role": "Coach",
+  "team": "DNS",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 4,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1371183703
+ },
+ {
+  "section": "LCK",
+  "group": "농심 레드포스  Nongshim RedForce",
+  "kind": "player",
+  "id": "Kingen",
+  "name": "Kingen",
+  "role": "Top",
+  "team": "NS",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 0,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 4080291739
+ },
+ {
+  "section": "LCK",
+  "group": "농심 레드포스  Nongshim RedForce",
+  "kind": "player",
+  "id": "Sponge",
+  "name": "Sponge",
+  "role": "Jungle",
+  "team": "NS",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": -2,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1384591453
+ },
+ {
+  "section": "LCK",
+  "group": "농심 레드포스  Nongshim RedForce",
+  "kind": "player",
+  "id": "Scout",
+  "name": "Scout",
+  "role": "Mid",
+  "team": "NS",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 2,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 402145649
+ },
+ {
+  "section": "LCK",
+  "group": "농심 레드포스  Nongshim RedForce",
+  "kind": "player",
+  "id": "Diable",
+  "name": "Diable",
+  "role": "Bot",
+  "team": "NS",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 6,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 952097905
+ },
+ {
+  "section": "LCK",
+  "group": "농심 레드포스  Nongshim RedForce",
+  "kind": "player",
+  "id": "Lehends",
+  "name": "Lehends",
+  "role": "Support",
+  "team": "NS",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": -5,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1384591453
+ },
+ {
+  "section": "LCK",
+  "group": "농심 레드포스  Nongshim RedForce",
+  "kind": "player",
+  "id": "Calix (Syun Hyun-bin)",
+  "name": "Calix",
+  "role": "Mid",
+  "team": "NS",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": -7,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 624352529
+ },
+ {
+  "section": "LCK",
+  "group": "농심 레드포스  Nongshim RedForce",
+  "kind": "staff",
+  "id": "DanDy",
+  "name": "DanDy",
+  "role": "Head Coach",
+  "team": "NS",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": -6,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 3173970041
+ },
+ {
+  "section": "LCK",
+  "group": "농심 레드포스  Nongshim RedForce",
+  "kind": "staff",
+  "id": "Chelly (Park Seung-jin)",
+  "name": "Chelly",
+  "role": "Coach",
+  "team": "NS",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 3,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2884955547
+ },
+ {
+  "section": "LCK",
+  "group": "농심 레드포스  Nongshim RedForce",
+  "kind": "staff",
+  "id": "Crazy (Kim Jae-hee)",
+  "name": "Crazy",
+  "role": "Coach",
+  "team": "NS",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 0,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3324140107
+ },
+ {
+  "section": "LCK",
+  "group": "농심 레드포스  Nongshim RedForce",
+  "kind": "staff",
+  "id": "SSUN (Kim Tae-yang)",
+  "name": "SSUN",
+  "role": "Coach",
+  "team": "NS",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": -6,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3146790499
+ },
+ {
+  "section": "LCK",
+  "group": "한진 브리온  HANJIN BRION",
+  "kind": "player",
+  "id": "Casting",
+  "name": "Casting",
+  "role": "Top",
+  "team": "BRO",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": 2,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3776027409
+ },
+ {
+  "section": "LCK",
+  "group": "한진 브리온  HANJIN BRION",
+  "kind": "player",
+  "id": "GIDEON",
+  "name": "GIDEON",
+  "role": "Jungle",
+  "team": "BRO",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -7,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1292113773
+ },
+ {
+  "section": "LCK",
+  "group": "한진 브리온  HANJIN BRION",
+  "kind": "player",
+  "id": "Roamer",
+  "name": "Roamer",
+  "role": "Mid",
+  "team": "BRO",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -2,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1844669173
+ },
+ {
+  "section": "LCK",
+  "group": "한진 브리온  HANJIN BRION",
+  "kind": "player",
+  "id": "Teddy",
+  "name": "Teddy",
+  "role": "Bot",
+  "team": "BRO",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -1,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1297130141
+ },
+ {
+  "section": "LCK",
+  "group": "한진 브리온  HANJIN BRION",
+  "kind": "player",
+  "id": "Namgung",
+  "name": "Namgung",
+  "role": "Support",
+  "team": "BRO",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -5,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 652440113
+ },
+ {
+  "section": "LCK",
+  "group": "한진 브리온  HANJIN BRION",
+  "kind": "player",
+  "id": "Croco",
+  "name": "Croco",
+  "role": "Jungle",
+  "team": "BRO",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": 0,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2555972119
+ },
+ {
+  "section": "LCK",
+  "group": "한진 브리온  HANJIN BRION",
+  "kind": "player",
+  "id": "Hype (Byeon Jeong-hyeon)",
+  "name": "Hype",
+  "role": "Bot",
+  "team": "BRO",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -7,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 274119345
+ },
+ {
+  "section": "LCK",
+  "group": "한진 브리온  HANJIN BRION",
+  "kind": "staff",
+  "id": "Ssong",
+  "name": "Ssong",
+  "role": "Head Coach",
+  "team": "BRO",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -5,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1092488437
+ },
+ {
+  "section": "LCK",
+  "group": "한진 브리온  HANJIN BRION",
+  "kind": "staff",
+  "id": "Edgar",
+  "name": "Edgar",
+  "role": "Head Coach",
+  "team": "BRO",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -4,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 254157123
+ },
+ {
+  "section": "LCK",
+  "group": "한진 브리온  HANJIN BRION",
+  "kind": "staff",
+  "id": "Duke (Lee Ho-seong)",
+  "name": "Duke",
+  "role": "Coach",
+  "team": "BRO",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": 0,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2933638629
+ },
+ {
+  "section": "LCK",
+  "group": "한진 브리온  HANJIN BRION",
+  "kind": "staff",
+  "id": "GuGer",
+  "name": "GuGer",
+  "role": "Coach",
+  "team": "BRO",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -1,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 2653945943
+ },
+ {
+  "section": "LCK",
+  "group": "키움 DRX  Kiwoom DRX",
+  "kind": "player",
+  "id": "Willer",
+  "name": "Willer",
+  "role": "Jungle",
+  "team": "KRX",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": 1,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1198728469
+ },
+ {
+  "section": "LCK",
+  "group": "키움 DRX  Kiwoom DRX",
+  "kind": "player",
+  "id": "Ucal",
+  "name": "Ucal",
+  "role": "Mid",
+  "team": "KRX",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": -3,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1678012069
+ },
+ {
+  "section": "LCK",
+  "group": "키움 DRX  Kiwoom DRX",
+  "kind": "player",
+  "id": "Aiming",
+  "name": "Aiming",
+  "role": "Bot",
+  "team": "KRX",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": -1,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1851996141
+ },
+ {
+  "section": "LCK",
+  "group": "키움 DRX  Kiwoom DRX",
+  "kind": "player",
+  "id": "Andil",
+  "name": "Andil",
+  "role": "Support",
+  "team": "KRX",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": -4,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1454469217
+ },
+ {
+  "section": "LCK",
+  "group": "키움 DRX  Kiwoom DRX",
+  "kind": "staff",
+  "id": "Joker (Cho Jae-eup)",
+  "name": "Joker",
+  "role": "Head Coach",
+  "team": "KRX",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": 0,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2071773971
+ },
+ {
+  "section": "LCK",
+  "group": "키움 DRX  Kiwoom DRX",
+  "kind": "staff",
+  "id": "Naehyun",
+  "name": "Naehyun",
+  "role": "Coach",
+  "team": "KRX",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": 4,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 539152645
+ },
+ {
+  "section": "LCK",
+  "group": "키움 DRX  Kiwoom DRX",
+  "kind": "staff",
+  "id": "Saroo",
+  "name": "Saroo",
+  "role": "Coach",
+  "team": "KRX",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": -6,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1851996141
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "player",
+  "id": "Haetae",
+  "name": "Haetae",
+  "role": "Top",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 3,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 931256313
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "player",
+  "id": "Painter",
+  "name": "Painter",
+  "role": "Jungle",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 5,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 2384954703
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "player",
+  "id": "Guti (Moon Jeong-hwan)",
+  "name": "Guti",
+  "role": "Mid",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 7,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3961695965
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "player",
+  "id": "Eclipse (Kim Min-jun)",
+  "name": "Eclipse",
+  "role": "Bot",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": -3,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 4272161993
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "player",
+  "id": "Cloud (Moon Hyeon-ho)",
+  "name": "Cloud",
+  "role": "Support",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 2,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2322667985
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "player",
+  "id": "Guardian (Seong Tae-hyo)",
+  "name": "Guardian",
+  "role": "Top",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 344843539
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "player",
+  "id": "Carim",
+  "name": "Carim",
+  "role": "Jungle",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": 4,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 807363745
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "player",
+  "id": "Poby",
+  "name": "Poby",
+  "role": "Mid",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2422282331
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "player",
+  "id": "Cypher",
+  "name": "Cypher",
+  "role": "Bot",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": -5,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3786133153
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "player",
+  "id": "Jinbeom",
+  "name": "Jinbeom",
+  "role": "Bot",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": -6,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1361731755
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "staff",
+  "id": "DooTi",
+  "name": "DooTi",
+  "role": "Head Coach",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": -7,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1408865511
+ },
+ {
+  "section": "LCK CL",
+  "group": "T1 이스포츠 아카데미  T1 Esports Academy",
+  "kind": "staff",
+  "id": "Nagne",
+  "name": "Nagne",
+  "role": "Coach",
+  "team": "T1EA",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1888021467
+ },
+ {
+  "section": "LCK CL",
+  "group": "젠지 글로벌 아카데미  Gen.G Global Academy",
+  "kind": "player",
+  "id": "Ripple",
+  "name": "Ripple",
+  "role": "Top",
+  "team": "GENGA",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": -5,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1723306749
+ },
+ {
+  "section": "LCK CL",
+  "group": "젠지 글로벌 아카데미  Gen.G Global Academy",
+  "kind": "player",
+  "id": "Courage (Jeon Hyun-min)",
+  "name": "Courage",
+  "role": "Jungle",
+  "team": "GENGA",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": 7,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 306459427
+ },
+ {
+  "section": "LCK CL",
+  "group": "젠지 글로벌 아카데미  Gen.G Global Academy",
+  "kind": "player",
+  "id": "Kemish",
+  "name": "Kemish",
+  "role": "Mid",
+  "team": "GENGA",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": -5,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1723306749
+ },
+ {
+  "section": "LCK CL",
+  "group": "젠지 글로벌 아카데미  Gen.G Global Academy",
+  "kind": "player",
+  "id": "MUDAI",
+  "name": "MUDAI",
+  "role": "Bot",
+  "team": "GENGA",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3658748463
+ },
+ {
+  "section": "LCK CL",
+  "group": "젠지 글로벌 아카데미  Gen.G Global Academy",
+  "kind": "player",
+  "id": "Lumos",
+  "name": "Lumos",
+  "role": "Support",
+  "team": "GENGA",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": -2,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2675617923
+ },
+ {
+  "section": "LCK CL",
+  "group": "젠지 글로벌 아카데미  Gen.G Global Academy",
+  "kind": "player",
+  "id": "Hanbyeol",
+  "name": "Hanbyeol",
+  "role": "Top",
+  "team": "GENGA",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": -1,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 4120857233
+ },
+ {
+  "section": "LCK CL",
+  "group": "젠지 글로벌 아카데미  Gen.G Global Academy",
+  "kind": "player",
+  "id": "Wet",
+  "name": "Winner",
+  "role": "Jungle",
+  "team": "GENGA",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3001280809
+ },
+ {
+  "section": "LCK CL",
+  "group": "젠지 글로벌 아카데미  Gen.G Global Academy",
+  "kind": "player",
+  "id": "About",
+  "name": "About",
+  "role": "Bot",
+  "team": "GENGA",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": 5,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1535002911
+ },
+ {
+  "section": "LCK CL",
+  "group": "젠지 글로벌 아카데미  Gen.G Global Academy",
+  "kind": "player",
+  "id": "SIRIUSS",
+  "name": "SIRIUSS",
+  "role": "Support",
+  "team": "GENGA",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": -1,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 2141357059
+ },
+ {
+  "section": "LCK CL",
+  "group": "젠지 글로벌 아카데미  Gen.G Global Academy",
+  "kind": "staff",
+  "id": "Jerry (Kang Sung-jun)",
+  "name": "Jerry",
+  "role": "Coach",
+  "team": "GENGA",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": -7,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1763036291
+ },
+ {
+  "section": "LCK CL",
+  "group": "젠지 글로벌 아카데미  Gen.G Global Academy",
+  "kind": "staff",
+  "id": "Gyul",
+  "name": "Gyul",
+  "role": "Coach",
+  "team": "GENGA",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 853647989
+ },
+ {
+  "section": "LCK CL",
+  "group": "한화생명e스포츠 챌린저스  Hanwha Life Esports Challengers",
+  "kind": "player",
+  "id": "Panther (Park Ji-ho)",
+  "name": "Panther",
+  "role": "Top",
+  "team": "HLEC",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2648779779
+ },
+ {
+  "section": "LCK CL",
+  "group": "한화생명e스포츠 챌린저스  Hanwha Life Esports Challengers",
+  "kind": "player",
+  "id": "Jackal (Lee Su-min)",
+  "name": "Jackal",
+  "role": "Jungle",
+  "team": "HLEC",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": -7,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2648779779
+ },
+ {
+  "section": "LCK CL",
+  "group": "한화생명e스포츠 챌린저스  Hanwha Life Esports Challengers",
+  "kind": "player",
+  "id": "Cracker (Lee Jeong-wook)",
+  "name": "Cracker",
+  "role": "Mid",
+  "team": "HLEC",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": 5,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 82116667
+ },
+ {
+  "section": "LCK CL",
+  "group": "한화생명e스포츠 챌린저스  Hanwha Life Esports Challengers",
+  "kind": "player",
+  "id": "Pyeonsik",
+  "name": "Pyeonsik",
+  "role": "Bot",
+  "team": "HLEC",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3465115015
+ },
+ {
+  "section": "LCK CL",
+  "group": "한화생명e스포츠 챌린저스  Hanwha Life Esports Challengers",
+  "kind": "player",
+  "id": "Bluffing",
+  "name": "Bluffing",
+  "role": "Support",
+  "team": "HLEC",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": 7,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3753059957
+ },
+ {
+  "section": "LCK CL",
+  "group": "한화생명e스포츠 챌린저스  Hanwha Life Esports Challengers",
+  "kind": "player",
+  "id": "Rooster",
+  "name": "Rooster",
+  "role": "Top",
+  "team": "HLEC",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 919998103
+ },
+ {
+  "section": "LCK CL",
+  "group": "한화생명e스포츠 챌린저스  Hanwha Life Esports Challengers",
+  "kind": "player",
+  "id": "Valiant (Han Kang-hyun)",
+  "name": "Valiant",
+  "role": "Support",
+  "team": "HLEC",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 570179841
+ },
+ {
+  "section": "LCK CL",
+  "group": "한화생명e스포츠 챌린저스  Hanwha Life Esports Challengers",
+  "kind": "staff",
+  "id": "Sensation",
+  "name": "Sensation",
+  "role": "Head Coach",
+  "team": "HLEC",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ],
+  "hairIdx": -7,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2512065601
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "player",
+  "id": "Jaehyuk",
+  "name": "Jaehyuk",
+  "role": "Top",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -5,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1048855273
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "player",
+  "id": "Solid (Nam Hyeon-seo)",
+  "name": "Solid",
+  "role": "Jungle",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 7,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3085700001
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "player",
+  "id": "Garden (Seol Jeong-won)",
+  "name": "Garden",
+  "role": "Mid",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 1,
+  "style": 1,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 5849597
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "player",
+  "id": "Wayne (Hwang Seo-hyeon)",
+  "name": "Wayne",
+  "role": "Bot",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 4,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3701176897
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "player",
+  "id": "Loopy",
+  "name": "Loopy",
+  "role": "Support",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -1,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2904154909
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "player",
+  "id": "Nevid",
+  "name": "Nevid",
+  "role": "Top",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -6,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 801068161
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "player",
+  "id": "Berr",
+  "name": "Berr",
+  "role": "Support",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -2,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2904154909
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "player",
+  "id": "Bible",
+  "name": "Bible",
+  "role": "Support",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 2,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1002764245
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "player",
+  "id": "Thumb",
+  "name": "Thumb",
+  "role": "Support",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 0,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 2741794055
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "staff",
+  "id": "Woong (Kim Sun-woong)",
+  "name": "Woong",
+  "role": "Head Coach",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 5,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2539440403
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "staff",
+  "id": "ALT (Lee Han-young)",
+  "name": "ALT",
+  "role": "Head Coach",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -5,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 801068161
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "staff",
+  "id": "Sungmin",
+  "name": "Sungmin",
+  "role": "Coach",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 0,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 935221569
+ },
+ {
+  "section": "LCK CL",
+  "group": "디플러스 기아 챌린저스  Dplus Kia Challengers",
+  "kind": "staff",
+  "id": "Bible",
+  "name": "Bible",
+  "role": "Coach",
+  "team": "DKC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 2,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1002764245
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "player",
+  "id": "Sero",
+  "name": "Sero",
+  "role": "Top",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2579684897
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "player",
+  "id": "Sylvie",
+  "name": "Sylvie",
+  "role": "Jungle",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": -3,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1823386233
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "player",
+  "id": "Hwichan",
+  "name": "Hwichan",
+  "role": "Mid",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": 1,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3466493771
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "player",
+  "id": "FenRir (Park Kang-jun)",
+  "name": "FenRir",
+  "role": "Bot",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": -1,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1578907309
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "player",
+  "id": "Pollu",
+  "name": "Pollu",
+  "role": "Support",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": 5,
+  "style": 3,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1170936141
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "player",
+  "id": "YoungJae",
+  "name": "YoungJae",
+  "role": "Jungle",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": 6,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3919700011
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "player",
+  "id": "Zinie",
+  "name": "Zinie",
+  "role": "Mid",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": -2,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1276574451
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "player",
+  "id": "Paduck",
+  "name": "Paduck",
+  "role": "Bot",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": -1,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 75410117
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "player",
+  "id": "Ghost (Jang Yong-jun)",
+  "name": "Ghost",
+  "role": "Support",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": -6,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 75410117
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "player",
+  "id": "Way (Han Gil)",
+  "name": "Way",
+  "role": "Support",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": 5,
+  "style": 3,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1522004787
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "staff",
+  "id": "Spark (Kang Byung-ryul)",
+  "name": "Spark",
+  "role": "Head Coach",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3292778611
+ },
+ {
+  "section": "LCK CL",
+  "group": "kt 롤스터 챌린저스  KT Rolster Challengers",
+  "kind": "staff",
+  "id": "Lilac (Jeon Ho-jin)",
+  "name": "Lilac",
+  "role": "Coach",
+  "team": "KTC",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ],
+  "hairIdx": 2,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1238439949
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "player",
+  "id": "Kangin",
+  "name": "Kangin",
+  "role": "Top",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": -2,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1288651007
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "player",
+  "id": "Grizzly",
+  "name": "Grizzly",
+  "role": "Jungle",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": -2,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 3908674865
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "player",
+  "id": "MG (Lee Ji-hoon)",
+  "name": "MG",
+  "role": "Mid",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": 5,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 588859863
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "player",
+  "id": "Slayer (Kim Jin-young)",
+  "name": "Slayer",
+  "role": "Bot",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": -2,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2118996829
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "player",
+  "id": "Luon",
+  "name": "Luon",
+  "role": "Support",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": 3,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 2922880297
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "player",
+  "id": "Soboro",
+  "name": "Soboro",
+  "role": "Top",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": 3,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3080022341
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "player",
+  "id": "Zephyr (Hwang Hyeok-su)",
+  "name": "Zephyr",
+  "role": "Jungle",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": -3,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 3380731447
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "player",
+  "id": "Bonnie",
+  "name": "Bonnie",
+  "role": "Jungle",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 3908674865
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "player",
+  "id": "FIESTA (An Hyeon-seo)",
+  "name": "FIESTA",
+  "role": "Mid",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": 1,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 58008927
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "player",
+  "id": "Envyy",
+  "name": "Envyy",
+  "role": "Bot",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": -2,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 650370763
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "staff",
+  "id": "Key (Kim Han-gi)",
+  "name": "Key",
+  "role": "Coach",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": 3,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1427910369
+ },
+ {
+  "section": "LCK CL",
+  "group": "BNK 피어엑스 유스  BNK FEARX Youth",
+  "kind": "staff",
+  "id": "Dopil",
+  "name": "Dopil",
+  "role": "Coach",
+  "team": "BFXY",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ],
+  "hairIdx": -2,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3756858255
+ },
+ {
+  "section": "LCK CL",
+  "group": "DN 수퍼스 챌린저스  DN SOOPers Challengers",
+  "kind": "player",
+  "id": "Lancer",
+  "name": "Lancer",
+  "role": "Top",
+  "team": "DNSC",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 6,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 810400783
+ },
+ {
+  "section": "LCK CL",
+  "group": "DN 수퍼스 챌린저스  DN SOOPers Challengers",
+  "kind": "player",
+  "id": "DDoiV",
+  "name": "DDoiV",
+  "role": "Jungle",
+  "team": "DNSC",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 2,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3243752561
+ },
+ {
+  "section": "LCK CL",
+  "group": "DN 수퍼스 챌린저스  DN SOOPers Challengers",
+  "kind": "player",
+  "id": "Flip (Kim Sang-wook)",
+  "name": "Flip",
+  "role": "Mid",
+  "team": "DNSC",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 0,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 2787871205
+ },
+ {
+  "section": "LCK CL",
+  "group": "DN 수퍼스 챌린저스  DN SOOPers Challengers",
+  "kind": "player",
+  "id": "Enosh",
+  "name": "Enosh",
+  "role": "Bot",
+  "team": "DNSC",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 0,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2125847687
+ },
+ {
+  "section": "LCK CL",
+  "group": "DN 수퍼스 챌린저스  DN SOOPers Challengers",
+  "kind": "player",
+  "id": "Quantum (Son Jeong-hwan)",
+  "name": "Quantum",
+  "role": "Support",
+  "team": "DNSC",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 5,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2811039043
+ },
+ {
+  "section": "LCK CL",
+  "group": "DN 수퍼스 챌린저스  DN SOOPers Challengers",
+  "kind": "player",
+  "id": "Pungyeon",
+  "name": "Pungyeon",
+  "role": "Mid",
+  "team": "DNSC",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": -7,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 3671076127
+ },
+ {
+  "section": "LCK CL",
+  "group": "DN 수퍼스 챌린저스  DN SOOPers Challengers",
+  "kind": "staff",
+  "id": "RapidStar",
+  "name": "RapidStar",
+  "role": "Head Coach",
+  "team": "DNSC",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": -3,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2145884881
+ },
+ {
+  "section": "LCK CL",
+  "group": "DN 수퍼스 챌린저스  DN SOOPers Challengers",
+  "kind": "staff",
+  "id": "Cube (Kim Chang-seong)",
+  "name": "Cube",
+  "role": "Coach",
+  "team": "DNSC",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ],
+  "hairIdx": 0,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 515306037
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "player",
+  "id": "Janus (Eom Ye-jun)",
+  "name": "Janus",
+  "role": "Top",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 2,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2514596993
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "player",
+  "id": "MihawK",
+  "name": "MihawK",
+  "role": "Jungle",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 2,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 943179071
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "player",
+  "id": "SeTab",
+  "name": "SeTab",
+  "role": "Mid",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 6,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3176231333
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "player",
+  "id": "Lucy (Hyun Soo-hoon)",
+  "name": "Lucy",
+  "role": "Bot",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": -2,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1541739675
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "player",
+  "id": "Pleata",
+  "name": "Pleata",
+  "role": "Support",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 4,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3334721227
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "player",
+  "id": "Burdol",
+  "name": "Burdol",
+  "role": "Top",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 2,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 951189855
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "player",
+  "id": "vital",
+  "name": "vital",
+  "role": "Bot",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": -7,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2284265919
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "player",
+  "id": "Trigger (Kim Eui-joo)",
+  "name": "Trigger",
+  "role": "Bot",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 4,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2140179953
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "player",
+  "id": "Crack (Noh Ji-seong)",
+  "name": "Crack",
+  "role": "Support",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 0,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3161390527
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "staff",
+  "id": "Bon0",
+  "name": "bon0",
+  "role": "Coach",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": -2,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 3173970041
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "staff",
+  "id": "bon0",
+  "name": "bon0",
+  "role": "Coach",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": 4,
+  "style": 1,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 30441021
+ },
+ {
+  "section": "LCK CL",
+  "group": "농심 이스포츠 아카데미  Nongshim Esports Academy",
+  "kind": "staff",
+  "id": "Dawn (Kim Jin-young)",
+  "name": "Dawn",
+  "role": "Coach",
+  "team": "NSEA",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ],
+  "hairIdx": -1,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1536934161
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "DDahyuk",
+  "name": "DDahyuk",
+  "role": "Top",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": 2,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2282380705
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "Dinai",
+  "name": "Dinai",
+  "role": "Jungle",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -4,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1440281659
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "Tempester",
+  "name": "Tempester",
+  "role": "Mid",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -7,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1186700977
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "OddEye",
+  "name": "OddEye",
+  "role": "Bot",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": 5,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1782086277
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "PlanB",
+  "name": "PlanB",
+  "role": "Support",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -3,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1292113773
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "Lonely (Han Gyu-joon)",
+  "name": "Lonely",
+  "role": "Top",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -2,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 254157123
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "HamBak",
+  "name": "HamBak",
+  "role": "Jungle",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": 7,
+  "style": 1,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3543756961
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "Ellim",
+  "name": "Ellim",
+  "role": "Jungle",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -6,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 254157123
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "Fisher (Lee Jeong-tae)",
+  "name": "Fisher",
+  "role": "Mid",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": 4,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3204377191
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "Starlit",
+  "name": "Starlit",
+  "role": "Mid",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -5,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1186700977
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "Bull",
+  "name": "Bull",
+  "role": "Bot",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -4,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 2653945943
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "Levy",
+  "name": "Levy",
+  "role": "Bot",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -1,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1092488437
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "Leo (Han Gyeo-re)",
+  "name": "Leo",
+  "role": "Bot",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": 2,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2745372085
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "player",
+  "id": "Kice",
+  "name": "Kice",
+  "role": "Support",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": 3,
+  "style": 3,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 2917926673
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "staff",
+  "id": "Ssumday",
+  "name": "Ssumday",
+  "role": "Coach",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": 1,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1751473755
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "staff",
+  "id": "Cheoni",
+  "name": "Cheoni",
+  "role": "Coach",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": 2,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3776027409
+ },
+ {
+  "section": "LCK CL",
+  "group": "한진 브리온 챌린저스  HANJIN BRION Challengers",
+  "kind": "staff",
+  "id": "Drinker",
+  "name": "Drinker",
+  "role": "Coach",
+  "team": "BROC",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ],
+  "hairIdx": -4,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 1844669173
+ },
+ {
+  "section": "LCK CL",
+  "group": "키움 DRX 챌린저스  Kiwoom DRX Challengers",
+  "kind": "player",
+  "id": "Frog (Lee Min-hoi)",
+  "name": "Frog",
+  "role": "Top",
+  "team": "KRXC",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": -6,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 230388815
+ },
+ {
+  "section": "LCK CL",
+  "group": "키움 DRX 챌린저스  Kiwoom DRX Challengers",
+  "kind": "player",
+  "id": "Winner (Woo Joo-sung)",
+  "name": "Winner",
+  "role": "Jungle",
+  "team": "KRXC",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": 7,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 2741165925
+ },
+ {
+  "section": "LCK CL",
+  "group": "키움 DRX 챌린저스  Kiwoom DRX Challengers",
+  "kind": "player",
+  "id": "AKaJe",
+  "name": "AKaJe",
+  "role": "Mid",
+  "team": "KRXC",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": 1,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 4248278945
+ },
+ {
+  "section": "LCK CL",
+  "group": "키움 DRX 챌린저스  Kiwoom DRX Challengers",
+  "kind": "player",
+  "id": "Vincenzo (Ha Seung-min)",
+  "name": "Vincenzo",
+  "role": "Jungle",
+  "team": "KRXC",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": -5,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 2538600817
+ },
+ {
+  "section": "LCK CL",
+  "group": "키움 DRX 챌린저스  Kiwoom DRX Challengers",
+  "kind": "player",
+  "id": "Minous",
+  "name": "Minous",
+  "role": "Support",
+  "team": "KRXC",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": 1,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1476979999
+ },
+ {
+  "section": "LCK CL",
+  "group": "키움 DRX 챌린저스  Kiwoom DRX Challengers",
+  "kind": "player",
+  "id": "Rich (Lee Jae-won)",
+  "name": "Rich",
+  "role": "Top",
+  "team": "KRXC",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": 6,
+  "style": 3,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3872340725
+ },
+ {
+  "section": "LCK CL",
+  "group": "키움 DRX 챌린저스  Kiwoom DRX Challengers",
+  "kind": "player",
+  "id": "Juhan",
+  "name": "Juhan",
+  "role": "Jungle",
+  "team": "KRXC",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": 5,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 498874589
+ },
+ {
+  "section": "LCK CL",
+  "group": "키움 DRX 챌린저스  Kiwoom DRX Challengers",
+  "kind": "player",
+  "id": "LazyFeel",
+  "name": "LazyFeel",
+  "role": "Bot",
+  "team": "KRXC",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": 2,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3034861743
+ },
+ {
+  "section": "LCK CL",
+  "group": "키움 DRX 챌린저스  Kiwoom DRX Challengers",
+  "kind": "player",
+  "id": "Alive",
+  "name": "Alive",
+  "role": "Bot",
+  "team": "KRXC",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": 2,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3550970509
+ },
+ {
+  "section": "LCK CL",
+  "group": "키움 DRX 챌린저스  Kiwoom DRX Challengers",
+  "kind": "staff",
+  "id": "Frozen (Kim Tae-il)",
+  "name": "Frozen",
+  "role": "Head Coach",
+  "team": "KRXC",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": -4,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3788559207
+ },
+ {
+  "section": "LCK CL",
+  "group": "키움 DRX 챌린저스  Kiwoom DRX Challengers",
+  "kind": "staff",
+  "id": "Catch (Yun Sang-ho)",
+  "name": "Catch",
+  "role": "Coach",
+  "team": "KRXC",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ],
+  "hairIdx": -1,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 3979344129
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Bilibili Gaming  LPL",
+  "kind": "player",
+  "id": "intl:BLG:Bin (Chen Ze-Bin)",
+  "name": "Bin",
+  "role": "Top",
+  "team": "BLG",
+  "colors": [
+   "#34d0f4",
+   "#fa7299"
+  ],
+  "hairIdx": -7,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3546603407
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Bilibili Gaming  LPL",
+  "kind": "player",
+  "id": "intl:BLG:Xun",
+  "name": "Xun",
+  "role": "Jungle",
+  "team": "BLG",
+  "colors": [
+   "#34d0f4",
+   "#fa7299"
+  ],
+  "hairIdx": -5,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 2036059783
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Bilibili Gaming  LPL",
+  "kind": "player",
+  "id": "intl:BLG:Knight (Zhuo Ding)",
+  "name": "Knight",
+  "role": "Mid",
+  "team": "BLG",
+  "colors": [
+   "#34d0f4",
+   "#fa7299"
+  ],
+  "hairIdx": 3,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3417761343
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Bilibili Gaming  LPL",
+  "kind": "player",
+  "id": "Viper (Park Do-hyeon)",
+  "name": "Viper",
+  "role": "Bot",
+  "team": "BLG",
+  "colors": [
+   "#34d0f4",
+   "#fa7299"
+  ],
+  "hairIdx": -3,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 467727981
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Bilibili Gaming  LPL",
+  "kind": "player",
+  "id": "intl:BLG:ON",
+  "name": "ON",
+  "role": "Support",
+  "team": "BLG",
+  "colors": [
+   "#34d0f4",
+   "#fa7299"
+  ],
+  "hairIdx": 6,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 228779317
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Karmine Corp  LEC",
+  "kind": "player",
+  "id": "intl:KC:Canna",
+  "name": "Canna",
+  "role": "Top",
+  "team": "KC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -6,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1335329025
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Karmine Corp  LEC",
+  "kind": "player",
+  "id": "intl:KC:Yike",
+  "name": "Yike",
+  "role": "Jungle",
+  "team": "KC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 0,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 799159411
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Karmine Corp  LEC",
+  "kind": "player",
+  "id": "kyeahoo",
+  "name": "kyeahoo",
+  "role": "Mid",
+  "team": "KC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -5,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2904154909
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Karmine Corp  LEC",
+  "kind": "player",
+  "id": "intl:KC:Caliste",
+  "name": "Caliste",
+  "role": "Bot",
+  "team": "KC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 0,
+  "style": -3,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 2741794055
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Karmine Corp  LEC",
+  "kind": "player",
+  "id": "intl:KC:Busio",
+  "name": "Busio",
+  "role": "Support",
+  "team": "KC",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -1,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2166596603
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Invictus Gaming  LPL",
+  "kind": "player",
+  "id": "intl:IG:TheShy",
+  "name": "TheShy",
+  "role": "Top",
+  "team": "IG",
+  "colors": [
+   "#d6261f",
+   "#f5c400"
+  ],
+  "hairIdx": -6,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3089215177
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Invictus Gaming  LPL",
+  "kind": "player",
+  "id": "intl:IG:Wei (Yan Yang-Wei)",
+  "name": "Wei",
+  "role": "Jungle",
+  "team": "IG",
+  "colors": [
+   "#d6261f",
+   "#f5c400"
+  ],
+  "hairIdx": 1,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 4135313937
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Invictus Gaming  LPL",
+  "kind": "player",
+  "id": "intl:IG:Rookie",
+  "name": "Rookie",
+  "role": "Mid",
+  "team": "IG",
+  "colors": [
+   "#d6261f",
+   "#f5c400"
+  ],
+  "hairIdx": -2,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3089215177
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Invictus Gaming  LPL",
+  "kind": "player",
+  "id": "intl:IG:JiaQi",
+  "name": "JiaQi",
+  "role": "Bot",
+  "team": "IG",
+  "colors": [
+   "#d6261f",
+   "#f5c400"
+  ],
+  "hairIdx": -5,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1824146399
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Invictus Gaming  LPL",
+  "kind": "player",
+  "id": "intl:IG:Meiko",
+  "name": "Meiko",
+  "role": "Support",
+  "team": "IG",
+  "colors": [
+   "#d6261f",
+   "#f5c400"
+  ],
+  "hairIdx": 4,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2049467695
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Anyone's Legend  LPL",
+  "kind": "player",
+  "id": "intl:AL:Breathe",
+  "name": "Breathe",
+  "role": "Top",
+  "team": "AL",
+  "colors": [
+   "#852423",
+   "#b92829"
+  ],
+  "hairIdx": 4,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2409555795
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Anyone's Legend  LPL",
+  "kind": "player",
+  "id": "intl:AL:Tarzan (Lee Seung-yong)",
+  "name": "Tarzan",
+  "role": "Jungle",
+  "team": "AL",
+  "colors": [
+   "#852423",
+   "#b92829"
+  ],
+  "hairIdx": 1,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3237132161
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Anyone's Legend  LPL",
+  "kind": "player",
+  "id": "intl:AL:Shanks",
+  "name": "Shanks",
+  "role": "Mid",
+  "team": "AL",
+  "colors": [
+   "#852423",
+   "#b92829"
+  ],
+  "hairIdx": 1,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1741203723
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Anyone's Legend  LPL",
+  "kind": "player",
+  "id": "intl:AL:Hope (Wang Jie)",
+  "name": "Hope",
+  "role": "Bot",
+  "team": "AL",
+  "colors": [
+   "#852423",
+   "#b92829"
+  ],
+  "hairIdx": 2,
+  "style": 3,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1105829305
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Anyone's Legend  LPL",
+  "kind": "player",
+  "id": "intl:AL:Kael (Kim Jin-hong)",
+  "name": "Kael",
+  "role": "Support",
+  "team": "AL",
+  "colors": [
+   "#852423",
+   "#b92829"
+  ],
+  "hairIdx": 7,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2133114315
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Team Liquid  LTA",
+  "kind": "player",
+  "id": "Morgan",
+  "name": "Morgan",
+  "role": "Top",
+  "team": "TL",
+  "colors": [
+   "#081723",
+   "#071423"
+  ],
+  "hairIdx": -5,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1115508253
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Team Liquid  LTA",
+  "kind": "player",
+  "id": "intl:TL:Josedeodo",
+  "name": "Josedeodo",
+  "role": "Jungle",
+  "team": "TL",
+  "colors": [
+   "#081723",
+   "#071423"
+  ],
+  "hairIdx": 7,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 2296358151
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Team Liquid  LTA",
+  "kind": "player",
+  "id": "intl:TL:Quid",
+  "name": "Quid",
+  "role": "Mid",
+  "team": "TL",
+  "colors": [
+   "#081723",
+   "#071423"
+  ],
+  "hairIdx": -5,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3275148051
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Team Liquid  LTA",
+  "kind": "player",
+  "id": "intl:TL:Yeon (Sean Sung)",
+  "name": "Yeon",
+  "role": "Bot",
+  "team": "TL",
+  "colors": [
+   "#081723",
+   "#071423"
+  ],
+  "hairIdx": 5,
+  "style": 1,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 240036005
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Team Liquid  LTA",
+  "kind": "player",
+  "id": "intl:TL:CoreJJ",
+  "name": "CoreJJ",
+  "role": "Support",
+  "team": "TL",
+  "colors": [
+   "#081723",
+   "#071423"
+  ],
+  "hairIdx": -3,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 198625973
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "LØS  LTA",
+  "kind": "player",
+  "id": "intl:LOS:Zest (Kim Dong-min)",
+  "name": "Zest",
+  "role": "Top",
+  "team": "LOS",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ],
+  "hairIdx": 1,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1042978609
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "LØS  LTA",
+  "kind": "player",
+  "id": "intl:LOS:Curse (Raí Yamada)",
+  "name": "Curse",
+  "role": "Jungle",
+  "team": "LOS",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ],
+  "hairIdx": -4,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2981368413
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "LØS  LTA",
+  "kind": "player",
+  "id": "intl:LOS:Feisty",
+  "name": "Feisty",
+  "role": "Mid",
+  "team": "LOS",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ],
+  "hairIdx": 2,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3649632513
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "LØS  LTA",
+  "kind": "player",
+  "id": "intl:LOS:Duduhh",
+  "name": "Duduhh",
+  "role": "Bot",
+  "team": "LOS",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ],
+  "hairIdx": 3,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 278266421
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "LØS  LTA",
+  "kind": "player",
+  "id": "intl:LOS:Ackerman (Gabriel Aparicio)",
+  "name": "Ackerman",
+  "role": "Support",
+  "team": "LOS",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ],
+  "hairIdx": 1,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 375688983
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "MVK Esports  LCP",
+  "kind": "player",
+  "id": "intl:MVK:Kratos (Ngô Đức Khánh)",
+  "name": "Kratos",
+  "role": "Top",
+  "team": "MVK",
+  "colors": [
+   "#fe5900",
+   "#101010"
+  ],
+  "hairIdx": 2,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2216649573
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "MVK Esports  LCP",
+  "kind": "player",
+  "id": "intl:MVK:Gury",
+  "name": "Gury",
+  "role": "Jungle",
+  "team": "MVK",
+  "colors": [
+   "#fe5900",
+   "#101010"
+  ],
+  "hairIdx": 0,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1266913225
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "MVK Esports  LCP",
+  "kind": "player",
+  "id": "intl:MVK:Chika",
+  "name": "Chika",
+  "role": "Mid",
+  "team": "MVK",
+  "colors": [
+   "#fe5900",
+   "#101010"
+  ],
+  "hairIdx": 1,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3747563409
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "MVK Esports  LCP",
+  "kind": "player",
+  "id": "intl:MVK:Harky",
+  "name": "Harky",
+  "role": "Bot",
+  "team": "MVK",
+  "colors": [
+   "#fe5900",
+   "#101010"
+  ],
+  "hairIdx": 4,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1111722651
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "MVK Esports  LCP",
+  "kind": "player",
+  "id": "intl:MVK:SiuLoong",
+  "name": "SiuLoong",
+  "role": "Support",
+  "team": "MVK",
+  "colors": [
+   "#fe5900",
+   "#101010"
+  ],
+  "hairIdx": -3,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2328788869
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Cloud9  LTA",
+  "kind": "player",
+  "id": "intl:C9:Thanatos (Park Seung-kyu)",
+  "name": "Thanatos",
+  "role": "Top",
+  "team": "C9",
+  "colors": [
+   "#00aff1",
+   "#101010"
+  ],
+  "hairIdx": 4,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1676144745
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Cloud9  LTA",
+  "kind": "player",
+  "id": "intl:C9:Blaber",
+  "name": "Blaber",
+  "role": "Jungle",
+  "team": "C9",
+  "colors": [
+   "#00aff1",
+   "#101010"
+  ],
+  "hairIdx": -1,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3788912987
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Cloud9  LTA",
+  "kind": "player",
+  "id": "Loki (Lee Sang-min)",
+  "name": "Loki",
+  "role": "Mid",
+  "team": "C9",
+  "colors": [
+   "#00aff1",
+   "#101010"
+  ],
+  "hairIdx": -4,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1989387181
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Cloud9  LTA",
+  "kind": "player",
+  "id": "intl:C9:Tactical",
+  "name": "Tactical",
+  "role": "Bot",
+  "team": "C9",
+  "colors": [
+   "#00aff1",
+   "#101010"
+  ],
+  "hairIdx": 2,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 2645778577
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Cloud9  LTA",
+  "kind": "player",
+  "id": "intl:C9:Vulcan (Philippe Laflamme)",
+  "name": "Vulcan",
+  "role": "Support",
+  "team": "C9",
+  "colors": [
+   "#00aff1",
+   "#101010"
+  ],
+  "hairIdx": 4,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1889616527
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "G2 Esports  LEC",
+  "kind": "player",
+  "id": "intl:G2:BrokenBlade",
+  "name": "BrokenBlade",
+  "role": "Top",
+  "team": "G2",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 6,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 376241261
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "G2 Esports  LEC",
+  "kind": "player",
+  "id": "intl:G2:SkewMond",
+  "name": "SkewMond",
+  "role": "Jungle",
+  "team": "G2",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 5,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1692902981
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "G2 Esports  LEC",
+  "kind": "player",
+  "id": "intl:G2:Caps",
+  "name": "Caps",
+  "role": "Mid",
+  "team": "G2",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 6,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3821043341
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "G2 Esports  LEC",
+  "kind": "player",
+  "id": "intl:G2:Hans Sama",
+  "name": "Hans Sama",
+  "role": "Bot",
+  "team": "G2",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -2,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2904154909
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "G2 Esports  LEC",
+  "kind": "player",
+  "id": "intl:G2:Labrov",
+  "name": "Labrov",
+  "role": "Support",
+  "team": "G2",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 2,
+  "style": 1,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3531572911
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "LYON  LTA",
+  "kind": "player",
+  "id": "intl:LYON:Dhokla",
+  "name": "Dhokla",
+  "role": "Top",
+  "team": "LYON",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ],
+  "hairIdx": -7,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2024491171
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "LYON  LTA",
+  "kind": "player",
+  "id": "intl:LYON:Inspired",
+  "name": "Inspired",
+  "role": "Jungle",
+  "team": "LYON",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ],
+  "hairIdx": 2,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3987641637
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "LYON  LTA",
+  "kind": "player",
+  "id": "intl:LYON:Saint (Kang Sung-in)",
+  "name": "Saint",
+  "role": "Mid",
+  "team": "LYON",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ],
+  "hairIdx": 3,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3055306631
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "LYON  LTA",
+  "kind": "player",
+  "id": "Berserker (Kim Min-cheol)",
+  "name": "Berserker",
+  "role": "Bot",
+  "team": "LYON",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ],
+  "hairIdx": -2,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2984077665
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "LYON  LTA",
+  "kind": "player",
+  "id": "intl:LYON:Isles",
+  "name": "Isles",
+  "role": "Support",
+  "team": "LYON",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ],
+  "hairIdx": -6,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3348065439
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Top Esports  LPL",
+  "kind": "player",
+  "id": "intl:TES:369",
+  "name": "369",
+  "role": "Top",
+  "team": "TES",
+  "colors": [
+   "#ff3e23",
+   "#101010"
+  ],
+  "hairIdx": 2,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1838532855
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Top Esports  LPL",
+  "kind": "player",
+  "id": "intl:TES:Tian",
+  "name": "Tian",
+  "role": "Jungle",
+  "team": "TES",
+  "colors": [
+   "#ff3e23",
+   "#101010"
+  ],
+  "hairIdx": 6,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 4035668869
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Top Esports  LPL",
+  "kind": "player",
+  "id": "intl:TES:Creme",
+  "name": "Creme",
+  "role": "Mid",
+  "team": "TES",
+  "colors": [
+   "#ff3e23",
+   "#101010"
+  ],
+  "hairIdx": 3,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1403268473
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Top Esports  LPL",
+  "kind": "player",
+  "id": "intl:TES:JackeyLove",
+  "name": "JackeyLove",
+  "role": "Bot",
+  "team": "TES",
+  "colors": [
+   "#ff3e23",
+   "#101010"
+  ],
+  "hairIdx": 3,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 2369570509
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Top Esports  LPL",
+  "kind": "player",
+  "id": "intl:TES:Zhuo",
+  "name": "Zhuo",
+  "role": "Support",
+  "team": "TES",
+  "colors": [
+   "#ff3e23",
+   "#101010"
+  ],
+  "hairIdx": 5,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1014854807
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "CTBC Flying Oyster  LCP",
+  "kind": "player",
+  "id": "intl:CFO:Rest",
+  "name": "Rest",
+  "role": "Top",
+  "team": "CFO",
+  "colors": [
+   "#16a2a8",
+   "#101828"
+  ],
+  "hairIdx": 3,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 97664951
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "CTBC Flying Oyster  LCP",
+  "kind": "player",
+  "id": "intl:CFO:Shad0w",
+  "name": "Shad0w",
+  "role": "Jungle",
+  "team": "CFO",
+  "colors": [
+   "#16a2a8",
+   "#101828"
+  ],
+  "hairIdx": -3,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1748125065
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "CTBC Flying Oyster  LCP",
+  "kind": "player",
+  "id": "intl:CFO:POUT",
+  "name": "Pout",
+  "role": "Mid",
+  "team": "CFO",
+  "colors": [
+   "#16a2a8",
+   "#101828"
+  ],
+  "hairIdx": 6,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 293157391
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "CTBC Flying Oyster  LCP",
+  "kind": "player",
+  "id": "intl:CFO:Doggo",
+  "name": "Doggo",
+  "role": "Bot",
+  "team": "CFO",
+  "colors": [
+   "#16a2a8",
+   "#101828"
+  ],
+  "hairIdx": 7,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 174182691
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "CTBC Flying Oyster  LCP",
+  "kind": "player",
+  "id": "intl:CFO:Kino",
+  "name": "Kino",
+  "role": "Support",
+  "team": "CFO",
+  "colors": [
+   "#16a2a8",
+   "#101828"
+  ],
+  "hairIdx": 0,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3426381857
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Movistar KOI  LEC",
+  "kind": "player",
+  "id": "intl:MKOI:Myrwn",
+  "name": "Myrwn",
+  "role": "Top",
+  "team": "MKOI",
+  "colors": [
+   "#4b9cee",
+   "#4a9cec"
+  ],
+  "hairIdx": -4,
+  "style": -2,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1714092385
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Movistar KOI  LEC",
+  "kind": "player",
+  "id": "intl:MKOI:Elyoya",
+  "name": "Elyoya",
+  "role": "Jungle",
+  "team": "MKOI",
+  "colors": [
+   "#4b9cee",
+   "#4a9cec"
+  ],
+  "hairIdx": 1,
+  "style": 2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 335874285
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Movistar KOI  LEC",
+  "kind": "player",
+  "id": "intl:MKOI:Jojopyun",
+  "name": "Jojopyun",
+  "role": "Mid",
+  "team": "MKOI",
+  "colors": [
+   "#4b9cee",
+   "#4a9cec"
+  ],
+  "hairIdx": -4,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1984407723
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Movistar KOI  LEC",
+  "kind": "player",
+  "id": "intl:MKOI:Supa",
+  "name": "Supa",
+  "role": "Bot",
+  "team": "MKOI",
+  "colors": [
+   "#4b9cee",
+   "#4a9cec"
+  ],
+  "hairIdx": 4,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3172560597
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Movistar KOI  LEC",
+  "kind": "player",
+  "id": "intl:MKOI:Alvaro (Álvaro Fernández)",
+  "name": "Alvaro",
+  "role": "Support",
+  "team": "MKOI",
+  "colors": [
+   "#4b9cee",
+   "#4a9cec"
+  ],
+  "hairIdx": -3,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 1568033589
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "FURIA  LTA",
+  "kind": "player",
+  "id": "intl:FUR:Guigo",
+  "name": "Guigo",
+  "role": "Top",
+  "team": "FUR",
+  "colors": [
+   "#020202",
+   "#d8d8d8"
+  ],
+  "hairIdx": 4,
+  "style": 2,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3820664099
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "FURIA  LTA",
+  "kind": "player",
+  "id": "intl:FUR:Tatu (Pedro Seixas)",
+  "name": "Tatu",
+  "role": "Jungle",
+  "team": "FUR",
+  "colors": [
+   "#020202",
+   "#d8d8d8"
+  ],
+  "hairIdx": -6,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 3743454757
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "FURIA  LTA",
+  "kind": "player",
+  "id": "intl:FUR:Tutsz",
+  "name": "Tutsz",
+  "role": "Mid",
+  "team": "FUR",
+  "colors": [
+   "#020202",
+   "#d8d8d8"
+  ],
+  "hairIdx": 4,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 617355081
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "FURIA  LTA",
+  "kind": "player",
+  "id": "intl:FUR:Ayu (Andrey Saraiva)",
+  "name": "Ayu",
+  "role": "Bot",
+  "team": "FUR",
+  "colors": [
+   "#020202",
+   "#d8d8d8"
+  ],
+  "hairIdx": 3,
+  "style": 3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 147392053
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "FURIA  LTA",
+  "kind": "player",
+  "id": "intl:FUR:JoJo (Gabriel Dzelme)",
+  "name": "JoJo",
+  "role": "Support",
+  "team": "FUR",
+  "colors": [
+   "#020202",
+   "#d8d8d8"
+  ],
+  "hairIdx": 7,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 3065941207
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Deep Cross Gaming  LCP",
+  "kind": "player",
+  "id": "intl:DCG:Flauren",
+  "name": "Flauren",
+  "role": "Top",
+  "team": "DCG",
+  "colors": [
+   "#0e65cd",
+   "#000000"
+  ],
+  "hairIdx": 0,
+  "style": -3,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 1170638587
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Deep Cross Gaming  LCP",
+  "kind": "player",
+  "id": "intl:DCG:Pop9",
+  "name": "Pop9",
+  "role": "Jungle",
+  "team": "DCG",
+  "colors": [
+   "#0e65cd",
+   "#000000"
+  ],
+  "hairIdx": -3,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 2304691385
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Deep Cross Gaming  LCP",
+  "kind": "player",
+  "id": "intl:DCG:HongSuo",
+  "name": "HongSuo",
+  "role": "Mid",
+  "team": "DCG",
+  "colors": [
+   "#0e65cd",
+   "#000000"
+  ],
+  "hairIdx": 2,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 55651125
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Deep Cross Gaming  LCP",
+  "kind": "player",
+  "id": "intl:DCG:Feng (Chen Chun-Feng)",
+  "name": "Feng",
+  "role": "Bot",
+  "team": "DCG",
+  "colors": [
+   "#0e65cd",
+   "#000000"
+  ],
+  "hairIdx": 0,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3133152709
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Deep Cross Gaming  LCP",
+  "kind": "player",
+  "id": "intl:DCG:ShiauC",
+  "name": "ShiauC",
+  "role": "Support",
+  "team": "DCG",
+  "colors": [
+   "#0e65cd",
+   "#000000"
+  ],
+  "hairIdx": 0,
+  "style": -2,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 1898528321
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Team Secret Whales  LCP",
+  "kind": "player",
+  "id": "intl:TSW:Pun",
+  "name": "Pun",
+  "role": "Top",
+  "team": "TSW",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 3,
+  "style": 0,
+  "glasses": true,
+  "skinHairBug": false,
+  "signature": 2216868301
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Team Secret Whales  LCP",
+  "kind": "player",
+  "id": "intl:TSW:Hizto",
+  "name": "Hizto",
+  "role": "Jungle",
+  "team": "TSW",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -6,
+  "style": -1,
+  "glasses": true,
+  "skinHairBug": true,
+  "signature": 801068161
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Team Secret Whales  LCP",
+  "kind": "player",
+  "id": "intl:TSW:Dire",
+  "name": "Dire",
+  "role": "Mid",
+  "team": "TSW",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -2,
+  "style": 0,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2069867047
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Team Secret Whales  LCP",
+  "kind": "player",
+  "id": "intl:TSW:Eddie",
+  "name": "Eddie",
+  "role": "Bot",
+  "team": "TSW",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": -5,
+  "style": -1,
+  "glasses": false,
+  "skinHairBug": true,
+  "signature": 2875777699
+ },
+ {
+  "section": "해외 (MSI·Worlds 2026)",
+  "group": "Team Secret Whales  LCP",
+  "kind": "player",
+  "id": "intl:TSW:Bie",
+  "name": "Bie",
+  "role": "Support",
+  "team": "TSW",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ],
+  "hairIdx": 3,
+  "style": 1,
+  "glasses": false,
+  "skinHairBug": false,
+  "signature": 3013930451
+ }
+]

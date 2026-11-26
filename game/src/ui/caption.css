@@ -1,0 +1,26 @@
+/* Broadcast lower-third: why the auto camera just cut. Lives at the bottom of the match board. */
+.cut-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  max-width: 88%;
+  pointer-events: none;
+  animation: captionIn 0.25s steps(3) both, captionOut 0.5s steps(4) 2.7s both;
+}
+.cut-caption span {
+  display: inline-block;
+  padding: 5px 14px 5px 12px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #f2f4fa;
+  background: rgba(8, 10, 18, 0.88);
+  box-shadow: inset 3px 0 0 0 var(--gold), 0 0 0 2px #0b0d14;
+  text-shadow: 1px 1px 0 #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+@keyframes captionIn { from { opacity: 0; transform: translate(-50%, 6px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes captionOut { from { opacity: 1; } to { opacity: 0; } }

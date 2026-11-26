@@ -1,0 +1,16 @@
+{
+ "order": [
+  ["B", "ban"], ["R", "ban"], ["B", "ban"], ["R", "ban"], ["B", "ban"], ["R", "ban"],
+  ["B", "pick"], ["R", "pick"], ["R", "pick"], ["B", "pick"], ["B", "pick"], ["R", "pick"],
+  ["R", "ban"], ["B", "ban"], ["R", "ban"], ["B", "ban"],
+  ["R", "pick"], ["B", "pick"], ["B", "pick"], ["R", "pick"]
+ ],
+ "orderNote": "Standard 20-step tournament draft. In 2026 'B' means the team drafting first and 'R' the team drafting second: with First Selection the pick order is no longer tied to the blue side.",
+ "firstSelection": "2026 First Selection: the team holding priority picks ONE of (a) map side or (b) draft order (first or second); the other team then decides the remaining one. Game 1 priority goes to the higher seed (otherwise coin toss); in later games the loser of the previous game holds it. Applied in LCK from the 2026 LCK Cup.",
+ "fearless": "Hard Fearless Draft (LCK since 2025, kept for 2026): a champion picked by either team in an earlier game of the series cannot be picked by either team for the rest of that series. Bans do not carry over. Bo3 in the regular rounds, Bo5 in the playoffs; applied in every game of the series (no reset for game 5, following how LCK ran it in 2025; the 2026 rulebook text itself was not read).",
+ "source": [
+  "https://lolesports.com/ko-KR/news/season-start-2026-lol-esports",
+  "https://www.hankyung.com/article/202601091682i",
+  "https://www.gosugamers.net/lol/news/77812-lol-esports-2026-introduces-new-draft-rule-first-selection-and-a-bo5-heavy-first-stand"
+ ]
+}
