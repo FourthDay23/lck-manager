@@ -199,6 +199,10 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
 .banner.blue { box-shadow: 0 0 0 2px var(--blue), 0 0 0 4px #0b0d14; }
 .banner.red { box-shadow: 0 0 0 2px var(--red), 0 0 0 4px #0b0d14; }
 .banner.mega { font-size: 30px; padding: 12px 30px; }
+/* objectives: spawns in neutral gold, captures in the taking team's colour (Series.tsx MatchView) */
+.banner.obj-spawn { font-size: 18px; box-shadow: 0 0 0 2px var(--gold), 0 0 0 4px #0b0d14; }
+.banner .obj-tag { font-size: 12px; padding: 1px 6px; background: var(--gold); color: #1a1406; text-shadow: none; }
+.banner .obj-team { font-size: 14px; opacity: 0.85; }
 @keyframes bannerIn { from { transform: scale(1.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes bannerOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-8px); } }
 

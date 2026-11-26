@@ -14,13 +14,14 @@ import {
 import type { DraftState, Side } from "../../match/draft";
 import { Engine, ENGINE_FLAGS } from "../../match/engine";
 import { planLabel } from "../../match/macro";
-import type { GameEvent, Tactic } from "../../match/engine";
+import type { GameEvent, ObjKey, Tactic } from "../../match/engine";
+import { OBJ_KO } from "../../match/engine";
 import { STRATEGIES, STRATEGY_DESC, STRATEGY_KO } from "../../match/strategy";
 import type { Strategy } from "../../match/strategy";
 import { CAPTION_MS, MatchRenderer } from "../../match/render";
 import "../caption.css";
 import "../draft.css";
-import { ItemStrip, LoadoutPicker } from "../Loadout";
+import { ItemStrip, LoadoutPicker, RuneBadge } from "../Loadout";
 import { Scorebar } from "../Scorebar";
 import type { SeriesInfo } from "../Scorebar";
 import { standings } from "../../core/schedule";
@@ -296,10 +297,11 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
   if (q) list = list.filter((c) => c.name.includes(q) || c.nameEn.toLowerCase().includes(q.toLowerCase()));
   const tierRank = (id: string) => { const t = metaTier(s, id); return t === "S" ? 0 : t === "A" ? 1 : t === "N" ? 3 : 2; };
   const shown = [...list].sort((a, b) => tierRank(a.id) - tierRank(b.id) || b.pro.presence - a.pro.presence || a.name.localeCompare(b.name, "ko"));
-  const choose = (c: ChampionData) => {
+  /** `forRole`: a coach suggestion names the slot it is for (an open one), which wins over the selected slot */
+  const choose = (c: ChampionData, forRole?: Role | null) => {
     if (!st || !myTurn || blocked.has(c.id)) return;
     if (st[1] === "pick") {
-      let r = role;
+      let r = forRole && open.includes(forRole) ? forRole : role;
       if ((c.roles[r] ?? 0) < 0.03) {
         const best = open.slice().sort((x, y) => (c.roles[y] ?? 0) - (c.roles[x] ?? 0))[0];
         if (best && (c.roles[best] ?? 0) >= 0.03) r = best;
@@ -384,7 +386,7 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
               <h3>{!myTurn ? "감독 추천" : sug.coach ? `감독 ${sug.coach}의 추천` : "감독이 없어 추천이 거의 없습니다"}{myTurn ? ` (${sug.items.length}개)` : ""}</h3>
               <div class="sug-row">
                 {myTurn ? sug.items.map((x) => (
-                  <div class="sug-item" title={`${x.champ.name} · ${x.role ? ROLE_KO[x.role] + " · " : ""}${x.why}`} onClick={() => { if (x.role) setSelRole(x.role); choose(x.champ); }}>
+                  <div class="sug-item" title={`${x.champ.name} · ${x.role ? ROLE_KO[x.role] + " · " : ""}${x.why}`} onClick={() => choose(x.champ, x.role)}>
                     <ChampIcon id={x.champ.id} size={28} />
                     <span>{x.champ.name}<br /><span class="muted">{x.role ? ROLE_KO[x.role] + " · " : ""}{x.why}</span></span>
                   </div>
@@ -433,6 +435,9 @@ function CompCompare({ d }: { d: DraftState }) {
 const SPEEDS = [1, 2, 4, 8, 16];
 /** Game seconds a teamfight keeps running in real time after it ends, so the last kills and spells play out. */
 const REAL_AFTER = 2;
+/** objectives taken: shown as banners like kills, whether or not the engine marks them big */
+const OBJ_TAKEN = new Set<GameEvent["type"]>(["dragon", "soul", "elder", "grubs", "herald", "baron"]);
+
 const BIG_ICON: Partial<Record<GameEvent["type"], string>> = {
   first_blood: "퍼스트 블러드", solo: "솔로 킬", double: "더블 킬", triple: "트리플 킬", quadra: "쿼드라 킬", penta: "펜타 킬",
   ace: "에이스", steal: "스틸!", baron: "바론", soul: "드래곤의 영혼", elder: "장로 드래곤", inhib: "억제기", first_turret: "첫 포탑", nexus: "승리",
@@ -449,8 +454,10 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
   const [slowmo, setSlowmo] = useState(true);
   const [tac, setTac] = useState(tactic);
   const [, setTick] = useState(0);
-  const [banners, setBanners] = useState<{ id: number; ev: GameEvent }[]>([]);
+  const [banners, setBanners] = useState<{ id: number; ev: GameEvent; spawn?: boolean }[]>([]);
   const evSeen = useRef(0);
+  /** objectives alive at the last UI tick: a change to alive is a spawn banner (also covers the elder dragon) */
+  const objAlive = useRef<Partial<Record<ObjKey, boolean>>>({});
   const st = useRef({ speed, paused, slowmo });
   st.current = { speed, paused, slowmo };
   /** true while a teamfight is playing in real time (set by the match loop) */
@@ -504,11 +511,24 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
         uiT = now;
         setTick((x) => x + 1);
         const evs = e.events;
-        if (evs.length > evSeen.current) {
-          const fresh = evs.slice(evSeen.current).filter((x) => x.big);
-          evSeen.current = evs.length;
-          if (fresh.length) setBanners((b) => [...b, ...fresh.slice(-2).map((ev, i) => ({ id: now + i, ev }))].slice(-3));
+        const add: { id: number; ev: GameEvent; spawn?: boolean }[] = [];
+        // objectives that just spawned (the engine has no event for every one of them, e.g. the elder dragon)
+        for (const k of Object.keys(e.obj) as ObjKey[]) {
+          const o = e.obj[k];
+          const was = objAlive.current[k];
+          objAlive.current[k] = o.alive;
+          if (o.alive && was === false && e.t > 1) {
+            const name = k === "dragon" && o.type ? `${o.type} 드래곤` : OBJ_KO[k];
+            add.push({ id: now + add.length, ev: { t: e.t, type: "info", side: 0, text: `${name} 등장`, big: false }, spawn: true });
+          }
         }
+        if (evs.length > evSeen.current) {
+          // big plays, and every objective taken (like kills)
+          const fresh = evs.slice(evSeen.current).filter((x) => x.big || OBJ_TAKEN.has(x.type));
+          evSeen.current = evs.length;
+          for (const ev of fresh.slice(-2)) add.push({ id: now + 10 + add.length, ev });
+        }
+        if (add.length) setBanners((b) => [...b, ...add].slice(-3));
       }
       raf = requestAnimationFrame(loop);
     };
@@ -535,13 +555,13 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
       </div>
       {e.units.filter((u) => u.side === side).map((u) => (
         <div class={`pl ${u.alive ? "" : "dead"}`} style={{ cursor: "pointer" }} onClick={() => { if (rend.current) { rend.current.followIdx = u.i; setCam("follow"); } }}>
-          <ChampIcon id={u.champ.id} size={38} />
+          <div class="pl-face"><ChampIcon id={u.champ.id} size={38} /><RuneBadge e={e} u={u} /></div>
           <div>
             <div class="nm"><b style={{ fontSize: 12 }}>{u.name}</b><span class="muted" style={{ fontSize: 11 }}>Lv{u.level}</span></div>
             <div style={{ fontSize: 11 }}>{u.k}/{u.d}/{u.a} · CS {Math.round(u.cs)}{!u.alive && <span class="neg"> · {Math.ceil(u.respawnAt - e.t)}초</span>}</div>
             <div class="hp"><i style={{ width: `${(u.hp / u.maxHp) * 100}%`, background: side ? "#ff6b6b" : "#5ad07a" }} /></div>
-            <ItemStrip e={e} u={u} />
           </div>
+          <ItemStrip e={e} u={u} />
         </div>
       ))}
     </div>
@@ -565,10 +585,29 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
               return <div class="cut-caption" key={c.at}><span>{c.text}</span></div>;
             })()}
             <div class="banner-wrap">
-              {banners.map(({ id, ev }) => {
+              {banners.map(({ id, ev, spawn }) => {
                 const a = ev.actor !== undefined ? e.units[ev.actor] : null;
                 const v = ev.victim !== undefined ? e.units[ev.victim] : null;
                 const mega = ["penta", "quadra", "ace", "steal", "nexus", "soul"].includes(ev.type);
+                if (spawn) {
+                  return (
+                    <div key={id} class="banner obj-spawn">
+                      <span class="obj-tag">등장</span>
+                      <span>{ev.text.replace(/ 등장$/, "")}</span>
+                    </div>
+                  );
+                }
+                if (OBJ_TAKEN.has(ev.type)) {
+                  // "T1, 화염 드래곤 처치 (2스택)" -> team, then what was taken
+                  const what = ev.text.replace(/^[^,]+,\s*/, "").replace(/!$/, "");
+                  return (
+                    <div key={id} class={`banner ${ev.side ? "red" : "blue"} ${mega ? "mega" : ""}`}>
+                      {a && <ChampIcon id={a.champ.id} size={32} />}
+                      <span class="obj-team">{e.names[ev.side]}</span>
+                      <span>{what}</span>
+                    </div>
+                  );
+                }
                 return (
                   <div key={id} class={`banner ${ev.side ? "red" : "blue"} ${mega ? "mega" : ""}`}>
                     {a && <ChampIcon id={a.champ.id} size={32} />}
