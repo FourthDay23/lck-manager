@@ -89,9 +89,19 @@ export function CutsceneLayer() {
     <div class="cut" style={{ "--c1": c1, "--c2": t.colors[1] } as Record<string, string>} onClick={next}>
       <div class="stripes" />
       <div class="bg" />
-      <Sparks colors={[c1, "#ffffff", "#f2c14e", t.colors[1]]} fireworks={c.kind === "title"} />
+      <Sparks colors={[c1, "#ffffff", "#f2c14e", t.colors[1]]} fireworks={c.kind === "title" || c.kind === "qualify"} />
       <div class="inner">
-        {c.kind === "title" ? (
+        {c.kind === "qualify" ? (
+          <>
+            <div style={{ marginBottom: 8 }}><TrophyArt comp={c.trophy ?? "CUP"} scale={10} /></div>
+            <div class="sub" style={{ letterSpacing: 4 }}>LCK REPRESENTATIVE</div>
+            <div class="big" style={{ color: "#f2c14e" }}>QUALIFIED</div>
+            <div class="big" style={{ fontSize: 30 }}>{c.title}</div>
+            <div class="row" style={{ justifyContent: "center", marginTop: 6 }}><TeamLogo id={t.id} size={44} /><b style={{ fontSize: 20 }}>{t.name}</b></div>
+            <div class="sub">{c.sub}</div>
+            <div class="sub">{c.lines?.join(" · ")}</div>
+          </>
+        ) : c.kind === "title" ? (
           <>
             <div style={{ marginBottom: 10 }}><TrophyArt comp={c.trophy ?? "PO"} scale={14} /></div>
             <div class="big" style={{ color: "#f2c14e" }}>CHAMPIONS</div>

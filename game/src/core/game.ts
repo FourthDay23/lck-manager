@@ -433,6 +433,13 @@ function bracketRanks(s: GameState, id: CompId, season: number, champion: string
   return out;
 }
 
+/** The user's team qualified for an international event: a full-screen moment, not just a news line. */
+function qualifyCutscene(s: GameState, id: CompId, season: number, how: string) {
+  const roster = ROLES.map((r) => s.teams[s.user].lineup[r]).filter(Boolean).map((pid) => s.players[pid!]);
+  s.cutscenes.push({ kind: "qualify", title: `${season} ${COMP_NAME[id]} 진출`, sub: how, team: s.user, trophy: id, lines: roster.map((x) => `${x.role} ${x.name}`) });
+  inbox(s, `${season} ${COMP_NAME[id]} 진출이 확정됐습니다 (${how}).`);
+}
+
 function completeComp(s: GameState, data: GameData, id: CompId, season: number, champion: string, runner: string) {
   const c = comp(s, id, season);
   if (!c || c.done) return;
@@ -449,7 +456,10 @@ function completeComp(s: GameState, data: GameData, id: CompId, season: number, 
   if (id === "EWCQ") {
     // a qualifier: no trophy, just the ticket
     addNews(s, { kind: "info", title: `${t.name}, EWC 선발전 통과`, body: `EWC에 LCK 세 번째 대표로 나갑니다. 결승 상대 ${teamName(s, runner)}.`, teams: [t.id, runner] });
-    if (champion === s.user) inbox(s, "EWC 선발전을 통과했습니다. 7월 말 EWC에 나갑니다.");
+    if (champion === s.user) {
+      inbox(s, "EWC 선발전을 통과했습니다. 7월 말 EWC에 나갑니다.");
+      qualifyCutscene(s, "EWC", season, "선발전 우승 · LCK 3번 시드");
+    }
     return;
   }
   if (id === "CUP") t.titles.cup++;
@@ -508,6 +518,12 @@ function stageProgress(s: GameState, data: GameData, rng: Rng) {
     const seeds = [st[0].team, intlSeeds[0], st[1].team, intlSeeds[1], ...intlSeeds.slice(2)];
     makeBracket8(s, "MSI", season, seeds, d.msi);
     addNews(s, { kind: "info", title: `${teamName(s, st[0].team)}·${teamName(s, st[1].team)}, MSI 진출`, body: "정규 시즌 1·2라운드 1, 2위 팀이 LCK 대표로 나섭니다.", teams: [st[0].team, st[1].team] });
+    // the user's team going abroad gets the big screen (1st/2nd also go straight to EWC)
+    const myRank = st.findIndex((x) => x.team === s.user);
+    if (myRank === 0 || myRank === 1) {
+      qualifyCutscene(s, "MSI", season, `정규 시즌 1·2R ${myRank + 1}위 · LCK ${myRank + 1}번 시드`);
+      if (comp(s, "EWC", season)) qualifyCutscene(s, "EWC", season, `정규 시즌 1·2R ${myRank + 1}위 · 선발전 없이 직행`);
+    }
     // EWC: 1st and 2nd go straight in, 3rd-6th play the qualifier for the last LCK seat
     const q = comp(s, "EWCQ", season);
     if (q && !has("EWCQ", "SF")) {
@@ -547,6 +563,8 @@ function stageProgress(s: GameState, data: GameData, rng: Rng) {
     w.teams = [...ranks, ...intl];
     if (w.teams.length % 2) w.teams.pop();
     addNews(s, { kind: "info", title: `LCK 월즈 대표 확정`, body: ranks.map((x, i) => `${i + 1}시드 ${teamName(s, x)}`).join(" / "), teams: ranks });
+    const mySeed = ranks.indexOf(s.user);
+    if (mySeed >= 0) qualifyCutscene(s, "WORLDS", season, `LCK 플레이오프 ${mySeed + 1}위 · LCK ${mySeed + 1}번 시드`);
   }
   if (w.teams.length && s.day >= d.worlds - 1 && !w.done && !has("WORLDS", "QF")) {
     const rounds = s.series.filter((x) => x.comp === "WORLDS" && x.season === season && x.stage.startsWith("SW"));

@@ -246,7 +246,7 @@ export interface ModalEvent {
 }
 
 export interface Cutscene {
-  kind: "sign" | "renew" | "title" | "trade";
+  kind: "sign" | "renew" | "title" | "trade" | "qualify";
   title: string;
   sub?: string;
   player?: string;
