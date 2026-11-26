@@ -34,6 +34,7 @@ import { ENGINE_FLAGS } from "./engine";
 import type { LaneId, Vec } from "./map";
 import { BARON_PIT, DRAGON_PIT, FOUNTAIN, LANES, MIRROR_C, NEXUS, ROLE_LANE, dist, lanePoint, laneU, mirror } from "./map";
 import * as Nav from "./nav";
+import * as Items from "./items";
 import { LCK_STATS } from "./lck-stats.gen";
 import type { Strategy, StrategyParams } from "./strategy";
 import { STRATEGY_PARAMS } from "./strategy";
@@ -1136,11 +1137,14 @@ function wantRecall(e: Engine, b: Brain, u: Unit, m: UMem): boolean {
   if (busy || m.job === "defend" || (m.job === "group" && p.kind === "siege")) return false;
   // hurt and nothing urgent: reset rather than walk back into the next fight
   if (f < 0.45 && !e.laningPhase() && !e.units.some((x) => x.alive && x.side !== u.side && dist(x, u) < 2500)) return e.rng.chance(0.03);
-  const rich = u.gold - lastShop(u) > 1500;
+  // gold in the pocket: go home and buy like real players do (items.ts shopUrge: next item affordable, or the gold
+  // LCK players usually carry back); without items.json the old 1500-gold rule
+  const urge = Items.shopUrge(e, u);
+  const rich = urge !== null ? urge > 0 : u.gold - lastShop(u) > 1500;
   if (!rich || inFountain(u)) return false;
   const nx = nextSpawn(e);
   if (nx && nx.in < 45 && dist(u, PIT_POS[PIT_OF[nx.k]]) < 7000) return false;
-  return e.rng.chance(0.004);
+  return e.rng.chance(urge !== null ? Items.recallChance(urge) : 0.004);
 }
 
 /** Outnumbered nearby: fall back toward a turret behind us. */

@@ -1,15 +1,28 @@
-/* builds and keystones (Loadout.tsx) */
+/* builds and keystones (Loadout.tsx): two lines per player, keystones on top, core builds below */
 .loadout { margin: 8px 0; padding: 6px 8px; background: #0f1220; box-shadow: inset 0 0 0 1px #262c44; }
-.lo-row { display: grid; grid-template-columns: 28px 120px 1fr 1.3fr; gap: 6px; align-items: center; padding: 3px 0; border-top: 1px solid #1c2134; }
-.lo-row:first-of-type { border-top: 0; }
-.lo-name { font-size: 12px; line-height: 1.2; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.lo-name .muted { font-size: 10px; }
+.lo-row {
+  display: grid; grid-template-columns: 32px 92px 1fr; grid-template-rows: auto auto; column-gap: 6px; row-gap: 2px;
+  align-items: center; padding: 4px 0; border-top: 1px solid #1c2134;
+}
+.lo-row > :first-child { grid-row: 1 / 3; }
+.lo-name { grid-column: 2; grid-row: 1; font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.lo-meta { grid-column: 2; grid-row: 2; font-size: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.lo-ks { grid-column: 3; grid-row: 1; }
+.lo-builds { grid-column: 3; grid-row: 2; }
 .lo-opts { display: flex; flex-wrap: nowrap; gap: 4px; min-width: 0; overflow: hidden; }
-.lo-opt { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px; background: #151a2b; color: var(--muted); border: 0; box-shadow: inset 0 0 0 1px #2a3150; cursor: pointer; font: inherit; font-size: 10px; white-space: nowrap; }
+.lo-opt { display: inline-flex; flex: none; align-items: center; gap: 2px; padding: 1px 4px; background: #151a2b; color: var(--muted); border: 0; box-shadow: inset 0 0 0 1px #2a3150; cursor: pointer; font: inherit; font-size: 10px; white-space: nowrap; }
 .lo-opt:hover { box-shadow: inset 0 0 0 1px var(--gold); }
 .lo-opt.on { color: var(--text, #e6e8f0); box-shadow: inset 0 0 0 2px var(--gold); background: #22263a; }
 .lo-opt span { margin-left: 2px; }
 .item-ic, .rune-ic { display: inline-block; vertical-align: middle; image-rendering: auto; }
 .item-ic { box-shadow: 0 0 0 1px #05070d; }
-.rune-ic { border-radius: 50%; background: #0b0d14; }
-.item-strip { display: flex; gap: 1px; align-items: center; height: 15px; margin-top: 1px; }
+/* a lighter disc behind keystones: several (Lethal Tempo, Conqueror, First Strike) are dark and vanished on black */
+.rune-ic { border-radius: 50%; background: #3a4366; box-shadow: 0 0 0 1px rgba(201, 164, 90, 0.55); }
+/* match player list (Series.tsx MatchView): six item slots on their own line, keystone badge on the portrait.
+   .pl sizes every img to the 38px portrait, so these rules name their own sizes. */
+.item-strip { display: flex; gap: 2px; align-items: center; margin-top: 4px; }
+.pl .item-strip { grid-column: 1 / -1; }
+.pl .item-strip img, .pl .item-strip .item-slot { width: 33px; height: 33px; flex: none; }
+.pl .item-strip .item-slot { display: inline-block; background: #0b0d14; box-shadow: inset 0 0 0 1px #262c44; }
+.pl .pl-face { position: relative; width: 38px; height: 38px; }
+.pl .pl-face img.rune-badge { position: absolute; right: -6px; bottom: -6px; width: 20px; height: 20px; border-radius: 50%; background: #3a4366; box-shadow: 0 0 0 1px #c9a45a, 0 0 0 2px #0b0d14; }

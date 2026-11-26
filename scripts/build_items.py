@@ -35,6 +35,10 @@ Finished items (all from Data Dragon fields, nothing hand-listed except the supp
   boots / support form per player-game.
 
 Per champion (and per role in roleDefaults)
+  role          the champion's most played role in these games.
+  roles         only for flex picks (3+ games in two or more roles): the same fields per role, so a top
+                Camille does not get the support Camille build. The game falls back to the role default
+                when a champion is used in a role it has no games in and the builds would not carry over.
   n/w           player-games and wins.
   builds        "core" = ordered first three completed legendaries (no boots, no support item). Exact
                 sequences are grouped; top 3 by n (ties: w, then ids). If fewer than 3 games reached three
@@ -59,16 +63,19 @@ Bounty ("bounty" section; every number is measured by this script, nothing is co
   * killBase/killLevel: modal bounty per victim level among victims with no death streak and no first blood.
   * deathStreak: [deaths, 300 * mean(bounty / level base)] - the reduction is also driven by how far behind in
     gold the victim is, so deathStreakFit fits mult = 1 - deaths * (a + b * max(0, r0 - rel)) with
-    rel = victim gold / mean gold of all 10 and a 100 gold floor (grid over r0, least squares for a, b).
+    rel = victim gold / mean gold of all 10 and a 100 gold floor (grid over r0 with least squares for a, b,
+    then a pattern search on the squared error of the clamped model).
   * shutdown: fitted min(cap, a*kills + c*assists + b*max(0, lead)) * clamp((teamLead - t0) / t1, 0, 1)
-    by least squares (grid over t0, t1). lead is tried as victim minus the mean of all 10 and as victim
-    minus the enemy laner, with and without the team factor; the best by squared error is kept and the
-    comparison is written to shutdown.compare.
+    (coarse grid over t0, t1 with least squares for a, c, b, then a pattern search on the squared error of
+    the clipped model). The victim's own lead is tried as victim minus the mean of all 10 and as victim
+    minus the enemy laner, with and without the team factor; the best team-factor model by squared error
+    is kept and all four are written to shutdown.compare.
   * assist: residual gold of minutes with exactly one assist, by number of assisters.
-  * objective: bounty > 0 on BUILDING_KILL / ELITE_MONSTER_KILL vs the taking team's gold deficit, the
-    OBJECTIVE_BOUNTY_PRESTART activations, and a team-level gold regression showing the value is a team total.
+  * objective: bounty > 0 on BUILDING_KILL / ELITE_MONSTER_KILL vs the taking team's gold deficit at the
+    event time (interpolated between frames), the OBJECTIVE_BOUNTY_PRESTART activations, and a team-level
+    gold regression showing the value is a team total.
 
-Output is deterministic (sorted iteration, fixed tie-breaks, grid searches) and compact.
+Output is deterministic (sorted iteration, fixed tie-breaks, grid and pattern searches) and compact.
 """
 
 from __future__ import annotations
@@ -77,8 +84,11 @@ import argparse
 import bisect
 import gzip
 import json
+import os
 import re
 import statistics
+import sys
+import time
 import urllib.request
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -128,6 +138,20 @@ def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def write_retry(path: Path, text: str) -> None:
+    """Write through a temp file and os.replace; retry while another process (dev server, scanner) holds the file."""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    for attempt in range(20):
+        try:
+            os.replace(tmp, path)
+            return
+        except OSError:
+            if attempt == 19:
+                raise
+            time.sleep(0.5)
+
+
 def solve(a, b):
     """Gaussian elimination with partial pivoting (small dense systems)."""
     n = len(b)
@@ -159,6 +183,25 @@ def lstsq(xs, ys):
                 for j in range(k):
                     row[j] += xi * x[j]
     return solve(ata, aty)
+
+
+def refine(fun, x, steps, halvings=8):
+    """Deterministic pattern search: try +/- step on each parameter, halve the steps when nothing improves."""
+    x, fx, steps = list(x), fun(x), list(steps)
+    while halvings > 0:
+        improved = False
+        for i in range(len(x)):
+            for sign in (1, -1):
+                y = list(x)
+                y[i] += sign * steps[i]
+                fy = fun(y)
+                if fy < fx:
+                    x, fx, improved = y, fy, True
+                    break
+        if not improved:
+            steps = [s / 2 for s in steps]
+            halvings -= 1
+    return x, fx
 
 
 def mean(values):
@@ -442,15 +485,22 @@ def gold_minutes(timeline, quiet, killer_one, assist_one, team_rows, pool_share)
 def objective_rows(timeline, rows, activations):
     frames = timeline["frames"]
 
-    def team_gold(fi):
-        pf = frames[fi - 1]["participantFrames"] if fi else frames[0]["participantFrames"]
-        return {100: sum(pf[str(p)]["totalGold"] for p in range(1, 6)), 200: sum(pf[str(p)]["totalGold"] for p in range(6, 11))}
+    def team_gold(fi, t):
+        """Team totalGold at time t, interpolated between the frames around the event."""
+        if fi == 0:
+            pf = frames[0]["participantFrames"]
+            return {100: sum(pf[str(p)]["totalGold"] for p in range(1, 6)), 200: sum(pf[str(p)]["totalGold"] for p in range(6, 11))}
+        a, b = frames[fi - 1], frames[fi]
+        w = (t - a["timestamp"]) / (b["timestamp"] - a["timestamp"]) if b["timestamp"] > a["timestamp"] else 1.0
+        gold = {p: a["participantFrames"][str(p)]["totalGold"] * (1 - w) + b["participantFrames"][str(p)]["totalGold"] * w
+                for p in range(1, 11)}
+        return {100: sum(gold[p] for p in range(1, 6)), 200: sum(gold[p] for p in range(6, 11))}
 
     for fi, frame in enumerate(frames):
         for e in frame["events"]:
             kind = e["type"]
             if kind == "OBJECTIVE_BOUNTY_PRESTART":
-                g = team_gold(fi)
+                g = team_gold(fi, e["timestamp"])
                 deficit = g[300 - e["teamId"]] - g[e["teamId"]]
                 activations.append({"t": e["timestamp"], "start": e.get("actualStartTime", e["timestamp"]),
                                     "deficit": deficit, "rel": deficit / (g[100] + g[200])})
@@ -463,48 +513,64 @@ def objective_rows(timeline, rows, activations):
                     typ = "ELDER_DRAGON" if e.get("monsterSubType") == "ELDER_DRAGON" else e.get("monsterType")
                 if taking not in (100, 200):
                     continue
-                g = team_gold(fi)
+                g = team_gold(fi, e["timestamp"])
                 rows.append({"t": e["timestamp"], "type": typ, "bounty": e.get("bounty", 0) or 0,
                              "deficit": g[300 - taking] - g[taking]})
 
 
+def shutdown_pred(p, ks, asx, lead, team, use_team=True):
+    a, c, b, t0, t1 = p
+    m = min(1.0, max(0.0, (team - t0) / t1)) if use_team else 1.0
+    return min(SHUTDOWN_CAP, max(0.0, a * ks + c * asx + b * lead)) * m
+
+
 def fit_shutdown(rows, lead_key, use_team):
-    """Least squares for (a, c, b) on a (t0, t1) grid; returns the best by squared error of the clipped model."""
+    """Coarse (t0, t1) grid with least squares for (a, c, b), then a pattern search on the squared error of the
+    clipped model. Returns sse, mae, r2 and params (a, c, b, t0, t1)."""
     y = [r["shutdown"] for r in rows]
-    base = [(r["ks"], r["as"], max(0.0, r[lead_key]), r["team"]) for r in rows]
-    sst = sum((v - mean(y)) ** 2 for v in y)
+    everything = [(r["ks"], r["as"], max(0.0, r[lead_key]), r["team"], v) for r, v in zip(rows, y)]
+    # rows with no kills, assists or lead always predict 0: their error is a constant
+    data = [d for d in everything if d[0] or d[1] or d[2]]
+    const = sum(d[4] ** 2 for d in everything if not (d[0] or d[1] or d[2]))
+    ybar = mean(y)
+    sst = sum((v - ybar) ** 2 for v in y)
 
-    def evaluate(t0, t1):
-        xs, ys = [], []
-        for (ks, asx, lead, team), v in zip(base, y):
+    def ls(t0, t1):
+        s = [0.0] * 9
+        for ks, asx, lead, team, v in data:
             m = min(1.0, max(0.0, (team - t0) / t1)) if use_team else 1.0
-            if m > 0:
-                xs.append([m * ks, m * asx, m * lead])
-                ys.append(v)
-        a, c, b = lstsq(xs, ys)
-        sse = abs_err = 0.0
-        for (ks, asx, lead, team), v in zip(base, y):
-            m = min(1.0, max(0.0, (team - t0) / t1)) if use_team else 1.0
-            pred = min(SHUTDOWN_CAP, max(0.0, a * ks + c * asx + b * lead)) * m
-            sse += (pred - v) ** 2
-            abs_err += abs(pred - v)
-        return sse, abs_err / len(y), (a, c, b, t0, t1)
+            if m <= 0:
+                continue
+            x0, x1, x2 = m * ks, m * asx, m * lead
+            s[0] += x0 * x0; s[1] += x0 * x1; s[2] += x0 * x2; s[3] += x1 * x1; s[4] += x1 * x2; s[5] += x2 * x2
+            s[6] += x0 * v; s[7] += x1 * v; s[8] += x2 * v
+        return solve([[s[0], s[1], s[2]], [s[1], s[3], s[4]], [s[2], s[4], s[5]]], [s[6], s[7], s[8]])
 
-    if not use_team:
-        sse, mae, params = evaluate(0, 1)
-        return {"sse": sse, "mae": mae, "r2": 1 - sse / sst, "params": params}
-    best = None
-    grid = [(t0, t1) for t0 in range(-3000, 1001, 500) for t1 in range(1000, 10001, 1000)]
-    for step0, step1 in ((None, None), (100, 250), (25, 50)):
-        if step0:
-            c0, c1 = best[2][3], best[2][4]
-            grid = [(c0 + i * step0, c1 + j * step1) for i in range(-5, 6) for j in range(-4, 5) if c1 + j * step1 > 0]
-        for t0, t1 in grid:
-            res = evaluate(t0, t1)
-            if best is None or res[0] < best[0]:
-                best = res
-    sse, mae, params = best
-    return {"sse": sse, "mae": mae, "r2": 1 - sse / sst, "params": params}
+    def sse(p):
+        a, c, b, t0, t1 = p
+        if t1 <= 0:
+            return float("inf")
+        total = 0.0
+        for ks, asx, lead, team, v in data:
+            raw = a * ks + c * asx + b * lead
+            raw = SHUTDOWN_CAP if raw > SHUTDOWN_CAP else (raw if raw > 0 else 0.0)
+            if use_team:
+                m = (team - t0) / t1
+                raw *= 1.0 if m > 1 else (m if m > 0 else 0.0)
+            total += (raw - v) * (raw - v)
+        return total + const
+
+    if use_team:
+        grid = [(t0, t1) for t0 in range(-3000, 1001, 500) for t1 in range(1000, 10001, 1000)]
+        start = min(([*ls(t0, t1), t0, t1] for t0, t1 in grid), key=sse)
+        params, err = refine(sse, start, [10, 2, 0.002, 100, 200])
+    else:
+        params = [*ls(0, 1), 0, 1]
+        params, err = refine(lambda p: sse(p[:3] + [0, 1]), params[:3], [10, 2, 0.002])
+        params = params + [0, 1]
+        err = sse(params)
+    mae = mean([abs(shutdown_pred(params, ks, asx, lead, team, use_team) - v) for ks, asx, lead, team, v in everything])
+    return {"sse": err, "mae": mae, "r2": 1 - err / sst, "params": params, "useTeam": use_team}
 
 
 def build_bounty(kills, quiet, killer_one, assist_one, team_rows, objectives, activations, games):
@@ -517,7 +583,7 @@ def build_bounty(kills, quiet, killer_one, assist_one, team_rows, objectives, ac
     level_mode = {lv: min(c, key=lambda g: (-c[g], g)) for lv, c in by_level.items()}
     kill_base = Counter(level_mode[lv] for lv in level_mode if lv <= 6).most_common(1)[0][0]
     steps = [level_mode[lv] - level_mode[lv - 1] for lv in range(7, 19) if lv in level_mode and lv - 1 in level_mode]
-    per_level = statistics.median(steps)
+    per_level = int(round(statistics.median(steps)))
     free = max((lv for lv in level_mode if level_mode[lv] == kill_base), default=6)
     cap = max(level_mode.values())
 
@@ -550,35 +616,48 @@ def build_bounty(kills, quiet, killer_one, assist_one, team_rows, objectives, ac
         mult = 1 - r["ds"] * (a + b * max(0.0, r0 - r["rel"]))
         return max(min(r["base"], KILL_FLOOR), r["base"] * min(1.0, max(0.0, mult)))
 
-    best = None
-    streaky = [r for r in kills if r["ds"] > 0]
-    for i in range(90, 131):
+    streaky = [r for r in kills if r["ds"] > 0]  # deaths == 0 never changes with the parameters
+
+    streak_data = [(r["base"], r["ds"], r["rel"], r["bounty"], min(r["base"], KILL_FLOOR)) for r in streaky]
+
+    def ds_sse(p):
+        a, b, r0 = p
+        total = 0.0
+        for base, d, rel, v, floor in streak_data:
+            mult = 1 - d * (a + b * (r0 - rel if r0 > rel else 0.0))
+            pred = base * (1.0 if mult > 1 else (mult if mult > 0 else 0.0))
+            pred = pred if pred > floor else floor
+            total += (pred - v) * (pred - v)
+        return total
+
+    starts = []
+    for i in range(90, 131, 2):
         r0 = i / 100
         a, b = lstsq([[r["base"] * r["ds"], r["base"] * r["ds"] * max(0.0, r0 - r["rel"])] for r in streaky],
                      [r["base"] - r["bounty"] for r in streaky])
-        mae = mean([abs(ds_pred(r, a, b, r0) - r["bounty"]) for r in kills])
-        if best is None or mae < best[0]:
-            best = (mae, a, b, r0)
-    mae, a, b, r0 = best
+        starts.append([a, b, r0])
+    (a, b, r0), _ = refine(ds_sse, min(starts, key=ds_sse), [0.01, 0.05, 0.02], halvings=12)
+    mae = mean([abs(ds_pred(r, a, b, r0) - r["bounty"]) for r in kills])
     out["deathStreakFit"] = {
         "formula": "bounty = max(100, base * (1 - deaths * (perDeath + perDeficit * max(0, relPivot - rel)))), "
                    "base = killLevel formula (+ firstBloodExtra), deaths = victim deaths since last kill, "
                    "rel = victim totalGold / mean totalGold of all 10 at the frame before the kill",
-        "params": {"perDeath": round(a, 4), "perDeficit": round(b, 4), "relPivot": r0, "floor": KILL_FLOOR},
+        "params": {"perDeath": round(a, 4), "perDeficit": round(b, 4), "relPivot": round(r0, 3), "floor": KILL_FLOOR},
         "mae": r1(mae), "maeTable": r1(mean([abs(r["base"] * mult_by_ds[min(r["ds"], 7)] - r["bounty"]) for r in kills])),
-        "maeNoReduction": r1(mean([abs(r["base"] - r["bounty"]) for r in kills])), "n": len(kills)}
+        "maeNoReduction": r1(mean([abs(r["base"] - r["bounty"]) for r in kills])), "n": len(kills),
+        "tableNote": "deathStreak = [victim deaths since last kill (7 = 7+), 300 * mean(bounty / base)]: the gold for a "
+                     "level 1-6 victim; scale by base / 300 for higher levels"}
 
     # ---- shutdown
     compare = {}
     for lead_key, label in (("leadAvg", "avg10"), ("leadLane", "laner")):
         for use_team in (True, False):
             compare[(label, use_team)] = fit_shutdown(kills, lead_key, use_team)
-    (lead_label, _), best = min(compare.items(), key=lambda kv: kv[1]["sse"])
+    (lead_label, _), best = min(((k, v) for k, v in compare.items() if k[1]), key=lambda kv: kv[1]["sse"])
     lead_key = "leadAvg" if lead_label == "avg10" else "leadLane"
     a, c, b, t0, t1 = best["params"]
     y = [r["shutdown"] for r in kills]
-    pred = [min(SHUTDOWN_CAP, max(0.0, a * r["ks"] + c * r["as"] + b * max(0.0, r[lead_key])))
-            * min(1.0, max(0.0, (r["team"] - t0) / t1)) for r in kills]
+    pred = [shutdown_pred(best["params"], r["ks"], r["as"], max(0.0, r[lead_key]), r["team"]) for r in kills]
     pos = [i for i, v in enumerate(y) if v > 0]
 
     def buckets(key, edges):
@@ -607,6 +686,9 @@ def build_bounty(kills, quiet, killer_one, assist_one, team_rows, objectives, ac
                 "maxSeen": max(y), "atCap": sum(1 for v in y if v == SHUTDOWN_CAP)},
         "compare": {f"{label}{'+team' if team else ''}": {"r2": round(v["r2"], 3), "mae": r1(v["mae"])}
                     for (label, team), v in sorted(compare.items())},
+        "tableNote": "byStreak [victim kills since last death (8 = 8+), mean shutdownBounty, kills]; byLead (G) and "
+                     "byTeamLead (T) [bucketStart, mean shutdownBounty, kills], first bucket also holds everything below, "
+                     "last everything above",
         "byStreak": by_streak,
         "byLead": buckets(lead_key, list(range(-3000, 4001, 500))),
         "byTeamLead": buckets("team", list(range(-4000, 8001, 1000))),
@@ -667,7 +749,8 @@ def build_bounty(kills, quiet, killer_one, assist_one, team_rows, objectives, ac
     out["objective"] = {
         "note": "bounty on BUILDING_KILL / ELITE_MONSTER_KILL is the team total paid to the taking team, only while an "
                 "objective bounty is active for it: OBJECTIVE_BOUNTY_PRESTART (15 s warning) fires only after 14:00 and "
-                "only for the team behind in gold. deficit = enemy team totalGold - taking team totalGold at the frame before.",
+                "only for the team behind in gold. deficit = enemy team totalGold - taking team totalGold at the event time "
+                "(interpolated between frames). activeFrom = earliest actualStartTime seen (s).",
         "activeFrom": round(after / 1000),
         "warning": round(mean([(a["start"] - a["t"]) / 1000 for a in activations])) if activations else None,
         "activations": len(activations),
@@ -694,6 +777,8 @@ def main() -> int:
     parser.add_argument("--index", default=str(ROOT / "data" / "games_lck_2026.json"))
     parser.add_argument("--version", default="16.23.1")
     args = parser.parse_args()
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     version = args.version
     vdir = DDRAGON / version
     for locale in ("ko_KR", "en_US"):
@@ -826,6 +911,11 @@ def main() -> int:
         roles = Counter(r["role"] for r in recs)
         main_role = min(roles, key=lambda r: (-roles[r], ROLES.index(r)))
         champs[cid] = summarize(recs, main_role == "Support")
+        # main role, and a separate entry per role for flex picks (support Camille builds nothing like top Camille)
+        champs[cid]["role"] = main_role
+        played = [r for r in ROLES if roles[r] >= 3]
+        if len(played) >= 2:
+            champs[cid]["roles"] = {r: summarize([x for x in recs if x["role"] == r], r == "Support") for r in played}
     role_defaults = {role: summarize(by_role[role], role == "Support") for role in ROLES}
 
     bounty = build_bounty(kills, quiet, killer_one, assist_one, team_rows, objectives, activations,
@@ -835,7 +925,7 @@ def main() -> int:
            "patches": [f"{a}.{b}" for a, b in sorted(patches)],
            "items": items_out, "keystones": keystones, "trees": trees, "champs": champs,
            "roleDefaults": role_defaults, "bounty": bounty}
-    OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    write_retry(OUT, json.dumps(out, ensure_ascii=False, separators=(",", ":")))
 
     # ---- console report
     size = OUT.stat().st_size

@@ -599,8 +599,11 @@ export class Engine {
     if (dist(u, FOUNTAIN[u.side]) < 1200) u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.08 * DT);
     // decide to recall
     const low = u.hp / u.maxHp < 0.3;
-    const rich = u.gold - (u as Unit & { lastShop?: number }).lastShop! > 1500;
-    if ((low || (rich && this.rng.chance(0.004))) && u.task !== "obj") {
+    // gold to spend: go home and buy like real players (items.ts shopUrge); without items.json the old 1500 rule.
+    // Laning units run on this path (macro gives them the "old" job), so this is where early recalls come from.
+    const urge = Items.shopUrge(this, u);
+    const rich = urge !== null ? urge > 0 : u.gold - (u as Unit & { lastShop?: number }).lastShop! > 1500;
+    if ((low || (rich && this.rng.chance(urge !== null ? Items.recallChance(urge) : 0.004))) && u.task !== "obj") {
       u.task = "recall";
       (u as Unit & { lastShop?: number }).lastShop = u.gold;
       return;
@@ -1180,14 +1183,16 @@ export class Engine {
     const recent = [...v.lastHitBy.entries()].filter(([, t]) => this.t - t < 10).map(([i]) => this.units[i]).filter((x) => x.side !== v.side);
     if (!killer && recent.length) killer = recent[recent.length - 1];
     const assists = recent.filter((x) => x !== killer);
-    const wasShutdown = v.streak >= 3;
+    // kill gold and shutdown (제압골) fitted on real LCK games (items.ts); without items.json the old flat rule
+    const kg = Items.killGold(this, killer, v, assists, !this.firstBlood);
+    const wasShutdown = kg ? kg.shutdown >= 250 : v.streak >= 3;
     v.streak = 0;
-    const bounty = 300 + (wasShutdown ? 150 + Math.min(700, (v.k - v.d) * 50) : 0);
+    const bounty = kg ? kg.bounty + kg.shutdown : 300 + (wasShutdown ? 150 + Math.min(700, (v.k - v.d) * 50) : 0) + (this.firstBlood ? 0 : 100);
     this.fx_({ kind: "kill", side: killerSide, x: v.x, y: v.y, tx: v.x, ty: v.y, color: killerSide ? "#ff5a5a" : "#5aa9ff", r: 200, w: 0, to: v.i, from: killer?.i });
     if (killer) {
       killer.k += 1;
       killer.streak += 1;
-      killer.gold += bounty + (this.firstBlood ? 0 : 100);
+      killer.gold += bounty;
       killer.xp += 220 + lvl * 25;
       // multikill window
       if (this.t - killer.multi.last <= (killer.multi.n === 4 ? 30 : 10)) killer.multi.n += 1;
@@ -1196,7 +1201,7 @@ export class Engine {
     }
     for (const a of assists) {
       a.a += 1;
-      a.gold += Math.round(150 / Math.max(1, assists.length)) + 20;
+      a.gold += kg ? kg.assist : Math.round(150 / Math.max(1, assists.length)) + 20;
       a.xp += 120;
     }
     const kName = killer ? `${killer.name}(${killer.champ.name})` : "포탑";
@@ -1209,7 +1214,10 @@ export class Engine {
     } else {
       this.event("kill", killerSide, `${kName} → ${vName}`, false, killer?.i, v.i);
     }
-    if (wasShutdown && killer) this.event("shutdown", killerSide, `셧다운! ${josa(kName, "이가")} ${v.name}의 연속 킬을 끊었습니다`, false, killer.i, v.i);
+    if (wasShutdown && killer) {
+      const extra = kg ? ` (제압골 ${kg.shutdown}골드)` : "";
+      this.event("shutdown", killerSide, `셧다운! ${josa(kName, "이가")} ${v.name}의 연속 킬을 끊었습니다${extra}`, false, killer.i, v.i);
+    }
     if (killer && killer.multi.n >= 2) {
       const n = killer.multi.n;
       const t: EvType = n === 2 ? "double" : n === 3 ? "triple" : n === 4 ? "quadra" : "penta";
