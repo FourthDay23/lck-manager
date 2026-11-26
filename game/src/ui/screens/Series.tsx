@@ -21,6 +21,9 @@ import { CAPTION_MS, MatchRenderer } from "../../match/render";
 import "../caption.css";
 import "../draft.css";
 import { ItemStrip, LoadoutPicker } from "../Loadout";
+import { Scorebar } from "../Scorebar";
+import type { SeriesInfo } from "../Scorebar";
+import { standings } from "../../core/schedule";
 import type { CamMode } from "../../match/render";
 import { ChampIcon, TeamLogo, Bar } from "../components";
 import { autosave } from "../App";
@@ -161,7 +164,24 @@ export function SeriesScreen() {
   );
 
   if (L.phase === "draft" && L.draft) return <div>{header}<DraftView d={L.draft} userSide={userSide === 0 ? "blue" : "red"} onDone={(go) => { if (go === "skip") { const e = makeEngine(L.draft!, L.tactic, userSide, seedBase + 1, L.strategy); e.runToEnd(); finishGame(e, L.draft!); } else { L.engine = makeEngine(L.draft!, L.tactic, userSide, seedBase + 1, L.strategy); L.phase = "match"; bump(); } }} /></div>;
-  if (L.phase === "match" && L.engine && L.draft) return <div>{header}<MatchView e={L.engine} userSide={userSide} tactic={L.tactic} setTactic={(t) => { L.tactic = t; L.engine!.tactic[userSide] = t; }} onEnd={() => finishGame(L.engine!, L.draft!)} /></div>;
+  if (L.phase === "match" && L.engine && L.draft) {
+    // the broadcast scorebar carries the series (pips, label), so the series header is not shown during the game
+    const sub: Record<string, string> = {};
+    const reg = sr.comp === "REG" || sr.comp === "REG2";
+    const tbl = reg ? standings(s, sr.comp === "REG2" ? ["REG", "REG2"] : [sr.comp], sr.season) : [];
+    for (const id of [sr.a!, sr.b!]) {
+      const i = tbl.findIndex((x) => x.team === id);
+      sub[id] = i >= 0 ? `LCK ${i + 1}위 · ${tbl[i].w}승 ${tbl[i].l}패` : s.teams[id].region;
+    }
+    const fl = fearlessOf(sr).length;
+    const series: SeriesInfo = {
+      teams: [sr.a!, sr.b!], wins: [sr.wa, sr.wb], bo: sr.bo, sub,
+      label: `${COMP_NAME[sr.comp]} · ${stageName(sr.stage)}`,
+      game: `${sr.games.length + 1}세트 · Bo${sr.bo}`,
+      note: fl ? `피어리스: 챔피언 ${fl}개 사용 불가` : "하드 피어리스 드래프트",
+    };
+    return <div><MatchView e={L.engine} userSide={userSide} series={series} tactic={L.tactic} setTactic={(t) => { L.tactic = t; L.engine!.tactic[userSide] = t; }} onEnd={() => finishGame(L.engine!, L.draft!)} /></div>;
+  }
 
   const pWin = seriesWinProb(0.5, sr.bo);
   return (
@@ -418,7 +438,7 @@ const BIG_ICON: Partial<Record<GameEvent["type"], string>> = {
   ace: "에이스", steal: "스틸!", baron: "바론", soul: "드래곤의 영혼", elder: "장로 드래곤", inhib: "억제기", first_turret: "첫 포탑", nexus: "승리",
 };
 
-export function MatchView({ e, userSide, tactic, setTactic, onEnd }: { e: Engine; userSide: 0 | 1; tactic: Tactic; setTactic: (t: Tactic) => void; onEnd: () => void }) {
+export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e: Engine; userSide: 0 | 1; series?: SeriesInfo; tactic: Tactic; setTactic: (t: Tactic) => void; onEnd: () => void }) {
   const s = S();
   const data = D();
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -528,22 +548,9 @@ export function MatchView({ e, userSide, tactic, setTactic, onEnd }: { e: Engine
   );
   const timers = e.timers();
   const campTimers = e.camps.filter((c) => !c.alive && c.spawnAt - e.t < 300 && (c.kind === "blue" || c.kind === "red" || c.kind === "scuttle"));
-  const dragonIcons = (side: 0 | 1) => e.dragons[side].map((t) => <span class="tag" style={{ padding: "0 3px" }}>{t.slice(0, 2)}</span>);
   return (
     <div>
-      <div class="frame pad" style={{ padding: "6px 10px", marginBottom: 6 }}>
-        <div class="row" style={{ justifyContent: "space-between" }}>
-          <div class="row" style={{ gap: 6 }}>
-            <b style={{ color: "var(--blue)", fontSize: 22, fontFamily: "Galmuri14" }}>{e.kills[0]}</b>
-            <span class="muted">포탑 {e.towers[0]} · 유충 {e.grubs[0]} · 바론 {e.barons[0]}</span> {dragonIcons(0)}
-          </div>
-          <div class="center"><b style={{ fontSize: 18 }}>{fmtClock(e.t)}</b><div class="muted" style={{ fontSize: 11 }}>골드 차 {Math.round((e.gold(0) - e.gold(1)) / 100) / 10}k</div></div>
-          <div class="row" style={{ gap: 6 }}>
-            {dragonIcons(1)} <span class="muted">바론 {e.barons[1]} · 유충 {e.grubs[1]} · 포탑 {e.towers[1]}</span>
-            <b style={{ color: "var(--red)", fontSize: 22, fontFamily: "Galmuri14" }}>{e.kills[1]}</b>
-          </div>
-        </div>
-      </div>
+      <Scorebar e={e} series={series} />
       <div class="match">
         {team(0)}
         <div>

@@ -135,7 +135,7 @@ export function StartScreen() {
         </div>
       )}
       <div class="dim center" style={{ fontSize: 11, padding: 10 }}>
-        데이터 출처: Leaguepedia, Riot Data Dragon. 이 게임은 Riot Games가 보증하거나 후원하지 않습니다. 게임 속 뉴스와 사건은 가상입니다.
+        데이터 출처: Leaguepedia, Riot Data Dragon, CommunityDragon(경기 화면 아이콘). 이 게임은 Riot Games가 보증하거나 후원하지 않습니다. 게임 속 뉴스와 사건은 가상입니다.
         <br />
         © 2026 LCK MANAGER. 구단·대회 명칭과 로고의 권리는 각 권리자에게 있습니다.
       </div>

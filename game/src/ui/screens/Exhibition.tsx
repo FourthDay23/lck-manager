@@ -12,6 +12,7 @@ import type { Engine, Tactic } from "../../match/engine";
 import { DraftView, GameResult, MatchView, StrategyPicker, makeEngine, recordFromEngine } from "./Series";
 import type { Strategy } from "../../match/strategy";
 import { TeamLogo } from "../components";
+import type { SeriesInfo } from "../Scorebar";
 
 interface ExLive {
   bo: 1 | 3 | 5;
@@ -178,7 +179,14 @@ export function ExhibitionScreen() {
     );
   }
   if (L.phase === "match" && L.engine && L.draft) {
-    return <div>{header}<MatchView e={L.engine} userSide={userSide} tactic={L.tactic} setTactic={(t) => { L.tactic = t; if (controlledId) L.engine!.tactic[userSide] = t; }} onEnd={() => finishGame(L.engine!, L.draft!)} /></div>;
+    const series: SeriesInfo = {
+      teams: ["EXA", "EXB"], wins: L.wins, bo: L.bo,
+      label: "코드 대전",
+      game: `${L.games.length + 1}세트 · Bo${L.bo}`,
+      note: `패치 ${s.meta?.patch} · 피어리스 잠금 ${fearless.length}개`,
+      sub: { EXA: s.teams.EXA.name, EXB: s.teams.EXB.name },
+    };
+    return <div><MatchView e={L.engine} userSide={userSide} series={series} tactic={L.tactic} setTactic={(t) => { L.tactic = t; if (controlledId) L.engine!.tactic[userSide] = t; }} onEnd={() => finishGame(L.engine!, L.draft!)} /></div>;
   }
   return (
     <div>
