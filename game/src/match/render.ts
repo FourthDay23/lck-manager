@@ -122,6 +122,16 @@ export class MatchRenderer {
     this.skills.reset();
     this.stepFrom = [];
     this.lerp = 1;
+    // broadcast director: a new game starts with no shot, no position history and a cut
+    this.shotId = null;
+    this.shotLast = null;
+    this.shotLabel = "";
+    this.shotSince = this.shotSinceT = this.idleSince = this.idleSinceT = this.reframedAt = 0;
+    this.prevPos = null;
+    this.upCache = null;
+    this.fallbackKey = "";
+    this.cut = null;
+    this.snap = true;
     for (const u of e.units) champImage(this.version, u.champ.id);
   }
 
@@ -174,7 +184,10 @@ export class MatchRenderer {
       case "double": case "triple": case "quadra": case "penta":
         return a ? `${this.tag(a)}의 ${EVENT_SHOT[ev.type]}` : plain(ev.text);
       case "ace": return `${josa(team, "이가")} 상대 다섯 명을 모두 잡았습니다`;
-      case "shutdown": return a && v ? `${josa(this.tag(a), "이가")} ${this.tag(v)}의 연속 킬을 끊었습니다` : plain(ev.text);
+      case "shutdown": {
+        const gold = ev.text.match(/제압골 \d+골드/)?.[0];
+        return a && v ? `${josa(this.tag(a), "이가")} ${this.tag(v)}의 연속 킬을 끊었습니다${gold ? ` (${gold})` : ""}` : plain(ev.text);
+      }
       case "steal": return a ? `${josa(this.tag(a), "이가")} 오브젝트를 빼앗았습니다` : plain(ev.text);
       case "nexus": return `${josa(team, "이가")} 넥서스를 파괴했습니다`;
       default: return plain(ev.text);
@@ -259,6 +272,8 @@ export class MatchRenderer {
    *  groups walking into each other. Ids match the shots the same scene gets once it starts, so no second cut. */
   private upcoming(): Shot[] {
     const e = this.e;
+    // once per engine step: frames between steps (high refresh rate, pause, slow motion) see the same answer
+    if (this.upCache && this.upCache.t === e.t) return this.upCache.shots;
     const out: Shot[] = [];
     // team plans (macro brains): objective setups and sieges are decided well before anyone arrives
     const M = Macro.st(e);
@@ -327,11 +342,12 @@ export class MatchRenderer {
       if (a.side !== 0 || seen.has(a.i)) continue;
       const foes = alive.filter((b) => b.side === 1 && Math.hypot(a.x - b.x, a.y - b.y) < 2400);
       if (!foes.length) continue;
+      // really walking toward each other (standing close is just the lane)
       const closing = foes.some((b) => {
         if (!prev || dt <= 0) return false;
         const pa = prev.pos[a.i], pb = prev.pos[b.i];
         const before = Math.hypot(pa.x - pb.x, pa.y - pb.y), after = Math.hypot(a.x - b.x, a.y - b.y);
-        return (before - after) / dt > 60 || after < 1400;
+        return (before - after) / dt > 60;
       });
       if (!closing) continue;
       // the group: everyone within 1000 of the two sides' members
@@ -339,8 +355,9 @@ export class MatchRenderer {
       for (const u of alive) if ([...group].some((g) => Math.hypot(g.x - u.x, g.y - u.y) < 1000)) group.add(u);
       const m = [...group];
       m.forEach((u) => seen.add(u.i));
-      // two laners facing each other is the lane, not a fight about to start
-      if (m.length < 3) continue;
+      // laners trading in their lane (1v1, the bot 2v2) are the lane, not a fight about to start: it takes three
+      // or more with at least one who came from elsewhere (jungler, roamer, a group on the move)
+      if (m.length < 3 || m.every((u) => u.task === "lane")) continue;
       const cx = m.reduce((s, u) => s + u.x, 0) / m.length, cy = m.reduce((s, u) => s + u.y, 0) / m.length;
       const spread = Math.max(...m.map((u) => Math.hypot(u.x - cx, u.y - cy)));
       const n = m.length;
@@ -351,8 +368,10 @@ export class MatchRenderer {
       });
     }
     if (!prev || e.t - prev.t >= 1) this.prevPos = { t: e.t, pos: e.units.map((u) => ({ x: u.x, y: u.y })) };
+    this.upCache = { t: e.t, shots: out };
     return out;
   }
+  private upCache: { t: number; shots: Shot[] } | null = null;
 
   /** Pick a shot like a broadcast observer: hold it for a moment, cut away for something bigger, then fall back.
    *  Cuts are instant (see draw); a new shot over the same spot only changes the caption. */
@@ -370,9 +389,14 @@ export class MatchRenderer {
       if (best.reason !== this.shotLast.reason) this.cut = { text: best.reason, at: now };
     }
     // hold a shot ~2.5 s (and 5 game s) before cutting to something better; something far bigger cuts sooner
-    if (cur && best && best.id !== cur.id && ((held > 2500 && heldGame > 5 && best.score > cur.score * 1.35) || (held > 1000 && best.score > cur.score * 2.2))) cur = null;
-    // the scene just ended: stay on it a moment (1.5 s, 3 game s) unless something big is on
-    if (!cur && this.shotLast && now - this.idleSince < 1500 && this.e.t - this.idleSinceT < 3 && !(best && best.score >= 30)) {
+    let cutAway = false;
+    if (cur && best && best.id !== cur.id && ((held > 2500 && heldGame > 5 && best.score > cur.score * 1.35) || (held > 1000 && best.score > cur.score * 2.2))) {
+      cur = null;
+      cutAway = true;
+    }
+    // the scene just ended: stay on it a moment (1.5 s, 3 game s) unless something big is on (not when the camera
+    // is leaving a live scene for a bigger one: that cut happens now)
+    if (!cur && !cutAway && this.shotLast && now - this.idleSince < 1500 && this.e.t - this.idleSinceT < 3 && !(best && best.score >= 30)) {
       return { x: this.shotLast.x, y: this.shotLast.y, size: this.shotLast.size };
     }
     if (!cur && best && best.score >= 10 && (held > 900 || !this.shotLast)) {
