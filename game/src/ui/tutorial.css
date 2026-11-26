@@ -1,0 +1,12 @@
+/* tutorial: dim everything except the lit part, a step box on top (ui/Tutorial.tsx) */
+.tut-layer { position: fixed; inset: 0; z-index: 900; pointer-events: none; }
+.tut-block { position: fixed; inset: 0; pointer-events: auto; background: transparent; }
+.tut-dim { position: fixed; inset: 0; background: rgba(4, 6, 12, 0.66); }
+.tut-shade { position: fixed; background: rgba(4, 6, 12, 0.66); }
+.tut-hole { position: fixed; border-radius: 4px; box-shadow: 0 0 0 2px var(--gold) inset; }
+.tut-box { position: fixed; pointer-events: auto; padding: 12px 14px; background: #161a2b; box-shadow: 0 0 0 2px var(--gold), 0 8px 24px rgba(0, 0, 0, 0.5); }
+.tut-box h3 { margin: 2px 0 6px; color: var(--gold); }
+.tut-box p { margin: 0 0 10px; font-size: 13px; line-height: 1.6; }
+.tut-step { font-size: 11px; color: var(--muted); }
+.tut-bar { height: 3px; background: #0b0d14; margin-bottom: 10px; }
+.tut-bar i { display: block; height: 100%; background: var(--gold); }

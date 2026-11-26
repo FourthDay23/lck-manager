@@ -3,6 +3,7 @@ import { store, S } from "../../store";
 import { saveGame, slotMeta, deleteSlot, loadGame, downloadSave, readSaveFile } from "../../core/save";
 import { migrateSave } from "../../core/game";
 import { inbox } from "../../core/news";
+import { startTutorial } from "../Tutorial";
 
 export function SettingsScreen() {
   const s = S();
@@ -67,6 +68,13 @@ export function SettingsScreen() {
               store.go("home");
             }} />
           </label>
+        </div>
+      </div>
+      <div class="frame pad">
+        <h2>튜토리얼</h2>
+        <div class="row">
+          <span class="muted">게임 화면과 할 일을 차례로 안내합니다.</span>
+          <button class="btn" onClick={() => startTutorial(true)}>튜토리얼 다시 보기</button>
         </div>
       </div>
       <div class="frame pad">

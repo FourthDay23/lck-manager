@@ -1,0 +1,3 @@
+/* negotiation window: money steppers (the signing-bonus explanation is a one-time tip, ui/Tutorial.tsx tipOnce) */
+.stepper .btn.small { min-width: 26px; padding-left: 4px; padding-right: 4px; }
+.stepper input[type="range"] { flex: none; }

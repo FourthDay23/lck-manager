@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { S, store } from "../store";
 import { Rng } from "../core/rng";
 import { money } from "../core/format";
@@ -13,6 +13,42 @@ import { autosave } from "./App";
 import { monthlyWages } from "../core/ledger";
 import { monthlyIncomePreview } from "../core/economy";
 import { ROLE_KO } from "../data/types";
+import "./negotiation.css";
+import { tipOnce } from "./Tutorial";
+
+const BONUS_TIP = {
+  key: "signing-bonus",
+  sel: ".modal .bonus-row",
+  title: "계약금이란",
+  body:
+    "계약서에 서명할 때 한 번만 주는 돈입니다(사이닝 보너스). 연봉처럼 매달 나가지 않고, 계약하는 순간 지금 자금에서 바로 빠집니다. " +
+    "선수는 계약금 ÷ 계약 기간의 80%를 연봉으로 더 받는 것으로 칩니다. 2년 계약에 계약금 1억이면 연봉을 4000만 더 주는 셈입니다. " +
+    "월 급여 부담을 늘리지 않고 요구액을 맞출 때 쓰세요. 연봉을 요구액보다 너무 낮게 부르면 선수의 인내심이 두 칸 깎입니다.",
+};
+
+/** A money slider with -/+ buttons (small and big steps) and quick values; the slider alone is too fiddly. */
+function MoneyStepper({ value, min, max, step, big, onChange, presets }: {
+  value: number; min: number; max: number; step: number; big: number; onChange: (v: number) => void;
+  presets?: { label: string; value: number }[];
+}) {
+  const set = (v: number) => onChange(Math.max(min, Math.min(max, Math.round(v / step) * step)));
+  return (
+    <div class="stepper">
+      <div class="row" style={{ gap: 4, flexWrap: "nowrap" }}>
+        <button class="btn small" onClick={() => set(value - big)} title={`−${money(big)}`}>−−</button>
+        <button class="btn small" onClick={() => set(value - step)} title={`−${money(step)}`}>−</button>
+        <input type="range" min={min} max={max} step={step} value={value} onInput={(e) => set(Number((e.target as HTMLInputElement).value))} style={{ width: 200 }} />
+        <button class="btn small" onClick={() => set(value + step)} title={`+${money(step)}`}>+</button>
+        <button class="btn small" onClick={() => set(value + big)} title={`+${money(big)}`}>++</button>
+        <b style={{ minWidth: 64, textAlign: "right" }}>{money(value)}</b>
+      </div>
+      <div class="row muted" style={{ gap: 4, fontSize: 11, marginTop: 2 }}>
+        <span>− / + {money(step)}, −− / ++ {money(big)}</span>
+        {presets?.map((p) => <button class={`btn small ${value === Math.round(p.value / step) * step ? "on" : ""}`} onClick={() => set(p.value)}>{p.label}</button>)}
+      </div>
+    </div>
+  );
+}
 
 /** What this contract costs now and every month, next to what the club earns. */
 function CostBox({ upfront, fee, bonus, monthlyAdd }: { upfront: number; fee: number; bonus: number; monthlyAdd: number }) {
@@ -61,6 +97,10 @@ export function NegotiationModal({ pid, mode }: { pid: string; mode: NegMode }) 
   const say = (who: string, text: string) => setLog((l) => [...l, { who, text }]);
   const rivals = mode === "sign" ? rivalsFor(s, pid) : [];
   const step = !talk.ok ? "blocked" : needClub && agreed === undefined ? "club" : !p.interview?.done ? "interview" : "offer";
+  // the first time a contract form opens: what the signing bonus is (tutorial-style tip, once per browser)
+  useEffect(() => {
+    if (step === "offer") setTimeout(() => tipOnce(BONUS_TIP), 60);
+  }, [step]);
   const fromTeam = p.team ? s.teams[p.team] : null;
 
   const sendFee = () => {
@@ -144,9 +184,9 @@ export function NegotiationModal({ pid, mode }: { pid: string; mode: NegMode }) 
               <div class="muted" style={{ fontSize: 12 }}>
                 시장 가치 {money(marketValue(p, s.season))}. 주전이거나 대체 선수가 없으면 더 비싸게 부릅니다. 이적료를 합의해도 선수가 거절할 수 있습니다.
               </div>
-              <div class="row">
-                <input type="range" min={0} max={Math.max(20000, clubDemand(s, p) * 2)} step={500} value={fee} onInput={(e) => setFee(Number((e.target as HTMLInputElement).value))} style={{ width: 260 }} />
-                <b>{money(fee)}</b>
+              <div class="row" style={{ alignItems: "flex-start" }}>
+                <MoneyStepper value={fee} min={0} max={Math.max(20000, clubDemand(s, p) * 2)} step={500} big={5000} onChange={setFee}
+                  presets={[{ label: "시장 가치", value: marketValue(p, s.season) }, ...(ft.counter !== undefined ? [{ label: "상대 제시액", value: ft.counter }] : [])]} />
                 <button class="btn primary small" onClick={sendFee} disabled={!canOfferFee(s, p, fee)}>제시</button>
               </div>
             </div>
@@ -162,28 +202,29 @@ export function NegotiationModal({ pid, mode }: { pid: string; mode: NegMode }) 
           {step === "offer" && (
             <div class="frame dark pad">
               <div>선수 요구: <b class="gold">{money(ask)}</b>/년 <span class="muted">(시장 기준 {money(salaryAsk(p, s.season))})</span>{mode === "renew" && p.contract && <span class="muted"> · 현재 연봉 {money(p.contract.salary)}</span>}</div>
-              <div class="row">
-                <span style={{ width: 60 }}>연봉</span>
-                <input type="range" min={6000} max={Math.max(12000, Math.round(ask * 1.6))} step={100} value={offer.salary} onInput={(e) => setOffer({ ...offer, salary: Number((e.target as HTMLInputElement).value) })} style={{ width: 260 }} />
-                <b>{money(offer.salary)}</b>
+              <div class="row" style={{ alignItems: "flex-start" }}>
+                <span style={{ width: 60, paddingTop: 4 }}>연봉</span>
+                <MoneyStepper value={offer.salary} min={6000} max={Math.max(12000, Math.round(ask * 1.6))} step={100} big={1000} onChange={(v) => setOffer({ ...offer, salary: v })}
+                  presets={[{ label: "요구액", value: ask }, { label: "−5%", value: ask * 0.95 }, { label: "−10%", value: ask * 0.9 }]} />
               </div>
               <div class="row">
                 <span style={{ width: 60 }}>기간</span>
                 {[1, 2, 3].map((y) => <button class={`btn small ${offer.years === y ? "on" : ""}`} onClick={() => setOffer({ ...offer, years: y })}>{y}년</button>)}
               </div>
-              <div class="row">
-                <span style={{ width: 60 }}>계약금</span>
-                <input type="range" min={0} max={Math.round(ask)} step={500} value={offer.bonus} onInput={(e) => setOffer({ ...offer, bonus: Number((e.target as HTMLInputElement).value) })} style={{ width: 260 }} />
-                <b>{money(offer.bonus)}</b>
+              <div class="row bonus-row" style={{ alignItems: "flex-start" }}>
+                <span style={{ width: 60, paddingTop: 4 }} title="서명할 때 한 번만 주는 돈. 선수는 계약금 ÷ 기간의 80%를 연봉으로 더 받는 것으로 칩니다">계약금 ⓘ</span>
+                <MoneyStepper value={offer.bonus} min={0} max={Math.round(ask)} step={500} big={2500} onChange={(v) => setOffer({ ...offer, bonus: v })}
+                  presets={[{ label: "없음", value: 0 }, { label: "연봉 10%", value: offer.salary * 0.1 }, { label: "25%", value: offer.salary * 0.25 }, { label: "50%", value: offer.salary * 0.5 }]} />
               </div>
               <label class="row" style={{ cursor: "pointer" }}>
                 <input type="checkbox" checked={offer.starter} onChange={(e) => setOffer({ ...offer, starter: (e.target as HTMLInputElement).checked })} />
                 주전 보장 <span class="muted" style={{ fontSize: 11 }}>(욕심 많은 선수는 크게 반깁니다. 벤치에 두면 사기가 빨리 떨어집니다)</span>
               </label>
-              <div class="muted" style={{ fontSize: 11 }}>
-                계약금은 연봉으로 환산해 '계약금/기간 × 0.8'만큼 쳐줍니다. 너무 낮게 부르면 인내심이 두 칸 깎입니다.
-                {agreed !== undefined && <> 합의한 이적료 {money(agreed)}이 함께 나갑니다.</>}
-              </div>
+              {offer.bonus > 0 && (
+                <div class="muted" style={{ fontSize: 11 }}>
+                  선수가 보는 연봉 <b class="gold">{money(Math.round(offer.salary + (offer.bonus / offer.years) * 0.8))}</b> (연봉 {money(offer.salary)} + 계약금 환산 {money(Math.round((offer.bonus / offer.years) * 0.8))})
+                </div>
+              )}
               <CostBox upfront={offer.bonus + (agreed ?? 0)} fee={agreed ?? 0} bonus={offer.bonus} monthlyAdd={Math.round((offer.salary - (mode === "renew" ? p.contract?.salary ?? 0 : 0)) / 12)} />
               <div class="row" style={{ marginTop: 6 }}>
                 <button class="btn primary" onClick={send}>제안</button>

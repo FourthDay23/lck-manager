@@ -8,6 +8,7 @@ import { money } from "../../core/format";
 import { autosave } from "../App";
 import { teamDifficulty } from "../../core/player";
 import { LogoBox } from "../components";
+import { startTutorial } from "../Tutorial";
 import "../start.css";
 
 const LEVEL_CLASS = ["", "d1", "d2", "d3", "d4"];
@@ -30,6 +31,7 @@ export function StartScreen() {
     store.screen = { name: "home" };
     autosave();
     store.bump();
+    startTutorial(); // first new game on this browser only
   };
   const load = async (n: number) => {
     const s = await loadGame(n);

@@ -28,6 +28,7 @@ import { PlayerModal } from "./PlayerModal";
 import { NegotiationModal } from "./Negotiation";
 import { StaffNegotiationModal } from "./StaffNegotiation";
 import { AlertLayer, EventModal, CutsceneLayer } from "./Overlays";
+import { TutorialLayer } from "./Tutorial";
 import { TeamModal } from "./screens/Teams";
 
 let saveTimer: number | undefined;
@@ -158,6 +159,7 @@ export function App() {
       {s.events.length > 0 && scr !== "series" && scr !== "exhibition" && <EventModal />}
       {(s.alerts?.length ?? 0) > 0 && !s.events.length && scr !== "series" && scr !== "exhibition" && <AlertLayer />}
       <CutsceneLayer />
+      <TutorialLayer />
       {st.toast && <div class="toast frame">{st.toast.text}</div>}
     </div>
   );
