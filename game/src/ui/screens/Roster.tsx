@@ -10,7 +10,7 @@ import { META_LABEL, metaTier } from "../../core/meta";
 import { ACADEMY_MAX, LCK_MIN_SALARY, callUp, canCallUp, canSendDown, sendDown } from "../../core/academy";
 import { INTENSITY, restRecovery, trainPlanOf } from "../../core/training";
 import type { Intensity } from "../../core/training";
-import { fatiguePenalty, starterFatigue } from "../../core/quick";
+import { fatigueLoss, starterFatigue } from "../../core/quick";
 import type { Player } from "../../core/types";
 import "../fatigue.css";
 
@@ -46,7 +46,7 @@ function FatiguePanel() {
   const me = s.teams[s.user];
   const plan = trainPlanOf(me);
   const avg = starterFatigue(s, s.user);
-  const pen = fatiguePenalty(avg);
+  const pen = fatigueLoss(avg);
   const [avgWord, avgCls] = fatigueWord(avg);
   const roster = [...me.roster, ...(me.academy ?? [])].map((id) => s.players[id]).filter(Boolean) as Resting[];
   const tired = roster.filter((p) => p.fatigue >= 70);
@@ -56,17 +56,23 @@ function FatiguePanel() {
     autosave();
     store.bump();
   };
-  const restTired = () => {
-    for (const p of tired) {
-      if (p.train !== "rest") p.restFrom = p.train;
+  // bulk rest remembers each player's training (restFrom); restoring puts back exactly that and leaves players
+  // who were resting by hand alone
+  const sendToRest = (who: Resting[]) => {
+    for (const p of who) {
+      if (p.train === "rest") continue;
+      p.restFrom = p.train;
       p.train = "rest";
     }
     autosave();
     store.bump();
   };
-  const backToWork = () => {
-    for (const p of resting) {
-      p.train = p.restFrom ?? "champ";
+  const restTired = () => sendToRest(tired);
+  const bulk = roster.filter((p) => p.restFrom !== undefined);
+  const working = roster.filter((p) => p.train !== "rest");
+  const restore = () => {
+    for (const p of bulk) {
+      p.train = p.restFrom!;
       delete p.restFrom;
     }
     autosave();
@@ -98,8 +104,17 @@ function FatiguePanel() {
         <span class="dim" style={{ fontSize: 11, paddingTop: 6 }}>그 값을 넘은 선수는 그날 훈련 대신 쉽니다. 훈련 설정은 그대로 둡니다.</span>
       </div>
       <div class="row">
-        <button class="btn small" disabled={!tired.length} onClick={restTired}>피로 70 이상 휴식 ({tired.length}명)</button>
-        <button class="btn small" disabled={!resting.length} onClick={backToWork}>전원 훈련 복귀 ({resting.length}명)</button>
+        {bulk.length > 0 ? (
+          <button class="btn small on" onClick={restore} title="일괄 휴식으로 바꾼 선수만 각자 하던 훈련으로 돌아갑니다. 직접 휴식으로 둔 선수는 그대로입니다.">
+            휴식 전 설정으로 되돌리기 ({bulk.length}명)
+          </button>
+        ) : (
+          <button class="btn small" disabled={!working.length} onClick={() => sendToRest(working)} title="지금 훈련 설정을 기억해 두고 모두 휴식으로 바꿉니다. 같은 자리의 버튼으로 되돌립니다.">
+            전원 휴식 ({working.length}명)
+          </button>
+        )}
+        <button class="btn small" disabled={!tired.some((p) => p.train !== "rest")} onClick={restTired}>피로 70 이상만 휴식 ({tired.filter((p) => p.train !== "rest").length}명)</button>
+        {bulk.length > 0 && <span class="muted" style={{ fontSize: 11 }}>일괄 휴식 중: {bulk.map((p) => p.name).join(", ")}</span>}
       </div>
       <ul>
         <li>오르는 것: 훈련하는 날마다 강도에 따라 +{INTENSITY.light.fatigue} / +{INTENSITY.normal.fatigue} / +{INTENSITY.hard.fatigue}. 시리즈를 치르면 주전 +8.</li>
@@ -140,6 +155,8 @@ export function RosterScreen() {
   };
   const setTrain = (pid: string, f: TrainFocus) => {
     s.players[pid].train = f;
+    // a hand-picked setting is the new "before": the bulk restore must not overwrite it
+    delete (s.players[pid] as Resting).restFrom;
     store.bump();
   };
   const setChamp = (pid: string, c: string) => {
