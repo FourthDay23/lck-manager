@@ -2,7 +2,7 @@ import { store, S } from "../../store";
 import { fmtDate, money } from "../../core/format";
 import { nextUserSeries, stageName } from "../../core/game";
 import { standings, comp } from "../../core/schedule";
-import { teamPower, seriesWinProb, gameWinProb, fatiguePenalty, starterFatigue } from "../../core/quick";
+import { teamPower, seriesWinProb, gameWinProb, fatigueLoss, starterFatigue } from "../../core/quick";
 import { COMP_NAME } from "../../core/types";
 import { ROLES, ROLE_KO } from "../../data/types";
 import { monthlyExpensePreview, monthlyIncomePreview } from "../../core/economy";
@@ -40,7 +40,7 @@ export function HomeScreen() {
         <div class="frame pad" style={{ boxShadow: "0 0 0 2px #6e2630" }}>
           <h2 style={{ color: "var(--red)" }}>주전 피로 경고</h2>
           <div>
-            주전 평균 피로 {Math.round(avgFat)} · 경기력 {fatiguePenalty(avgFat) > 0 ? `−${fatiguePenalty(avgFat).toFixed(1)}` : "영향 없음"}
+            주전 평균 피로 {Math.round(avgFat)} · 경기력 {fatigueLoss(avgFat) > 0 ? `−${fatigueLoss(avgFat).toFixed(1)}` : "영향 없음"}
             {spent.length > 0 && <> · 한계(75 이상): {spent.map((p) => `${p.name} ${Math.round(p.fatigue)}`).join(", ")}</>}
           </div>
           <div class="muted" style={{ fontSize: 12 }}>훈련 강도를 낮추거나, 지친 선수를 휴식으로 돌리거나, 자동 휴식을 켜면 회복됩니다.</div>

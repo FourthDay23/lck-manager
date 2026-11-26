@@ -3,7 +3,7 @@ import type { GameData } from "../data/load";
 import type { ChampionData, Role, StyleKey } from "../data/types";
 import { ROLES } from "../data/types";
 import { ovr } from "../core/player";
-import { headCoach, teamPower, POWER_SCALE, aiEdge } from "../core/quick";
+import { headCoach, teamPower, POWER_SCALE, MOD_GAIN, aiEdge } from "../core/quick";
 import { clamp, logistic, Rng } from "../core/rng";
 import type { GameState, Player } from "../core/types";
 import { metaBonus, metaTier, teamMetaBonus } from "../core/meta";
@@ -242,10 +242,12 @@ export function masteryBonus(s: GameState, data: GameData, teamId: string, picks
 
 /** Win probability shown after the draft. */
 export function draftWinProb(s: GameState, data: GameData, d: DraftState): number {
-  const pb = teamPower(s, d.blue) + compBonus(data, d.picks.blue) + masteryBonus(s, data, d.blue, d.picks.blue) + teamMetaBonus(s, Object.values(d.picks.blue));
-  const pr = teamPower(s, d.red) + compBonus(data, d.picks.red) + masteryBonus(s, data, d.red, d.picks.red) + teamMetaBonus(s, Object.values(d.picks.red));
+  // composition and meta are manager-side modifiers (MOD_GAIN, see core/quick.ts); mastery is player strength
+  const pb = teamPower(s, d.blue) + (compBonus(data, d.picks.blue) + teamMetaBonus(s, Object.values(d.picks.blue))) * MOD_GAIN + masteryBonus(s, data, d.blue, d.picks.blue);
+  const pr = teamPower(s, d.red) + (compBonus(data, d.picks.red) + teamMetaBonus(s, Object.values(d.picks.red))) * MOD_GAIN + masteryBonus(s, data, d.red, d.picks.red);
   const lo = loadoutEdgePower(data, d, "blue") - loadoutEdgePower(data, d, "red");
-  return logistic((pb - pr + aiEdge(s, d.blue, d.red) + 0.3 + lo) / POWER_SCALE);
+  // blue side: +0.22 logit at equal strength (LCK 2025-26; the engine's swapped-side games land close to it)
+  return logistic((pb - pr + aiEdge(s, d.blue, d.red) + lo) / POWER_SCALE + 0.22);
 }
 
 /** Win-rate edge of the chosen builds / keystones (LCK statistics, items.ts) on the team power scale. */

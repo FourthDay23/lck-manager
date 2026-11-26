@@ -55,6 +55,11 @@ const OBJS: ObjKey[] = ["elder", "baron", "dragon", "herald", "grubs"];
  *  turned 180° about the map centre: the Rift's real symmetry swaps dragon and baron. */
 const BLUE_STAGE: Record<Pit, Vec> = { dragon: { x: 8500, y: 5300 }, baron: { x: 5300, y: 8500 } };
 const rot = (p: Vec): Vec => ({ x: MIRROR_C - p.x, y: MIRROR_C - p.y });
+/** a side holds the dragon area (sets up at its entrance instead of waiting back) when its presence-weighted power is
+ *  at least this share of the other side's */
+const DRAGON_HOLD = 0.8;
+/** siege score bonus when the target lane's inhibitor is already down (the nexus is next), see siegeCand */
+const BASE_OPEN_PUSH = 0.6;
 /** minimum group before a team commits (spec); a safe jungler may still solo dragon / herald / grubs */
 const MIN_GROUP: Record<ObjKey, number> = { dragon: 3, herald: 3, grubs: 2, baron: 4, elder: 4 };
 const PREF: Record<ObjKey, Role[]> = {
@@ -249,14 +254,18 @@ function ownHalf(side: SideN, p: Vec, slack = 400) {
   return side === 0 ? p.x + p.y < MIRROR_C + slack : p.x + p.y > MIRROR_C - slack;
 }
 
-function objValue(e: Engine, side: SideN, k: ObjKey): number {
+/** `contest`: valuing a stop of the enemy's take (contestCand) rather than our own take */
+function objValue(e: Engine, side: SideN, k: ObjKey, contest = false): number {
   const my = e.dragons[side].length, th = e.dragons[1 - side].length;
   switch (k) {
     case "dragon": return 1 + (my >= 3 ? 0.9 : my === 2 ? 0.25 : 0) + (th >= 3 ? 0.8 : th === 2 ? 0.2 : 0);
     case "grubs": return 0.75;
     case "herald": return 0.75;
     case "baron": return 1.6 + (e.minute() > 30 ? 0.3 : 0);
-    case "elder": return 2.6;
+    // elder is the comeback for the side without the soul; the soul side (it wins ~90% of engine and LCK games anyway)
+    // converts by sieging instead of camping elder (engine before: 1.0-1.3 elders per game that reached the elder spawn,
+    // 72-77% by the soul side; LCK 2026: 0.54, 57%). Stopping the other side's elder keeps its full value.
+    case "elder": return e.soul === side && !contest ? 1.4 : 2.6;
   }
 }
 
@@ -517,8 +526,12 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
   const mem = members.map((i) => e.units[i]);
   const ourP = powerAt(e, mem, pit, horizon);
   const ratio = (ourP + 1) / (thP + 1);
-  // who holds the area (whole teams, symmetric between the sides)
-  const area = (powerAt(e, V.team, pit, horizon) + 1) / (thP + 1);
+  // who holds the area (whole teams, symmetric between the sides). Dragons: a side within DRAGON_HOLD of the other's
+  // presence-weighted power holds it too, so both set up and the weaker side is not forced to concede every dragon.
+  // Engine fights at a 1.1-1.25 power edge go to the stronger side only ~61% of the time (1.25-1.5: ~79%), yet with a
+  // 1.0 cut the side 5 % weaker always waited 2,700 u back and gave up: dragon 0-4 splits came as often in even
+  // matchups (40-53%) as in lopsided ones (scripts/dragon-curve.ts; LCK 2026: 0-4 in 24% of games).
+  const area = (powerAt(e, V.team, pit, horizon) + 1) / (thP + 1) / (k === "dragon" ? DRAGON_HOLD : 1);
   // laning-phase objectives are given up by the side without priority (its jungler goes back to farming)
   if (V.laning && area < 1 && !cur) return null;
   let score: number;
@@ -558,7 +571,9 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
     // baron needs two down or a won fight with a body up (LCK first baron median 24:53)
     const veryEarly = V.minute < 23;
     const down = V.numAdv >= 2 || (V.numAdv >= 1 && !veryEarly && (honest > 1.35 || b.wonFight)) || (V.numAdv >= 1 && veryEarly && b.wonFight);
-    const safe = down || honest > (late ? 1.75 : early ? 2.4 : 2.0) || (b.wonFight && !veryEarly && honest > 1.05);
+    // elder without a pick or a won fight needs a stomp: a full-strength enemy can flip it (LCK elder takers had more
+    // champions alive in 52% of takes)
+    const safe = down || honest > (k === "elder" ? 2.4 : late ? 1.75 : early ? 2.4 : 2.0) || (b.wonFight && !veryEarly && honest > 1.05);
     if (!safe && !(cur && cur.phase === "commit")) return null;
     // no camping the baron spawn unless the enemy is down bodies or the plan is built around objectives
     if (k === "baron" && !o.alive && V.numAdv < 1 && b.strat !== "objective") return null;
@@ -577,7 +592,9 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
 function contestCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan | null {
   const o = e.obj[k];
   if (!o.alive) return null;
-  if (b.plan.kind === "take" && b.plan.obj === k) return null;
+  // our own take of it is the same fight — unless we are the side waiting back without priority: that side commits by
+  // contesting (before, this line vetoed it, so the waiting side never contested and left on "outnumbered")
+  if (b.plan.kind === "take" && b.plan.obj === k && (b.plan.prio || b.plan.phase === "commit")) return null;
   if ((b.cool[`c:${k}`] ?? 0) > e.t) return null;
   const pit = PIT_POS[PIT_OF[k]];
   const onIt = V.theirs.filter((x) => dist(x, pit) < 1400);
@@ -597,12 +614,14 @@ function contestCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Pl
   const big = k === "baron" || k === "elder" || (k === "dragon" && (e.dragons[1 - b.side].length >= 2 || e.dragons[b.side].length >= 3));
   // a team behind still flanks a baron / elder for a steal or a fight (LCK teams rarely hand baron over for free)
   if (ratio < (k === "baron" || k === "elder" ? 0.65 : big ? 0.8 : 0.95) - b.P.fight * 0.5) return null;
-  const val = objValue(e, b.side, k) * (b.P.obj[k] ?? 1);
+  const val = objValue(e, b.side, k, true) * (b.P.obj[k] ?? 1);
   let score = val * b.P.contest * (hitting ? 1 : 0.7) - 0.3 + clamp(ratio - 1, -1, 0.8) * 1.3 + (can.length - onIt.length) * 0.15 + b.P.fight;
   if (V.minute < b.P.avoidUntil && ratio < 1.3) score -= 0.4;
   if (k === "grubs" || k === "herald") score -= 0.2;
   return mkPlan(e, "contest", `contest:${k}`, score, can.map((u) => u.i), {
-    obj: k, need: Math.min(3, can.length), h: can.length, hitters: can.map((u) => u.i), phase: "gather",
+    // h = hitters needed in the pit before anyone damages it (hitsObjective): all of `can` meant a contest that won the
+    // fight rarely started hitting (one member a few hundred units out blocked it) while the dragon regenerated
+    obj: k, need: Math.min(3, can.length), h: Math.min(3, can.length), hitters: can.map((u) => u.i), phase: "gather",
     until: e.t + 15, expires: e.t + 60, engage: ratio >= 0.9 - b.P.fight, emergency: true, ratio, prio: true,
   });
 }
@@ -681,8 +700,15 @@ function siegeCand(e: Engine, M: MacroState, b: Brain, V: View): Plan | null {
     let v = 0.15 + (ratio - b.P.siegeEdge) * 1.0 + V.numAdv * 0.25 + (V.baron ? 0.7 : 0) + (b.wonFight ? 0.4 : 0) + push * 0.6 +
       (lane === "mid" ? 0.1 : 0) - Math.hypot(tp.x - cx, tp.y - cy) / 25000 + (tierT ? (tierT.tier - 1) * 0.08 : 0.25);
     if (V.minute < b.P.avoidUntil && ratio < 1.5) v -= 0.4;
-    // sieges follow an edge: bodies up, baron, a won fight, or a clearly stronger group
-    if (V.numAdv < 1 && !V.baron && !b.wonFight && ratio < b.P.siegeEdge + 0.2) continue;
+    // an open base (this lane's inhibitor is down, so the target is the nexus) is a push to end. LCK 2026 games end a
+    // median 0.7 min after the first inhibitor and see 1.63 inhibitors per game (scripts/lck_late.py); the engine took
+    // 5.8 min and 3.4 inhibitors: the team took an inhibitor, went back to farming formations (28 % of the next 2 min)
+    // and broke it again after it respawned.
+    const inh = e.inhibs.find((x) => x.side === enemy && x.lane === lane);
+    const baseOpen = !tierT && !!inh && !inh.alive;
+    if (baseOpen) v += BASE_OPEN_PUSH + V.numAdv * 0.15;
+    // sieges follow an edge: bodies up, baron, a won fight, or a clearly stronger group (an open base needs only an even one)
+    if (V.numAdv < 1 && !V.baron && !b.wonFight && ratio < b.P.siegeEdge + 0.2 && !(baseOpen && ratio >= 1)) continue;
     if (ratio < 0.95) continue;
     if (!best || v > best.score) {
       const u0 = laneU(lane, tp);
@@ -691,7 +717,7 @@ function siegeCand(e: Engine, M: MacroState, b: Brain, V: View): Plan | null {
       // first baron; with a 20 s commitment the engine needed 8.8 min and took a second/third baron far too often)
       const buffLeft = V.baron ? Math.max(...pool.map((u) => u.baronUntil - e.t)) : 0;
       best = mkPlan(e, "siege", `siege:${lane}`, v + (V.baron ? 0.5 : 0), pool.map((u) => u.i), {
-        lane, target: snap(stand), until: e.t + Math.max(20, Math.min(90, buffLeft)), expires: e.t + Math.max(70, buffLeft + 20),
+        lane, target: snap(stand), until: e.t + Math.max(baseOpen ? 40 : 20, Math.min(90, buffLeft)), expires: e.t + Math.max(70, buffLeft + 20),
         engage: ratio >= 1.05 - b.P.fight, ratio,
       });
     }
@@ -829,8 +855,23 @@ function choosePlan(e: Engine, M: MacroState, b: Brain, V: View) {
     const need = committed ? bestV + 0.35 : bestV;
     if (c.score > need) { best = c; bestV = c.score; }
   }
+  // the side waiting back without priority commits by contesting: its contest of that objective is the next step of
+  // the same plan, not a rival that has to beat it by the hysteresis margin
+  if (keep && best === keep && keep.kind === "take" && !keep.prio && keep.phase !== "commit") {
+    const c = cands.find((x) => x.kind === "contest" && x.obj === keep.obj && x.score > NONE_SCORE);
+    if (c) best = c;
+  }
   if (best && best !== keep) {
-    // a contest of the objective we are already taking is the same fight
+    // a contest of the objective we are already taking is the same fight; a won contest is finished as a take from the
+    // pit (before, the fresh take restarted at "gather", walked the hitters out to the entrance and the dragon
+    // regenerated 2 %/s until a new commit — or an "outnumbered" abort once the enemy respawned)
+    // only from a contest that is still valid (keep === cur): an aborted one ("outnumbered") must not hand its commit on
+    if (keep === cur && best.kind === "take" && cur.kind === "contest" && cur.obj === best.obj && cur.phase === "commit" && e.obj[best.obj!].alive) {
+      best.phase = "commit";
+      best.phaseAt = e.t;
+      best.prio = true;
+      best.hitters = cur.hitters.filter((i) => best!.members.includes(i));
+    }
     b.plan = best;
     M.stats[b.side].plans[best.id] = (M.stats[b.side].plans[best.id] ?? 0) + 1;
     if (best.solo) M.stats[b.side].plans[`${best.id}:solo`] = (M.stats[b.side].plans[`${best.id}:solo`] ?? 0) + 1;
@@ -886,8 +927,15 @@ function planTick(e: Engine, M: MacroState, b: Brain) {
 // ---------- formation & jobs ----------
 function chooseFormation(e: Engine, M: MacroState, b: Brain, V: View) {
   if (V.laning) { b.formation = "lanes"; return; }
-  if (b.formation !== "lanes" && e.t < b.formUntil) return;
+  // an enemy inhibitor down: stay grouped to end instead of drifting back to side lanes (see BASE_OPEN_PUSH)
+  const baseOpen = e.inhibs.some((x) => x.side !== b.side && !x.alive);
+  if (b.formation !== "lanes" && e.t < b.formUntil && !(baseOpen && b.formation !== "five")) return;
   b.formUntil = e.t + 35 + e.rng.next() * 25;
+  if (baseOpen) {
+    b.formation = "five";
+    M.stats[b.side].formations[`${b.strat}:five`] = (M.stats[b.side].formations[`${b.strat}:five`] ?? 0) + 1;
+    return;
+  }
   const P = b.P, m = V.minute;
   let f: Formation;
   if (m < P.groupFrom) f = "spread";

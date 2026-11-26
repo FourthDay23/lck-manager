@@ -1,23 +1,32 @@
 // Headless engine runs: game length, kills, objectives, and whether the watched engine agrees with
 // the one-line AI-vs-AI formula (gameWinProb) on who wins.
 // Run: node scripts/run-ts.mjs scripts/calibrate.ts [games] [rosterSeed]
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { newGame } from "../src/core/game";
 import { joinTeam, autoLineup } from "../src/core/market";
-import { Engine, ENGINE_FLAGS } from "../src/match/engine";
+import { Engine, ENGINE_FLAGS, applyEarlyTune } from "../src/match/engine";
 import { newDraft, autoDraft } from "../src/match/draft";
 import { Rng } from "../src/core/rng";
 import { gameWinProb, teamPower } from "../src/core/quick";
 import { ROLES } from "../src/data/types";
+import { ITEM_TUNE } from "../src/match/items";
 
 const dir = existsSync("public/data/champions.json") && existsSync("public/data/players.json") ? "data" : "data-sample";
 const j = (f: string) => {
   const p = `public/${dir}/${f}`;
   return existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : null;
 };
-const data = assembleData(dir, j("champions.json"), j("players.json"), j("staff.json"), j("teams.json"), j("intl.json"), j("meta.json"), j("heatmap.json"));
+// ITEMS=0 runs the engine without items.json (the older gold-only item model and flat kill gold)
+const data = assembleData(dir, j("champions.json"), j("players.json"), j("staff.json"), j("teams.json"), j("intl.json"), j("meta.json"), j("heatmap.json"), process.env.ITEMS === "0" ? null : j("items.json"));
+// ITEM_TUNE=beyond:0.85,objectiveBounty:0 overrides items.ts weights for this run
+for (const kv of (process.env.ITEM_TUNE ?? "").split(",").filter(Boolean)) {
+  const [k, v] = kv.split(":");
+  (ITEM_TUNE as Record<string, number | boolean>)[k] = k === "objectiveBounty" ? v !== "0" : Number(v);
+}
 const N = Number(process.argv[3] ?? 60);
+// EARLY_TUNE=gankRate:0.004,allinBot:0.0008 overrides the laning fight rates (engine.ts EARLY_TUNE) for this run
+applyEarlyTune(process.env.EARLY_TUNE);
 // FLAGS=nav,macro,fight turns engine modules on (default: the engine's own defaults)
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x && !x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl] = true;
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl.slice(1)] = false;
@@ -43,6 +52,7 @@ const kpm = [0, 0, 0, 0, 0];
 const buckets = [0, 0, 0, 0, 0].map(() => ({ n: 0, wins: 0, expSum: 0 }));
 let brierEngine = 0;
 const pairs: [number, number][] = [];
+const rows: { p: number; win: number; len: number; kills: number; drag: number; barons: number }[] = [];
 let blueWins = 0;
 const split: Record<string, number> = {};
 const origins: Record<string, number> = {};
@@ -84,6 +94,7 @@ for (let g = 0; g < N; g++) {
   brierEngine += (p - win) ** 2;
   blueWins += win;
   pairs.push([p, win]);
+  rows.push({ p, win, len: e.t, kills: e.kills[0] + e.kills[1], drag: e.dragons[0].length + e.dragons[1].length, barons: e.barons[0] + e.barons[1] });
 }
 // logistic fit win ~ sigmoid(slope * logit(p) + bias): slope 1 / bias 0 = the engine agrees with the formula;
 // slope < 1 = ratings matter less in the engine than in the AI-vs-AI formula; bias > 0 = blue-side edge
@@ -119,3 +130,6 @@ console.log(`logistic fit: slope ${fit.slope.toFixed(2)} (1 = engine as decisive
 console.log("kill origins per game", Object.entries(origins).map(([k, v]) => `${k} ${(v / N).toFixed(1)}`).join(" | "));
 console.log("dragon splits", Object.entries(split).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join("  "));
 console.log(`blue side win rate ${(blueWins / N * 100).toFixed(1)}%`);
+// PAIRS=file.json writes each game's (formula p, blue won, length, kills, dragons, barons) so several roster seeds can
+// be pooled into one slope fit (one or two seeds swing 0.3-1.6 on their own)
+if (process.env.PAIRS) writeFileSync(process.env.PAIRS, JSON.stringify(rows));

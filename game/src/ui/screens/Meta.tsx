@@ -1,6 +1,7 @@
 import { S, D } from "../../store";
 import { ROLES, ROLE_KO } from "../../data/types";
 import { META_BONUS, patchDays } from "../../core/meta";
+import { MOD_GAIN } from "../../core/quick";
 import type { MetaTier } from "../../core/types";
 import { fmtDate } from "../../core/format";
 import { ChampIcon } from "../components";
@@ -23,7 +24,7 @@ export function MetaScreen() {
       <h1>메타 · 패치 {meta.patch}</h1>
       <div class="muted" style={{ marginBottom: 8 }}>
         {fmtDate(meta.since, false)} 적용 · 다음 패치 {fmtDate(next, false)}. 게임이 패치마다 강한 챔피언과 너프된 챔피언을 새로 정합니다.
-        경기에서 S티어 챔피언을 잡은 선수는 능력치 +{META_BONUS.S}, A티어는 +{META_BONUS.A}, 너프된 챔피언은 {META_BONUS.N}로 계산된다(관전 경기와 결과만 보기 모두).
+        경기에서 S티어 챔피언을 잡은 선수는 능력치 +{(META_BONUS.S * MOD_GAIN).toFixed(1)}, A티어는 +{(META_BONUS.A * MOD_GAIN).toFixed(1)}, 너프된 챔피언은 {(META_BONUS.N * MOD_GAIN).toFixed(1)}로 계산됩니다(관전 경기와 결과만 보기 모두).
       </div>
       <div class="frame pad">
         <h2>포지션별 티어</h2>

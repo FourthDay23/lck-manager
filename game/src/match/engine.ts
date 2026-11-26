@@ -8,7 +8,7 @@ import { Rng, clamp } from "../core/rng";
 import { josa } from "../core/format";
 import type { GameState, Player } from "../core/types";
 import { ovr } from "../core/player";
-import { coachBonus, fatiguePenalty, starterFatigue } from "../core/quick";
+import { coachBonus, fatiguePenalty, MOD_GAIN, starterFatigue } from "../core/quick";
 import { compBonus, mastery } from "./draft";
 import { metaBonus } from "../core/meta";
 import {
@@ -34,6 +34,51 @@ export type SideN = 0 | 1;
  * test scripts may flip these at runtime. With a flag off the engine runs the old code path.
  */
 export const ENGINE_FLAGS = { nav: true, macro: true, fight: true };
+
+/**
+ * How far apart player strength puts two units in this engine. A unit's rating (overall + role fit + form +
+ * mastery + team modifiers + meta + a per-game roll, all on the teamPower scale) is pulled toward RATING_REF by
+ * this factor before anything reads it, so every rating-driven edge (damage multiplier, poke and skillshot odds,
+ * gank choice, smite steals, CS rate) shrinks or grows together and no single channel gets out of line.
+ * Real LCK 2025-26 results put POWER_SCALE (core/quick.ts) at 9.5 (scripts/real-scale.ts); at factor 1 the engine
+ * played like a scale of ~6.2 (calibrate slope 1.53 vs 9.5 over 6 roster seeds), 0.7 brings it to ~1.05.
+ */
+export const RATING_SPREAD = 0.7;
+const RATING_REF = 75;
+/** cds[3] (the ultimate) until level 6: every "t >= cds[k]" readiness check fails without a separate level test.
+ *  Before this, ults were cast from level 1 (e.g. Galio R in a 2:20 lane all-in). */
+const R_LOCKED = 1e9;
+
+/**
+ * Laning-phase fight rates (calibrated with scripts/early-diag.ts against LCK 2026, scripts/lck_early.py: 3.83 kills
+ * by 10 min and 6.83 by 14, 70 % of them with a jungler in it, 3.55 champions per kill, 1v1 only 10 %).
+ * gankRate: chance per step that a jungler starts a gank (on top of the coach's strategy); gankMin: how good a lane
+ * must look (pickGankLane score); allin: lane all-in rates per second; meet / meetEdge: chance per second that two
+ * champions who meet off-lane (junglers at a camp or the scuttle, a roaming mid) start a fight, even / at a 1.3 edge.
+ * Scripts can override any of them with EARLY_TUNE=key:value,... (allinTop / allinMid / allinBot for the lanes).
+ */
+export const EARLY_TUNE = {
+  // was 0.0018 / 0.35 / bot 0.0004 / 0.003 / 0.012 before real-stat damage and real recalls (first kill 9.0 min,
+  // 0.9 kills by 10 min); these give 5.5 min and 3.9 (60 games, roster seed 3)
+  gankRate: 0.008,
+  gankMin: 0.15,
+  allinTop: 0.0008,
+  allinMid: 0.00055,
+  allinBot: 0.0008,
+  meet: 0.006,
+  meetEdge: 0.02,
+};
+export function applyEarlyTune(spec: string | undefined) {
+  for (const kv of (spec ?? "").split(",").filter(Boolean)) {
+    const [k, v] = kv.split(":");
+    const n = Number(v);
+    // a typo or a missing value would silently turn ganks / all-ins off (rng.chance(NaN) is false): refuse it
+    if (!Object.prototype.hasOwnProperty.call(EARLY_TUNE, k) || v === undefined || v === "" || !Number.isFinite(n)) {
+      throw new Error(`EARLY_TUNE: bad entry "${kv}" (keys: ${Object.keys(EARLY_TUNE).join(", ")})`);
+    }
+    (EARLY_TUNE as Record<string, number>)[k] = n;
+  }
+}
 
 export interface Unit {
   i: number;
@@ -192,7 +237,8 @@ export class Engine {
       const moraleAvg = ROLES.reduce((a, r) => a + (t.lineup[r] ? s.players[t.lineup[r]!].morale : 60), 0) / 5;
       const edge = tid === s.user ? 0 : s.difficulty === "hard" ? 1.5 : s.difficulty === "easy" ? -1 : 0.4;
       const userPlays = cfg.blue === s.user || cfg.red === s.user;
-      this.teamMod[side] = (t.synergy - 50) / 12 + coachBonus(s, t) + comp + (moraleAvg - 60) / 20 + (userPlays ? edge : 0) - fatiguePenalty(starterFatigue(s, tid));
+      // manager-side modifiers keep their designed win-rate effect on the real-data scale (MOD_GAIN, core/quick.ts)
+      this.teamMod[side] = MOD_GAIN * ((t.synergy - 50) / 12 + coachBonus(s, t) + comp + (moraleAvg - 60) / 20 + (userPlays ? edge : 0) - fatiguePenalty(starterFatigue(s, tid)));
       ROLES.forEach((role) => {
         const pid = t.lineup[role];
         const p: Player | undefined = pid ? s.players[pid] : undefined;
@@ -200,13 +246,14 @@ export class Engine {
         const champ = data.champ.get(champId) ?? data.champions[0];
         const m = mastery(p, champ);
         const base = p ? ovr(p) + (p.role === role ? 0 : -8) + p.form * 0.15 : 45;
-        const rating = base + (m - 62) / 4.5 + this.teamMod[side] + metaBonus(s, champ.id) + this.rng.normal(0, 3);
+        const raw = base + (m - 62) / 4.5 + this.teamMod[side] + metaBonus(s, champ.id) * MOD_GAIN + this.rng.normal(0, 3);
+        const rating = RATING_REF + (raw - RATING_REF) * RATING_SPREAD;
         const f = FOUNTAIN[side];
         const u: Unit = {
           i: this.units.length, side: side as SideN, role, pid: pid ?? "", name: p?.name ?? ROLE_KO[role], champ, rating,
           x: f.x + (this.rng.next() - 0.5) * 300, y: f.y + (this.rng.next() - 0.5) * 300, path: [],
           hp: 1, maxHp: 1, alive: true, respawnAt: 0, level: 1, xp: 0, gold: 500, cs: 0, k: 0, d: 0, a: 0, streak: 0,
-          multi: { n: 0, last: -99 }, cds: [0, 0, 0, 0], stunUntil: 0, shield: 0, task: "lane", taskUntil: 0, goal: null,
+          multi: { n: 0, last: -99 }, cds: [0, 0, 0, R_LOCKED], stunUntil: 0, shield: 0, task: "lane", taskUntil: 0, goal: null,
           lastHitBy: new Map(), baronUntil: 0, elderUntil: 0, dmg: 0, fightId: 0,
         };
         this.units.push(u);
@@ -776,7 +823,7 @@ export class Engine {
         return;
       }
     }
-    if (this.t > 195 && u.task !== "gank" && this.rng.chance(0.0018)) {
+    if (this.t > 195 && u.task !== "gank" && this.rng.chance(EARLY_TUNE.gankRate)) {
       const lane = this.pickGankLane(u);
       if (lane) {
         u.task = "gank";
@@ -829,7 +876,7 @@ export class Engine {
   }
 
   pickGankLane(u: Unit): LaneId | null {
-    let best: LaneId | null = null, bestV = 0.35;
+    let best: LaneId | null = null, bestV = EARLY_TUNE.gankMin;
     for (const lane of LANES) {
       const ally = this.units.find((e) => e.side === u.side && e.alive && ROLE_LANE[e.role] === lane && e.role !== "Support");
       const foe = this.units.find((e) => e.side !== u.side && e.alive && ROLE_LANE[e.role] === lane && e.role !== "Support");
@@ -855,7 +902,7 @@ export class Engine {
       const lu = ROLE_LANE[u.role], le = ROLE_LANE[e.role];
       // lane opponents are handled by laneDuels(); this covers jungle meetings and roams
       if (lu && lu === le && u.role !== "Jungle" && e.role !== "Jungle") return 0;
-      r = ratio > 1.3 ? 0.012 : 0.003;
+      r = ratio > 1.3 ? EARLY_TUNE.meetEdge : EARLY_TUNE.meet;
     } else {
       r = ratio > 1.35 ? 0.025 : ratio > 1.05 ? 0.008 : ratio > 0.9 ? 0.003 : 0.0008;
       if (this.minute() > 28) r *= 1.5;
@@ -865,8 +912,10 @@ export class Engine {
     return r * aggro;
   }
 
-  /** Per-lane rates of a committed all-in during laning, per second (from 2026 LCK solo kill rates). */
-  static ALLIN: Record<LaneId, number> = { top: 0.0008, mid: 0.00055, bot: 0.0004 };
+  /** Per-lane rates of a committed all-in during laning, per second (EARLY_TUNE). */
+  static allinRate(lane: LaneId): number {
+    return lane === "top" ? EARLY_TUNE.allinTop : lane === "mid" ? EARLY_TUNE.allinMid : EARLY_TUNE.allinBot;
+  }
 
   /** Laning: small pokes most of the time, a rare all-in that can become a solo kill. */
   laneDuels() {
@@ -894,7 +943,7 @@ export class Engine {
       const pb = sideUnits[1].reduce((s, u) => s + this.power(u), 0);
       const ratio = Math.max(pa / pb, pb / pa);
       const lowHp = Math.min(...[...sideUnits[0], ...sideUnits[1]].map((u) => u.hp / u.maxHp));
-      const rate = Engine.ALLIN[lane] * (1 + Math.max(0, ratio - 1) * 3) * (lowHp < 0.45 ? 3 : 1) *
+      const rate = Engine.allinRate(lane) * (1 + Math.max(0, ratio - 1) * 3) * (lowHp < 0.45 ? 3 : 1) *
         (this.tactic[0] === "aggressive" || this.tactic[1] === "aggressive" ? 1.4 : 1);
       if (this.rng.chance(rate * DT * 4)) {
         const id = ++this.fightSeq;
@@ -1408,7 +1457,9 @@ export class Engine {
         let steal = false;
         const other = (1 - side) as SideN;
         if (jg[other] && (contested || this.rng.chance(0.3))) {
-          const pSteal = clamp(0.12 + (jg[other]!.rating - (jg[side]?.rating ?? 60)) / 120 + (jg[side] ? 0 : 0.35), 0.03, 0.6);
+          // no jungler on the taking side: an average-ish rating of 60 on the raw scale (unit ratings are compressed)
+          const noJg = RATING_REF + (60 - RATING_REF) * RATING_SPREAD;
+          const pSteal = clamp(0.12 + (jg[other]!.rating - (jg[side]?.rating ?? noJg)) / 120 + (jg[side] ? 0 : 0.35), 0.03, 0.6);
           if (this.rng.chance(pSteal)) {
             side = other;
             steal = true;
@@ -1519,6 +1570,7 @@ export class Engine {
       // level ups
       while (u.level < 18 && u.xp >= this.xpFor(u.level + 1)) {
         u.level += 1;
+        if (u.level >= 6 && u.cds[3] >= R_LOCKED) u.cds[3] = this.t; // the ultimate unlocks at level 6
         const newMax = this.maxHp(u);
         u.hp += newMax - u.maxHp;
         u.maxHp = newMax;

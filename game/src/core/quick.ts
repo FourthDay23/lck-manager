@@ -7,7 +7,17 @@ import type { GameRecord, GameState, Series, Team } from "./types";
 import { metaBonus, teamMetaBonus } from "./meta";
 import { defaultEdgePower } from "../match/items";
 
-export const POWER_SCALE = 4.5;
+// Power points per logit of win odds. Fitted on real LCK 2025-26 games (1,057, per-game lineups' OVR):
+// 10.8 over all games, 7.4 on gaps under 10; 9.5 sits inside both 95% intervals. Was 4.5. scripts/real-scale.ts
+export const POWER_SCALE = 9.5;
+/**
+ * The manager-side modifiers (difficulty, coaching staff, synergy, morale, fatigue, meta picks, team composition)
+ * were sized as win-rate effects when the scale was 4.5. The new scale is fitted on player OVR only, so these are
+ * multiplied by MOD_GAIN to keep the effect they were designed for (hard difficulty about +8 points at even
+ * strength, a meta pick advantage near 58-62 %, fatigue 70 about -13 points). Player strength (OVR, form, role fit,
+ * champion mastery) stays on the fitted scale. The match engine applies the same gain to its teamMod and meta terms.
+ */
+export const MOD_GAIN = POWER_SCALE / 4.5;
 
 export function headCoach(s: GameState, t: Team) {
   return t.staff.map((id) => s.staff[id]).find((x) => x?.role === "Head Coach");
@@ -43,12 +53,17 @@ export function teamPower(s: GameState, teamId: string): number {
     fatigue += p.fatigue;
   }
   const avg = sum / 5;
-  return avg + (t.synergy - 50) / 12 + coachBonus(s, t) + (morale / 5 - 60) / 20 - fatiguePenalty(fatigue / 5);
+  return avg + MOD_GAIN * ((t.synergy - 50) / 12 + coachBonus(s, t) + (morale / 5 - 60) / 20 - fatiguePenalty(fatigue / 5));
 }
 
 /** Power lost to the starting five's average fatigue: nothing up to 40, then 1 per 12 (70 → 2.5, 90 → 4.2). */
 export function fatiguePenalty(avgFatigue: number): number {
   return Math.max(0, avgFatigue - 40) / 12;
+}
+
+/** What fatigue actually costs on the team-power scale (OVR points), MOD_GAIN included: the number to show players. */
+export function fatigueLoss(avgFatigue: number): number {
+  return fatiguePenalty(avgFatigue) * MOD_GAIN;
 }
 
 /** Average fatigue of a team's starting five (missing slots count as 0). */
@@ -65,7 +80,7 @@ export function starterFatigue(s: GameState, teamId: string): number {
 
 /** Advantage of side `a` from difficulty: the AI gets a small edge against the user. */
 export function aiEdge(s: GameState, a: string, b: string): number {
-  const d = s.difficulty === "hard" ? 1.5 : s.difficulty === "easy" ? -1 : 0.4;
+  const d = (s.difficulty === "hard" ? 1.5 : s.difficulty === "easy" ? -1 : 0.4) * MOD_GAIN;
   if (a === s.user) return -d;
   if (b === s.user) return d;
   return 0;
@@ -115,11 +130,12 @@ export function quickGame(s: GameState, data: GameData, sr: Series, blue: string
   const tb = s.teams[blue], tr = s.teams[red];
   // picks first: meta champions raise the team's rating the same way they do in the match engine
   const picks = { blue: pickChamps(s, data, tb, used, rng), red: pickChamps(s, data, tr, used, rng) };
-  const metaDiff = teamMetaBonus(s, picks.blue) - teamMetaBonus(s, picks.red);
+  const metaDiff = (teamMetaBonus(s, picks.blue) - teamMetaBonus(s, picks.red)) * MOD_GAIN;
   // each champion's most played LCK build and keystone: their win-rate edge, as in the match engine (items.ts)
   const buildEdge = (champs: string[]) => champs.reduce((a, c, i) => a + defaultEdgePower(data.items, c, ROLES[i]), 0);
   const buildDiff = buildEdge(picks.blue) - buildEdge(picks.red);
-  const pBlue = logistic((teamPower(s, blue) - teamPower(s, red) + aiEdge(s, blue, red) + metaDiff + buildDiff) / POWER_SCALE) + 0.02;
+  // blue side: +0.22 logit at equal strength in LCK 2025-26 (inside the logit, as in draftWinProb)
+  const pBlue = logistic((teamPower(s, blue) - teamPower(s, red) + aiEdge(s, blue, red) + metaDiff + buildDiff) / POWER_SCALE + 0.22);
   const blueWins = rng.chance(clamp(pBlue, 0.03, 0.97));
   const winner = blueWins ? blue : red;
   const duration = Math.round(clamp(rng.normal(1900, 260), 1380, 2700));
