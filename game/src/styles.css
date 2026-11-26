@@ -110,6 +110,8 @@ h3 { font-size: 13px; color: var(--muted); }
 .sp { height: 10px; }
 .right { text-align: right; }
 .center { text-align: center; }
+/* a centered column: images and badges line up with the centered text (they sat at the left edge before) */
+.col.center { align-items: center; }
 .tag { display: inline-block; padding: 0 5px; font-size: 11px; background: #252b40; color: var(--muted); margin-right: 3px; }
 .tag.gold { background: #3a3014; color: var(--gold); }
 .tag.red { background: #3a1820; color: #ff9a9a; }
