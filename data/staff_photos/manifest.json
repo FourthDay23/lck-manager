@@ -1,0 +1,728 @@
+{
+ "kkOma": {
+  "name": "kkOma",
+  "photo": "lp_kkOma_O.png",
+  "source": "leaguepedia",
+  "file": "T1 kkOma 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:T1_kkOma_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "kkOma.png",
+   "source": "liquipedia"
+  }
+ },
+ "Bengi": {
+  "name": "Bengi",
+  "photo": "lp_Bengi.png",
+  "source": "leaguepedia",
+  "file": "DK Bengi 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK_Bengi_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Bengi.png",
+   "source": "liquipedia"
+  }
+ },
+ "Lyn": {
+  "name": "Lyn",
+  "photo": "lp_Lyn.png",
+  "source": "leaguepedia",
+  "file": "GEN Lyn 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:GEN_Lyn_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Lyn.png",
+   "source": "liquipedia"
+  }
+ },
+ "Helper (Kwon Yeong-jae)": {
+  "name": "Helper",
+  "photo": "lp_Helper_Kwon_Yeong-jae.png",
+  "source": "leaguepedia",
+  "file": "GEN Helper 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:GEN_Helper_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Helper_Kwon_Yeong-jae.png",
+   "source": "liquipedia"
+  }
+ },
+ "Mowgli": {
+  "name": "Mowgli",
+  "photo": "lp_Mowgli.png",
+  "source": "leaguepedia",
+  "file": "HLE Mowgli 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:HLE_Mowgli_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Mowgli.png",
+   "source": "liquipedia"
+  }
+ },
+ "Ryu": {
+  "name": "Ryu",
+  "photo": "lp_Ryu.png",
+  "source": "leaguepedia",
+  "file": "FOX Ryu 2024 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:FOX_Ryu_2024_Split_1.png",
+  "year": 2024,
+  "previous": {
+   "photo": "Ryu.png",
+   "source": "liquipedia"
+  }
+ },
+ "DanDy": {
+  "name": "DanDy",
+  "photo": "lp_DanDy.png",
+  "source": "leaguepedia",
+  "file": "HLE DanDy 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:HLE_DanDy_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "DanDy.png",
+   "source": "liquipedia"
+  }
+ },
+ "Homme": {
+  "name": "Homme",
+  "photo": "lp_Homme.png",
+  "source": "leaguepedia",
+  "file": "HLE Homme 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:HLE_Homme_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Homme.png",
+   "source": "liquipedia"
+  }
+ },
+ "Tom (Im Jae-hyeon)": {
+  "name": "Tom",
+  "photo": "lp_Tom_Im_Jae-hyeon.png",
+  "source": "leaguepedia",
+  "file": "T1 Tom 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:T1_Tom_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Tom_Im_Jae-hyeon.png",
+   "source": "liquipedia"
+  }
+ },
+ "Nova (Park Chan-ho)": {
+  "name": "Nova",
+  "photo": "lp_Nova_Park_Chan-ho.png",
+  "source": "leaguepedia",
+  "file": "GEN Nova 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:GEN_Nova_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Nova_Park_Chan-ho.png",
+   "source": "liquipedia"
+  }
+ },
+ "cvMax": {
+  "name": "cvMax",
+  "photo": "lp_cvMax_M.png",
+  "source": "leaguepedia",
+  "file": "DK CvMax 2026 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK_CvMax_2026_Split_2.png",
+  "year": 2026,
+  "previous": {
+   "photo": "cvMax.png",
+   "source": "liquipedia"
+  }
+ },
+ "Shine (Shin Dong-wook)": {
+  "name": "Shine",
+  "photo": "lp_Shine_Shin_Dong-wook.png",
+  "source": "leaguepedia",
+  "file": "HLE Shine 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:HLE_Shine_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Shine_Shin_Dong-wook.png",
+   "source": "liquipedia"
+  }
+ },
+ "Rather": {
+  "name": "Rather",
+  "photo": "lp_Rather.png",
+  "source": "leaguepedia",
+  "file": "T1.EA Rather 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:T1.EA_Rather_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Rather.png",
+   "source": "liquipedia"
+  }
+ },
+ "Score": {
+  "name": "Score",
+  "photo": "lp_Score.png",
+  "source": "leaguepedia",
+  "file": "GEN Score 2022 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:GEN_Score_2022_Split_1.png",
+  "year": 2022,
+  "previous": {
+   "photo": "Score.png",
+   "source": "liquipedia"
+  }
+ },
+ "Frozen (Kim Tae-il)": {
+  "name": "Frozen",
+  "photo": "lp_Frozen_Kim_Tae-il.png",
+  "source": "leaguepedia",
+  "file": "DRX Frozen 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DRX_Frozen_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Frozen_Kim_Tae-il.png",
+   "source": "liquipedia"
+  }
+ },
+ "Mata": {
+  "name": "Mata",
+  "photo": "lp_Mata.png",
+  "source": "leaguepedia",
+  "file": "T1 Mata 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:T1_Mata_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Mata.png",
+   "source": "liquipedia"
+  }
+ },
+ "Sin (Yeon Hyeong-mo)": {
+  "name": "Sin",
+  "photo": "lp_Sin_Yeon_Hyeong-mo.png",
+  "source": "leaguepedia",
+  "file": "HLE Sin 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:HLE_Sin_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Sin_Yeon_Hyeong-mo.png",
+   "source": "liquipedia"
+  }
+ },
+ "RapidStar": {
+  "name": "RapidStar",
+  "photo": "lp_RapidStar.png",
+  "source": "leaguepedia",
+  "file": "DNF RapidStar 2025 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DNF_RapidStar_2025_Split_2.png",
+  "year": 2025,
+  "previous": {
+   "photo": "RapidStar.png",
+   "source": "liquipedia"
+  }
+ },
+ "Joker (Cho Jae-eup)": {
+  "name": "Joker",
+  "photo": "lp_Joker_Cho_Jae-eup.png",
+  "source": "leaguepedia",
+  "file": "DRX Joker 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DRX_Joker_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Joker_Cho_Jae-eup.png",
+   "source": "liquipedia"
+  }
+ },
+ "Hachani": {
+  "name": "Hachani",
+  "photo": "lp_Hachani.png",
+  "source": "leaguepedia",
+  "file": "DK Hachani 2026 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK_Hachani_2026_Split_2.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Hachani.png",
+   "source": "liquipedia"
+  }
+ },
+ "PoohManDu": {
+  "name": "PoohManDu",
+  "photo": "lp_PoohManDu.png",
+  "source": "leaguepedia",
+  "file": "DK PoohManDu 2026 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK_PoohManDu_2026_Split_2.png",
+  "year": 2026,
+  "previous": {
+   "photo": "PoohManDu.png",
+   "source": "liquipedia"
+  }
+ },
+ "Ssong": {
+  "name": "Ssong",
+  "photo": "lp_Ssong.png",
+  "source": "leaguepedia",
+  "file": "DRX Ssong 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DRX_Ssong_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Ssong.png",
+   "source": "liquipedia"
+  }
+ },
+ "CvMax": {
+  "name": "cvMax",
+  "photo": "lp_CvMax_CM.png",
+  "source": "leaguepedia",
+  "file": "DK CvMax 2026 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK_CvMax_2026_Split_2.png",
+  "year": 2026,
+  "previous": {
+   "photo": "CvMax.png",
+   "source": "liquipedia"
+  }
+ },
+ "FanTaSy (Jeong Myeong-hoon)": {
+  "name": "FanTaSy",
+  "photo": "lp_FanTaSy_Jeong_Myeong-hoon.png",
+  "source": "leaguepedia",
+  "file": "KDF FanTaSy 2024 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:KDF_FanTaSy_2024_Split_1.png",
+  "year": 2024,
+  "previous": {
+   "photo": "FanTaSy_Jeong_Myeong-hoon.png",
+   "source": "liquipedia"
+  }
+ },
+ "Edgar": {
+  "name": "Edgar",
+  "photo": "lp_Edgar.png",
+  "source": "leaguepedia",
+  "file": "LNG Edgar 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:LNG_Edgar_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Edgar.png",
+   "source": "liquipedia"
+  }
+ },
+ "Ggoong": {
+  "name": "Ggoong",
+  "photo": "lp_Ggoong.png",
+  "source": "leaguepedia",
+  "file": "DNS Ggoong 2027 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DNS_Ggoong_2027_Split_1.png",
+  "year": 2027,
+  "previous": {
+   "photo": "Ggoong.png",
+   "source": "liquipedia"
+  }
+ },
+ "oDin (Ju Yeong-dal)": {
+  "name": "oDin",
+  "photo": "lp_oDin_Ju_Yeong-dal.png",
+  "source": "leaguepedia",
+  "file": "GEN oDin 2021 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:GEN_oDin_2021_Split_1.png",
+  "year": 2021,
+  "previous": {
+   "why": "liquipedia page has no photo"
+  }
+ },
+ "KkOma": {
+  "name": "kkOma",
+  "photo": "lp_KkOma_KO.png",
+  "source": "leaguepedia",
+  "file": "T1 kkOma 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:T1_kkOma_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "KkOma.png",
+   "source": "liquipedia"
+  }
+ },
+ "Easyhoon": {
+  "name": "Easyhoon",
+  "photo": "lp_Easyhoon.png",
+  "source": "leaguepedia",
+  "file": "BLG Easyhoon 2024 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:BLG_Easyhoon_2024_Split_2.png",
+  "year": 2024,
+  "previous": {
+   "photo": "Easyhoon.png",
+   "source": "liquipedia"
+  }
+ },
+ "Catch (Yun Sang-ho)": {
+  "name": "Catch",
+  "photo": "lp_Catch_Yun_Sang-ho.png",
+  "source": "leaguepedia",
+  "file": "DRX.C Catch 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DRX.C_Catch_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Catch_Yun_Sang-ho.png",
+   "source": "liquipedia"
+  }
+ },
+ "Museong": {
+  "name": "Museong",
+  "photo": "lp_Museong.png",
+  "source": "leaguepedia",
+  "file": "KT Museong 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:KT_Museong_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Museong.png",
+   "source": "liquipedia"
+  }
+ },
+ "Sonstar": {
+  "name": "Sonstar",
+  "photo": "lp_Sonstar.png",
+  "source": "leaguepedia",
+  "file": "KT Sonstar 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:KT_Sonstar_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Sonstar.png",
+   "source": "liquipedia"
+  }
+ },
+ "Lira": {
+  "name": "Lira",
+  "photo": "lp_Lira.png",
+  "source": "leaguepedia",
+  "file": "DIG Lira 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DIG_Lira_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Lira.png",
+   "source": "liquipedia"
+  }
+ },
+ "Cube (Kim Chang-seong)": {
+  "name": "Cube",
+  "photo": "lp_Cube_Kim_Chang-seong.png",
+  "source": "leaguepedia",
+  "file": "DNS.C Cube 2027 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DNS.C_Cube_2027_Split_1.png",
+  "year": 2027,
+  "previous": {
+   "why": "liquipedia page has no photo"
+  }
+ },
+ "Saroo": {
+  "name": "Saroo",
+  "photo": "lp_Saroo.png",
+  "source": "leaguepedia",
+  "file": "DRX.C Saroo 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DRX.C_Saroo_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Saroo.png",
+   "source": "liquipedia"
+  }
+ },
+ "Chelly (Park Seung-jin)": {
+  "name": "Chelly",
+  "photo": "lp_Chelly_Park_Seung-jin.png",
+  "source": "leaguepedia",
+  "file": "NS Chelly 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:NS_Chelly_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Chelly_Park_Seung-jin.png",
+   "source": "liquipedia"
+  }
+ },
+ "Crazy (Kim Jae-hee)": {
+  "name": "Crazy",
+  "photo": "lp_Crazy_Kim_Jae-hee.png",
+  "source": "leaguepedia",
+  "file": "DNS Crazy 2027 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DNS_Crazy_2027_Split_1.png",
+  "year": 2027,
+  "previous": {
+   "photo": "Crazy_Kim_Jae-hee.png",
+   "source": "liquipedia"
+  }
+ },
+ "SSUN (Kim Tae-yang)": {
+  "name": "SSUN",
+  "photo": "lp_SSUN_Kim_Tae-yang.png",
+  "source": "leaguepedia",
+  "file": "NS SSUN 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:NS_SSUN_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "SSUN_Kim_Tae-yang.png",
+   "source": "liquipedia"
+  }
+ },
+ "GuGer": {
+  "name": "GuGer",
+  "photo": "lp_GuGer.png",
+  "source": "leaguepedia",
+  "file": "NS GuGer 2024 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:NS_GuGer_2024_Split_2.png",
+  "year": 2024,
+  "previous": {
+   "photo": "GuGer.png",
+   "source": "liquipedia"
+  }
+ },
+ "Duke (Lee Ho-seong)": {
+  "name": "Duke",
+  "photo": "lp_Duke_Lee_Ho-seong.png",
+  "source": "leaguepedia",
+  "file": "BRO Duke 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:BRO_Duke_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Duke_Lee_Ho-seong.png",
+   "source": "liquipedia"
+  }
+ },
+ "Naehyun": {
+  "name": "Naehyun",
+  "photo": "lp_Naehyun.png",
+  "source": "leaguepedia",
+  "file": "DRX Naehyun 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DRX_Naehyun_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Naehyun.png",
+   "source": "liquipedia"
+  }
+ },
+ "Minit": {
+  "name": "Minit",
+  "photo": "lp_Minit.png",
+  "source": "leaguepedia",
+  "file": "DNS Minit 2027 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DNS_Minit_2027_Split_1.png",
+  "year": 2027,
+  "previous": {
+   "photo": "Minit.png",
+   "source": "liquipedia"
+  }
+ },
+ "Punch": {
+  "name": "Punch",
+  "photo": "lp_Punch.png",
+  "source": "leaguepedia",
+  "file": "GEN.C Punch 2022 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:GEN.C_Punch_2022_Split_1.png",
+  "year": 2022,
+  "previous": {
+   "photo": "Punch.png",
+   "source": "liquipedia"
+  }
+ },
+ "Spark (Kang Byung-ryul)": {
+  "name": "Spark",
+  "photo": "lp_Spark_Kang_Byung-ryul.png",
+  "source": "leaguepedia",
+  "file": "KT.C Spark 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:KT.C_Spark_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "why": "liquipedia page has no photo"
+  }
+ },
+ "DooTi": {
+  "name": "DooTi",
+  "photo": "lp_DooTi.png",
+  "source": "leaguepedia",
+  "file": "T1.EA DooTi 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:T1.EA_DooTi_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "why": "liquipedia page has no photo"
+  }
+ },
+ "Woong (Kim Sun-woong)": {
+  "name": "Woong",
+  "photo": "lp_Woong_Kim_Sun-woong.png",
+  "source": "leaguepedia",
+  "file": "DK.C Woong 2026 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK.C_Woong_2026_Split_2.png",
+  "year": 2026,
+  "previous": {
+   "why": "liquipedia page has no photo"
+  }
+ },
+ "Sensation": {
+  "name": "Sensation",
+  "photo": "lp_Sensation.png",
+  "source": "leaguepedia",
+  "file": "HLE.C Sensation 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:HLE.C_Sensation_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "why": "liquipedia page has no photo"
+  }
+ },
+ "ALT (Lee Han-young)": {
+  "name": "ALT",
+  "photo": "lp_ALT_Lee_Han-young.png",
+  "source": "leaguepedia",
+  "file": "DK.C ALT 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK.C_ALT_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "why": "liquipedia page has no photo"
+  }
+ },
+ "Lilac (Jeon Ho-jin)": {
+  "name": "Lilac",
+  "photo": "lp_Lilac_Jeon_Ho-jin.png",
+  "source": "leaguepedia",
+  "file": "KT.C Lilac 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:KT.C_Lilac_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Lilac_Jeon_Ho-jin.png",
+   "source": "liquipedia"
+  }
+ },
+ "Nagne": {
+  "name": "Nagne",
+  "photo": "lp_Nagne.png",
+  "source": "leaguepedia",
+  "file": "T1.EA Nagne 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:T1.EA_Nagne_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Nagne.png",
+   "source": "liquipedia"
+  }
+ },
+ "Ssumday": {
+  "name": "Ssumday",
+  "photo": "lp_Ssumday.png",
+  "source": "leaguepedia",
+  "file": "BRO Ssumday 2027 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:BRO_Ssumday_2027_Split_1.png",
+  "year": 2027,
+  "previous": {
+   "photo": "Ssumday.png",
+   "source": "liquipedia"
+  }
+ },
+ "bon0": {
+  "name": "bon0",
+  "photo": "lp_bon0.png",
+  "source": "leaguepedia",
+  "file": "NS.EA bon0 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:NS.EA_bon0_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "bon0.png",
+   "source": "liquipedia"
+  }
+ },
+ "Sungmin": {
+  "name": "Sungmin",
+  "photo": "lp_Sungmin.png",
+  "source": "leaguepedia",
+  "file": "DK.C Sungmin 2026 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK.C_Sungmin_2026_Split_2.png",
+  "year": 2026,
+  "previous": {
+   "why": "liquipedia page has no photo"
+  }
+ },
+ "Key (Kim Han-gi)": {
+  "name": "Key",
+  "photo": "lp_Key_Kim_Han-gi.png",
+  "source": "leaguepedia",
+  "file": "HVE Key VCS Spring 2025.png",
+  "filePage": "https://lol.fandom.com/wiki/File:HVE_Key_VCS_Spring_2025.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Key_Kim_Han-gi.png",
+   "source": "liquipedia"
+  }
+ },
+ "Bon0": {
+  "name": "bon0",
+  "photo": "lp_Bon0_B.png",
+  "source": "leaguepedia",
+  "file": "NS.EA bon0 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:NS.EA_bon0_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Bon0.png",
+   "source": "liquipedia"
+  }
+ },
+ "Gyul": {
+  "name": "Gyul",
+  "photo": "manual_Gyul.png",
+  "source": "manual",
+  "original": "data/manual_photos/Gyul_original.jfif",
+  "note": "downloaded by the user; identity checked from the caption / file name",
+  "previous": {}
+ },
+ "Dopil": {
+  "name": "Dopil",
+  "photo": "manual_Dopil.png",
+  "source": "manual",
+  "original": "data/manual_photos/Dopil_original.webp",
+  "note": "downloaded by the user; identity checked from the caption / file name",
+  "previous": {}
+ },
+ "Dawn (Kim Jin-young)": {
+  "name": "Dawn",
+  "photo": "lp_Dawn_Kim_Jin-young.png",
+  "source": "leaguepedia",
+  "file": "NS.EA Dawn 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:NS.EA_Dawn_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "why": "liquipedia page has no photo"
+  }
+ },
+ "Drinker": {
+  "name": "Drinker",
+  "photo": "lp_Drinker.png",
+  "source": "leaguepedia",
+  "file": "BRO Drinker 2021 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:BRO_Drinker_2021_Split_1.png",
+  "year": 2021,
+  "previous": {
+   "photo": "Drinker.png",
+   "source": "liquipedia"
+  }
+ },
+ "Cheoni": {
+  "name": "Cheoni",
+  "photo": "lp_Cheoni.png",
+  "source": "leaguepedia",
+  "file": "BRO.C Cheoni 2026 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:BRO.C_Cheoni_2026_Split_2.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Cheoni.png",
+   "source": "liquipedia"
+  }
+ },
+ "Bible": {
+  "name": "Bible",
+  "photo": "lp_Bible.png",
+  "source": "leaguepedia",
+  "file": "DK.C Bible 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK.C_Bible_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Bible.png",
+   "source": "liquipedia"
+  }
+ },
+ "Jerry (Kang Sung-jun)": {
+  "name": "Jerry",
+  "photo": "lp_Jerry_Kang_Sung-jun.png",
+  "source": "leaguepedia",
+  "file": "GEN.GA Jerry 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:GEN.GA_Jerry_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "why": "liquipedia page has no photo"
+  }
+ }
+}

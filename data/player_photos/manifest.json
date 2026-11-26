@@ -1,0 +1,2008 @@
+{
+ "Chovy": {
+  "name": "Chovy",
+  "photo": "Chovy.png",
+  "source": "http://static.lolesports.com/players/1778842975847_LCK_GEN_Chovy_F.png",
+  "slug": "geng",
+  "realNameLatin": "JIHUN JUNG",
+  "matched": "team page"
+ },
+ "Ruler": {
+  "name": "Ruler",
+  "photo": "Ruler.png",
+  "source": "http://static.lolesports.com/players/1778842957393_LCK_GEN_Ruler_F.PNG",
+  "slug": "geng",
+  "realNameLatin": "JAEHYEOK PARK",
+  "matched": "team page"
+ },
+ "Canyon": {
+  "name": "Canyon",
+  "photo": "Canyon.png",
+  "source": "http://static.lolesports.com/players/1778842984822_LCK_GEN_Canyon_F.PNG",
+  "slug": "geng",
+  "realNameLatin": "GUNBU KIM",
+  "matched": "team page"
+ },
+ "Duro": {
+  "name": "Duro",
+  "photo": "Duro.png",
+  "source": "http://static.lolesports.com/players/1778842969792_LCK_GEN_Duro_F.PNG",
+  "slug": "geng",
+  "realNameLatin": "MINGYU JU",
+  "matched": "team page"
+ },
+ "Gumayusi": {
+  "name": "Gumayusi",
+  "photo": "Gumayusi.png",
+  "source": "http://static.lolesports.com/players/1769089421483_LCK_HLE_Gumayusi_F.PNG",
+  "slug": "hanwha-life-esports",
+  "realNameLatin": "MINHYUNG LEE",
+  "matched": "team page"
+ },
+ "Kiin": {
+  "name": "Kiin",
+  "photo": "Kiin.png",
+  "source": "http://static.lolesports.com/players/1778842963805_LCK_GEN_Kiin_F.PNG",
+  "slug": "geng",
+  "realNameLatin": "KIIN KIM",
+  "matched": "team page"
+ },
+ "Faker": {
+  "name": "Faker",
+  "photo": "Faker.png",
+  "source": "http://static.lolesports.com/players/1769087499078_LCK_T1_Faker_F.PNG",
+  "slug": "t1",
+  "realNameLatin": "SANGHYEOK LEE",
+  "matched": "team page"
+ },
+ "Zeus": {
+  "name": "Zeus",
+  "photo": "Zeus.png",
+  "source": "http://static.lolesports.com/players/1769089435131_LCK_HLE_Zeus_F.PNG",
+  "slug": "hanwha-life-esports",
+  "realNameLatin": "WOOJE CHOI",
+  "matched": "team page"
+ },
+ "Keria": {
+  "name": "Keria",
+  "photo": "Keria.png",
+  "source": "http://static.lolesports.com/players/1769087515444_LCK_T1_Keria_F.PNG",
+  "slug": "t1",
+  "realNameLatin": "MINSEOK RYU",
+  "matched": "team page"
+ },
+ "Zeka (Kim Geon-woo)": {
+  "name": "Zeka",
+  "photo": "Zeka_Kim_Geon-woo.png",
+  "source": "http://static.lolesports.com/players/1769089430303_LCK_HLE_Zeka_F.PNG",
+  "slug": "hanwha-life-esports",
+  "realNameLatin": "GEON-WOO KIM",
+  "matched": "team page"
+ },
+ "Viper (Park Do-hyeon)": {
+  "name": "Viper",
+  "photo": "Viper_Park_Do-hyeon.png",
+  "source": "http://static.lolesports.com/players/1768349250531_viper.png",
+  "slug": "bilibili-gaming",
+  "realNameLatin": "DOHYEON PARK",
+  "matched": "other team page"
+ },
+ "Oner": {
+  "name": "Oner",
+  "photo": "Oner.png",
+  "source": "http://static.lolesports.com/players/1769087509929_LCK_T1_Oner_F.PNG",
+  "slug": "t1",
+  "realNameLatin": "HYUNJUN MUN",
+  "matched": "team page"
+ },
+ "Delight": {
+  "name": "Delight",
+  "photo": "Delight.png",
+  "source": "http://static.lolesports.com/players/1769089417110_LCK_HLE_Delight_F.PNG",
+  "slug": "hanwha-life-esports",
+  "realNameLatin": "HWANJUNG YU",
+  "matched": "team page"
+ },
+ "Doran (Choi Hyeon-jun)": {
+  "name": "Doran",
+  "photo": "Doran_Choi_Hyeon-jun.png",
+  "source": "http://static.lolesports.com/players/1769087520664_LCK_T1_Doran_F.PNG",
+  "slug": "t1",
+  "realNameLatin": "HYEONJUN CHOI",
+  "matched": "team page"
+ },
+ "Peyz": {
+  "name": "Peyz",
+  "photo": "Peyz.png",
+  "source": "http://static.lolesports.com/players/1769087491906_LCK_T1_Peyz_F.PNG",
+  "slug": "t1",
+  "realNameLatin": "SOOHWAN KIM",
+  "matched": "team page"
+ },
+ "Kanavi": {
+  "name": "Kanavi",
+  "photo": "Kanavi.png",
+  "source": "http://static.lolesports.com/players/1769089425886_LCK_HLE_Kanavi_F.PNG",
+  "slug": "hanwha-life-esports",
+  "realNameLatin": "JINHHYEOK  SEO",
+  "matched": "team page"
+ },
+ "Peanut": {
+  "name": "Peanut",
+  "photo": "lp_Peanut.png",
+  "source": "leaguepedia",
+  "file": "HLE Peanut 2025 Split 1 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:HLE_Peanut_2025_Split_1_2.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Peanut.png",
+   "source": "liquipedia"
+  }
+ },
+ "Smash (Shin Geum-jae)": {
+  "name": "Smash",
+  "photo": "Smash_Shin_Geum-jae.png",
+  "source": "http://static.lolesports.com/players/1778842749985_LCK_DK_Smash_F.PNG",
+  "slug": "dwg-kia",
+  "realNameLatin": "GUNMJAE SIN",
+  "matched": "team page"
+ },
+ "Career": {
+  "name": "Career",
+  "photo": "Career.png",
+  "source": "http://static.lolesports.com/players/1778842708132_LCK_DK_Career_F.PNG",
+  "slug": "dwg-kia",
+  "realNameLatin": "HYUNGSUK OH",
+  "matched": "team page"
+ },
+ "ShowMaker": {
+  "name": "ShowMaker",
+  "photo": "ShowMaker.png",
+  "source": "http://static.lolesports.com/players/1778842721951_LCK_DK_Showmaker_F.png",
+  "slug": "dwg-kia",
+  "realNameLatin": "SU HEO",
+  "matched": "team page"
+ },
+ "Siwoo": {
+  "name": "Siwoo",
+  "photo": "Siwoo.png",
+  "source": "http://static.lolesports.com/players/1778842731846_LCK_DK_Siwoo_F.PNG",
+  "slug": "dwg-kia",
+  "realNameLatin": "JEON SIWOO",
+  "matched": "team page"
+ },
+ "Lucid (Choi Yong-hyeok)": {
+  "name": "Lucid",
+  "photo": "Lucid_Choi_Yong-hyeok.png",
+  "source": "http://static.lolesports.com/players/1778842716183_LCK_DK_Lucid_F.PNG",
+  "slug": "dwg-kia",
+  "realNameLatin": "YONGHYEOK CHOI",
+  "matched": "team page"
+ },
+ "Kingen": {
+  "name": "Kingen",
+  "photo": "Kingen.png",
+  "source": "http://static.lolesports.com/players/1769088303035_LCK_NS_Kingen_F.PNG",
+  "slug": "nongshim-redforce",
+  "realNameLatin": "SUNGHOON  HWANG",
+  "matched": "team page"
+ },
+ "Cuzz": {
+  "name": "Cuzz",
+  "photo": "Cuzz.png",
+  "source": "http://static.lolesports.com/players/1769088880566_LCK_KT_Cuzz_F.PNG",
+  "slug": "kt-rolster",
+  "realNameLatin": "UCHAN MUN",
+  "matched": "team page"
+ },
+ "Aiming": {
+  "name": "Aiming",
+  "photo": "Aiming.png",
+  "source": "http://static.lolesports.com/players/1769088886678_LCK_KT_Aiming_F.PNG",
+  "slug": "drx",
+  "realNameLatin": "HARAM KIM",
+  "matched": "team page"
+ },
+ "Kellin": {
+  "name": "Kellin",
+  "photo": "Kellin.png",
+  "source": "http://static.lolesports.com/players/1769091436066_LCK_BFX_Kellin_F.PNG",
+  "slug": "fearx",
+  "realNameLatin": "HYEONGGYU KIM",
+  "matched": "team page"
+ },
+ "Peter (Jeong Yoon-su)": {
+  "name": "Peter",
+  "photo": "Peter_Jeong_Yoon-su.png",
+  "source": "http://static.lolesports.com/players/1769090762247_LCK_DNS_Peter_F.PNG",
+  "slug": "kwangdong-freecs",
+  "realNameLatin": "YOON SU JEONG",
+  "matched": "team page"
+ },
+ "Bdd": {
+  "name": "Bdd",
+  "photo": "Bdd.png",
+  "source": "http://static.lolesports.com/players/1769088894551_LCK_KT_Bdd_F.PNG",
+  "slug": "kt-rolster",
+  "realNameLatin": "BO SEONG GWAK",
+  "matched": "team page"
+ },
+ "Raptor (Jeon Eo-jin)": {
+  "name": "Raptor",
+  "photo": "Raptor_Jeon_Eo-jin.png",
+  "source": "http://static.lolesports.com/players/1769091440054_LCK_BFX_Raptor_F.PNG",
+  "slug": "fearx",
+  "realNameLatin": "EOJIN JEON",
+  "matched": "team page"
+ },
+ "Diable": {
+  "name": "Diable",
+  "photo": "Diable.png",
+  "source": "http://static.lolesports.com/players/1778842694156_LCK_NS_Diable_F.PNG",
+  "slug": "nongshim-redforce",
+  "realNameLatin": "NAM DAEGEUN",
+  "matched": "team page"
+ },
+ "Effort": {
+  "name": "Effort",
+  "photo": "Effort.png",
+  "source": "http://static.lolesports.com/players/1769085556949_image6-2026-01-22T133848.159.png",
+  "slug": "kt-rolster",
+  "realNameLatin": "SANGHO LEE",
+  "matched": "team page"
+ },
+ "Ucal": {
+  "name": "Ucal",
+  "photo": "Ucal.png",
+  "source": "http://static.lolesports.com/players/1778842833744_LCK_DRX_Ucal_F.PNG",
+  "slug": "drx",
+  "realNameLatin": "WOOHYUN SON",
+  "matched": "team page"
+ },
+ "Teddy": {
+  "name": "Teddy",
+  "photo": "Teddy.png",
+  "source": "http://static.lolesports.com/players/1769091213345_LCK_BRO_Teddy_F.PNG",
+  "slug": "fredit-brion",
+  "realNameLatin": "JINSUNG PARK",
+  "matched": "team page"
+ },
+ "Clear (Song Hyeon-min)": {
+  "name": "Clear",
+  "photo": "Clear_Song_Hyeon-min.png",
+  "source": "http://static.lolesports.com/players/1769091426725_LCK_BFX_Clear_F.png",
+  "slug": "fearx",
+  "realNameLatin": "HYUNMIN SONG",
+  "matched": "team page"
+ },
+ "VicLa": {
+  "name": "VicLa",
+  "photo": "VicLa.png",
+  "source": "http://static.lolesports.com/players/1769091444387_LCK_BFX_VicLa_F.PNG",
+  "slug": "fearx",
+  "realNameLatin": "DEAKWANG LEE",
+  "matched": "team page"
+ },
+ "Taeyoon (Kim Tae-yoon)": {
+  "name": "Taeyoon",
+  "photo": "Taeyoon_Kim_Tae-yoon.png",
+  "source": "http://static.lolesports.com/players/1778842617008_LCK_BFX_Taeyoon_F.PNG",
+  "slug": "fearx",
+  "realNameLatin": "TAEYUN KIM",
+  "matched": "team page"
+ },
+ "Rich (Lee Jae-won)": {
+  "name": "Rich",
+  "photo": "Rich_Lee_Jae-won.png",
+  "source": "http://static.lolesports.com/players/1778842826162_LCK_DRX_Rich_F.PNG",
+  "slug": "drx",
+  "realNameLatin": "JAEWON LEE",
+  "matched": "team page"
+ },
+ "Sponge": {
+  "name": "Sponge",
+  "photo": "Sponge.png",
+  "source": "http://static.lolesports.com/players/1769088325879_LCK_NS_Sponge_F.PNG",
+  "slug": "nongshim-redforce",
+  "realNameLatin": "YOUNGJUN BAE",
+  "matched": "team page"
+ },
+ "Pyosik": {
+  "name": "Pyosik",
+  "photo": "Pyosik.png",
+  "source": "http://static.lolesports.com/players/1769090766931_LCK_DNS_Pyosik_F.png",
+  "slug": "kwangdong-freecs",
+  "realNameLatin": "CHANGHYEON HONG",
+  "matched": "team page"
+ },
+ "GIDEON": {
+  "name": "GIDEON",
+  "photo": "GIDEON.png",
+  "source": "http://static.lolesports.com/players/1769091233026_LCK_BRO_GIDEON_F.PNG",
+  "slug": "fredit-brion",
+  "realNameLatin": "MINSUNG KIM",
+  "matched": "team page"
+ },
+ "Morgan": {
+  "name": "Morgan",
+  "photo": "Morgan.png",
+  "source": "http://static.lolesports.com/players/1769752562927_morgan.png",
+  "slug": "team-liquid",
+  "realNameLatin": "RUHAN PARK",
+  "matched": "other team page"
+ },
+ "PerfecT (Lee Seung-min)": {
+  "name": "PerfecT",
+  "photo": "PerfecT_Lee_Seung-min.png",
+  "source": "http://static.lolesports.com/players/1769088904650_LCK_KT_PerfecT_F.png",
+  "slug": "kt-rolster",
+  "realNameLatin": "SEUNGMIN LEE",
+  "matched": "team page"
+ },
+ "Scout": {
+  "name": "Scout",
+  "photo": "Scout.png",
+  "source": "http://static.lolesports.com/players/1769088313446_LCK_NS_Scout_F.png",
+  "slug": "nongshim-redforce",
+  "realNameLatin": "YECHAN LEE",
+  "matched": "team page"
+ },
+ "DuDu (Lee Dong-ju)": {
+  "name": "DuDu",
+  "photo": "DuDu_Lee_Dong-ju.png",
+  "source": "http://static.lolesports.com/players/1769090757762_LCK_DNS_DuDu_F.PNG",
+  "slug": "kwangdong-freecs",
+  "realNameLatin": "DONGJU LEE",
+  "matched": "team page"
+ },
+ "Clozer": {
+  "name": "Clozer",
+  "photo": "Clozer.png",
+  "source": "http://static.lolesports.com/players/1769090740623_LCK_DNS_Clozer_F.PNG",
+  "slug": "kwangdong-freecs",
+  "realNameLatin": "JUHYEON LEE",
+  "matched": "team page"
+ },
+ "Casting": {
+  "name": "Casting",
+  "photo": "Casting.png",
+  "source": "http://static.lolesports.com/players/1769091238011_LCK_BRO_Casting_F.png",
+  "slug": "fredit-brion",
+  "realNameLatin": "MINJE SHIN",
+  "matched": "team page"
+ },
+ "kyeahoo": {
+  "name": "kyeahoo",
+  "photo": "kyeahoo.png",
+  "source": "http://static.lolesports.com/players/1774652002153_kyeahoo.png",
+  "slug": "karmine-corp",
+  "realNameLatin": "YEAHOO KANG",
+  "matched": "other team page"
+ },
+ "Namgung": {
+  "name": "Namgung",
+  "photo": "Namgung.png",
+  "source": "http://static.lolesports.com/players/1769091222686_LCK_BRO_Namgung_F.PNG",
+  "slug": "fredit-brion",
+  "realNameLatin": "NAMGUNG SEONGHOON",
+  "matched": "team page"
+ },
+ "Willer": {
+  "name": "Willer",
+  "photo": "Willer.png",
+  "source": "http://static.lolesports.com/players/1778842847968_LCK_DRX_Willer_F.PNG",
+  "slug": "drx",
+  "realNameLatin": "JUNGHYEUN KIM",
+  "matched": "team page"
+ },
+ "Andil": {
+  "name": "Andil",
+  "photo": "Andil.png",
+  "source": "http://static.lolesports.com/players/1769090483396_LCK_DRX_Andil_F.PNG",
+  "slug": "drx",
+  "realNameLatin": "GWAN-BIN MUN",
+  "matched": "team page"
+ },
+ "Berserker (Kim Min-cheol)": {
+  "name": "Berserker",
+  "photo": "Berserker_Kim_Min-cheol.png",
+  "source": "http://static.lolesports.com/players/1769752644164_berserker.png",
+  "slug": "lyon-gaming",
+  "realNameLatin": "MINCHEOL KIM",
+  "matched": "other team page"
+ },
+ "Jiwoo": {
+  "name": "Jiwoo",
+  "photo": "Jiwoo.png",
+  "source": "http://static.lolesports.com/players/1778842819812_LCK_DRX_Jiwoo_F.PNG",
+  "slug": "kt-rolster",
+  "realNameLatin": "JIWOO JUNG",
+  "matched": "team page"
+ },
+ "deokdam": {
+  "name": "deokdam",
+  "photo": "deokdam.png",
+  "source": "http://static.lolesports.com/players/1769090748726_LCK_DNS_deokdam_F.PNG",
+  "slug": "kwangdong-freecs",
+  "realNameLatin": "DAEGIL SEO",
+  "matched": "team page"
+ },
+ "BeryL": {
+  "name": "BeryL",
+  "photo": "lp_BeryL.png",
+  "source": "leaguepedia",
+  "file": "DK BeryL 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK_BeryL_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "BeryL.png",
+   "source": "liquipedia"
+  }
+ },
+ "Lehends": {
+  "name": "Lehends",
+  "photo": "Lehends.png",
+  "source": "http://static.lolesports.com/players/1769088308486_LCK_NS_Lehends_F.PNG",
+  "slug": "nongshim-redforce",
+  "realNameLatin": "SIU SON",
+  "matched": "team page"
+ },
+ "Pollu": {
+  "name": "Pollu",
+  "photo": "Pollu.png",
+  "source": "http://static.lolesports.com/players/1769088909540_LCK_KT_Pollu_F.png",
+  "slug": "kt-rolster",
+  "realNameLatin": "DONGGYU OH",
+  "matched": "team page"
+ },
+ "Hype (Byeon Jeong-hyeon)": {
+  "name": "Hype",
+  "photo": "lp_Hype_Byeon_Jeong-hyeon.png",
+  "source": "leaguepedia",
+  "file": "TH Hype 2026 Split 3.png",
+  "filePage": "https://lol.fandom.com/wiki/File:TH_Hype_2026_Split_3.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Hype_Byeon_Jeong-hyeon.png",
+   "source": "liquipedia"
+  }
+ },
+ "Croco": {
+  "name": "Croco",
+  "photo": "lp_Croco.png",
+  "source": "leaguepedia",
+  "file": "LNG Croco 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:LNG_Croco_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Croco.png",
+   "source": "liquipedia"
+  }
+ },
+ "Sharvel": {
+  "name": "Sharvel",
+  "photo": "lp_Sharvel.png",
+  "source": "leaguepedia",
+  "file": "DK.C Sharvel 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK.C_Sharvel_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Sharvel.png",
+   "source": "liquipedia"
+  }
+ },
+ "BuLLDoG (Lee Tae-young)": {
+  "name": "BuLLDoG",
+  "photo": "lp_BuLLDoG_Lee_Tae-young.png",
+  "source": "leaguepedia",
+  "file": "LNG BuLLDoG 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:LNG_BuLLDoG_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "BuLLDoG_Lee_Tae-young.png",
+   "source": "liquipedia"
+  }
+ },
+ "Fisher (Lee Jeong-tae)": {
+  "name": "Fisher",
+  "photo": "lp_Fisher_Lee_Jeong-tae.png",
+  "source": "leaguepedia",
+  "file": "DFM Fisher 2026 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DFM_Fisher_2026_Split_2.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Fisher_Lee_Jeong-tae.png",
+   "source": "liquipedia"
+  }
+ },
+ "Calix (Syun Hyun-bin)": {
+  "name": "Calix",
+  "photo": "Calix_Syun_Hyun-bin.png",
+  "source": "http://static.lolesports.com/players/1769088332489_LCK_NS_Calix_F.png",
+  "slug": "nongshim-redforce",
+  "realNameLatin": "HYUN BIN SYUN",
+  "matched": "team page"
+ },
+ "Roamer": {
+  "name": "Roamer",
+  "photo": "Roamer.png",
+  "source": "http://static.lolesports.com/players/1769091227250_LCK_BRO_Roamer_F.PNG",
+  "slug": "fredit-brion",
+  "realNameLatin": "WOOJIN CHO",
+  "matched": "team page"
+ },
+ "Bluffing": {
+  "name": "Bluffing",
+  "photo": "Bluffing.png",
+  "source": "http://static.lolesports.com/players/1769086484481_image6-2026-01-22T135420.093.png",
+  "slug": "hanwha-life-esports",
+  "realNameLatin": "GYUYONG PARK",
+  "matched": "team page"
+ },
+ "Life": {
+  "name": "Life",
+  "photo": "Life.png",
+  "source": "http://static.lolesports.com/players/1769090753765_LCK_DNS_Life_F.PNG",
+  "slug": "kwangdong-freecs",
+  "realNameLatin": "JEONGMIN KIM",
+  "matched": "team page"
+ },
+ "LazyFeel": {
+  "name": "LazyFeel",
+  "photo": "LazyFeel.png",
+  "source": "http://static.lolesports.com/players/1769088600339_image6-2026-01-22T142919.845.png",
+  "slug": "drx",
+  "realNameLatin": "BAO MINH TRAN",
+  "matched": "team page"
+ },
+ "Ghost (Jang Yong-jun)": {
+  "name": "Ghost",
+  "photo": "Ghost_Jang_Yong-jun.png",
+  "source": "http://static.lolesports.com/players/1769088899654_LCK_KT_Ghost_F.PNG",
+  "slug": "kt-rolster",
+  "realNameLatin": "YONGJUN JANG",
+  "matched": "team page"
+ },
+ "Painter": {
+  "name": "Painter",
+  "photo": "Painter.png",
+  "source": "http://static.lolesports.com/players/1769084021546_image6-2026-01-22T131032.591.png",
+  "slug": "t1",
+  "realNameLatin": "EUNHU KIM",
+  "matched": "team page"
+ },
+ "Minous": {
+  "name": "Minous",
+  "photo": "Minous.png",
+  "source": "http://static.lolesports.com/players/1769088440171_image6-2026-01-22T142652.779.png",
+  "slug": "drx",
+  "realNameLatin": "MINWOO KANG",
+  "matched": "team page"
+ },
+ "HamBak": {
+  "name": "HamBak",
+  "photo": "lp_HamBak.png",
+  "source": "leaguepedia",
+  "file": "SEN HamBak 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:SEN_HamBak_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "HamBak.png",
+   "source": "liquipedia"
+  }
+ },
+ "Way (Han Gil)": {
+  "name": "Way",
+  "photo": "lp_Way_Han_Gil.png",
+  "source": "leaguepedia",
+  "file": "TH Way 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:TH_Way_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Way_Han_Gil.png",
+   "source": "liquipedia"
+  }
+ },
+ "Bull": {
+  "name": "Bull",
+  "photo": "lp_Bull.png",
+  "source": "leaguepedia",
+  "file": "LOUD Bull 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:LOUD_Bull_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Bull.png",
+   "source": "liquipedia"
+  }
+ },
+ "Ellim": {
+  "name": "Ellim",
+  "photo": "lp_Ellim.png",
+  "source": "leaguepedia",
+  "file": "FL Ellim 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:FL_Ellim_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Ellim.png",
+   "source": "liquipedia"
+  }
+ },
+ "Pleata": {
+  "name": "Pleata",
+  "photo": "Pleata.png",
+  "source": "http://static.lolesports.com/players/1769084677995_image6-2026-01-22T132347.123.png",
+  "slug": "nongshim-redforce",
+  "realNameLatin": "MINWOO SON",
+  "matched": "team page"
+ },
+ "Soboro": {
+  "name": "Soboro",
+  "photo": "lp_Soboro.png",
+  "source": "leaguepedia",
+  "file": "IG Soboro 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:IG_Soboro_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Soboro.png",
+   "source": "liquipedia"
+  }
+ },
+ "Daystar": {
+  "name": "Daystar",
+  "photo": "Daystar.png",
+  "source": "http://static.lolesports.com/players/1769091448891_LCK_BFX_Daystar_F.PNG",
+  "slug": "fearx",
+  "realNameLatin": "JI-MYEONG YOO",
+  "matched": "team page"
+ },
+ "vital": {
+  "name": "vital",
+  "photo": "lp_vital.png",
+  "source": "leaguepedia",
+  "file": "NS.EA vital 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:NS.EA_vital_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "vital.png",
+   "source": "liquipedia"
+  }
+ },
+ "Quantum (Son Jeong-hwan)": {
+  "name": "Quantum",
+  "photo": "Quantum_Son_Jeong-hwan.png",
+  "source": "http://static.lolesports.com/players/1769088918397_image6-2026-01-22T143449.651.png",
+  "slug": "kwangdong-freecs",
+  "realNameLatin": "SON JUNGHWAN",
+  "matched": "team page"
+ },
+ "Slayer (Kim Jin-young)": {
+  "name": "Slayer",
+  "photo": "Slayer_Kim_Jin-young.png",
+  "source": "http://static.lolesports.com/players/1769090556098_image6-2026-01-22T150207.367.png",
+  "slug": "fearx",
+  "realNameLatin": "KIM JINYOUNG",
+  "matched": "team page"
+ },
+ "Pungyeon": {
+  "name": "Pungyeon",
+  "photo": "Pungyeon.png",
+  "source": "http://static.lolesports.com/players/1769232251135_Pungyeon.png",
+  "slug": "fredit-brion",
+  "realNameLatin": "LEE JONGHYUK",
+  "matched": "other team page"
+ },
+ "Trigger (Kim Eui-joo)": {
+  "name": "Trigger",
+  "photo": "lp_Trigger_Kim_Eui-joo.png",
+  "source": "leaguepedia",
+  "file": "PaiN Trigger 2026 CBLOL Cup.png",
+  "filePage": "https://lol.fandom.com/wiki/File:PaiN_Trigger_2026_CBLOL_Cup.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Trigger_Kim_Eui-joo.png",
+   "source": "liquipedia"
+  }
+ },
+ "Loki (Lee Sang-min)": {
+  "name": "Loki",
+  "photo": "Loki_Lee_Sang-min.png",
+  "source": "http://static.lolesports.com/players/1790204959636_loki.png",
+  "slug": "cloud9",
+  "realNameLatin": "SANGMIN LEE",
+  "matched": "other team page"
+ },
+ "FenRir (Park Kang-jun)": {
+  "name": "FenRir",
+  "photo": "FenRir_Park_Kang-jun.png",
+  "source": "http://static.lolesports.com/players/1769085625159_image6-2026-01-22T133959.277.png",
+  "slug": "kt-rolster",
+  "realNameLatin": "KANGJUN PARK",
+  "matched": "team page"
+ },
+ "Frog (Lee Min-hoi)": {
+  "name": "Frog",
+  "photo": "Frog_Lee_Min-hoi.png",
+  "source": "http://static.lolesports.com/players/1769088684062_image6-2026-01-22T143101.541.png",
+  "slug": "drx",
+  "realNameLatin": "MINHOI LEE",
+  "matched": "team page"
+ },
+ "Paduck": {
+  "name": "Paduck",
+  "photo": "lp_Paduck.png",
+  "source": "leaguepedia",
+  "file": "SHFT Paduck 2026 Split 3.png",
+  "filePage": "https://lol.fandom.com/wiki/File:SHFT_Paduck_2026_Split_3.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Paduck.png",
+   "source": "liquipedia"
+  }
+ },
+ "DDoiV": {
+  "name": "DDoiV",
+  "photo": "DDoiV.png",
+  "source": "http://static.lolesports.com/players/1769089231683_image6-2026-01-22T143929.578.png",
+  "slug": "kwangdong-freecs",
+  "realNameLatin": "MOONYOUNG BANG",
+  "matched": "team page"
+ },
+ "Enosh": {
+  "name": "Enosh",
+  "photo": "Enosh.png",
+  "source": "http://static.lolesports.com/players/1769089101112_image6-2026-01-22T143756.610.png",
+  "slug": "kwangdong-freecs",
+  "realNameLatin": "KYUJUN KWAK",
+  "matched": "team page"
+ },
+ "Cloud (Moon Hyeon-ho)": {
+  "name": "Cloud",
+  "photo": "Cloud_Moon_Hyeon-ho.png",
+  "source": "http://static.lolesports.com/players/1769083077918_image6144.png",
+  "slug": "t1",
+  "realNameLatin": "MOON HYUNHO",
+  "matched": "team page"
+ },
+ "Guti (Moon Jeong-hwan)": {
+  "name": "Guti",
+  "photo": "Guti_Moon_Jeong-hwan.png",
+  "source": "http://static.lolesports.com/players/1769083583495_image6-2026-01-22T130511.010.png",
+  "slug": "t1",
+  "realNameLatin": "MOON JEONGHWAN",
+  "matched": "team page"
+ },
+ "Zinie": {
+  "name": "Zinie",
+  "photo": "lp_Zinie.png",
+  "source": "leaguepedia",
+  "file": "SR Zinie 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:SR_Zinie_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Zinie.png",
+   "source": "liquipedia"
+  }
+ },
+ "Haetae": {
+  "name": "Haetae",
+  "photo": "Haetae.png",
+  "source": "http://static.lolesports.com/players/1769083792191_image6-2026-01-22T130909.603.png",
+  "slug": "t1",
+  "realNameLatin": "SUHYEON SIM",
+  "matched": "team page"
+ },
+ "Lucy (Hyun Soo-hoon)": {
+  "name": "Lucy",
+  "photo": "Lucy_Hyun_Soo-hoon.png",
+  "source": "http://static.lolesports.com/players/1769084487004_image6-2026-01-22T132101.252.png",
+  "slug": "nongshim-redforce",
+  "realNameLatin": "SOOHOON HYUN",
+  "matched": "team page"
+ },
+ "Hwichan": {
+  "name": "Hwichan",
+  "photo": "Hwichan.png",
+  "source": "http://static.lolesports.com/players/1769085699169_image6-2026-01-22T134118.726.png",
+  "slug": "kt-rolster",
+  "realNameLatin": "HWICHAN JEONG",
+  "matched": "team page"
+ },
+ "YoungJae": {
+  "name": "YoungJae",
+  "photo": "lp_YoungJae.png",
+  "source": "leaguepedia",
+  "file": "LOUD YoungJae 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:LOUD_YoungJae_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "YoungJae.png",
+   "source": "liquipedia"
+  }
+ },
+ "Grizzly": {
+  "name": "Grizzly",
+  "photo": "lp_Grizzly.png",
+  "source": "leaguepedia",
+  "file": "UP Grizzly 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:UP_Grizzly_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "why": "default headshot"
+  }
+ },
+ "Janus (Eom Ye-jun)": {
+  "name": "Janus",
+  "photo": "Janus_Eom_Ye-jun.png",
+  "source": "http://static.lolesports.com/players/1769084399354_image6-2026-01-22T131901.879.png",
+  "slug": "nongshim-redforce",
+  "realNameLatin": "UM YEJUN",
+  "matched": "team page"
+ },
+ "Kangin": {
+  "name": "Kangin",
+  "photo": "Kangin.png",
+  "source": "http://static.lolesports.com/players/1769090667320_image6-2026-01-22T150401.262.png",
+  "slug": "fearx",
+  "realNameLatin": "KANGIN CHOI",
+  "matched": "team page"
+ },
+ "Vincenzo (Ha Seung-min)": {
+  "name": "Vincenzo",
+  "photo": "Vincenzo_Ha_Seung-min.png",
+  "source": "http://static.lolesports.com/players/1778842840049_LCK_DRX_Vincenzo_F.PNG",
+  "slug": "drx",
+  "realNameLatin": "SEUNGMIN HA",
+  "matched": "team page"
+ },
+ "About": {
+  "name": "About",
+  "photo": "lp_About.png",
+  "source": "leaguepedia",
+  "file": "WE About 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:WE_About_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "About.png",
+   "source": "liquipedia"
+  }
+ },
+ "Lancer": {
+  "name": "Lancer",
+  "photo": "Lancer.png",
+  "source": "http://static.lolesports.com/players/1769088987064_image6-2026-01-22T143604.524.png",
+  "slug": "kwangdong-freecs",
+  "realNameLatin": "JEONGHEUM HAN",
+  "matched": "team page"
+ },
+ "Garden (Seol Jeong-won)": {
+  "name": "Garden",
+  "photo": "Garden_Seol_Jeong-won.png",
+  "source": "http://static.lolesports.com/players/1769089555344_image6-2026-01-22T144534.879.png",
+  "slug": "dwg-kia",
+  "realNameLatin": "JEONGWON SEOL",
+  "matched": "team page"
+ },
+ "Winner (Woo Joo-sung)": {
+  "name": "Winner",
+  "photo": "Winner_Woo_Joo-sung.png",
+  "source": "http://static.lolesports.com/players/1769088522766_image6-2026-01-22T142810.865.png",
+  "slug": "drx",
+  "realNameLatin": "JOOSUNG WOO",
+  "matched": "team page"
+ },
+ "Pyeonsik": {
+  "name": "Pyeonsik",
+  "photo": "Pyeonsik.png",
+  "source": "http://static.lolesports.com/players/1769086215440_image6-2026-01-22T134944.828.png",
+  "slug": "hanwha-life-esports",
+  "realNameLatin": "MINGI PYEON",
+  "matched": "team page"
+ },
+ "Sylvie": {
+  "name": "Sylvie",
+  "photo": "Sylvie.png",
+  "source": "http://static.lolesports.com/players/1769085457796_image6-2026-01-22T133710.328.png",
+  "slug": "kt-rolster",
+  "realNameLatin": "SEUNGBOK LEE",
+  "matched": "team page"
+ },
+ "MihawK": {
+  "name": "MihawK",
+  "photo": "MihawK.png",
+  "source": "http://static.lolesports.com/players/1769084566201_image6-2026-01-22T132214.656.png",
+  "slug": "nongshim-redforce",
+  "realNameLatin": "JOOHYUNG KIM",
+  "matched": "team page"
+ },
+ "SeTab": {
+  "name": "SeTab",
+  "photo": "SeTab.png",
+  "source": "http://static.lolesports.com/players/1769084751769_image6-2026-01-22T132525.809.png",
+  "slug": "nongshim-redforce",
+  "realNameLatin": "KYEONGJIN SONG",
+  "matched": "team page"
+ },
+ "Wayne (Hwang Seo-hyeon)": {
+  "name": "Wayne",
+  "photo": "Wayne_Hwang_Seo-hyeon.png",
+  "source": "http://static.lolesports.com/players/1769089494861_image6-2026-01-22T144431.139.png",
+  "slug": "dwg-kia",
+  "realNameLatin": "SEOHYEON HWANG",
+  "matched": "team page"
+ },
+ "Loopy": {
+  "name": "Loopy",
+  "photo": "Loopy.png",
+  "source": "http://static.lolesports.com/players/1769089723144_image6-2026-01-22T144756.107.png",
+  "slug": "dwg-kia",
+  "realNameLatin": "DONGHYEON KIM",
+  "matched": "team page"
+ },
+ "Sero": {
+  "name": "Sero",
+  "photo": "Sero.png",
+  "source": "http://static.lolesports.com/players/1769085767741_image6-2026-01-22T134220.704.png",
+  "slug": "kt-rolster",
+  "realNameLatin": "HYOCHAN AHN",
+  "matched": "team page"
+ },
+ "Poby": {
+  "name": "Poby",
+  "photo": "lp_Poby.png",
+  "source": "leaguepedia",
+  "file": "NAVI Poby 2026 Split 3.png",
+  "filePage": "https://lol.fandom.com/wiki/File:NAVI_Poby_2026_Split_3.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Poby.png",
+   "source": "liquipedia"
+  }
+ },
+ "Juhan": {
+  "name": "Juhan",
+  "photo": "lp_Juhan.png",
+  "source": "leaguepedia",
+  "file": "OMG Juhan 2026 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:OMG_Juhan_2026_Split_1.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Juhan.png",
+   "source": "liquipedia"
+  }
+ },
+ "Jaehyuk": {
+  "name": "Jaehyuk",
+  "photo": "Jaehyuk.png",
+  "source": "http://static.lolesports.com/players/1769089631457_image6-2026-01-22T144643.456.png",
+  "slug": "dwg-kia",
+  "realNameLatin": "JAEHYUK KWON",
+  "matched": "team page"
+ },
+ "Cypher": {
+  "name": "Cypher",
+  "photo": "Cypher.png",
+  "source": "http://static.lolesports.com/players/1769083165855_image6-2026-01-22T125855.379.png",
+  "slug": "t1",
+  "realNameLatin": "YOOJUN KIM",
+  "matched": "team page"
+ },
+ "Luon": {
+  "name": "Luon",
+  "photo": "Luon.png",
+  "source": "http://static.lolesports.com/players/1769090720455_image6-2026-01-22T150458.891.png",
+  "slug": "fearx",
+  "realNameLatin": "HYUNHO LEE",
+  "matched": "team page"
+ },
+ "Flip (Kim Sang-wook)": {
+  "name": "Flip",
+  "photo": "Flip_Kim_Sang-wook.png",
+  "source": "http://static.lolesports.com/players/1769089040652_image6-2026-01-22T143659.183.png",
+  "slug": "kwangdong-freecs",
+  "realNameLatin": "SANGUK KIM",
+  "matched": "team page"
+ },
+ "Tempester": {
+  "name": "Tempester",
+  "photo": "Tempester.png",
+  "source": "http://static.lolesports.com/players/1769089985671_image6-2026-01-22T145216.586.png",
+  "slug": "fredit-brion",
+  "realNameLatin": "YEONGWOONG OH",
+  "matched": "team page"
+ },
+ "OddEye": {
+  "name": "OddEye",
+  "photo": "OddEye.png",
+  "source": "http://static.lolesports.com/players/1769090109251_image6-2026-01-22T145445.080.png",
+  "slug": "fredit-brion",
+  "realNameLatin": "CHO HYUNGJIN",
+  "matched": "team page"
+ },
+ "PlanB": {
+  "name": "PlanB",
+  "photo": "PlanB.png",
+  "source": "http://static.lolesports.com/players/1769090048813_image6-2026-01-22T145347.864.png",
+  "slug": "fredit-brion",
+  "realNameLatin": "HONG JUNSEOK",
+  "matched": "team page"
+ },
+ "Hanbyeol": {
+  "name": "Hanbyeol",
+  "photo": "lp_Hanbyeol.png",
+  "source": "leaguepedia",
+  "file": "GEN.GA Hanbyeol 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:GEN.GA_Hanbyeol_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "why": "not on any page"
+  }
+ },
+ "Kemish": {
+  "name": "Kemish",
+  "photo": "Kemish.png",
+  "source": "http://static.lolesports.com/players/1769088100524_image6-2026-01-22T142115.940.png",
+  "slug": "geng",
+  "realNameLatin": "SIHUN KIM",
+  "matched": "team page"
+ },
+ "DDahyuk": {
+  "name": "DDahyuk",
+  "photo": "DDahyuk.png",
+  "source": "http://static.lolesports.com/players/1769090323253_image6-2026-01-22T145701.864.png",
+  "slug": "fredit-brion",
+  "realNameLatin": "MINHYUK AHN",
+  "matched": "team page"
+ },
+ "Burdol": {
+  "name": "Burdol",
+  "photo": "lp_Burdol.png",
+  "source": "leaguepedia",
+  "file": "LGD Burdol 2026 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:LGD_Burdol_2026_Split_2.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Burdol.png",
+   "source": "liquipedia"
+  }
+ },
+ "Jackal (Lee Su-min)": {
+  "name": "Jackal",
+  "photo": "Jackal_Lee_Su-min.png",
+  "source": "http://static.lolesports.com/players/1769086354742_image6-2026-01-22T135205.457.png",
+  "slug": "hanwha-life-esports",
+  "realNameLatin": "SUMIN LEE",
+  "matched": "team page"
+ },
+ "Rooster": {
+  "name": "Rooster",
+  "photo": "lp_Rooster.png",
+  "source": "leaguepedia",
+  "file": "SHFT Rooster 2026 Split 3.png",
+  "filePage": "https://lol.fandom.com/wiki/File:SHFT_Rooster_2026_Split_3.png",
+  "year": 2026,
+  "previous": {
+   "photo": "Rooster.png",
+   "source": "liquipedia"
+  }
+ },
+ "Panther (Park Ji-ho)": {
+  "name": "Panther",
+  "photo": "Panther_Park_Ji-ho.png",
+  "source": "http://static.lolesports.com/players/1769086291531_image6-2026-01-22T135105.756.png",
+  "slug": "hanwha-life-esports",
+  "realNameLatin": "JIHO PARK",
+  "matched": "team page"
+ },
+ "AKaJe": {
+  "name": "AKaJe",
+  "photo": "AKaJe.png",
+  "source": "http://static.lolesports.com/players/1769088738370_image6-2026-01-22T143158.433.png",
+  "slug": "drx",
+  "realNameLatin": "SUHYEOK CHOI",
+  "matched": "team page"
+ },
+ "Starlit": {
+  "name": "Starlit",
+  "photo": "lp_Starlit.png",
+  "source": "leaguepedia",
+  "file": "BRO.C Starlit 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:BRO.C_Starlit_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "why": "not on any page"
+  }
+ },
+ "Crack (Noh Ji-seong)": {
+  "name": "Crack",
+  "photo": "lp_Crack_Noh_Ji-seong.png",
+  "source": "leaguepedia",
+  "file": "NS.EA Crack 2025 Split 3.png",
+  "filePage": "https://lol.fandom.com/wiki/File:NS.EA_Crack_2025_Split_3.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Crack_Noh_Ji-seong.png",
+   "source": "liquipedia"
+  }
+ },
+ "Dinai": {
+  "name": "Dinai",
+  "photo": "Dinai.png",
+  "source": "http://static.lolesports.com/players/1769090179597_image6-2026-01-22T145555.391.png",
+  "slug": "fredit-brion",
+  "realNameLatin": "CHIHYUN HWANG",
+  "matched": "team page"
+ },
+ "Eclipse (Kim Min-jun)": {
+  "name": "Eclipse",
+  "photo": "manual_Eclipse.png",
+  "source": "manual",
+  "original": "data/manual_photos/Eclipse_original.webp",
+  "note": "downloaded by the user; identity checked from the caption / file name",
+  "previous": {}
+ },
+ "Kice": {
+  "name": "Kice",
+  "photo": "lp_Kice.png",
+  "source": "leaguepedia",
+  "file": "BRO.C Kice 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:BRO.C_Kice_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Kice.png",
+   "source": "liquipedia"
+  }
+ },
+ "Envyy": {
+  "name": "Envyy",
+  "photo": "lp_Envyy.png",
+  "source": "leaguepedia",
+  "file": "BFX.Y Envyy 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:BFX.Y_Envyy_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Envyy.png",
+   "source": "liquipedia"
+  }
+ },
+ "Zephyr (Hwang Hyeok-su)": {
+  "name": "Zephyr",
+  "photo": "Zephyr_Hwang_Hyeok-su.png",
+  "source": "http://static.lolesports.com/players/1769090492602_image6-2026-01-22T150110.156.png",
+  "slug": "fearx",
+  "realNameLatin": "HYEOKSU HWANG",
+  "matched": "team page"
+ },
+ "FIESTA (An Hyeon-seo)": {
+  "name": "FIESTA",
+  "photo": "lp_FIESTA_An_Hyeon-seo.png",
+  "source": "leaguepedia",
+  "file": "VIT FIESTA 2026 Split 3.png",
+  "filePage": "https://lol.fandom.com/wiki/File:VIT_FIESTA_2026_Split_3.png",
+  "year": 2026,
+  "previous": {
+   "photo": "FIESTA_An_Hyeon-seo.png",
+   "source": "liquipedia"
+  }
+ },
+ "Ripple": {
+  "name": "Ripple",
+  "photo": "Ripple.png",
+  "source": "http://static.lolesports.com/players/1769087975904_image6-2026-01-22T141912.328.png",
+  "slug": "geng",
+  "realNameLatin": "JONGMIN BYEON",
+  "matched": "team page"
+ },
+ "Berr": {
+  "name": "Berr",
+  "photo": "lp_Berr.png",
+  "source": "leaguepedia",
+  "file": "DK.C Berr 2025 Split 2.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK.C_Berr_2025_Split_2.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Berr.png",
+   "source": "liquipedia"
+  }
+ },
+ "Jinbeom": {
+  "name": "Jinbeom",
+  "photo": "lp_Jinbeom.png",
+  "source": "leaguepedia",
+  "file": "DK.C Jinbeom 2024 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK.C_Jinbeom_2024_Split_1.png",
+  "year": 2024,
+  "previous": {
+   "why": "default headshot"
+  }
+ },
+ "MG (Lee Ji-hoon)": {
+  "name": "MG",
+  "photo": "lp_MG_Lee_Ji-hoon.png",
+  "source": "leaguepedia",
+  "file": "IGY MG 2023 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:IGY_MG_2023_Split_1.png",
+  "year": 2023,
+  "previous": {
+   "why": "default headshot"
+  }
+ },
+ "Bonnie": {
+  "name": "Bonnie",
+  "photo": "lp_Bonnie.png",
+  "source": "leaguepedia",
+  "file": "BFX.Y Bonnie 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:BFX.Y_Bonnie_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Bonnie.png",
+   "source": "liquipedia"
+  }
+ },
+ "Guardian (Seong Tae-hyo)": {
+  "name": "Guardian",
+  "photo": "Guardian_Seong_Tae-hyo.png",
+  "source": "http://static.lolesports.com/players/1769083424311_image6-2026-01-22T130312.532.png",
+  "slug": "t1",
+  "realNameLatin": "TAEHYO SEONG",
+  "matched": "team page"
+ },
+ "Solid (Nam Hyeon-seo)": {
+  "name": "Solid",
+  "photo": "lp_Solid_Nam_Hyeon-seo.png",
+  "source": "leaguepedia",
+  "file": "WSCI 2026 solid.png",
+  "filePage": "https://lol.fandom.com/wiki/File:WSCI_2026_solid.png",
+  "year": 2026,
+  "previous": {
+   "why": "default headshot"
+  }
+ },
+ "Courage (Jeon Hyun-min)": {
+  "name": "Courage",
+  "photo": "Courage_Jeon_Hyun-min.png",
+  "source": "http://static.lolesports.com/players/1769088040791_image6-2026-01-22T142015.564.png",
+  "slug": "geng",
+  "realNameLatin": "HYUNMIN JEON",
+  "matched": "team page"
+ },
+ "SIRIUSS": {
+  "name": "SIRIUSS",
+  "photo": "SIRIUSS.png",
+  "source": "http://static.lolesports.com/players/1769087912320_image6-2026-01-22T141807.421.png",
+  "slug": "geng",
+  "realNameLatin": "KUN KO",
+  "matched": "team page"
+ },
+ "Alive": {
+  "name": "Alive",
+  "photo": "lp_Alive.png",
+  "source": "leaguepedia",
+  "file": "DRX Alive 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DRX_Alive_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Alive.png",
+   "source": "liquipedia"
+  }
+ },
+ "Nevid": {
+  "name": "Nevid",
+  "photo": "Nevid.png",
+  "source": "http://static.lolesports.com/players/1769089783078_image6-2026-01-22T144919.671.png",
+  "slug": "dwg-kia",
+  "realNameLatin": "MINWOO PARK",
+  "matched": "team page"
+ },
+ "Wet": {
+  "name": "Winner",
+  "photo": "Wet.png",
+  "source": "http://static.lolesports.com/players/1769088522766_image6-2026-01-22T142810.865.png",
+  "slug": "drx",
+  "realNameLatin": "JOOSUNG WOO",
+  "matched": "other team page"
+ },
+ "Bible": {
+  "name": "Bible",
+  "photo": "lp_Bible.png",
+  "source": "leaguepedia",
+  "file": "DK.C Bible 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK.C_Bible_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Bible_2.png",
+   "source": "liquipedia"
+  }
+ },
+ "Cracker (Lee Jeong-wook)": {
+  "name": "Cracker",
+  "photo": "Cracker_Lee_Jeong-wook.png",
+  "source": "http://static.lolesports.com/players/1769086419226_image6-2026-01-22T135315.938.png",
+  "slug": "hanwha-life-esports",
+  "realNameLatin": "JEONGWOOK LEE",
+  "matched": "team page"
+ },
+ "Lumos": {
+  "name": "Lumos",
+  "photo": "Lumos.png",
+  "source": "http://static.lolesports.com/players/1769088159344_image6-2026-01-22T142218.990.png",
+  "slug": "geng",
+  "realNameLatin": "JAEMIN KIM",
+  "matched": "team page"
+ },
+ "Lonely (Han Gyu-joon)": {
+  "name": "Lonely",
+  "photo": "lp_Lonely_Han_Gyu-joon.png",
+  "source": "leaguepedia",
+  "file": "BRO.C Lonely 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:BRO.C_Lonely_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Lonely_Han_Gyu-joon.png",
+   "source": "liquipedia"
+  }
+ },
+ "Thumb": {
+  "name": "Thumb",
+  "photo": "lp_Thumb.png",
+  "source": "leaguepedia",
+  "file": "DK.C Thumb 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:DK.C_Thumb_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Thumb.png",
+   "source": "liquipedia"
+  }
+ },
+ "Levy": {
+  "name": "Levy",
+  "photo": "lp_Levy.png",
+  "source": "leaguepedia",
+  "file": "BRO.C Levy 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:BRO.C_Levy_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Levy.png",
+   "source": "liquipedia"
+  }
+ },
+ "Carim": {
+  "name": "Carim",
+  "photo": "lp_Carim.png",
+  "source": "leaguepedia",
+  "file": "NS.EA Carim 2025 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:NS.EA_Carim_2025_Split_1.png",
+  "year": 2025,
+  "previous": {
+   "photo": "Carim.png",
+   "source": "liquipedia"
+  }
+ },
+ "Leo (Han Gyeo-re)": {
+  "name": "Leo",
+  "photo": "lp_Leo_Han_Gyeo-re.png",
+  "source": "leaguepedia",
+  "file": "FL Leo 2023 Split 1.png",
+  "filePage": "https://lol.fandom.com/wiki/File:FL_Leo_2023_Split_1.png",
+  "year": 2023,
+  "previous": {
+   "photo": "Leo_Han_Gyeo-re.png",
+   "source": "liquipedia"
+  }
+ },
+ "MUDAI": {
+  "name": "MUDAI",
+  "photo": "MUDAI.png",
+  "source": "http://static.lolesports.com/players/1769088228177_image6-2026-01-22T142317.010.png",
+  "slug": "geng",
+  "realNameLatin": "SUNGYU LEE",
+  "matched": "team page"
+ },
+ "Valiant (Han Kang-hyun)": {
+  "name": "Valiant",
+  "photo": "Valiant_Han_Kang-hyun.png",
+  "source": "http://static.lolesports.com/players/1769086142550_image6-2026-01-22T134839.572.png",
+  "slug": "hanwha-life-esports",
+  "realNameLatin": "GANGHYEON HAN",
+  "matched": "team page"
+ },
+ "intl:BLG:Bin (Chen Ze-Bin)": {
+  "name": "Bin",
+  "photo": "intl_BLG_Bin_Chen_Ze-Bin.png",
+  "source": "http://static.lolesports.com/players/1768347827679_bin.png",
+  "slug": "bilibili-gaming",
+  "realNameLatin": "ZE-BIN CHEN",
+  "matched": "team page"
+ },
+ "intl:BLG:Xun": {
+  "name": "Xun",
+  "photo": "intl_BLG_Xun.png",
+  "source": "http://static.lolesports.com/players/1768349380095_xun.png",
+  "slug": "bilibili-gaming",
+  "realNameLatin": "LI-XUN PENG",
+  "matched": "team page"
+ },
+ "intl:BLG:Knight (Zhuo Ding)": {
+  "name": "Knight",
+  "photo": "intl_BLG_Knight_Zhuo_Ding.png",
+  "source": "http://static.lolesports.com/players/1768348559860_knight.png",
+  "slug": "bilibili-gaming",
+  "realNameLatin": "DING ZHUO",
+  "matched": "team page"
+ },
+ "intl:BLG:ON": {
+  "name": "ON",
+  "photo": "intl_BLG_ON.png",
+  "source": "http://static.lolesports.com/players/1768348897219_on.png",
+  "slug": "bilibili-gaming",
+  "realNameLatin": "WENJUN LUO",
+  "matched": "team page"
+ },
+ "intl:KC:Canna": {
+  "name": "Canna",
+  "photo": "intl_KC_Canna.png",
+  "source": "http://static.lolesports.com/players/1774651372836_canna.png",
+  "slug": "karmine-corp",
+  "realNameLatin": "CHANGDONG KIM",
+  "matched": "team page"
+ },
+ "intl:KC:Yike": {
+  "name": "Yike",
+  "photo": "intl_KC_Yike.png",
+  "source": "http://static.lolesports.com/players/1768550195190_Yike-01.png",
+  "slug": "karmine-corp",
+  "realNameLatin": "MARTIN SUNDELIN",
+  "matched": "team page"
+ },
+ "intl:KC:Caliste": {
+  "name": "Caliste",
+  "photo": "intl_KC_Caliste.png",
+  "source": "http://static.lolesports.com/players/1774651348279_caliste.png",
+  "slug": "karmine-corp",
+  "realNameLatin": "CALISTE HENRY-HENNEBERT",
+  "matched": "team page"
+ },
+ "intl:KC:Busio": {
+  "name": "Busio",
+  "photo": "intl_KC_Busio.png",
+  "source": "http://static.lolesports.com/players/1774651329556_busio.png",
+  "slug": "karmine-corp",
+  "realNameLatin": "ALAN CWALINA",
+  "matched": "team page"
+ },
+ "intl:IG:TheShy": {
+  "name": "TheShy",
+  "photo": "intl_IG_TheShy.png",
+  "source": "http://static.lolesports.com/players/1753279025857_image628.png",
+  "slug": "invictus-gaming",
+  "realNameLatin": "SEUNG-LOK KANG",
+  "matched": "team page"
+ },
+ "intl:IG:Wei (Yan Yang-Wei)": {
+  "name": "Wei",
+  "photo": "intl_IG_Wei_Yan_Yang-Wei.png",
+  "source": "http://static.lolesports.com/players/1775225991291_wei.png",
+  "slug": "invictus-gaming",
+  "realNameLatin": "YANG-WEI  YAN",
+  "matched": "team page"
+ },
+ "intl:IG:Rookie": {
+  "name": "Rookie",
+  "photo": "intl_IG_Rookie.png",
+  "source": "http://static.lolesports.com/players/1775225799612_rookie.png",
+  "slug": "invictus-gaming",
+  "realNameLatin": "UI-JIN SONG",
+  "matched": "team page"
+ },
+ "intl:IG:JiaQi": {
+  "name": "JiaQi",
+  "photo": "intl_IG_JiaQi.png",
+  "source": "http://static.lolesports.com/players/1775225631369_jiaqi.png",
+  "slug": "invictus-gaming",
+  "realNameLatin": "JIAQI ZI",
+  "matched": "team page"
+ },
+ "intl:IG:Meiko": {
+  "name": "Meiko",
+  "photo": "intl_IG_Meiko.png",
+  "source": "http://static.lolesports.com/players/1775225723214_meiko.png",
+  "slug": "invictus-gaming",
+  "realNameLatin": "YE TIAN",
+  "matched": "team page"
+ },
+ "intl:AL:Breathe": {
+  "name": "Breathe",
+  "photo": "intl_AL_Breathe.png",
+  "source": "http://static.lolesports.com/players/1775225499864_breathe.png",
+  "slug": "anyones-legend",
+  "realNameLatin": "CHEN CHEN",
+  "matched": "team page"
+ },
+ "intl:AL:Tarzan (Lee Seung-yong)": {
+  "name": "Tarzan",
+  "photo": "intl_AL_Tarzan_Lee_Seung-yong.png",
+  "source": "http://static.lolesports.com/players/1768349186102_tarzan.png",
+  "slug": "anyones-legend",
+  "realNameLatin": "SEUNGYONG LEE",
+  "matched": "team page"
+ },
+ "intl:AL:Shanks": {
+  "name": "Shanks",
+  "photo": "intl_AL_Shanks.png",
+  "source": "http://static.lolesports.com/players/1768349057032_shanks.png",
+  "slug": "anyones-legend",
+  "realNameLatin": "XIAO-JUN CUI",
+  "matched": "team page"
+ },
+ "intl:AL:Hope (Wang Jie)": {
+  "name": "Hope",
+  "photo": "intl_AL_Hope_Wang_Jie.png",
+  "source": "http://static.lolesports.com/players/1768348315588_hope.png",
+  "slug": "anyones-legend",
+  "realNameLatin": "JIE WANG",
+  "matched": "team page"
+ },
+ "intl:AL:Kael (Kim Jin-hong)": {
+  "name": "Kael",
+  "photo": "intl_AL_Kael_Kim_Jin-hong.png",
+  "source": "http://static.lolesports.com/players/1768348497910_kael.png",
+  "slug": "anyones-legend",
+  "realNameLatin": "JINHONG KIM",
+  "matched": "team page"
+ },
+ "intl:TL:Josedeodo": {
+  "name": "Josedeodo",
+  "photo": "intl_TL_Josedeodo.png",
+  "source": "http://static.lolesports.com/players/1769150518581_AME_LCS26S1_TL_JOSEDEODO.png",
+  "slug": "team-liquid",
+  "realNameLatin": "BRANDON VILLEGAS",
+  "matched": "team page"
+ },
+ "intl:TL:Quid": {
+  "name": "Quid",
+  "photo": "intl_TL_Quid.png",
+  "source": "http://static.lolesports.com/players/1769150548420_AME_LCS26S1_TL_QUID.png",
+  "slug": "team-liquid",
+  "realNameLatin": "HYEONSEUNG LIM",
+  "matched": "team page"
+ },
+ "intl:TL:Yeon (Sean Sung)": {
+  "name": "Yeon",
+  "photo": "intl_TL_Yeon_Sean_Sung.png",
+  "source": "http://static.lolesports.com/players/1769150607307_AME_LCS26S1_TL_YEON.png",
+  "slug": "team-liquid",
+  "realNameLatin": "SEAN SUNG",
+  "matched": "team page"
+ },
+ "intl:TL:CoreJJ": {
+  "name": "CoreJJ",
+  "photo": "intl_TL_CoreJJ.png",
+  "source": "http://static.lolesports.com/players/1769150483053_AME_LCS26S1_TL_COREJJ.png",
+  "slug": "team-liquid",
+  "realNameLatin": "YONGIN JO",
+  "matched": "team page"
+ },
+ "intl:LOS:Zest (Kim Dong-min)": {
+  "name": "Zest",
+  "photo": "intl_LOS_Zest_Kim_Dong-min.png",
+  "source": "http://static.lolesports.com/players/1785139905307_LOS_Zest-1copy.png",
+  "slug": "los",
+  "realNameLatin": "DONGMIN KIM",
+  "matched": "team page"
+ },
+ "intl:LOS:Curse (Raí Yamada)": {
+  "name": "Curse",
+  "photo": "intl_LOS_Curse_Ra_Yamada.png",
+  "source": "http://static.lolesports.com/players/1785139911386_LOS_Curse-1copy.png",
+  "slug": "los",
+  "realNameLatin": "RAÍ YAMADA",
+  "matched": "team page"
+ },
+ "intl:LOS:Feisty": {
+  "name": "Feisty",
+  "photo": "intl_LOS_Feisty.png",
+  "source": "http://static.lolesports.com/players/1785139916710_LOS_Feisty-5copy.png",
+  "slug": "los",
+  "realNameLatin": "SEONGHUN JUNG",
+  "matched": "team page"
+ },
+ "intl:LOS:Duduhh": {
+  "name": "Duduhh",
+  "photo": "intl_LOS_Duduhh.png",
+  "source": "http://static.lolesports.com/players/1785139922550_LOS_Duduhh-1copy.png",
+  "slug": "los",
+  "realNameLatin": "WALLYSON SILVA",
+  "matched": "team page"
+ },
+ "intl:LOS:Ackerman (Gabriel Aparicio)": {
+  "name": "Ackerman",
+  "photo": "intl_LOS_Ackerman_Gabriel_Aparicio.png",
+  "source": "http://static.lolesports.com/players/1785139928559_LOS_Ackerman-1copy.png",
+  "slug": "los",
+  "realNameLatin": "GABRIEL APARICIO",
+  "matched": "team page"
+ },
+ "intl:MVK:Kratos (Ngô Đức Khánh)": {
+  "name": "Kratos",
+  "photo": "intl_MVK_Kratos_Ng_c_Kh_nh.png",
+  "source": "http://static.lolesports.com/players/1769231608754_Kratos.png",
+  "slug": "saigon-buffalo-esports",
+  "realNameLatin": "KHANH NGO DUC",
+  "matched": "team page"
+ },
+ "intl:MVK:Gury": {
+  "name": "Gury",
+  "photo": "intl_MVK_Gury.png",
+  "source": "http://static.lolesports.com/players/1769231815740_Gury.png",
+  "slug": "saigon-buffalo-esports",
+  "realNameLatin": "LUONG HAI LONG",
+  "matched": "team page"
+ },
+ "intl:MVK:Chika": {
+  "name": "Chika",
+  "photo": "intl_MVK_Chika.png",
+  "source": "http://static.lolesports.com/players/1775222135365_Chika.png",
+  "slug": "saigon-buffalo-esports",
+  "realNameLatin": "LE NHAN VO",
+  "matched": "team page"
+ },
+ "intl:MVK:Harky": {
+  "name": "Harky",
+  "photo": "intl_MVK_Harky.png",
+  "source": "http://static.lolesports.com/players/1775222116165_Harky.png",
+  "slug": "saigon-buffalo-esports",
+  "realNameLatin": "HUU NGUYEN VAN",
+  "matched": "team page"
+ },
+ "intl:MVK:SiuLoong": {
+  "name": "SiuLoong",
+  "photo": "intl_MVK_SiuLoong.png",
+  "source": "http://static.lolesports.com/players/1775222126505_SiuLoong.png",
+  "slug": "saigon-buffalo-esports",
+  "realNameLatin": "HOANG LAM NGUYEN",
+  "matched": "team page"
+ },
+ "intl:C9:Thanatos (Park Seung-kyu)": {
+  "name": "Thanatos",
+  "photo": "intl_C9_Thanatos_Park_Seung-kyu.png",
+  "source": "http://static.lolesports.com/players/1769149468221_AME_LCS26S1_C9_THANATOS.png",
+  "slug": "cloud9",
+  "realNameLatin": "SEUNG-GYU PARK",
+  "matched": "team page"
+ },
+ "intl:C9:Blaber": {
+  "name": "Blaber",
+  "photo": "intl_C9_Blaber.png",
+  "source": "http://static.lolesports.com/players/1769149391904_AME_LCS26S1_C9_BLABER.png",
+  "slug": "cloud9",
+  "realNameLatin": "ROBERT HUANG",
+  "matched": "team page"
+ },
+ "intl:C9:Tactical": {
+  "name": "Tactical",
+  "photo": "intl_C9_Tactical.png",
+  "source": "http://static.lolesports.com/players/1790204905338_tac.png",
+  "slug": "cloud9",
+  "realNameLatin": "EDWARD RA",
+  "matched": "team page"
+ },
+ "intl:C9:Vulcan (Philippe Laflamme)": {
+  "name": "Vulcan",
+  "photo": "intl_C9_Vulcan_Philippe_Laflamme.png",
+  "source": "http://static.lolesports.com/players/1769149513772_AME_LCS26S1_C9_VULCAN.png",
+  "slug": "cloud9",
+  "realNameLatin": "PHILIPPE LAFLAMME",
+  "matched": "team page"
+ },
+ "intl:G2:BrokenBlade": {
+  "name": "BrokenBlade",
+  "photo": "intl_G2_BrokenBlade.png",
+  "source": "http://static.lolesports.com/players/1768550002850_BrokenBlade-01.png",
+  "slug": "g2-esports",
+  "realNameLatin": "SERGEN ÇELIK",
+  "matched": "team page"
+ },
+ "intl:G2:SkewMond": {
+  "name": "SkewMond",
+  "photo": "intl_G2_SkewMond.png",
+  "source": "http://static.lolesports.com/players/1768549980779_Skewmond-01.png",
+  "slug": "g2-esports",
+  "realNameLatin": "RUDY SEMAAN",
+  "matched": "team page"
+ },
+ "intl:G2:Caps": {
+  "name": "Caps",
+  "photo": "intl_G2_Caps.png",
+  "source": "http://static.lolesports.com/players/1768549998426_Caps-01.png",
+  "slug": "g2-esports",
+  "realNameLatin": "RASMUS BORREGAARD WINTHER",
+  "matched": "team page"
+ },
+ "intl:G2:Hans Sama": {
+  "name": "Hans Sama",
+  "photo": "intl_G2_Hans_Sama.png",
+  "source": "http://static.lolesports.com/players/1768549994123_HansSama-01.png",
+  "slug": "g2-esports",
+  "realNameLatin": "STEVEN LIV",
+  "matched": "team page"
+ },
+ "intl:G2:Labrov": {
+  "name": "Labrov",
+  "photo": "intl_G2_Labrov.png",
+  "source": "http://static.lolesports.com/players/1768549989298_Labrov-01.png",
+  "slug": "g2-esports",
+  "realNameLatin": "LABROS PAPOUTSAKIS",
+  "matched": "team page"
+ },
+ "intl:LYON:Dhokla": {
+  "name": "Dhokla",
+  "photo": "intl_LYON_Dhokla.png",
+  "source": "http://static.lolesports.com/players/1769150098659_AME_LCS26S1_LYON_DHOKLA.png",
+  "slug": "lyon-gaming",
+  "realNameLatin": "NISHIP DOSHI",
+  "matched": "team page"
+ },
+ "intl:LYON:Inspired": {
+  "name": "Inspired",
+  "photo": "intl_LYON_Inspired.png",
+  "source": "http://static.lolesports.com/players/1769150137024_AME_LCS26S1_LYON_INSPIRED.png",
+  "slug": "lyon-gaming",
+  "realNameLatin": "KACPER SLOMA",
+  "matched": "team page"
+ },
+ "intl:LYON:Saint (Kang Sung-in)": {
+  "name": "Saint",
+  "photo": "intl_LYON_Saint_Kang_Sung-in.png",
+  "source": "http://static.lolesports.com/players/1769150214608_AME_LCS26S1_LYON_SAINT.png",
+  "slug": "lyon-gaming",
+  "realNameLatin": "SUNGIN KANG",
+  "matched": "team page"
+ },
+ "intl:LYON:Isles": {
+  "name": "Isles",
+  "photo": "intl_LYON_Isles.png",
+  "source": "http://static.lolesports.com/players/1769150180651_AME_LCS26S1_LYON_ISLES.png",
+  "slug": "lyon-gaming",
+  "realNameLatin": "JONAH ROSARIO",
+  "matched": "team page"
+ },
+ "intl:TES:369": {
+  "name": "369",
+  "photo": "intl_TES_369.png",
+  "source": "http://static.lolesports.com/players/1768347704727_369.png",
+  "slug": "top-esports",
+  "realNameLatin": "JIAHAO BAI",
+  "matched": "team page"
+ },
+ "intl:TES:Tian": {
+  "name": "Tian",
+  "photo": "intl_TES_Tian.png",
+  "source": "http://static.lolesports.com/players/1775225951328_tian.png",
+  "slug": "top-esports",
+  "realNameLatin": "TIAN-LIANG GAO",
+  "matched": "team page"
+ },
+ "intl:TES:Creme": {
+  "name": "Creme",
+  "photo": "intl_TES_Creme.png",
+  "source": "http://static.lolesports.com/players/1768347880178_creme.png",
+  "slug": "top-esports",
+  "realNameLatin": "JIAN LIN",
+  "matched": "team page"
+ },
+ "intl:TES:JackeyLove": {
+  "name": "JackeyLove",
+  "photo": "intl_TES_JackeyLove.png",
+  "source": "http://static.lolesports.com/players/1768348354504_jackeylove.png",
+  "slug": "top-esports",
+  "realNameLatin": "WEN BO YU",
+  "matched": "team page"
+ },
+ "intl:TES:Zhuo": {
+  "name": "Zhuo",
+  "photo": "intl_TES_Zhuo.png",
+  "source": "http://static.lolesports.com/players/1768349462733_zhuo.png",
+  "slug": "top-esports",
+  "realNameLatin": "XU-ZHUO WANG",
+  "matched": "team page"
+ },
+ "intl:CFO:Rest": {
+  "name": "Rest",
+  "photo": "intl_CFO_Rest.png",
+  "source": "http://static.lolesports.com/players/1769232185565_Rest.png",
+  "slug": "ctbc-flying-oyster",
+  "realNameLatin": "SHI-JIE XU",
+  "matched": "team page"
+ },
+ "intl:CFO:Shad0w": {
+  "name": "Shad0w",
+  "photo": "intl_CFO_Shad0w.png",
+  "source": "http://static.lolesports.com/players/1769232218550_Shad0w.png",
+  "slug": "ctbc-flying-oyster",
+  "realNameLatin": "ZHIQIAN ZHAO",
+  "matched": "team page"
+ },
+ "intl:CFO:POUT": {
+  "name": "Pout",
+  "photo": "intl_CFO_POUT.png",
+  "source": "http://static.lolesports.com/players/1785926070523_POUT.png",
+  "slug": "ctbc-flying-oyster",
+  "realNameLatin": "INUNG HAN",
+  "matched": "team page"
+ },
+ "intl:CFO:Doggo": {
+  "name": "Doggo",
+  "photo": "intl_CFO_Doggo.png",
+  "source": "http://static.lolesports.com/players/1769232306480_Doggo.png",
+  "slug": "ctbc-flying-oyster",
+  "realNameLatin": "TZU-CHUAN CHIU",
+  "matched": "team page"
+ },
+ "intl:CFO:Kino": {
+  "name": "Kino",
+  "photo": "intl_CFO_Kino.png",
+  "source": "http://static.lolesports.com/players/1785926061333_Kino.png",
+  "slug": "ctbc-flying-oyster",
+  "realNameLatin": "XIN-RONG JHU WU",
+  "matched": "team page"
+ },
+ "intl:MKOI:Myrwn": {
+  "name": "Myrwn",
+  "photo": "intl_MKOI_Myrwn.png",
+  "source": "http://static.lolesports.com/players/1774652336923_myrwn.png",
+  "slug": "mad-lions",
+  "realNameLatin": "ÁLEX  VILLAREJO PASTOR",
+  "matched": "team page"
+ },
+ "intl:MKOI:Elyoya": {
+  "name": "Elyoya",
+  "photo": "intl_MKOI_Elyoya.png",
+  "source": "http://static.lolesports.com/players/1774651428253_elyoya.png",
+  "slug": "mad-lions",
+  "realNameLatin": "JAVIER  PRADES",
+  "matched": "team page"
+ },
+ "intl:MKOI:Jojopyun": {
+  "name": "Jojopyun",
+  "photo": "intl_MKOI_Jojopyun.png",
+  "source": "http://static.lolesports.com/players/1774651666226_jojopyun.png",
+  "slug": "mad-lions",
+  "realNameLatin": "JOSEPH JOON  PYUN",
+  "matched": "team page"
+ },
+ "intl:MKOI:Supa": {
+  "name": "Supa",
+  "photo": "intl_MKOI_Supa.png",
+  "source": "http://static.lolesports.com/players/1774652617630_supa.png",
+  "slug": "mad-lions",
+  "realNameLatin": "DAVID MARTÍNEZ GARCÍA",
+  "matched": "team page"
+ },
+ "intl:MKOI:Alvaro (Álvaro Fernández)": {
+  "name": "Alvaro",
+  "photo": "intl_MKOI_Alvaro_lvaro_Fern_ndez.png",
+  "source": "http://static.lolesports.com/players/1774651304778_alvaro.png",
+  "slug": "mad-lions",
+  "realNameLatin": "ALVARO FERNÁNDEZ DEL AMO",
+  "matched": "team page"
+ },
+ "intl:FUR:Guigo": {
+  "name": "Guigo",
+  "photo": "intl_FUR_Guigo.png",
+  "source": "http://static.lolesports.com/players/1785137517154_FUR_Guigo-1copy.png",
+  "slug": "furia",
+  "realNameLatin": "GUILHERME RUIZ",
+  "matched": "team page"
+ },
+ "intl:FUR:Tatu (Pedro Seixas)": {
+  "name": "Tatu",
+  "photo": "intl_FUR_Tatu_Pedro_Seixas.png",
+  "source": "http://static.lolesports.com/players/1785137528696_FUR_Tatu-1copy.png",
+  "slug": "furia",
+  "realNameLatin": "PEDRO SEIXAS",
+  "matched": "team page"
+ },
+ "intl:FUR:Tutsz": {
+  "name": "Tutsz",
+  "photo": "intl_FUR_Tutsz.png",
+  "source": "http://static.lolesports.com/players/1785137538274_FUR_Tutsz-1copy.png",
+  "slug": "furia",
+  "realNameLatin": "ARTHUR MACHADO",
+  "matched": "team page"
+ },
+ "intl:FUR:Ayu (Andrey Saraiva)": {
+  "name": "Ayu",
+  "photo": "intl_FUR_Ayu_Andrey_Saraiva.png",
+  "source": "http://static.lolesports.com/players/1785137510622_FUR_Ayu-1copy.png",
+  "slug": "furia",
+  "realNameLatin": "ANDREY SARAIVA",
+  "matched": "team page"
+ },
+ "intl:FUR:JoJo (Gabriel Dzelme)": {
+  "name": "JoJo",
+  "photo": "intl_FUR_JoJo_Gabriel_Dzelme.png",
+  "source": "http://static.lolesports.com/players/1785137522978_FUR_Jojo-1copy.png",
+  "slug": "furia",
+  "realNameLatin": "GABRIEL DZELME",
+  "matched": "team page"
+ },
+ "intl:DCG:Flauren": {
+  "name": "Flauren",
+  "photo": "intl_DCG_Flauren.png",
+  "source": "http://static.lolesports.com/players/1769232909918_Flauren.png",
+  "slug": "deep-cross-gaming",
+  "realNameLatin": "CHAK-KIN LO",
+  "matched": "team page"
+ },
+ "intl:DCG:Pop9": {
+  "name": "Pop9",
+  "photo": "intl_DCG_Pop9.png",
+  "source": "http://static.lolesports.com/players/1769232940755_Pop9.png",
+  "slug": "deep-cross-gaming",
+  "realNameLatin": "YI-HAN WU",
+  "matched": "team page"
+ },
+ "intl:DCG:HongSuo": {
+  "name": "HongSuo",
+  "photo": "intl_DCG_HongSuo.png",
+  "source": "http://static.lolesports.com/players/1769232968075_HongSuo.png",
+  "slug": "deep-cross-gaming",
+  "realNameLatin": "BEI YI GUO",
+  "matched": "team page"
+ },
+ "intl:DCG:Feng (Chen Chun-Feng)": {
+  "name": "Feng",
+  "photo": "intl_DCG_Feng_Chen_Chun-Feng.png",
+  "source": "http://static.lolesports.com/players/1769233007340_Feng.png",
+  "slug": "deep-cross-gaming",
+  "realNameLatin": "JUN-FENG CHEN",
+  "matched": "team page"
+ },
+ "intl:DCG:ShiauC": {
+  "name": "ShiauC",
+  "photo": "intl_DCG_ShiauC.png",
+  "source": "http://static.lolesports.com/players/1769233035363_ShiauC.png",
+  "slug": "deep-cross-gaming",
+  "realNameLatin": "JIA-HAO  LIU",
+  "matched": "team page"
+ },
+ "intl:TSW:Pun": {
+  "name": "Pun",
+  "photo": "intl_TSW_Pun.png",
+  "source": "http://static.lolesports.com/players/1775221968161_Pun.png",
+  "slug": "team-secret-whales",
+  "realNameLatin": "DANG KHOA NGUYEN",
+  "matched": "team page"
+ },
+ "intl:TSW:Hizto": {
+  "name": "Hizto",
+  "photo": "intl_TSW_Hizto.png",
+  "source": "http://static.lolesports.com/players/1775221973791_Hizto.png",
+  "slug": "team-secret-whales",
+  "realNameLatin": "VĂN HOÀNG HẢI LÊ",
+  "matched": "team page"
+ },
+ "intl:TSW:Dire": {
+  "name": "Dire",
+  "photo": "intl_TSW_Dire.png",
+  "source": "http://static.lolesports.com/players/1775221979037_Dire.png",
+  "slug": "team-secret-whales",
+  "realNameLatin": "DUY ĐỨC TRẦN",
+  "matched": "team page"
+ },
+ "intl:TSW:Eddie": {
+  "name": "Eddie",
+  "photo": "intl_TSW_Eddie.png",
+  "source": "http://static.lolesports.com/players/1775221984176_Eddie.png",
+  "slug": "team-secret-whales",
+  "realNameLatin": "CÔNG NGHĨA HOÀNG",
+  "matched": "team page"
+ },
+ "intl:TSW:Bie": {
+  "name": "Bie",
+  "photo": "intl_TSW_Bie.png",
+  "source": "http://static.lolesports.com/players/1775221988811_Bie.png",
+  "slug": "team-secret-whales",
+  "realNameLatin": "HIEU TRAN DUC",
+  "matched": "team page"
+ }
+}

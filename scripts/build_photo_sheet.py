@@ -9,16 +9,21 @@ pixel-portrait sheet (scripts/build_portrait_sheet.py). Writes data/player_photo
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from build_portrait_sheet import DATA, ROLE_KO, STAFF_KO, font, groups
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from build_portrait_sheet import DATA, ROLE_KO, STAFF_KO, font, groups  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 PHOTOS = ROOT / "data" / "player_photos"
+STAFF_PHOTOS = ROOT / "data" / "staff_photos"
 WHY_KO = {"default headshot": "공식 사진 미등록", "not on any page": "lolesports에 없음",
-          "ambiguous handle": "동명이인", "staff": "감코 사진 출처 없음"}
+          "ambiguous handle": "동명이인", "staff": "감코 사진 출처 없음",
+          "not on liquipedia": "Liquipedia에도 없음", "liquipedia page has no photo": "Liquipedia에 사진 없음",
+          "download failed": "받기 실패"}
 
 
 def mix(c1, c2, t):
@@ -49,10 +54,29 @@ def placeholder(side: int, fill) -> Image.Image:
     return im
 
 
-def main() -> None:
+def manifests() -> tuple[dict, dict]:
     manifest = json.loads((PHOTOS / "manifest.json").read_text(encoding="utf-8"))
-    grs = groups()
-    side, cols = 132, 10
+    sman_path = STAFF_PHOTOS / "manifest.json"
+    sman = json.loads(sman_path.read_text(encoding="utf-8")) if sman_path.exists() else {}
+    return manifest, sman
+
+
+def photo_of(cell: dict, manifest: dict, sman: dict) -> tuple[Path | None, dict]:
+    """The photo file of a sheet cell (or None) and its manifest entry."""
+    info = (manifest if cell["kind"] == "player" else sman).get(cell["id"]) or {}
+    if not info.get("photo"):
+        return None, info
+    return (PHOTOS if cell["kind"] == "player" else STAFF_PHOTOS) / info["photo"], info
+
+
+def main() -> None:
+    render(groups(), PHOTOS / "sheet.png", "LoLSim 선수·감코 실제 프로필 사진")
+
+
+def render(grs: list[dict], path: Path, title: str, cols: int = 11) -> None:
+    """Draw the given team groups on one sheet. cols 11 lets two overseas fives (plus the gap) share a row."""
+    manifest, sman = manifests()
+    side = 132
     cell_w, cell_h = side + 14, side + 50
     pad, head_h, section_h, gap = 24, 42, 54, 28
     inner = cols * cell_w
@@ -74,7 +98,7 @@ def main() -> None:
         prev = g["section"]
     for band in bands:
         band["h"] = head_h + max(b["rows"] for b in band["blocks"]) * cell_h + 4
-    height = pad + 74 + sum(b["h"] + 16 + (section_h if b["new_section"] else 0) for b in bands) + pad
+    height = pad + 80 + sum(b["h"] + 16 + (section_h if b["new_section"] else 0) for b in bands) + pad
 
     bg, panel, text, dim = (15, 18, 32), (24, 28, 46), (232, 234, 242), (140, 146, 170)
     sheet = Image.new("RGB", (width, height), bg)
@@ -83,10 +107,17 @@ def main() -> None:
     n_pl = sum(c["kind"] == "player" for c in cells)
     have = sum(1 for c in cells if c["kind"] == "player" and (manifest.get(c["id"]) or {}).get("photo"))
     n_st = sum(c["kind"] == "staff" for c in cells)
-    d.text((pad, pad), "LoLSim 선수·감코 실제 프로필 사진", font=f_title, fill=text)
-    d.text((pad, pad + 42), f"선수 {n_pl}명 중 사진 {have}명 · 감코 {n_st}명(사진 출처 없음) · 출처: lolesports.com 팀 페이지 공식 프로필(2026) · "
-                            f"이름 아래는 포지션·OVR, 회색 실루엣은 사진 없음", font=f_sub, fill=dim)
-    y = pad + 74
+    have_st = sum(1 for c in cells if c["kind"] == "staff" and (sman.get(c["id"]) or {}).get("photo"))
+    def source_of(c):
+        return ((manifest if c["kind"] == "player" else sman).get(c["id"]) or {}).get("source")
+    n_lp = sum(1 for c in cells if source_of(c) == "leaguepedia")
+    n_lq = sum(1 for c in cells if source_of(c) == "liquipedia")
+    d.text((pad, pad), title, font=f_title, fill=text)
+    n_man = sum(1 for c in cells if source_of(c) == "manual")
+    d.text((pad, pad + 40), f"선수 {n_pl}명 중 {have}명 · 감코 {n_st}명 중 {have_st}명 · 회색 실루엣은 사진 없음", font=f_sub, fill=dim)
+    d.text((pad, pad + 56), f"표시 없음: lolesports.com 공식 프로필(2026) · LP {n_lp}: Leaguepedia · LQ {n_lq}: Liquipedia · "
+                            f"직접 {n_man}: 사용자가 받음 · 저작권은 사진마다 다름", font=f_sub, fill=dim)
+    y = pad + 80
     for band in bands:
         if band["new_section"]:
             d.text((pad, y + 14), band["section"], font=f_title, fill=(242, 193, 78))
@@ -114,16 +145,22 @@ def main() -> None:
                 td = ImageDraw.Draw(tile)
                 for row in range(side):
                     td.line([(0, row), (side, row)], fill=mix(top, bottom, row / side))
-                info = manifest.get(c["id"]) if c["kind"] == "player" else None
+                info = manifest.get(c["id"]) if c["kind"] == "player" else sman.get(c["id"])
                 why = None
                 if info and info.get("photo"):
-                    face = headshot(PHOTOS / info["photo"], side)
+                    face = headshot((PHOTOS if c["kind"] == "player" else STAFF_PHOTOS) / info["photo"], side)
                     tile.paste(face, (0, 0), face)
                 else:
                     ph = placeholder(side, (90, 96, 120))
                     tile.paste(ph, (0, 0), ph)
-                    why = WHY_KO.get((info or {}).get("why", "staff"), "사진 없음")
+                    reason = (info or {}).get("liquipedia") if (info or {}).get("liquipedia") in WHY_KO else (info or {}).get("why", "staff")
+                    why = WHY_KO.get(reason, "사진 없음")
                 sheet.paste(tile, (cx, cy))
+                tag = {"leaguepedia": ("LP", (120, 200, 255)), "liquipedia": ("LQ", (255, 190, 120)),
+                       "manual": ("직접", (150, 230, 150))}.get((info or {}).get("source"))
+                if tag:
+                    d.rectangle([cx, cy, cx + d.textlength(tag[0], font=f_why) + 6, cy + 15], fill=(20, 22, 34))
+                    d.text((cx + 3, cy + 1), tag[0], font=f_why, fill=tag[1])
                 border = (242, 193, 78) if c["kind"] == "staff" else (60, 66, 96)
                 d.rectangle([cx - 2, cy - 2, cx + side + 1, cy + side + 1], outline=border, width=2)
                 if why:
@@ -137,7 +174,6 @@ def main() -> None:
                 else:
                     d.text((cx, cy + side + 25), f"{ROLE_KO.get(c['role'], c['role'])} · {c['ovr']}", font=f_sub, fill=dim)
         y += band["h"] + 16
-    path = PHOTOS / "sheet.png"
     sheet.save(path, optimize=True)
     print(f"{path} {width}x{height}  players {n_pl} (photo {have}), staff {n_st}")
 

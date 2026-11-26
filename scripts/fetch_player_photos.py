@@ -27,7 +27,7 @@ DATA = ROOT / "game" / "public" / "data"
 CACHE = ROOT / "data" / "lolesports_cache"
 OUT = ROOT / "data" / "player_photos"
 HEADERS = {"User-Agent": "lolsim-research/0.1 (player photo lookup)"}
-PAGE_PAUSE, IMAGE_PAUSE = 3.0, 1.0
+PAGE_PAUSE, IMAGE_PAUSE = 3.0, 1.5
 WIDTH = 384
 
 # game team id -> lolesports team slug (academies are listed on the parent club's page)
@@ -43,15 +43,28 @@ CARD = re.compile(r'<img alt="([^"]*)"[^>]*?src="https://am-a\.akamaihd\.net/ima
                   r'http%3A%2F%2Fstatic\.lolesports\.com%2Fplayers%2F([^"]+)"')
 
 
-def get(url: str, pause: float) -> requests.Response:
+def get(url: str, pause: float) -> requests.Response | None:
+    """Plain GET with backoff on 429/5xx and on dropped connections (the resize proxy once failed a TLS handshake)."""
+    response = None
     for delay in (5, 20, 60):
-        response = requests.get(url, headers=HEADERS, timeout=60)
+        try:
+            response = requests.get(url, headers=HEADERS, timeout=60)
+        except requests.RequestException as error:
+            print(f"    retry in {delay}s: {type(error).__name__}", flush=True)
+            time.sleep(delay)
+            continue
         time.sleep(pause)
         if response.status_code == 429 or response.status_code >= 500:
             time.sleep(delay)
             continue
         return response
     return response
+
+
+def is_image(response: requests.Response | None) -> bool:
+    # the CDN answers binary/octet-stream, so check the bytes instead of the content type
+    return bool(response is not None and response.ok and (
+        response.content[:4] in (b"\x89PNG", b"RIFF") or response.content[:3] == b"\xff\xd8\xff"))
 
 
 def team_cards(slug: str) -> list[dict]:
@@ -130,15 +143,19 @@ def main() -> None:
         target = OUT / f"{stem}.png"
         source = "http://static.lolesports.com/players/" + pick["file"]
         if not target.exists():
-            url = f"https://am-a.akamaihd.net/image?resize={WIDTH}:&f={quote(source, safe='')}"
-            response = get(url, IMAGE_PAUSE)
-            # the proxy answers binary/octet-stream, so check the bytes instead of the content type
-            if not response.ok or response.content[:4] not in (b"\x89PNG", b"RIFF") and response.content[:3] != b"\xff\xd8\xff":
-                manifest[pid] = {"name": name, "photo": None, "why": f"download failed HTTP {response.status_code}"}
+            response = get(f"https://am-a.akamaihd.net/image?resize={WIDTH}:&f={quote(source, safe='')}", IMAGE_PAUSE)
+            if not is_image(response):  # resize proxy down: take the original and shrink it here
+                response = get(source.replace("http://", "https://"), IMAGE_PAUSE)
+            if not is_image(response):
+                code = response.status_code if response is not None else "no response"
+                manifest[pid] = {"name": name, "photo": None, "why": f"download failed ({code})"}
                 continue
             from io import BytesIO
             from PIL import Image
-            Image.open(BytesIO(response.content)).convert("RGBA").save(target)
+            image = Image.open(BytesIO(response.content)).convert("RGBA")
+            if image.width > WIDTH:
+                image = image.resize((WIDTH, round(image.height * WIDTH / image.width)), Image.LANCZOS)
+            image.save(target)
         manifest[pid] = {"name": name, "photo": f"{stem}.png", "source": source, "slug": pick["slug"],
                          "realNameLatin": pick["realName"], "matched": how}
     (OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
