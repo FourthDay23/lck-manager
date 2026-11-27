@@ -21,6 +21,7 @@ import { buffOf, setCCHook, setFightShields, shieldLeft } from "./procs-lib";
 import * as Nav from "./nav";
 import * as Macro from "./macro";
 import type { Stance } from "./macro";
+import * as Turrets from "./turrets";
 import { BARON_PIT, DRAGON_PIT, FOUNTAIN, dist } from "./map";
 import type { Vec } from "./map";
 
@@ -80,6 +81,8 @@ interface UState {
   pathTo: Vec | null;
   pathAt: number;
   hitChampAt: number;
+  /** the enemy champion that hit landed on (turret and minion aggro) */
+  hitChampV: number;
   shields: { amt: number; until: number }[];
   joinAt: number;
   /** effective AI uses per slot: the kit's, plus engage/escape fallbacks when the kit lists none */
@@ -216,6 +219,24 @@ function mod(e: Engine): Mod {
   return m;
 }
 
+/** When `u` last damaged an enemy champion in a fight, and whom: a turret turns on a champion that hits one of its
+ *  own in its range, and so do the minions next to it (turrets.ts, minions.ts). */
+export function lastChampHit(e: Engine, u: Unit): { at: number; v: number } {
+  const s = (e.mods.fight as Mod | undefined)?.u[u.i];
+  return s ? { at: s.hitChampAt, v: s.hitChampV } : { at: -9, v: -1 };
+}
+
+/** False while `u` cannot be targeted (stasis, an untargetable spell): turrets and minions leave it alone too. */
+export function hittable(e: Engine, u: Unit): boolean {
+  const s = (e.mods.fight as Mod | undefined)?.u[u.i];
+  return !s || e.t >= s.untargetUntil;
+}
+
+/** Damage to a champion from lane minions (minions.ts), with the fight's shields, saves and kill credit. */
+export function outsideHurt(e: Engine, v: Unit, amount: number): void {
+  hurt(e, mod(e), null, v, amount, "proc");
+}
+
 /** Fight stats of this engine (fight-test). */
 export function stats(e: Engine): FightStats {
   return mod(e).stats;
@@ -253,7 +274,7 @@ function makeUnit(e: Engine, u: Unit): UState {
   return {
     kit, role: kit.role, melee, range, poke, aaMul: aa, spMul: sp, kitScale: ks, lat: u.i % 2 ? 1 : -1, target: -1, lockUntil: 0,
     rootUntil: 0, slowUntil: 0, silenceUntil: 0, blindUntil: 0, groundUntil: 0, ccEnd: 0, buffUntil: 0, buffKind: "",
-    untargetUntil: 0, bail: false, bailAt: 0, pathTo: null, pathAt: -9, hitChampAt: -9, shields: [], joinAt: 0,
+    untargetUntil: 0, bail: false, bailAt: 0, pathTo: null, pathAt: -9, hitChampAt: -9, hitChampV: -1, shields: [], joinAt: 0,
     uses: effectiveUses(kit, melee), helpers: [], invulnUntil: 0, reviveUntil: 0, airUntil: 0, arenaUntil: 0,
     arena: { x: 0, y: 0, r: 0 }, marks: new Map(), commitUntil: 0, hook: null, towerAt: -1,
   };
@@ -425,7 +446,7 @@ function hurt(e: Engine, M: Mod, src: Unit | null, v: Unit, amount: number, kind
   if (real) Procs.onDealt(e, src, v, amount, kind, M.deal);
   if (f) f.last = e.t;
   if (info && info.firstDmg < 0) info.firstDmg = e.t;
-  if (src) M.u[src.i].hitChampAt = e.t;
+  if (src) { M.u[src.i].hitChampAt = e.t; M.u[src.i].hitChampV = v.i; }
   if (died) {
     M.stats.kills++;
     const n = info ? info.members.size : 0;
@@ -2228,6 +2249,13 @@ function turretShots(e: Engine, M: Mod) {
     const s = M.u[u.i];
     if (!u.alive || u.fightId || !e.exposedAt(u.side, u)) s.towerAt = -1;
     else if (s.towerAt < 0) s.towerAt = e.t;
+  }
+  if (ENGINE_FLAGS.minions) {
+    // the game's own targeting (turrets.ts): minions first, a champion when it hits one of the turret's champions
+    // or when no minions are in range (outside a fight: after SIM_TUNE.towerGrace)
+    Turrets.shots(e, (u, amount) => hurt(e, M, null, u, amount * FIGHT_TUNE.towerMul, "proc"),
+      (u) => M.u[u.i].towerAt >= 0 && e.t - M.u[u.i].towerAt >= SIM_TUNE.towerGrace);
+    return;
   }
   e.turrets.forEach((t, ti) => {
     const ts = M.tower[ti];

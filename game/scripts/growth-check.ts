@@ -6,7 +6,8 @@ import { readFileSync, existsSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { newGame } from "../src/core/game";
 import { joinTeam, autoLineup } from "../src/core/market";
-import { Engine, applyEarlyTune, applyGrowthTune } from "../src/match/engine";
+import { Engine, ENGINE_FLAGS, applyEarlyTune, applyGrowthTune } from "../src/match/engine";
+import { applyWaveTune } from "../src/match/minions";
 import { newDraft, autoDraft } from "../src/match/draft";
 import { Rng } from "../src/core/rng";
 import { ROLES } from "../src/data/types";
@@ -19,6 +20,9 @@ const rosterSeed = Number(process.argv[4] ?? 3);
 applyEarlyTune(process.env.EARLY_TUNE);
 // GROWTH_TUNE=laneCs:12,sideCs:7 overrides the CS / XP / gold income (engine.ts GROWTH) for this run
 applyGrowthTune(process.env.GROWTH_TUNE);
+// WAVE_TUNE=lastHit:0.9 overrides the wave knobs (minions.ts); FLAGS=-minions runs the engine without real minions
+applyWaveTune(process.env.WAVE_TUNE);
+for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter(Boolean)) (ENGINE_FLAGS as Record<string, boolean>)[fl.replace(/^-/, "")] = !fl.startsWith("-");
 const s = newGame(data, { team: data.teams[0].id, difficulty: "normal", manager: "test", seed: 7 });
 s.user = "__nobody__";
 const rr = new Rng(rosterSeed);
@@ -40,6 +44,13 @@ const econ = Engine.prototype.economy;
 Engine.prototype.economy = function (this: Engine) {
   const before = this.units.map((u) => u.cs);
   econ.call(this);
+  this.units.forEach((u, i) => (laneCs[i] += u.cs - before[i]));
+};
+// with real minions (ENGINE_FLAGS.minions) the last hits are paid in lanesTick (minions.ts)
+const lanes = Engine.prototype.lanesTick;
+Engine.prototype.lanesTick = function (this: Engine) {
+  const before = this.units.map((u) => u.cs);
+  lanes.call(this);
   this.units.forEach((u, i) => (laneCs[i] += u.cs - before[i]));
 };
 

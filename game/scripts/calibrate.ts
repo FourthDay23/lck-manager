@@ -11,6 +11,7 @@ import { Rng } from "../src/core/rng";
 import { gameWinProb, teamPower } from "../src/core/quick";
 import { ROLES } from "../src/data/types";
 import { ITEM_TUNE } from "../src/match/items";
+import { applyWaveTune } from "../src/match/minions";
 
 const dir = existsSync("public/data/champions.json") && existsSync("public/data/players.json") ? "data" : "data-sample";
 const j = (f: string) => {
@@ -35,6 +36,8 @@ applyGrowthTune(process.env.GROWTH_TUNE);
 applySimTune(process.env.SIM_TUNE);
 // PACE_TUNE=towerDmg:1.3 overrides the structure damage after laning (engine.ts PACE_TUNE) for this run
 applyPaceTune(process.env.PACE_TUNE);
+// WAVE_TUNE=lastHit:0.9,loneWave:0.4 overrides how champions and minions deal with waves and structures (minions.ts)
+applyWaveTune(process.env.WAVE_TUNE);
 // FLAGS=nav,macro,fight turns engine modules on (default: the engine's own defaults)
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x && !x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl] = true;
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl.slice(1)] = false;

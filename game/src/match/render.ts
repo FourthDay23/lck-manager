@@ -1,5 +1,8 @@
 // Canvas renderer for the match: low-res 512px buffer scaled up with nearest-neighbour, so it reads as pixel art.
 import type { Engine, Fx, GameEvent, Unit } from "./engine";
+import { ENGINE_FLAGS } from "./engine";
+import * as Minions from "./minions";
+import * as Turrets from "./turrets";
 import { MAP, NEXUS, LANES, BARON_PIT, DRAGON_PIT, MIRROR_C, lanePoint, laneU } from "./map";
 import type { Vec } from "./map";
 import { champImg, spellImg } from "../data/load";
@@ -151,6 +154,8 @@ export class MatchRenderer {
     this.parts = [];
     this.skills.reset();
     this.stepFrom = [];
+    this.minFrom.clear();
+    this.minDeathSeen = 0;
     this.lerp = 1;
     // auto camera: a new game starts on the whole map with nothing queued
     this.shotLabel = "전체 맵";
@@ -987,11 +992,22 @@ export class MatchRenderer {
       if (e.laningPhase() && e.units.some((d) => d.alive && d.side === t.side && Math.hypot(d.x - t.pos.x, d.y - t.pos.y) < 1300)) continue;
       return t.pos;
     }
-    for (const ih of e.inhibs) if (ih.alive && ih.side !== u.side && ih.hp < 3000 && within(ih.pos, 700)) return ih.pos;
-    if (e.nexus[1 - u.side] < 4000 && within(NEXUS[1 - u.side], 900)) return NEXUS[1 - u.side];
+    const real = ENGINE_FLAGS.minions;
+    for (const ih of e.inhibs) if (ih.alive && ih.side !== u.side && ih.hp < (real ? Turrets.INHIB_HP : 3000) && within(ih.pos, 700)) return ih.pos;
+    if (e.nexus[1 - u.side] < (real ? Turrets.NEXUS_HP : 4000) && within(NEXUS[1 - u.side], 900)) return NEXUS[1 - u.side];
     for (const o of Object.values(e.obj)) if (o.alive && o.hp < o.maxHp && Math.hypot(o.pos.x - u.x, o.pos.y - u.y) < 660) return o.pos;
     for (const cp of e.camps) if (cp.alive && cp.hp < cp.maxHp && Math.hypot(cp.pos.x - u.x, cp.pos.y - u.y) < 320) return cp.pos;
     if (e.t < 60 || u.role === "Support") return null;
+    if (real) {
+      // the enemy minion it is about to finish: the lowest one in its reach (minions.ts farm)
+      let best: Vec | null = null, hp = Infinity;
+      for (const m of Minions.list(e)) {
+        if (m.side === u.side || m.hp <= 0 || m.hp >= hp || !within(m, Minions.WAVE_TUNE.reach)) continue;
+        hp = m.hp;
+        best = m;
+      }
+      return best ? { x: best.x, y: best.y } : null;
+    }
     for (const lane of LANES) {
       const f = e.lanes[lane].front;
       const p = lanePoint(lane, f + (u.side === 0 ? 0.01 : -0.01));
@@ -1185,6 +1201,10 @@ export class MatchRenderer {
 
   /** Minion waves: a clump of outlined pixels per side where the two waves meet. */
   private drawLanes(now: number) {
+    if (ENGINE_FLAGS.minions) {
+      this.drawMinions(now);
+      return;
+    }
     if (this.e.t < 50) return;
     const c = this.ctx;
     const zoom = this.cam.size < 9000;
@@ -1219,6 +1239,57 @@ export class MatchRenderer {
         }
       }
     }
+  }
+
+  /** minion positions before the latest engine step (drawn between the two, like the champions) */
+  private minFrom = new Map<number, Vec>();
+  private minDeathSeen = 0;
+
+  /**
+   * The real minions (minions.ts): melee as plain squares, casters with a dark core, siege minions larger, super
+   * minions larger with a gold rim. A minion that is hurt shows its health in the close-up; one that dies leaves a
+   * puff, gold when a champion got the last hit.
+   */
+  private drawMinions(now: number) {
+    const c = this.ctx;
+    const e = this.e;
+    const zoom = this.cam.size < 9000;
+    const far = this.cam.size >= 12000;
+    for (const m of Minions.list(e)) {
+      if (m.hp <= 0) continue;
+      let wx = m.x, wy = m.y;
+      const p = this.minFrom.get(m.id);
+      if (p && this.lerp < 1) { wx = p.x + (m.x - p.x) * this.lerp; wy = p.y + (m.y - p.y) * this.lerp; }
+      const x = this.sx(wx), y = this.sy(wy);
+      if (x < -8 || y < -8 || x > RES + 8 || y > RES + 8) continue;
+      const big = m.kind === "siege" || m.kind === "super";
+      const s = zoom ? (big ? 7 : 5) : far ? (big ? 3 : 2) : big ? 4 : 3;
+      const px = Math.round(x - s / 2), py = Math.round(y - s / 2);
+      c.fillStyle = m.kind === "super" ? "#ffd36b" : "#05070d";
+      c.fillRect(px - 1, py - 1, s + 2, s + 2);
+      c.fillStyle = m.side === 0 ? "#7cc4ff" : "#ff8c8c";
+      c.fillRect(px, py, s, s);
+      if (m.kind === "caster" || m.kind === "siege") {
+        const k = Math.max(1, Math.ceil(s / 3));
+        c.fillStyle = m.kind === "siege" ? "#f2f4fa" : m.side === 0 ? "#123a66" : "#5e1a1a";
+        c.fillRect(px + Math.floor((s - k) / 2), py + Math.floor((s - k) / 2), k, k);
+      }
+      if (zoom && m.hp < m.maxHp) {
+        c.fillStyle = "#05070d";
+        c.fillRect(px - 1, py - 4, s + 2, 3);
+        c.fillStyle = m.side === 0 ? "#7cc4ff" : "#ff8c8c";
+        c.fillRect(px, py - 3, Math.max(1, Math.round(s * (m.hp / m.maxHp))), 1);
+      }
+    }
+    // deaths since the last frame (not the ones a fast-forward skipped over)
+    const ds = Minions.deaths(e);
+    for (let i = ds.length - 1; i >= 0 && ds[i].id > this.minDeathSeen; i--) {
+      const d = ds[i];
+      if (e.t - d.t > 1.5 || far) continue;
+      if (d.by >= 0) this.burst(d.x, d.y, "#ffd36b", zoom ? 4 : 2, now, 1);
+      else if (zoom) this.burst(d.x, d.y, d.side === 0 ? "#7cc4ff" : "#ff8c8c", 2, now);
+    }
+    if (ds.length) this.minDeathSeen = ds[ds.length - 1].id;
   }
 
   /** Same arc-length parameter as the engine (lane front, turret `u`). Sampling by segment index instead put the
@@ -1284,6 +1355,11 @@ export class MatchRenderer {
         c.fillRect(ox - 1, oy + h + 1, bw, 3);
         c.fillStyle = body;
         c.fillRect(ox, oy + h + 2, Math.max(1, Math.round((bw - 2) * (t.hp / t.maxHp))), 1);
+        // the plates still on it, as gold pips under the bar in the close-up
+        if (zoom && ENGINE_FLAGS.minions && t.plates > 0) {
+          c.fillStyle = "#ffd36b";
+          for (let k = 0; k < t.plates; k++) c.fillRect(ox + k * 3, oy + h + 5, 2, 2);
+        }
       }
     }
     for (const ih of this.e.inhibs) {
@@ -1318,7 +1394,7 @@ export class MatchRenderer {
       c.fill();
       c.fillStyle = "#ffffff";
       c.fillRect(x - 1, y - 1, 3, 3);
-      const hp = this.e.nexus[side] / 4000;
+      const hp = this.e.nexus[side] / (ENGINE_FLAGS.minions ? Turrets.NEXUS_HP : 4000);
       if (hp < 1) {
         c.fillStyle = "#05070d";
         c.fillRect(x - s - 1, y + s + 3, 2 * s + 2, 3);
@@ -1384,6 +1460,10 @@ export class MatchRenderer {
   lerp = 1;
   beforeStep() {
     this.stepFrom = this.e.units.map((u) => ({ x: u.x, y: u.y }));
+    if (ENGINE_FLAGS.minions) {
+      this.minFrom.clear();
+      for (const m of Minions.list(this.e)) this.minFrom.set(m.id, { x: m.x, y: m.y });
+    }
   }
 
   /** Where to draw a unit: between engine steps (see lerp), plus the knock-up bob unless `bob` is off. */
