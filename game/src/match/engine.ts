@@ -12,8 +12,8 @@ import { coachBonus, fatiguePenalty, MOD_GAIN, starterFatigue } from "../core/qu
 import { compBonus, mastery } from "./draft";
 import { metaBonus } from "../core/meta";
 import {
-  BARON_PIT, CAMPS_BLUE, CAMP_POS_RED, DRAGON_PIT, FOUNTAIN, INHIBS, LANES, LANE_PATH, NEXUS, ROLE_LANE, SCUTTLE, TURRETS,
-  dist, findPath, laneU, lanePoint, mirror, sampleHeat, initMap,
+  BARON_PIT, CAMPS, DRAGON_PIT, FOUNTAIN, GRUBS_PIT, HERALD_PIT, INHIBS, LANES, LANE_PATH, NEXUS, ROLE_LANE, SCUTTLE, TURRETS,
+  dist, findPath, laneU, lanePoint, sampleHeat, initMap,
 } from "./map";
 import type { CampKind, LaneId, Vec } from "./map";
 import * as Nav from "./nav";
@@ -367,8 +367,9 @@ export class Engine {
     const camps = this.meta.camps;
     let id = 0;
     for (const side of [0, 1] as SideN[]) {
-      for (const c of CAMPS_BLUE) {
-        const pos = side === 0 ? c.pos : CAMP_POS_RED[c.kind] ?? mirror(c.pos);
+      // each side's own list: the jungle is a half turn of itself, not a mirror image like the lanes (map.ts CAMPS)
+      for (const c of CAMPS[side]) {
+        const pos = c.pos;
         const timing = camps[c.kind] ?? { firstSpawn: 90, respawn: 135 };
         const hp = (c.kind === "blue" || c.kind === "red" ? 1600 : 1100) * GROWTH.campHp;
         this.camps.push({ id: id++, side, kind: c.kind, pos, alive: false, spawnAt: timing.firstSpawn, hp, maxHp: hp });
@@ -380,8 +381,8 @@ export class Engine {
     const mk = (key: ObjKey, pos: Vec, spawnAt: number | null, hp: number): ObjState => ({ key, alive: false, spawnAt, hp, maxHp: hp, pos });
     this.obj = {
       dragon: mk("dragon", DRAGON_PIT, o.dragon?.firstSpawn ?? 300, 3600),
-      grubs: { ...mk("grubs", BARON_PIT, o.grubs?.firstSpawn ?? 480, 2400), left: 3 },
-      herald: mk("herald", BARON_PIT, o.herald?.firstSpawn ?? 900, 5200),
+      grubs: { ...mk("grubs", GRUBS_PIT, o.grubs?.firstSpawn ?? 480, 2400), left: 3 },
+      herald: mk("herald", HERALD_PIT, o.herald?.firstSpawn ?? 900, 5200),
       baron: mk("baron", BARON_PIT, o.baron?.firstSpawn ?? 1200, 9500),
       elder: mk("elder", DRAGON_PIT, null, 8000),
     };

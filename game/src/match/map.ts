@@ -103,7 +103,16 @@ export function laneU(lane: LaneId, p: Vec): number {
 }
 
 export type CampKind = "blue" | "gromp" | "wolves" | "raptors" | "red" | "krugs";
-export const CAMPS_BLUE: { kind: CampKind; pos: Vec }[] = [
+export interface CampDef { kind: CampKind; pos: Vec }
+/**
+ * Jungle camps, where the monsters stand. The jungle is a half turn of itself about the map centre, not a mirror
+ * image like the lanes and bases (`mirror`): the red team's blue buff, gromp and wolves are on the bot side (east),
+ * its raptors, red buff and krugs on the top side (north). Mirroring the blue team's camps put the red team's
+ * raptors on the mid lane, its wolves in a corridor and swapped its two buffs.
+ * Checked against the LCK 2026 timelines (scripts/lck_camps.py: where junglers stand in minutes 1-9) and the
+ * clearings of the minimap (scripts/camp-check.ts: open ground around every spot).
+ */
+export const CAMPS_BLUE: CampDef[] = [
   { kind: "blue", pos: { x: 3800, y: 7950 } },
   { kind: "gromp", pos: { x: 2090, y: 8430 } },
   { kind: "wolves", pos: { x: 3780, y: 6470 } },
@@ -111,11 +120,28 @@ export const CAMPS_BLUE: { kind: CampKind; pos: Vec }[] = [
   { kind: "red", pos: { x: 7770, y: 4040 } },
   { kind: "krugs", pos: { x: 8400, y: 2650 } },
 ];
-/** Red camps whose mirrored blue position falls on a minimap wall: nearest points with open ground around them. */
-export const CAMP_POS_RED: Partial<Record<CampKind, Vec>> = { wolves: { x: 7931, y: 10940 }, red: { x: 10918, y: 6870 }, krugs: { x: 12030, y: 6634 } };
+export const CAMPS_RED: CampDef[] = [
+  { kind: "blue", pos: { x: 10984, y: 6960 } },
+  { kind: "gromp", pos: { x: 12703, y: 6444 } },
+  { kind: "wolves", pos: { x: 11008, y: 8387 } },
+  { kind: "raptors", pos: { x: 7855, y: 9480 } },
+  { kind: "red", pos: { x: 7102, y: 10900 } },
+  // (the game's spot, 6317 12146, is on the edge of a wall on this minimap: moved 125 u into the clearing, to the
+  // half turn of the blue team's krugs)
+  { kind: "krugs", pos: { x: 6410, y: 12230 } },
+];
+/** Camps by side (0 blue, 1 red). */
+export const CAMPS: [CampDef[], CampDef[]] = [CAMPS_BLUE, CAMPS_RED];
+/** Rift scuttlers: top river, bot river. */
 export const SCUTTLE: Vec[] = [{ x: 4400, y: 9600 }, { x: 10400, y: 5200 }];
-export const DRAGON_PIT: Vec = { x: 9866, y: 4414 };
+/** Where the dragon and Baron stand: the spot their kills are reported at when they have not moved (LCK 2026). */
+export const DRAGON_PIT: Vec = { x: 9837, y: 4397 };
 export const BARON_PIT: Vec = { x: 5007, y: 10471 };
+/** The three Voidgrubs stand apart in the Baron pit; the engine's single "grubs" objective is at their middle. */
+export const GRUB_SPOTS: Vec[] = [{ x: 4790, y: 10182 }, { x: 5210, y: 10424 }, { x: 4841, y: 10638 }];
+export const GRUBS_PIT: Vec = { x: 4947, y: 10415 };
+/** The Rift Herald comes up in the same pit, in front of where Baron will stand. */
+export const HERALD_PIT: Vec = { x: 4940, y: 10384 };
 export const CAMP_KO: Record<CampKind | "scuttle", string> = {
   blue: "블루", gromp: "두꺼비", wolves: "늑대", raptors: "칼날부리", red: "레드", krugs: "돌거북", scuttle: "바위게",
 };

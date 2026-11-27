@@ -3,7 +3,7 @@
 // Optional: PATHS_OUT=file.json dumps sample routes (world coords) for a visual check.
 import { readFileSync, writeFileSync } from "node:fs";
 import * as Nav from "../src/match/nav";
-import { BARON_PIT, CAMPS_BLUE, DRAGON_PIT, FOUNTAIN, INHIBS, LANES, MAP, NEXUS, SCUTTLE, TURRETS, lanePoint, mirror } from "../src/match/map";
+import { BARON_PIT, CAMPS, DRAGON_PIT, FOUNTAIN, GRUBS_PIT, GRUB_SPOTS, HERALD_PIT, INHIBS, LANES, MAP, NEXUS, SCUTTLE, TURRETS, lanePoint } from "../src/match/map";
 import type { Vec } from "../src/match/map";
 
 const mask = JSON.parse(readFileSync("scripts/wallmask.json", "utf8"));
@@ -31,9 +31,10 @@ FOUNTAIN.forEach((p, i) => pts.push([`fountain${i}`, p]));
 NEXUS.forEach((p, i) => pts.push([`nexus${i}`, p]));
 TURRETS.forEach((t) => pts.push([`turret ${t.side} ${t.lane} ${t.tier}`, t.pos]));
 INHIBS.forEach((t) => pts.push([`inhib ${t.side} ${t.lane}`, t.pos]));
-CAMPS_BLUE.forEach((c) => { pts.push([`blue ${c.kind}`, c.pos]); pts.push([`red ${c.kind}`, mirror(c.pos)]); });
+CAMPS.forEach((list, side) => list.forEach((c) => pts.push([`${side ? "red" : "blue"} ${c.kind}`, c.pos])));
 SCUTTLE.forEach((p, i) => pts.push([`scuttle${i}`, p]));
-pts.push(["dragon", DRAGON_PIT], ["baron", BARON_PIT]);
+pts.push(["dragon", DRAGON_PIT], ["baron", BARON_PIT], ["herald", HERALD_PIT], ["grubs", GRUBS_PIT]);
+GRUB_SPOTS.forEach((p, i) => pts.push([`grub${i}`, p]));
 for (const lane of LANES) for (let u = 0; u <= 1.0001; u += 0.05) pts.push([`${lane} ${u.toFixed(2)}`, lanePoint(lane, u)]);
 
 let maxSnap = 0;
@@ -64,7 +65,7 @@ console.log(`key points: ${pts.length}, max snap ${maxSnap.toFixed(0)}u, paths f
 
 // --- jungle clear routes (blue side full clear, red side full clear)
 for (const side of [0, 1] as const) {
-  const camps = CAMPS_BLUE.map((c) => (side === 0 ? c.pos : mirror(c.pos)));
+  const camps = CAMPS[side].map((c) => c.pos);
   let at: Vec = FOUNTAIN[side];
   const route: Vec[] = [at];
   let len = 0;
