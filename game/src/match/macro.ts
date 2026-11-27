@@ -92,14 +92,14 @@ export const GRUB_MACRO = {
    *  game + blueEdge) for blue and its inverse for red. LCK: the first grub goes to the side ahead in gold at 8:00
    *  in 55.7 % of games only (lane states and jungle paths decide, which the power ratio does not see) and blue takes
    *  59.6 % of all grubs. The same tilt decides who may answer a take with a group (contestCand). */
-  tilt: 0.55, blueEdge: 0.37,
+  tilt: 0.55, blueEdge: 0.28,
   /** sneak: chance per camp that the jungler of the side without the area starts on the grubs alone when the enemy
    *  jungler is far and nobody is near. finish: a jungler chased off the grubs first finishes the one it is on when
    *  that grub is under this share of its health (so it leaves with one or two instead of none). */
   sneak: 0.75, finish: 0.5,
   /** a side is at the pit when the grubs spawn in this share of camps; otherwise it is free for them an exponential
    *  time later (mean lateMean seconds). LCK: first grub 14 / 18 / 32 / 74 / 117 s after 8:00 (P10 / 25 / 50 / 75 / 90). */
-  onTime: 0.6, lateMean: 75,
+  onTime: 0.6, lateMean: 60,
   /** skip: share of games in which neither side starts on the camp (LCK: 2.8 % of camps leave untouched). back: a
    *  side walks over for grubs somebody left behind this often (LCK: 9 % of the visits that stop with grubs alive
    *  are never followed up and those grubs despawn). */

@@ -190,12 +190,18 @@ export function applySimTune(spec: string | undefined) {
  *   time: change it together with the grubs' / herald's spawn times in the meta data (8:00 / 15:00 now).
  * runGap: a side's kills are announced as one "grubs" event (N마리 처치) once it has stopped hitting for this long.
  * towerPer / towerAll: champion damage to turrets, inhibitors and the nexus per grub taken, and the extra for all
- *   three (Touch of the Void burns structures per stack; the third brings the voidmites).
+ *   three (Touch of the Void burns structures per stack; the third brings the voidmites): +2 / 4 / 10 %. LCK teams
+ *   with all three grubs win 56.0 % of their games (none: 45.6 %); the engine 60 % (41 %) with these and 64 % (38 %)
+ *   at 0.04 / 0.06, where game length and kills were the same.
+ * Measured (scripts/grubs-diag.ts and calibrate.ts, 300 games x roster seeds 3 and 5, 2026-11-28; LCK in brackets):
+ * one team all three 77.2 % (75.1), shared 2-1 17.2 % (19.3), not finished 5.7 % (5.6), blue's share of grubs 61.8 %
+ * (59.6), visits of 1 / 2 / 3 grubs 24.5 / 15.7 / 59.8 % (27.1 / 17.7 / 55.2), first grub a median 8:36 (8:32), kills
+ * 7 s apart (7); game length 31.8 / 32.5 -> 32.0 / 32.2 min and kills 28.5 / 30.9 -> 28.8 / 29.3 (seed 3 / 5).
  * Scripts can override any of them with GRUB_TUNE=key:value,...
  */
 export const GRUB_TUNE = {
   hp: 1150, splash: 0.25, regen: 0.02, smiteEdge: 0.85, leaveAt: 885, runGap: 4,
-  towerPer: 0.04, towerAll: 0.06,
+  towerPer: 0.02, towerAll: 0.04,
 };
 export function applyGrubTune(spec: string | undefined) {
   applyTune(GRUB_TUNE, "GRUB_TUNE", spec);
