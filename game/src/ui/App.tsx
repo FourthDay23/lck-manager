@@ -5,7 +5,7 @@ import { fmtDate, money } from "../core/format";
 import { SAVE_VERSION, autoAdvance, migrateSave, phaseLabel, nextUserSeries, userSeriesToday } from "../core/game";
 import { inbox } from "../core/news";
 import type { AutoMode } from "../core/game";
-import { windowLabel } from "../core/market";
+import { MarketNav, MarketStat } from "./MarketTip";
 import { saveGame } from "../core/save";
 import { monthlyWages } from "../core/ledger";
 import { TeamLogo } from "./components";
@@ -105,7 +105,7 @@ export function App() {
         <div class="stat" title={me.cash < 0 ? "자금이 마이너스인 채로 하루가 지나면 게임 오버입니다." : undefined}><span>자금{me.cash < 0 && " · 게임 오버 위험"}</span><b class={me.cash < 0 ? "neg" : "gold"}>{money(me.cash)}</b></div>
         <div class="stat" title="선수·스태프 연봉 합계 ÷ 12. 매달 25일에 나갑니다."><span>월 급여 (25일)</span><span class="neg">-{money(monthlyWages(s))}</span></div>
         <div class="stat"><span>명성 · 팬</span>{Math.round(me.fame)} · {(me.fans / 10000).toFixed(1)}만</div>
-        <div class="stat"><span>이적시장</span>{windowLabel(s)}</div>
+        <MarketStat s={s} />
         <div class="grow" />
         {today ? (
           <button class="btn primary" onClick={() => store.go("series")}>오늘 경기 하러 가기</button>
@@ -120,13 +120,19 @@ export function App() {
         )}
       </div>
       <div class="side">
-        {NAV.map(([k, label]) => (
-          <button class={`nav ${scr === k ? "on" : ""}`} onClick={() => store.go(k)}>
-            {label}
-            {k === "market" && offers > 0 && <span class="badge">{offers}</span>}
-            {k === "news" && s.inbox.some((m) => !m.read) && <span class="badge">!</span>}
-          </button>
-        ))}
+        {NAV.map(([k, label]) =>
+          k === "market" ? (
+            <MarketNav s={s} cls={`nav ${scr === k ? "on" : ""}`} onClick={() => store.go(k)}>
+              {label}
+              {offers > 0 && <span class="badge">{offers}</span>}
+            </MarketNav>
+          ) : (
+            <button class={`nav ${scr === k ? "on" : ""}`} onClick={() => store.go(k)}>
+              {label}
+              {k === "news" && s.inbox.some((m) => !m.read) && <span class="badge">!</span>}
+            </button>
+          ),
+        )}
         <div class="sec">다음 경기</div>
         <div class="pad muted" style={{ fontSize: 11 }}>
           {next ? (
