@@ -726,6 +726,92 @@ export function autoAdvance(s: GameState, data: GameData, mode: AutoMode): Advan
   return null;
 }
 
+// ---------- auto-advance (ui/AutoPlay.tsx): a day at a time, on a timer ----------
+/** Where a running auto-advance ends by itself. "free" goes on until the player stops it. */
+export type AutoTarget = "free" | "match" | "window" | "phase";
+
+/** The calendar before an auto-advance step or run, to tell what it changed. */
+export interface AutoMark { day: number; season: number; phase: string; window: boolean; cash: number }
+
+/** A notice that ends an auto-advance (not just a wait): the player must not walk past it. */
+export interface AutoHalt { kind: "over" | "payday" | "debt" | "contract" | "season" | "offer" | "bid"; text: string }
+
+export function autoMark(s: GameState): AutoMark {
+  return { day: s.day, season: s.season, phase: phaseLabel(s), window: windowOpen(s), cash: s.teams[s.user].cash };
+}
+
+/**
+ * One day of auto-advance. Call it only when nothing is waiting for the player (no event, alert, cutscene or
+ * match today). `stop` is autoAdvance's reason; `halt` a notice that must end the run.
+ */
+export function autoStep(s: GameState, data: GameData): { stop: AdvanceStop; halt: AutoHalt | null } {
+  const m = autoMark(s);
+  const stop = autoAdvance(s, data, "day");
+  return { stop, halt: autoHalt(s, m) };
+}
+
+/** What a step from `m` to today brought that the player must see before more days go by. */
+export function autoHalt(s: GameState, m: AutoMark): AutoHalt | null {
+  if (s.over) return { kind: "over", text: "게임 오버" };
+  const t = s.teams[s.user];
+  if (s.alerts?.some((a) => a.ref === "payday-warning" && a.day >= m.day)) {
+    return { kind: "payday", text: "급여일(25일)에 자금이 마이너스가 됩니다" };
+  }
+  if (t.cash < 0 && m.cash >= 0) return { kind: "debt", text: "자금이 마이너스가 됐습니다" };
+  if (t.cash < 0 && s.debtGrace === s.day) return { kind: "debt", text: "오늘 안에 자금을 플러스로 만들지 못하면 게임 오버입니다" };
+  if (s.season !== m.season) return { kind: "season", text: `${m.season} 시즌이 끝났습니다. 계약 만료와 스폰서 갱신을 확인하세요` };
+  // same day as the inbox reminder (contractReminders)
+  if (m.day === seasonDates(m.season).worlds - 20) {
+    const exp = t.roster.map((id) => s.players[id]).filter((p) => p?.contract && p.contract.until <= s.season);
+    if (exp.length) return { kind: "contract", text: `시즌 뒤 계약 만료: ${exp.map((p) => p.name).join(", ")}` };
+  }
+  // offers answered "later": today is the last day (market.ts drops them on the next day)
+  const trade = s.tradeOffers.find((o) => o.expires === s.day);
+  if (trade) return { kind: "offer", text: `${teamName(s, trade.from)}의 트레이드 제안은 오늘까지 답해야 합니다` };
+  const sale = s.saleOffers.find((o) => o.expires === s.day);
+  if (sale) return { kind: "offer", text: `${teamName(s, sale.team)}의 ${s.players[sale.player]?.name ?? ""} 이적료 제안은 오늘까지 답해야 합니다` };
+  // a free agent the player is talking to picks a club when today ends (market.ts resolveBids)
+  for (const b of s.bids) {
+    if (b.team === s.user || b.due !== s.day) continue;
+    const p = s.players[b.player];
+    if (p && !p.team && (p.interview?.done || p.askSalary !== undefined)) {
+      return { kind: "bid", text: `협상 중인 ${p.name}가 오늘이 지나면 다른 구단 제안 중에서 팀을 고릅니다` };
+    }
+  }
+  return null;
+}
+
+/** The run's target is reached (the run started at `from`): the line to show, or null to go on. */
+export function autoDone(s: GameState, target: AutoTarget, from: AutoMark): string | null {
+  if (target === "match") return userSeriesToday(s) ? "경기 날입니다" : null;
+  if (target === "window") {
+    const open = windowOpen(s);
+    if (open !== from.window) return open ? "이적시장이 열렸습니다" : "이적시장이 닫혔습니다";
+    // an open window: stop on its last day, while signings can still be made
+    return open && !windowOpen({ ...s, day: s.day + 1 }) ? "오늘이 이적시장 마지막 날입니다" : null;
+  }
+  if (target === "phase") return phaseLabel(s) !== from.phase ? `${phaseLabel(s)} 일정이 시작됐습니다` : null;
+  return null;
+}
+
+/** The target as a label, and the day it falls on (null when there is none, e.g. no match left). */
+export function autoTargetInfo(s: GameState, target: AutoTarget): { label: string; day: number | null } {
+  if (target === "free") return { label: "멈출 때까지", day: null };
+  if (target === "match") {
+    const n = nextUserSeries(s);
+    return { label: "다음 경기", day: n ? n.day : null };
+  }
+  // scan the season's calendar (window and phase only depend on the day)
+  const open = windowOpen(s), phase = phaseLabel(s), end = seasonDates(s.season).end;
+  for (let day = s.day + 1; day <= s.day + 400; day++) {
+    // the season rolls over on its last day (seasonEnd), after which the next season's calendar applies
+    const at = { ...s, day, season: day > end ? s.season + 1 : s.season };
+    if (target === "window" && windowOpen(at) !== open) return { label: open ? "이적시장 마감" : "이적시장 개장", day: open ? day - 1 : day };
+    if (target === "phase" && phaseLabel(at) !== phase) return { label: `다음 일정 (${phaseLabel(at)})`, day };
+  }
+  return { label: target === "window" ? (open ? "이적시장 마감" : "이적시장 개장") : "다음 일정", day: null };
+}
+
 /** Called by the UI after the user's whole series is played. */
 export function closeUserSeries(s: GameState, data: GameData, sr: Series) {
   const rng = new Rng(s.rng);
