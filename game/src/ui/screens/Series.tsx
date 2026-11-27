@@ -694,7 +694,7 @@ const OBJ_TAKEN = new Set<GameEvent["type"]>(["dragon", "soul", "elder", "grubs"
 
 const BIG_ICON: Partial<Record<GameEvent["type"], string>> = {
   first_blood: "퍼스트 블러드", solo: "솔로 킬", double: "더블 킬", triple: "트리플 킬", quadra: "쿼드라 킬", penta: "펜타 킬",
-  ace: "에이스", steal: "스틸!", baron: "바론", soul: "드래곤의 영혼", elder: "장로 드래곤", inhib: "억제기", first_turret: "첫 포탑", nexus: "승리",
+  ace: "에이스", steal: "스틸!", baron: "바론", soul: "드래곤의 영혼", elder: "장로 드래곤", inhib: "억제기", first_turret: "첫 포탑",
 };
 
 export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e: Engine; userSide: 0 | 1; series?: SeriesInfo; tactic: Tactic; setTactic: (t: Tactic) => void; onEnd: () => void }) {
@@ -898,13 +898,22 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
                   );
                 }
                 if (OBJ_TAKEN.has(ev.type)) {
-                  // "T1, 화염 드래곤 처치 (2스택)" -> team, then what was taken
-                  const what = ev.text.replace(/^[^,]+,\s*/, "").replace(/!$/, "");
+                  // "T1, 화염 드래곤 처치 (2스택)" -> team, then what was taken; the stack count stays on the scoreboard,
+                  // so the banner keeps to one line (the elder's "(처형 버프)" stays)
+                  const what = ev.text.replace(/^[^,]+,\s*/, "").replace(/\s*\(\d+스택\)$/, "").replace(/!$/, "");
                   return (
                     <div key={id} class={`banner ${ev.side ? "red" : "blue"} ${mega ? "mega" : ""}`}>
                       {a && <ChampIcon id={a.champ.id} size={32} />}
                       <span class="obj-team">{e.names[ev.side]}</span>
                       <span>{what}</span>
+                    </div>
+                  );
+                }
+                if (ev.type === "nexus") {
+                  // "T1 승리": the winner's short name, as big on the scoreboard
+                  return (
+                    <div key={id} class={`banner ${ev.side ? "red" : "blue"} mega`}>
+                      <span>{s.teams[e.teamIds[ev.side]]?.short ?? e.names[ev.side]} 승리</span>
                     </div>
                   );
                 }
