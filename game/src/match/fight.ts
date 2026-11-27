@@ -614,7 +614,8 @@ function startFights(e: Engine, M: Mod) {
         break;
       }
       const myGroup = alive.filter((x) => x.side === u.side && !x.fightId && !calm(e, x) && dist(x, u) < 1500 && (x === u || x.task !== "recall") && (x === u || stanceOf(e, x) !== "avoid" || dist(x, foe) < 700));
-      const theirGroup = alive.filter((x) => x.side === foe.side && !x.fightId && !calm(e, x) && dist(x, foe) < 1500);
+      // (a steal runner near the one attacked is not drawn in: it has somewhere to be, see macro.stealWalk)
+      const theirGroup = alive.filter((x) => x.side === foe.side && !x.fightId && !calm(e, x) && dist(x, foe) < 1500 && (x === foe || !(ENGINE_FLAGS.macro && Macro.stealing(e, x))));
       const mp = myGroup.reduce((a, x) => a + e.power(x), 0);
       const tp = theirGroup.reduce((a, x) => a + e.power(x), 0) || 1;
       const ratio = mp / tp;
@@ -1182,6 +1183,8 @@ function act(e: Engine, M: Mod, u: Unit, info: FInfo, side: [Unit[], Unit[]], ge
   if (!u.alive || u.fightId !== info.id) return;
   const s = M.u[u.i];
   if (e.t < u.stunUntil) return;
+  // a jungler on a steal run that was caught keeps going for the monster (macro.ts stealJob)
+  if (ENGINE_FLAGS.macro && Macro.stealWalk(e, u)) return;
   const foes = side[1 - u.side].filter((x) => x.alive && x.fightId === info.id);
   const allies = side[u.side].filter((x) => x.alive && x.fightId === info.id);
   if (!foes.length) return;

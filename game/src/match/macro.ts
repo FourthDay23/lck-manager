@@ -52,6 +52,8 @@ import type { LaneId, Vec } from "./map";
 import { BARON_PIT, DRAGON_PIT, FOUNTAIN, LANES, MIRROR_C, NEXUS, ROLE_LANE, dist, lanePoint, laneU, mirror } from "./map";
 import * as Nav from "./nav";
 import * as Items from "./items";
+import * as Summoners from "./summoners";
+import { STEAL_TUNE, secondsTo } from "./objsmite";
 import { LCK_STATS } from "./lck-stats.gen";
 import type { Strategy, StrategyParams } from "./strategy";
 import { STRATEGY_PARAMS } from "./strategy";
@@ -91,6 +93,9 @@ const DRAGON_HOLD = 0.8;
  * tradeObj / tradeSiege: score bonus for the other pit's monster / a far-side turret while the enemy is on a pit we
  *   are not playing for (on top of the strategy's `trade`).
  * baronFrom: before this minute a baron call needs more bodies down (takeCand).
+ * stealAt: a steal run starts once the monster the enemy is on is under this share of its health; stealFrom: only for
+ *   a jungler this close to the pit; stealHover / stealLoose: its chance when its team is at the pit for that monster
+ *   / is not; stealBig: added for baron, elder and soul-race dragons (stealTick, T09).
  */
 export const OBJ_TUNE = {
   hover: 2300,
@@ -101,6 +106,7 @@ export const OBJ_TUNE = {
   backOff: 1.5,
   tradeObj: 0.35, tradeSiege: 0.3,
   baronFrom: 24,
+  stealAt: 0.92, stealFrom: 3600, stealHover: 0.7, stealLoose: 0.3, stealBig: 0.2,
 };
 export function applyObjTune(spec: string | undefined) {
   applyTune(OBJ_TUNE, "OBJ_TUNE", spec);
@@ -211,6 +217,9 @@ interface Brain {
   gaveUp: Partial<Record<ObjKey, number>>;
   /** the enemy is on a pit we are not playing for (think): the monster and its pit */
   trade: { k: ObjKey; pit: Pit } | null;
+  /** the jungler is going for a steal of monster k (stealTick); `tried`: the spawn it was last decided for, by monster */
+  steal: { k: ObjKey; by: number; until: number } | null;
+  stealTried: Partial<Record<ObjKey, number>>;
 }
 
 interface Geo {
@@ -486,7 +495,7 @@ export function init(e: Engine): void {
       side, strat, P: STRATEGY_PARAMS[strat] ?? STRATEGY_PARAMS.balanced, plan: noPlan(0), next: 1 + side * 1.25,
       formation: "lanes", formUntil: 0, splitter, side2: pickSplitter(e, side, splitter), splitLane: "top",
       group: { key: "", x: 0, y: 0, path: [], dest: { x: 0, y: 0 }, pathFor: null, members: [], quorum: 1 },
-      hist: [], cool: {}, rolls: {}, wonFight: false, gaveUp: {}, trade: null,
+      hist: [], cool: {}, rolls: {}, wonFight: false, gaveUp: {}, trade: null, steal: null, stealTried: {},
     };
   }) as [Brain, Brain];
   const units = e.units.map((): UMem => ({ job: "old", spotFor: "", spotAt: -99, retreatUntil: 0 }));
@@ -535,6 +544,7 @@ export function teamThink(e: Engine): void {
       think(e, M, b);
     }
     planTick(e, M, b);
+    stealTick(e, M, b);
     groupTick(e, b);
   }
   // committed hitters inside each pit (for hitsObjective)
@@ -1086,6 +1096,114 @@ function pickHitters(e: Engine, b: Brain, p: Plan) {
     if (!keep.includes(u.i)) keep.push(u.i);
   }
   p.hitters = keep;
+}
+
+/**
+ * Steal runs (T09). While the enemy is on a monster (enemyOn) and it is below OBJ_TUNE.stealAt of its health, a
+ * jungler close by with a Smite charge may go for it: once per monster, more often when its team is at the pit
+ * anyway (hovering, or gathered for it) than when it gave the monster up, and for the monsters that matter (bigObj).
+ * It walks to open ground inside Smite's reach (stealJob), over the wall if that is nearer; the Smite fight itself is
+ * objsmite.ts. Not for the grubs (three small monsters, T07).
+ */
+function stealTick(e: Engine, M: MacroState, b: Brain) {
+  const s = b.steal;
+  if (s) {
+    const u = e.units[s.by];
+    if (!e.obj[s.k].alive || !u.alive || e.t > s.until || hpf(u) < 0.2 || !enemyOn(e, M, b.side, s.k)) {
+      log(M, e, b, `steal run over: ${!e.obj[s.k].alive ? "monster gone" : !u.alive ? "dead" : e.t > s.until ? "time" : hpf(u) < 0.2 ? "hurt" : "enemy left"}, ${Math.round(dist(u, PIT_POS[PIT_OF[s.k]]))} u from the pit${u.fightId ? ", in a fight" : ""}`);
+      b.steal = null;
+    }
+    return;
+  }
+  for (const k of OBJS) {
+    const o = e.obj[k];
+    if (k === "grubs" || !o.alive || o.hp > o.maxHp * OBJ_TUNE.stealAt || !enemyOn(e, M, b.side, k)) continue;
+    const key = o.spawnAt ?? -1;
+    if (b.stealTried[k] === key) continue;
+    const jg = e.units.find((u) => u.side === b.side && u.role === "Jungle")!;
+    const pit = PIT_POS[PIT_OF[k]];
+    if (!jg.alive || hpf(jg) < 0.4 || channeling(jg) || dist(jg, pit) > OBJ_TUNE.stealFrom || Summoners.smiteReadyIn(e, jg) > 3) continue;
+    b.stealTried[k] = key;
+    const p = b.plan;
+    // its team is walking in on the monster already (a contest, or a take of its own: a race): the jungler is with it
+    if ((p.kind === "contest" || p.kind === "take") && p.obj === k && p.phase === "commit") continue;
+    const there = p.kind === "take" && p.obj === k;
+    const chance = (there ? OBJ_TUNE.stealHover : OBJ_TUNE.stealLoose) + (bigObj(e, b.side, k) ? OBJ_TUNE.stealBig : 0);
+    if (!e.rng.chance(clamp(chance * (0.6 + 0.4 * b.P.contest), 0, 0.95))) continue;
+    b.steal = { k, by: jg.i, until: e.t + 16 };
+    bump(M.stats[b.side].calls, `steal:${k}`);
+    log(M, e, b, `steal run on ${k} by ${jg.name} (${Math.round((o.hp / o.maxHp) * 100)}% left)`);
+    return;
+  }
+}
+
+/** Whether u is on a steal run for monster k (objsmite.ts: it may flash into Smite's reach). */
+export function stealing(e: Engine, u: Unit, k?: ObjKey): boolean {
+  const s = st(e)?.brains[u.side].steal;
+  return !!s && s.by === u.i && (k === undefined || s.k === k);
+}
+
+/** fight.ts: a steal runner that got caught in a fight keeps walking to its spot instead of fighting (it takes the
+ *  hits; a stun still stops it). True when this moved the unit. */
+export function stealWalk(e: Engine, u: Unit): boolean {
+  const M = st(e);
+  if (!M) return false;
+  const b = M.brains[u.side];
+  if (!b.steal || b.steal.by !== u.i) return false;
+  stealJob(e, b, u, M.units[u.i]);
+  return true;
+}
+
+/** Open ground on a ring around a pit: the point that is nearest by foot for u, scored down for enemies standing near. */
+function ringSpot(e: Engine, u: Unit, pit: Vec, r: number, lo: number, hi: number): Vec | null {
+  let best: Vec | null = null, bv = Infinity;
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const q = snap({ x: pit.x + Math.cos(a) * r, y: pit.y + Math.sin(a) * r });
+    const d = dist(q, pit);
+    if (d < lo || d > hi) continue;
+    let len = 0, prev: Vec = u;
+    for (const w of Nav.findPath(u, q)) { len += dist(prev, w); prev = w; }
+    for (const x of e.units) if (x.alive && x.side !== u.side) len += Math.max(0, 1300 - dist(x, q)) * 2;
+    if (len < bv) { bv = len; best = q; }
+  }
+  return best;
+}
+
+/**
+ * The steal runner. It waits just outside Smite's reach, on open ground away from the enemy (often behind the pit
+ * wall), and goes in when the monster is about to drop into its Smite: when the time left at the current damage is
+ * what the walk in takes (with Flash up it can leave it later: objsmite.ts flashes it in). Walking in at once, it
+ * was caught and killed at the pit mouth before the monster was low (every run in the first 60 games).
+ */
+function stealJob(e: Engine, b: Brain, u: Unit, m: UMem) {
+  const k = b.steal!.k;
+  const pit = PIT_POS[PIT_OF[k]];
+  u.task = "obj";
+  u.objTarget = k;
+  const reach = STEAL_TUNE.range - 120;
+  const d = dist(u, pit);
+  const walk = Math.max(0, d - reach) / e.speed(u);
+  const left = secondsTo(e, k, Summoners.smiteDamage(e, u));
+  const flash = Summoners.isReady(e, u, "flash") && d < STEAL_TUNE.range + STEAL_TUNE.flashIn;
+  if (d < STEAL_TUNE.range - 40 || (!flash && left <= walk + 0.5)) {
+    // in: straight at the monster (the reach is counted from its centre)
+    const tag = `steal:in:${k}`;
+    if (!m.spot || m.spotFor !== tag) {
+      m.spot = ringSpot(e, u, pit, reach - 60, 0, reach) ?? snap(toward(pit, u, reach - 60));
+      m.spotFor = tag;
+      m.spotAt = e.t;
+    }
+    go(e, u, m.spot, 50);
+    return;
+  }
+  const tag = `steal:wait:${k}`;
+  if (!m.spot || m.spotFor !== tag || e.t - m.spotAt > 4) {
+    m.spot = ringSpot(e, u, pit, STEAL_TUNE.range + 300, STEAL_TUNE.range + 120, STEAL_TUNE.range + 520) ?? snap(toward(pit, u, STEAL_TUNE.range + 300));
+    m.spotFor = tag;
+    m.spotAt = e.t;
+  }
+  go(e, u, m.spot, 60);
 }
 
 /** Per-step phase changes (gather -> commit as soon as the group is there). */
@@ -1689,6 +1807,8 @@ export function unitTick(e: Engine, u: Unit): boolean {
   if (m.job === "old") return false;
   // regen in the fountain area (the old code does this only on its own path)
   if (dist(u, FOUNTAIN[u.side]) < 1200) u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.08 * DT);
+  // a steal run comes before everything else the jungler was doing (stealTick ends it)
+  if (b.steal && b.steal.by === u.i) { stealJob(e, b, u, m); return true; }
   if (m.job === "recall") {
     if (inFountain(u)) { if (hpf(u) < 0.95) return true; }
     else { startRecall(e, u); return true; }
@@ -1803,6 +1923,8 @@ export function stance(e: Engine, u: Unit): Stance {
   const b = M.brains[u.side];
   const m = M.units[u.i];
   const p = b.plan;
+  // a steal runner is not there to fight: it does not start or answer one (fight.ts keeps it walking if it is caught)
+  if (b.steal && b.steal.by === u.i) return "avoid";
   if (m.job === "recall" || e.t < m.retreatUntil || hpf(u) < 0.3 || channeling(u)) return "avoid";
   const holdBack = e.minute() < b.P.avoidUntil;
   switch (m.job) {
