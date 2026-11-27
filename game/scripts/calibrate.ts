@@ -12,6 +12,8 @@ import { gameWinProb, teamPower } from "../src/core/quick";
 import { ROLES } from "../src/data/types";
 import { ITEM_TUNE } from "../src/match/items";
 import { applyWaveTune } from "../src/match/minions";
+import * as Macro from "../src/match/macro";
+import { par, engineSnap } from "./lib/par";
 
 const dir = existsSync("public/data/champions.json") && existsSync("public/data/players.json") ? "data" : "data-sample";
 const j = (f: string) => {
@@ -38,6 +40,9 @@ applySimTune(process.env.SIM_TUNE);
 applyPaceTune(process.env.PACE_TUNE);
 // WAVE_TUNE=lastHit:0.9,loneWave:0.4 overrides how champions and minions deal with waves and structures (minions.ts)
 applyWaveTune(process.env.WAVE_TUNE);
+// BASE_TUNE=giveUp:0.6,endCall:2.5 overrides how a base is defended and how the push that ends the game goes (macro.ts)
+// (optional call: scripts/ab.mjs --base runs this script against older code that has no BASE_TUNE)
+(Macro as { applyBaseTune?: (s: string | undefined) => void }).applyBaseTune?.(process.env.BASE_TUNE);
 // FLAGS=nav,macro,fight turns engine modules on (default: the engine's own defaults)
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x && !x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl] = true;
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl.slice(1)] = false;
@@ -75,8 +80,9 @@ for (let g = 0; g < N; g++) {
   autoDraft(s, data, d, rng);
   // STRAT=balanced,balanced forces both sides' game plans (default: each AI coach picks its own)
   const strategy = process.env.STRAT ? (process.env.STRAT.split(",").map((x) => x || null) as [never, never]) : undefined;
-  const e = new Engine({ s, data, blue: a, red: b, picks: { blue: d.picks.blue, red: d.picks.red }, seed: 1000 + g, strategy });
-  e.runToEnd();
+  // par.game: plays the game here, or leaves it to another piece of a parallel run (scripts/par.mjs)
+  const e = par.game(g, () => { const e = new Engine({ s, data, blue: a, red: b, picks: { blue: d.picks.blue, red: d.picks.red }, seed: 1000 + g, strategy }); e.runToEnd(); return engineSnap(e); });
+  if (!e) continue;
   len += e.t;
   kills += e.kills[0] + e.kills[1];
   drag += e.dragons[0].length + e.dragons[1].length;
@@ -107,6 +113,7 @@ for (let g = 0; g < N; g++) {
   pairs.push([p, win]);
   rows.push({ p, win, len: e.t, kills: e.kills[0] + e.kills[1], drag: e.dragons[0].length + e.dragons[1].length, barons: e.barons[0] + e.barons[1] });
 }
+par.end();
 // logistic fit win ~ sigmoid(slope * logit(p) + bias): slope 1 / bias 0 = the engine agrees with the formula;
 // slope < 1 = ratings matter less in the engine than in the AI-vs-AI formula; bias > 0 = blue-side edge
 function fitLogit(xy: [number, number][]) {

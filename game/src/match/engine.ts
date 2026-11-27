@@ -863,7 +863,12 @@ export class Engine {
         return;
       }
       if (dist(u, FOUNTAIN[u.side]) < 900) {
-        u.hp = u.maxHp = this.maxHp(u);
+        // walked home: full health at once, unless the enemy is in the base (then the fountain heals it over a few
+        // seconds, macro.ts: a defender ran 900 u out of a fight, came back at 100 % and the dive was pointless)
+        // (after laning only: before it macro does not drive the lane champions, so nothing would hold them there)
+        const f = ENGINE_FLAGS.macro && !this.laningPhase() && Macro.baseRaided(this, u.side) ? u.hp / Math.max(1, u.maxHp) : 1;
+        u.maxHp = this.maxHp(u);
+        u.hp = u.maxHp * f;
         u.task = "return";
         return;
       }
@@ -1176,6 +1181,9 @@ export class Engine {
   /** Chance per second that u picks a fight with e right now. */
   engageRate(u: Unit, e: Unit, ratio: number, underTurret: boolean, sizes = 2): number {
     const aggro = this.tactic[u.side] === "aggressive" ? 1.4 : this.tactic[u.side] === "safe" ? 0.6 : 1;
+    // defenders of an inhibitor / the nexus fight for it (macro.ts BASE_TUNE)
+    const base = ENGINE_FLAGS.macro ? Macro.baseEngage(this, u, e, ratio) : null;
+    if (base !== null) return base;
     let r: number;
     if (u.task === "gank") {
       r = ratio > 0.8 ? 1.2 : SIM_TUNE.gankPoor;

@@ -675,6 +675,12 @@ function underOwnTurret(e: Engine, u: Unit, foes: Minion[]): boolean {
     if (!t.alive || t.side !== u.side || dist(t.pos, u) > 1100) continue;
     for (const m of foes) if (dist(m, t.pos) < Turrets.RANGE) return true;
   }
+  // an inhibitor or the nexus with no turret left in front of it is cleared the same way
+  for (const ih of e.inhibs) {
+    if (!ih.alive || ih.side !== u.side || dist(ih.pos, u) > 1100) continue;
+    for (const m of foes) if (dist(m, ih.pos) < Turrets.RANGE) return true;
+  }
+  if (dist(NEXUS[u.side], u) < 1100) for (const m of foes) if (dist(m, NEXUS[u.side]) < Turrets.RANGE) return true;
   return false;
 }
 

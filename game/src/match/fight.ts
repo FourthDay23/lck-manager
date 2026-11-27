@@ -22,7 +22,7 @@ import * as Nav from "./nav";
 import * as Macro from "./macro";
 import type { Stance } from "./macro";
 import * as Turrets from "./turrets";
-import { BARON_PIT, DRAGON_PIT, FOUNTAIN, dist } from "./map";
+import { BARON_PIT, DRAGON_PIT, FOUNTAIN, NEXUS, dist } from "./map";
 import type { Vec } from "./map";
 
 const DT = 0.25;
@@ -698,7 +698,8 @@ function begin(e: Engine, M: Mod, u: Unit, foe: Unit, mine: Unit[], theirs: Unit
   if (trade || origin === "gank") info.phase = ["brawl", "brawl"];
   else if (small) {
     info.phase[s] = "brawl";
-    info.phase[o] = 1 / Math.max(0.01, ratio) < 0.62 ? "retreat" : "brawl";
+    // (not at its own nexus: a cornered side fights, see think)
+    info.phase[o] = 1 / Math.max(0.01, ratio) < 0.62 && dist(f, NEXUS[o]) >= Macro.BASE_TUNE.corner ? "retreat" : "brawl";
   } else {
     info.phase = ["position", "position"];
   }
@@ -908,12 +909,16 @@ function runFight(e: Engine, M: Mod, id: number, f: { x: number; y: number; star
     if (!u.alive || !s.bail) continue;
     let near = Infinity;
     for (const o of side[1 - u.side]) if (o.alive && !M.u[o.i].bail) near = Math.min(near, dist(o, u));
-    const home = e.nearestOwnTurret(u)!;
+    // inside its own base a runner is safe at the fountain, not next to a turret the enemy is already hitting (a base
+    // fight ended 2 s after it began: every defender "got away" on the spot and stood there, calm, next to the attackers)
+    const inBase = dist(u, NEXUS[u.side]) < Macro.BASE_TUNE.radius;
+    const home = inBase ? FOUNTAIN[u.side] : e.nearestOwnTurret(u)!;
     // a lane fight cannot be joined, so once nobody chases its runner any more it is over for the runner too (else the
     // winner stood idle until the runner was 1,350 u away)
     const unchased = info.kind !== "skirmish" && e.t - s.bailAt >= 0.5 &&
       !side[1 - u.side].some((o) => o.alive && !M.u[o.i].bail && M.u[o.i].target === u.i);
-    if (unchased || near > 1350 || (dist(u, home) < 500 && near > 700) || e.t - s.bailAt > 12) {
+    const safe = inBase ? dist(u, home) < 900 : dist(u, home) < 500 && near > 700;
+    if (unchased || near > 1350 || safe || e.t - s.bailAt > 12) {
       dropOut(e, M, u);
       setCalm(u, e.t + 5);
       e.setGoal(u, home);
@@ -1011,11 +1016,13 @@ function think(e: Engine, M: Mod, info: FInfo, f: Vec, side: [Unit[], Unit[]], g
     if (ph === "retreat" || n[s] === 0) continue;
     const ratio = pw[s] / Math.max(1, pw[o]);
     const tp = e.t - info.phaseAt[s];
+    // at its own nexus a side has nowhere to fall back to: no team retreat (a hurt champion still runs to the fountain)
+    const cornered = dist(f, NEXUS[s]) < Macro.BASE_TUNE.corner;
     if (ph === "position") {
       const g = gathered[s] / n[s];
       const plan = bestEngage(e, M, s, side[s], side[o]);
       const want = engageThreshold(e, info, s, side[s]);
-      if (ratio < 0.62 && tp > 1) { sideRetreat(e, M, info, s, `outmatched ${ratio.toFixed(2)}`); continue; }
+      if (ratio < 0.62 && tp > 1 && !cornered) { sideRetreat(e, M, info, s, `outmatched ${ratio.toFixed(2)}`); continue; }
       // hold the formation a moment (poke, wait for the rest) unless the enemy is already beaten
       const ready = (g >= 0.75 && tp >= info.hold[s]) || tp > 5 || (ratio > 1.6 && tp >= 1);
       const need = want - (plan ? 0.08 : 0) - Math.min(0.15, tp * 0.015);
@@ -1030,7 +1037,7 @@ function think(e: Engine, M: Mod, info: FInfo, f: Vec, side: [Unit[], Unit[]], g
           log(e, M, `  #${info.id} ${s ? "RED" : "BLUE"} walks in (no engage tool), ratio ${ratio.toFixed(2)}`);
           if (info.phase[o] !== "retreat") toBrawl(e, M, info, "walk-in");
         }
-      } else if (tp > 10) sideRetreat(e, M, info, s, "standoff");
+      } else if (tp > 10 && !cornered) sideRetreat(e, M, info, s, "standoff");
     } else if (ph === "engage") {
       const plan = info.plan[s];
       const pu = plan ? e.units[plan.u] : null;
@@ -1046,7 +1053,9 @@ function think(e: Engine, M: Mod, info: FInfo, f: Vec, side: [Unit[], Unit[]], g
       const thr = (late ? 0.58 : 0.68) + (info.members.size >= 8 ? FIGHT_TUNE.bigRetreat : 0);
       const near = pwNear[s] / Math.max(1, pwNear[o]);
       const outnumbered = nNear[s] + 2 <= nNear[o] && near < 0.9;
-      if (info.brawlAt >= 0 && e.t - info.brawlAt > 3 && nNear[s] > 0 && ((near < thr && e.rng.chance(late ? 0.3 : 0.4)) || outnumbered)) {
+      if (cornered) {
+        // fights it out
+      } else if (info.brawlAt >= 0 && e.t - info.brawlAt > 3 && nNear[s] > 0 && ((near < thr && e.rng.chance(late ? 0.3 : 0.4)) || outnumbered)) {
         sideRetreat(e, M, info, s, `losing ${near.toFixed(2)} (${nNear[s]}v${nNear[o]})`);
       } else if (nNear[s] === 0 && pwNear[o] > 0 && pw[s] < pwNear[o] * 0.8 && info.brawlAt >= 0 && e.t - info.brawlAt > 1) {
         // the ones in front are gone: the rest do not walk into it one by one
@@ -1205,6 +1214,8 @@ function act(e: Engine, M: Mod, u: Unit, info: FInfo, side: [Unit[], Unit[]], ge
 function shouldBail(e: Engine, M: Mod, u: Unit, info: FInfo, foes: Unit[], allies: Unit[], geo: Geo): boolean {
   const f = hpF(u);
   if (f > 0.3) return false;
+  // at its own nexus nobody leaves the fight (it ran 900 u to the fountain, healed and came back, twice a fight)
+  if (Macro.BASE_TUNE.stand && dist(u, NEXUS[u.side]) < Macro.BASE_TUNE.corner + 400) return false;
   const threats = foes.filter((x) => !M.u[x.i].bail && (M.u[x.i].target === u.i || dist(x, u) < 500));
   if (!threats.length) return false;
   const myAvg = allies.reduce((a, x) => a + hpF(x), 0) / Math.max(1, allies.length);
@@ -1283,6 +1294,7 @@ function engagerAct(e: Engine, M: Mod, u: Unit, info: FInfo, foes: Unit[], allie
 }
 
 function retreatPoint(e: Engine, u: Unit, foes: Unit[]): Vec {
+  if (dist(u, NEXUS[u.side]) < Macro.BASE_TUNE.radius) return FOUNTAIN[u.side];
   const home = e.nearestOwnTurret(u) ?? FOUNTAIN[u.side];
   const act = foes.filter((x) => x.alive);
   if (!act.length) return home;
