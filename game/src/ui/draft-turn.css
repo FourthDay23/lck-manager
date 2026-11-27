@@ -103,3 +103,29 @@
 .dr-flash.pick span { color: #f5dc9a; }
 @keyframes dr-flash-in { from { transform: scaleX(0.1); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes dr-flash-out { from { opacity: 1; } to { opacity: 0; transform: translateY(-10px); } }
+
+/* --- hot seat (코드 대전 한 기기 2인): both sides pick on this device, so whose turn it is shows in that side's colour:
+   a stripe on the header toward that side's board, the waiting board steps back, the side on the lock-in button,
+   and a short banner each time the turn passes to the other side --- */
+.draft-board.hotseat.seat-blue .dr-team:not(.turn), .draft-board.hotseat.seat-red .dr-team:not(.turn) { filter: brightness(0.62) saturate(0.6); }
+.dr-phase.seat.ban.blue { box-shadow: inset 6px 0 0 var(--blue), 0 0 0 2px #c8323c, 0 0 0 4px #0b0d14; }
+.dr-phase.seat.pick.blue { box-shadow: inset 6px 0 0 var(--blue), 0 0 0 2px #c99a2e, 0 0 0 4px #0b0d14; }
+.dr-phase.seat.ban.red { box-shadow: inset -6px 0 0 var(--red), 0 0 0 2px #c8323c, 0 0 0 4px #0b0d14; }
+.dr-phase.seat.pick.red { box-shadow: inset -6px 0 0 var(--red), 0 0 0 2px #c99a2e, 0 0 0 4px #0b0d14; }
+.dr-phase.seat.blue .dr-turn { color: #9ad0ff; }
+.dr-phase.seat.red .dr-turn { color: #ffb0b0; }
+.btn.lock .lock-side {
+  display: inline-block; margin-right: 6px; padding: 1px 5px; vertical-align: 2px;
+  font-family: "Galmuri11"; font-size: 12px; background: #0b0d14; text-shadow: none;
+}
+.btn.lock.seat-blue .lock-side { color: var(--blue); }
+.btn.lock.seat-red .lock-side { color: var(--red); }
+/* over the header and the filter row, which it repeats, so the champion grid stays clear for the next pick */
+.dr-flash.seat { top: 14px; animation: dr-flash-out 0.3s steps(3) 0.8s both; }
+.dr-flash.seat .dr-flash-in { min-width: 300px; padding: 8px 32px 7px; background: rgba(11, 13, 20, 0.95); }
+.dr-flash.seat b { font-size: 26px; }
+.dr-flash.seat span { color: #c4cbe0; }
+.dr-flash.seat.blue .dr-flash-in { box-shadow: 0 0 0 3px var(--blue), 0 0 0 6px #0b0d14, 0 8px 30px rgba(0, 0, 0, 0.6); }
+.dr-flash.seat.blue b { color: var(--blue); }
+.dr-flash.seat.red .dr-flash-in { box-shadow: 0 0 0 3px var(--red), 0 0 0 6px #0b0d14, 0 8px 30px rgba(0, 0, 0, 0.6); }
+.dr-flash.seat.red b { color: var(--red); }

@@ -9,27 +9,35 @@ import { Rng } from "../../core/rng";
 import { autoDraft, lineupOf, newDraft } from "../../match/draft";
 import type { DraftState } from "../../match/draft";
 import type { Engine, Tactic } from "../../match/engine";
-import { DraftView, GameResult, MatchView, StrategyPicker, makeEngine, recordFromEngine } from "./Series";
+import { DraftView, GameResult, MatchView, StrategyPicker, makeEngineSides, recordFromEngine } from "./Series";
 import type { Strategy } from "../../match/strategy";
 import { TeamLogo } from "../components";
 import type { SeriesInfo } from "../Scorebar";
 
+type ExId = "EXA" | "EXB";
+/** who drafts and sets the plan: "both" = two people take turns on this device (한 기기 2인), 0 / 1 = only code A /
+ *  code B (the other side is the AI), null = both AI (watch) */
+type ExControl = 0 | 1 | null | "both";
 interface ExLive {
   bo: 1 | 3 | 5;
-  control: 0 | 1 | null; // index of the code the player drafts for (0 = A, 1 = B), null = watch only
+  control: ExControl;
   games: GameRecord[];
   wins: [number, number];
   phase: "pre" | "draft" | "match" | "post" | "done";
-  blue: "EXA" | "EXB";
+  blue: ExId;
   draft: DraftState | null;
   engine: Engine | null;
-  tactic: Tactic;
-  /** the coach's game plan for the controlled side */
-  strategy: Strategy;
+  /** each team's tactic and game plan (used for the teams people play) */
+  tactic: Record<ExId, Tactic>;
+  strategy: Record<ExId, Strategy>;
   last?: GameRecord;
   seed: number;
 }
 let ex: ExLive | null = null;
+
+/** the teams people play in this mode */
+const humansOf = (c: ExControl): ExId[] => (c === "both" ? ["EXA", "EXB"] : c === null ? [] : [c === 0 ? "EXA" : "EXB"]);
+const TACTIC_KO: Record<Tactic, string> = { aggressive: "공격적", standard: "표준", safe: "안정적" };
 
 function CodeBox({ label, value, onChange, parsed }: { label: string; value: string; onChange: (v: string) => void; parsed: ReturnType<typeof parseTeamCode> | null }) {
   return (
@@ -52,7 +60,8 @@ export function ExhibitionScreen() {
   const [codeA, setCodeA] = useState("");
   const [codeB, setCodeB] = useState("");
   const [bo, setBo] = useState<1 | 3 | 5>(3);
-  const [control, setControl] = useState<0 | 1 | null>(career ? 0 : null);
+  // two people on this device is what a code match is mostly for; one side against the AI and watching stay
+  const [control, setControl] = useState<ExControl>("both");
   const parsedA = useMine ? null : codeA.trim() ? parseTeamCode(codeA) : null;
   const parsedB = codeB.trim() ? parseTeamCode(codeB) : null;
   const leave = () => {
@@ -69,7 +78,7 @@ export function ExhibitionScreen() {
       if (!aCode || !bCode) return;
       const seed = (Date.now() & 0x7fffffff) >>> 0;
       store.exState = buildExhibition(D(), [aCode, bCode], career?.meta, seed);
-      ex = { bo, control, games: [], wins: [0, 0], phase: "pre", blue: "EXA", draft: null, engine: null, tactic: "standard", strategy: "balanced", seed };
+      ex = { bo, control, games: [], wins: [0, 0], phase: "pre", blue: "EXA", draft: null, engine: null, tactic: { EXA: "standard", EXB: "standard" }, strategy: { EXA: "balanced", EXB: "balanced" }, seed };
       store.bump();
     };
     return (
@@ -110,9 +119,15 @@ export function ExhibitionScreen() {
             {([1, 3, 5] as const).map((n) => <button class={`btn small ${bo === n ? "on" : ""}`} onClick={() => setBo(n)}>Bo{n}</button>)}
             <span style={{ width: 12 }} />
             <span>밴픽 조작</span>
-            <button class={`btn small ${control === 0 ? "on" : ""}`} onClick={() => setControl(0)}>A팀</button>
-            <button class={`btn small ${control === 1 ? "on" : ""}`} onClick={() => setControl(1)}>B팀</button>
+            <button class={`btn small ${control === "both" ? "on" : ""}`} onClick={() => setControl("both")}>양쪽 번갈아 (한 기기 2인)</button>
+            <button class={`btn small ${control === 0 ? "on" : ""}`} onClick={() => setControl(0)}>A팀만</button>
+            <button class={`btn small ${control === 1 ? "on" : ""}`} onClick={() => setControl(1)}>B팀만</button>
             <button class={`btn small ${control === null ? "on" : ""}`} onClick={() => setControl(null)}>둘 다 자동 (관전)</button>
+          </div>
+          <div class="muted" style={{ fontSize: 11 }}>
+            {control === "both" ? "블루 차례에는 블루 팀이, 레드 차례에는 레드 팀이 고릅니다. 한 기기를 번갈아 쓰면 됩니다. 룬·빌드와 작전도 양쪽이 각자 정합니다."
+              : control === null ? "양쪽 밴픽과 작전을 AI가 정하고 지켜봅니다."
+              : `${control === 0 ? "A" : "B"}팀만 직접 고르고, 상대 팀은 AI가 고릅니다.`}
           </div>
           <div class="muted" style={{ fontSize: 11 }}>메타는 {career?.meta ? `이 기기 커리어의 현재 패치(${career.meta.patch})` : "대전마다 새로 정해지는 패치"}를 씁니다. 난이도 보정 없이 양쪽을 똑같이 계산합니다. 하드 피어리스가 적용됩니다.</div>
           <button class="btn primary" style={{ marginTop: 8 }} disabled={!aCode || !bCode} onClick={start}>대전 시작</button>
@@ -125,11 +140,22 @@ export function ExhibitionScreen() {
   const s = store.exState;
   const L = ex;
   const need = Math.ceil(L.bo / 2);
-  const red: "EXA" | "EXB" = L.blue === "EXA" ? "EXB" : "EXA";
-  const controlledId = L.control === null ? null : L.control === 0 ? "EXA" : "EXB";
+  const red: ExId = L.blue === "EXA" ? "EXB" : "EXA";
+  const hotseat = L.control === "both";
+  const humans = humansOf(L.control);
+  /** the one team played against the AI (null when both or neither are played) */
+  const controlledId = humans.length === 1 ? humans[0] : null;
   const userSide: 0 | 1 = controlledId === red ? 1 : 0;
   const fearless = L.games.flatMap((g) => [...g.picks.blue, ...g.picks.red]);
   const seed = (L.seed + L.games.length * 7919) >>> 0;
+  const teamOf = (side: 0 | 1): ExId => (side === 0 ? L.blue : red);
+  /** the engine with the tactic and game plan of each team people play; the AI's side plays standard and picks its plan */
+  const engineFor = (d: DraftState) => {
+    const played = (side: 0 | 1) => humans.includes(teamOf(side));
+    const t: [Tactic, Tactic] = [played(0) ? L.tactic[teamOf(0)] : "standard", played(1) ? L.tactic[teamOf(1)] : "standard"];
+    const st: [Strategy | null, Strategy | null] = [played(0) ? L.strategy[teamOf(0)] : null, played(1) ? L.strategy[teamOf(1)] : null];
+    return makeEngineSides(d, t, st, seed + 1);
+  };
   const finishGame = (e: Engine, d: DraftState) => {
     const rec = recordFromEngine(e, d);
     L.games.push(rec);
@@ -151,7 +177,7 @@ export function ExhibitionScreen() {
     const d = newDraft(L.blue, red, fearless);
     autoDraft(s, D(), d, new Rng(seed));
     L.draft = d;
-    const e = makeEngine(d, L.tactic, controlledId ? userSide : null, seed + 1, L.strategy);
+    const e = engineFor(d);
     e.runToEnd();
     finishGame(e, d);
   };
@@ -170,8 +196,8 @@ export function ExhibitionScreen() {
     return (
       <div>
         {header}
-        <DraftView d={L.draft} userSide={userSide === 0 ? "blue" : "red"} auto={controlledId === null} onDone={(go) => {
-          const e = makeEngine(L.draft!, L.tactic, controlledId ? userSide : null, seed + 1, L.strategy);
+        <DraftView d={L.draft} userSide={userSide === 0 ? "blue" : "red"} auto={humans.length === 0} hotseat={hotseat} onDone={(go) => {
+          const e = engineFor(L.draft!);
           if (go === "skip") { e.runToEnd(); finishGame(e, L.draft!); }
           else { L.engine = e; L.phase = "match"; bump(); }
         }} />
@@ -186,7 +212,14 @@ export function ExhibitionScreen() {
       note: `패치 ${s.meta?.patch} · 피어리스 잠금 ${fearless.length}개`,
       sub: { EXA: s.teams.EXA.name, EXB: s.teams.EXB.name },
     };
-    return <div><MatchView e={L.engine} userSide={userSide} series={series} tactic={L.tactic} setTactic={(t) => { L.tactic = t; if (controlledId) L.engine!.tactic[userSide] = t; }} onEnd={() => finishGame(L.engine!, L.draft!)} /></div>;
+    // the in-game tactic: the played team's (both in hot seat); while watching, the buttons change nothing
+    const setTactic = (t: Tactic, side: 0 | 1) => {
+      const team = teamOf(side);
+      if (!humans.includes(team)) return;
+      L.tactic[team] = t;
+      L.engine!.tactic[side] = t;
+    };
+    return <div><MatchView e={L.engine} userSide={userSide} series={series} tactic={controlledId ? L.tactic[controlledId] : "standard"} setTactic={setTactic} both={hotseat} onEnd={() => finishGame(L.engine!, L.draft!)} /></div>;
   }
   return (
     <div>
@@ -206,15 +239,20 @@ export function ExhibitionScreen() {
           <div class="frame pad">
             <h2>{L.games.length + 1}세트</h2>
             <div>진영: <b style={{ color: "var(--blue)" }}>블루 {s.teams[L.blue].short}</b> / <b style={{ color: "var(--red)" }}>레드 {s.teams[red].short}</b></div>
-            {controlledId && (
-              <div class="row" style={{ marginTop: 6 }}>
-                <span>작전:</span>
-                {(["aggressive", "standard", "safe"] as Tactic[]).map((t) => <button class={`btn small ${L.tactic === t ? "on" : ""}`} onClick={() => { L.tactic = t; bump(); }}>{t === "aggressive" ? "공격적" : t === "standard" ? "표준" : "안정적"}</button>)}
+            {hotseat && <div class="muted" style={{ fontSize: 11, marginTop: 4 }}>한 기기 2인: 밴픽은 블루·레드가 차례대로 고르고, 룬·빌드와 작전은 양쪽이 각자 정합니다.</div>}
+            {/* blue's plan first, then red's, each under its team name in its side's colour when both are played */}
+            {(hotseat ? [L.blue, red] : humans).map((id) => (
+              <div style={{ marginTop: 6 }}>
+                {hotseat && <b style={{ color: id === L.blue ? "var(--blue)" : "var(--red)" }}>{id === L.blue ? "블루" : "레드"} {s.teams[id].short}</b>}
+                <div class="row" style={{ marginTop: 2 }}>
+                  <span>작전:</span>
+                  {(["aggressive", "standard", "safe"] as Tactic[]).map((t) => <button class={`btn small ${L.tactic[id] === t ? "on" : ""}`} onClick={() => { L.tactic[id] = t; bump(); }}>{TACTIC_KO[t]}</button>)}
+                </div>
+                <StrategyPicker value={L.strategy[id]} onPick={(st) => { L.strategy[id] = st; bump(); }} />
               </div>
-            )}
-            {controlledId && <StrategyPicker value={L.strategy} onPick={(st) => { L.strategy = st; bump(); }} />}
+            ))}
             <div class="row" style={{ marginTop: 10 }}>
-              <button class="btn primary" onClick={startDraft}>{controlledId ? "밴픽 시작" : "밴픽 보기"}</button>
+              <button class="btn primary" onClick={startDraft}>{humans.length ? "밴픽 시작" : "밴픽 보기"}</button>
               <button class="btn" onClick={quick}>이 세트 결과만</button>
               <button class="btn" onClick={leave}>그만두기</button>
             </div>

@@ -75,13 +75,18 @@ export function recordFromEngine(e: Engine, d: DraftState): GameRecord {
 }
 
 export function makeEngine(d: DraftState, tactic: Tactic, userSide: 0 | 1 | null, seed: number, strategy?: Strategy): Engine {
-  const s = S();
   const t: [Tactic, Tactic] = ["standard", "standard"];
   if (userSide !== null) t[userSide] = tactic;
   // the user's side plays the plan the coach picked; the AI side picks its own from roster and draft
   const st: [Strategy | null, Strategy | null] = [null, null];
   if (userSide !== null && strategy) st[userSide] = strategy;
-  return new Engine({ s, data: D(), blue: d.blue, red: d.red, picks: { blue: d.picks.blue, red: d.picks.red }, seed, tactic: t, strategy: st, loadout: [d.loadout?.blue, d.loadout?.red] });
+  return makeEngineSides(d, t, st, seed);
+}
+
+/** The engine with each side's tactic and game plan given (blue first): for a match with people on both sides
+ *  (코드 대전 한 기기 2인). A null plan is picked by the AI from roster and draft. */
+export function makeEngineSides(d: DraftState, tactic: [Tactic, Tactic], strategy: [Strategy | null, Strategy | null], seed: number): Engine {
+  return new Engine({ s: S(), data: D(), blue: d.blue, red: d.red, picks: { blue: d.picks.blue, red: d.picks.red }, seed, tactic, strategy, loadout: [d.loadout?.blue, d.loadout?.red] });
 }
 
 /** Pre-game picker for the coach's game plan. */
@@ -313,7 +318,9 @@ function phaseRange(i: number): [number, number] {
   return [a, b];
 }
 
-export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSide: Side; onDone: (mode: "watch" | "skip") => void; auto?: boolean }) {
+/** `auto`: nobody picks (a watched AI draft). `hotseat`: people on both sides take turns on this one device (코드 대전
+ *  한 기기 2인): whoever's turn it is picks, sees their own coach's help, and both set runes and builds at the end. */
+export function DraftView({ d, userSide, onDone, auto, hotseat }: { d: DraftState; userSide: Side; onDone: (mode: "watch" | "skip") => void; auto?: boolean; hotseat?: boolean }) {
   const s = S();
   const data = D();
   const [, setV] = useState(0);
@@ -323,26 +330,36 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
   const [selRole, setSelRole] = useState<Role | null>(null);
   const rng = useMemo(() => new Rng((s.seed ^ d.step * 977 ^ s.day) >>> 0), [d]);
   const st = currentStep(d);
-  const myTurn = !!st && !auto && st[0] === userSide;
+  /** the side this screen picks for right now: ours, or in a hot-seat draft whoever's turn it is */
+  const actSide: Side = hotseat && st ? st[0] : userSide;
+  const sideKo = (sd: Side) => (sd === "blue" ? "블루" : "레드");
+  const myTurn = !!st && !auto && st[0] === actSide;
   /** the champion we clicked this turn: like the LoL client, a click only hovers it and the button locks it in */
   const [pend, setPend] = useState<{ id: string; step: number } | null>(null);
   const pendC = pend && pend.step === d.step && myTurn ? data.champ.get(pend.id) : undefined;
   // the phase (1차 밴 / 1차 픽 / 2차 밴 / 2차 픽) changes: a banner across the board, so a pick is never taken for a ban
   const ph = st ? draftPhase(d.step) : -1;
   const prevPh = useRef<number | null>(null);
-  const [flash, setFlash] = useState<{ key: number; kind: StepKind; text: string; sub: string } | null>(null);
+  const [flash, setFlash] = useState<{ key: number; kind: StepKind; text: string; sub: string; seat?: Side } | null>(null);
+  // hot seat: the turn passing to the other side inside a phase gets a shorter banner in that side's colour
+  const prevSeat = useRef<Side | null>(null);
   useEffect(() => {
     if (st && ph !== prevPh.current) {
       const [a, b] = phaseRange(d.step);
       const per = Math.ceil((b - a + 1) / 2);
       const first = s.teams[st[0] === "blue" ? d.blue : d.red].short;
-      setFlash({ key: d.step, kind: st[1], text: `${phaseName(ph, st[1])} 단계`, sub: `${st[0] === "blue" ? "블루" : "레드"} ${first}부터 · 팀마다 ${per}개씩 ${st[1] === "ban" ? "밴" : "픽"}` });
+      setFlash({ key: d.step, kind: st[1], text: `${phaseName(ph, st[1])} 단계`, sub: `${sideKo(st[0])} ${first}부터 · 팀마다 ${per}개씩 ${st[1] === "ban" ? "밴" : "픽"}` });
+    } else if (hotseat && st && st[0] !== prevSeat.current) {
+      const [a, b] = phaseRange(d.step);
+      const team = s.teams[st[0] === "blue" ? d.blue : d.red].short;
+      setFlash({ key: d.step, kind: st[1], seat: st[0], text: `${sideKo(st[0])} ${team} 차례`, sub: `${phaseName(ph, st[1])} ${d.step - a + 1}/${b - a + 1}` });
     }
     prevPh.current = ph;
-  }, [ph, d]);
+    prevSeat.current = st ? st[0] : null;
+  }, [ph, d, d.step]);
   useEffect(() => {
     if (!flash) return;
-    const id = setTimeout(() => setFlash(null), 1700);
+    const id = setTimeout(() => setFlash(null), flash.seat ? 1100 : 1700);
     return () => clearTimeout(id);
   }, [flash]);
   // AI steps play out with a short delay so the draft can be followed (longer at a new phase, under its banner)
@@ -362,14 +379,14 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
     else if (stepKind === "done") tutSpot("loadout");
   }, [stepKind]);
   const blocked = unavailable(d);
-  const myTeam = userSide === "blue" ? d.blue : d.red;
+  const myTeam = actSide === "blue" ? d.blue : d.red;
   const lu = lineupOf(s, myTeam);
-  const open = openRoles(d, userSide);
+  const open = openRoles(d, actSide);
   const role = selRole && open.includes(selRole) ? selRole : open[0];
-  const sug = useMemo(() => (st && myTurn ? coachSuggestions(s, data, d, userSide, rng) : { coach: null, items: [] }), [d.step, myTurn]);
+  const sug = useMemo(() => (st && myTurn ? coachSuggestions(s, data, d, actSide, rng) : { coach: null, items: [] }), [d.step, myTurn]);
   const sugIds = new Set(sug.items.map((x) => x.champ.id));
   // LCK matchups (matchup.ts): our coach's draft rating decides whether we see numbers or only the direction
-  const enemySide: Side = userSide === "blue" ? "red" : "blue";
+  const enemySide: Side = actSide === "blue" ? "red" : "blue";
   const exact = Matchup.coachExact(headCoach(s, s.teams[myTeam])?.attrs.draft ?? 35, s.teams[myTeam].facilities.analysis);
   const picking = myTurn && st![1] === "pick";
   const foe = picking ? d.picks[enemySide][role] : undefined;
@@ -474,7 +491,7 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
     const lup = lineupOf(s, team);
     const active = st && st[0] === sd;
     return (
-      <div class={`frame pad dr-team ${active ? `turn ${st![1]}` : ""}`} data-tut={sd === userSide ? "draft-mine" : undefined} style={{ boxShadow: active ? `0 0 0 2px ${sd === "blue" ? "var(--blue)" : "var(--red)"}` : undefined }}>
+      <div class={`frame pad dr-team ${active ? `turn ${st![1]}` : ""}`} data-tut={sd === actSide ? "draft-mine" : undefined} style={{ boxShadow: active ? `0 0 0 2px ${sd === "blue" ? "var(--blue)" : "var(--red)"}` : undefined }}>
         <div class="row" style={{ justifyContent: "space-between" }}>
           <div class="row"><TeamLogo id={team} size={26} /><b style={{ color: sd === "blue" ? "var(--blue)" : "var(--red)" }}>{s.teams[team].short}</b></div>
           <span class="row" style={{ gap: 4 }}>
@@ -486,14 +503,14 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
           {[0, 1, 2, 3, 4].map((i) => {
             // the ban this turn fills: pulses red, and shows the champion we are about to ban
             const next = !!active && st![1] === "ban" && i === d.bans[sd].length;
-            const prev = next && sd === userSide ? pendC?.id : undefined;
+            const prev = next && sd === actSide ? pendC?.id : undefined;
             return <div class={`b ${d.bans[sd][i] ? "" : "empty"} ${next ? "next" : ""} ${prev ? "prev" : ""}`}>{d.bans[sd][i] ? <ChampIcon id={d.bans[sd][i]} size={30} /> : prev ? <ChampIcon id={prev} size={30} /> : null}</div>;
           })}
         </div>
         {ROLES.map((r) => {
           const c = d.picks[sd][r];
           const p = lup[r];
-          const isMine = sd === userSide;
+          const isMine = sd === actSide;
           const selectable = isMine && myTurn && st?.[1] === "pick" && !c;
           const oc = d.picks[sd === "blue" ? "red" : "blue"][r];
           const e = c && oc ? Matchup.edge(data, r, c, oc) : 0;
@@ -519,8 +536,10 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
   const done = !st;
   const prob = done ? draftWinProb(s, data, d) : 0;
   const userProb = userSide === "blue" ? prob : 1 - prob;
+  /** the team whose turn it is (short name), for the hot-seat wording */
+  const turnTeam = st ? s.teams[st[0] === "blue" ? d.blue : d.red].short : "";
   return (
-    <div class={`grid3 draft-board ${st ? `mode-${st[1]}` : "mode-done"}`} style={{ gridTemplateColumns: "250px minmax(0, 1fr) 250px", position: "relative" }}>
+    <div class={`grid3 draft-board ${st ? `mode-${st[1]}` : "mode-done"} ${hotseat ? `hotseat ${st ? `seat-${st[0]}` : ""}` : ""}`} style={{ gridTemplateColumns: "250px minmax(0, 1fr) 250px", position: "relative" }}>
       {side("blue")}
       <div class={`frame pad dr-center ${st ? st[1] : ""}`}>
         {!done ? (
@@ -528,18 +547,19 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
             {(() => {
               // what is being decided now, in its colour (ban red, pick gold), who decides it, and where in the order
               const [a, b] = phaseRange(d.step);
-              const turnTeam = s.teams[st![0] === "blue" ? d.blue : d.red].short;
               const kind = st![1] === "ban" ? "밴" : "픽";
+              // hot seat: the turn line names the side that picks now (both are "ours"), with an arrow to its board
+              const who = hotseat ? `${st![0] === "blue" ? "◀ " : ""}${sideKo(st![0])} ${turnTeam} 차례${st![0] === "red" ? " ▶" : ""}` : "우리 차례";
               return (
-                <div class={`dr-phase ${st![1]} ${st![0]} ${myTurn ? "mine" : ""}`} data-tut="draft-head">
+                <div class={`dr-phase ${st![1]} ${st![0]} ${myTurn ? "mine" : ""} ${hotseat ? "seat" : ""}`} data-tut="draft-head">
                   <div class="dr-kind">{kind}</div>
                   <div class="dr-info">
                     <div class="dr-title">
-                      <span class="dr-side">{st![0] === "blue" ? "블루" : "레드"} {turnTeam}</span> {phaseName(ph, st![1])} <span class="dr-count">{d.step - a + 1}/{b - a + 1}</span>
+                      <span class="dr-side">{sideKo(st![0])} {turnTeam}</span> {phaseName(ph, st![1])} <span class="dr-count">{d.step - a + 1}/{b - a + 1}</span>
                     </div>
                     <div class="dr-turn">
                       {myTurn
-                        ? (st![1] === "pick" ? `우리 차례 · ${ROLE_KO[role]} 자리에 넣을 챔피언을 고르세요` : "우리 차례 · 상대가 못 쓰게 할 챔피언을 고르세요")
+                        ? (st![1] === "pick" ? `${who} · ${ROLE_KO[role]} 자리에 넣을 챔피언을 고르세요` : `${who} · 상대가 못 쓰게 할 챔피언을 고르세요`)
                         : `${auto ? "" : "상대 차례 · "}${turnTeam} ${kind} 고르는 중...`}
                     </div>
                   </div>
@@ -585,14 +605,15 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
                     <b>{!myTurn ? "기다리는 중..." : pendC ? `${pendC.name}${st![1] === "pick" ? ` → ${ROLE_KO[role]} ${lu[role]?.name ?? ""}` : ""}` : "아직 고르지 않았습니다"}</b>
                   </div>
                 </div>
-                <button class={`btn lock ${st![1]}`} disabled={!myTurn || !pendC} onClick={confirm} title="Enter로도 확정합니다">
+                <button class={`btn lock ${st![1]} ${hotseat ? `seat-${st![0]}` : ""}`} disabled={!myTurn || !pendC} onClick={confirm} title="Enter로도 확정합니다">
+                  {hotseat && <span class="lock-side">{sideKo(st![0])}</span>}
                   {st![1] === "ban" ? "밴하기" : "선택하기"}
                 </button>
               </div>
             )}
             {/* always the same height and one line, so the board does not jump between turns */}
             <div class="frame dark pad sug-panel" data-tut="draft-sug">
-              <h3>{!myTurn ? "감독 추천" : sug.coach ? `감독 ${sug.coach}의 추천` : "감독이 없어 추천이 거의 없습니다"}{myTurn ? ` (${sug.items.length}개)` : ""}</h3>
+              <h3>{hotseat && myTurn ? `${turnTeam} ` : ""}{!myTurn ? "감독 추천" : sug.coach ? `감독 ${sug.coach}의 추천` : "감독이 없어 추천이 거의 없습니다"}{myTurn ? ` (${sug.items.length}개)` : ""}</h3>
               <div class="sug-row">
                 {myTurn ? sug.items.map((x) => (
                   <div class="sug-item" title={`${x.champ.name} · ${x.role ? ROLE_KO[x.role] + " · " : ""}${x.why}`} onClick={() => choose(x.champ, x.role)}>
@@ -607,12 +628,24 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
           <>
             <h2>밴픽 완료</h2>
             <div data-tut="draft-comp"><CompCompare d={d} /></div>
-            <MatchupCompare d={d} userSide={userSide} exact={exact} />
-            {!auto && <LoadoutPicker d={d} side={userSide} onChange={bump} />}
+            <MatchupCompare d={d} userSide={userSide} exact={exact} who={hotseat ? sideKo(userSide) : undefined} />
+            {hotseat ? (
+              // both sides set their own runes and builds, each under its side's name and colour
+              (["blue", "red"] as Side[]).map((sd) => (
+                <LoadoutPicker d={d} side={sd} onChange={bump} title={<><span style={{ color: sd === "blue" ? "var(--blue)" : "var(--red)" }}>{sideKo(sd)} {s.teams[sd === "blue" ? d.blue : d.red].short}</span> 룬 · 빌드</>} />
+              ))
+            ) : !auto && <LoadoutPicker d={d} side={userSide} onChange={bump} />}
             <div data-tut="draft-go">
-              <div class="center" style={{ margin: "10px 0" }}>
-                우리 예상 승률 <b class="gold" style={{ fontSize: 20 }}>{Math.round(userProb * 100)}%</b> <span class="muted">({oddsWord(userProb)})</span>
-              </div>
+              {hotseat ? (
+                <div class="center" style={{ margin: "10px 0" }}>
+                  예상 승률 <b style={{ color: "var(--blue)" }}>{s.teams[d.blue].short}</b> <b class="gold" style={{ fontSize: 20 }}>{Math.round(prob * 100)}%</b>
+                  {" : "}<b class="gold" style={{ fontSize: 20 }}>{100 - Math.round(prob * 100)}%</b> <b style={{ color: "var(--red)" }}>{s.teams[d.red].short}</b>
+                </div>
+              ) : (
+                <div class="center" style={{ margin: "10px 0" }}>
+                  우리 예상 승률 <b class="gold" style={{ fontSize: 20 }}>{Math.round(userProb * 100)}%</b> <span class="muted">({oddsWord(userProb)})</span>
+                </div>
+              )}
               <div class="row" style={{ justifyContent: "center" }}>
                 <button class="btn primary" onClick={() => onDone("watch")}>경기 시작</button>
                 <button class="btn" onClick={() => onDone("skip")}>결과만 보기</button>
@@ -623,7 +656,7 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
       </div>
       {side("red")}
       {flash && (
-        <div class={`dr-flash ${flash.kind}`} key={flash.key}>
+        <div class={`dr-flash ${flash.kind} ${flash.seat ? `seat ${flash.seat}` : ""}`} key={flash.key}>
           <div class="dr-flash-in"><b>{flash.text}</b><span>{flash.sub}</span></div>
         </div>
       )}
@@ -649,7 +682,7 @@ function CompCompare({ d }: { d: DraftState }) {
 }
 
 /** Lane-by-lane LCK matchups after the draft, from our side, plus the composition counters and the total. */
-function MatchupCompare({ d, userSide, exact }: { d: DraftState; userSide: Side; exact: boolean }) {
+function MatchupCompare({ d, userSide, exact, who }: { d: DraftState; userSide: Side; exact: boolean; /** whose side the values are seen from, when not "ours" (hot seat) */ who?: string }) {
   const data = D();
   if (!data.matchups) return null;
   const mine = d.picks[userSide], theirs = d.picks[userSide === "blue" ? "red" : "blue"];
@@ -658,7 +691,7 @@ function MatchupCompare({ d, userSide, exact }: { d: DraftState; userSide: Side;
   const nm = (id?: string) => (id ? data.champ.get(id)?.name ?? id : "-");
   return (
     <div class="mu-table">
-      <h3>라인 상성 <span class="muted" style={{ fontSize: 11 }}>(LCK {data.matchups.games}경기 기준, 우리 쪽에서 본 값)</span></h3>
+      <h3>라인 상성 <span class="muted" style={{ fontSize: 11 }}>(LCK {data.matchups.games}경기 기준, {who ?? "우리"} 쪽에서 본 값)</span></h3>
       {ROLES.map((r) => {
         const pr = Matchup.pair(data, r, mine[r], theirs[r]);
         const e = pr ? pr.m * Matchup.MATCHUP_TUNE.gain : 0;
@@ -697,7 +730,9 @@ const BIG_ICON: Partial<Record<GameEvent["type"], string>> = {
   ace: "에이스", steal: "스틸!", baron: "바론", soul: "드래곤의 영혼", elder: "장로 드래곤", inhib: "억제기", first_turret: "첫 포탑", nexus: "승리",
 };
 
-export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e: Engine; userSide: 0 | 1; series?: SeriesInfo; tactic: Tactic; setTactic: (t: Tactic) => void; onEnd: () => void }) {
+/** `both`: people on both sides (코드 대전 한 기기 2인): each side's tactic can be changed and the end shows the winner,
+ *  not a victory or a defeat. */
+export function MatchView({ e, userSide, series, tactic, setTactic, onEnd, both }: { e: Engine; userSide: 0 | 1; series?: SeriesInfo; tactic: Tactic; setTactic: (t: Tactic, side: 0 | 1) => void; onEnd: () => void; both?: boolean }) {
   const s = S();
   const data = D();
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -708,6 +743,8 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
   const [cam, setCam] = useState<CamMode>("auto");
   const [slowmo, setSlowmo] = useState(true);
   const [tac, setTac] = useState(tactic);
+  /** both sides' tactics, for `both` */
+  const [tacs, setTacs] = useState<[Tactic, Tactic]>([e.tactic[0], e.tactic[1]]);
   const [, setTick] = useState(0);
   const [banners, setBanners] = useState<{ id: number; ev: GameEvent; spawn?: boolean }[]>([]);
   const evSeen = useRef(0);
@@ -919,7 +956,11 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
             </div>
             {e.over && (
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", background: "rgba(5,6,12,0.6)" }}>
-                <div class="title-logo" style={{ fontSize: 40, color: e.winner === userSide ? "#f2c14e" : "#ff6b6b" }}>{e.winner === userSide ? "VICTORY" : "DEFEAT"}</div>
+                {both ? (
+                  <div class="title-logo" style={{ fontSize: 40, color: e.winner ? "var(--red)" : "var(--blue)" }}>{s.teams[e.teamIds[e.winner ?? 0]].short} 승리</div>
+                ) : (
+                  <div class="title-logo" style={{ fontSize: 40, color: e.winner === userSide ? "#f2c14e" : "#ff6b6b" }}>{e.winner === userSide ? "VICTORY" : "DEFEAT"}</div>
+                )}
                 <button class="btn primary" onClick={onEnd}>결과 확인</button>
               </div>
             )}
@@ -934,9 +975,20 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
             <button class={`btn small ${slowmo ? "on" : ""}`} onClick={() => setSlowmo(!slowmo)} title="6명 이상이 붙는 한타는 고른 배속과 상관없이 실제 속도로 보여 주고, 중계 카메라가 그때만 확대합니다. 4~5명 교전은 최대 4배속으로 늦춥니다. 끄면 항상 고른 배속과 전체 맵입니다.">한타 실시간</button>
             <button class="btn small" onClick={skipToEnd}>끝까지</button>
           </div>
-          <div class="row" data-tut="match-tactic" style={{ justifyContent: "center" }}>
-            <span class="muted">작전</span>
-            {(["aggressive", "standard", "safe"] as Tactic[]).map((t) => <button class={`btn small ${tac === t ? "on" : ""}`} onClick={() => { setTac(t); setTactic(t); }}>{t === "aggressive" ? "공격적" : t === "standard" ? "표준" : "안정적"}</button>)}
+          <div class="row" data-tut="match-tactic" style={{ justifyContent: "center", flexWrap: "wrap" }}>
+            {both ? (
+              ([0, 1] as const).map((sd) => (
+                <span class="row" style={{ gap: 4, marginRight: sd ? 0 : 12 }}>
+                  <span style={{ color: sd ? "var(--red)" : "var(--blue)" }}>{s.teams[e.teamIds[sd]].short} 작전</span>
+                  {(["aggressive", "standard", "safe"] as Tactic[]).map((t) => <button class={`btn small ${tacs[sd] === t ? "on" : ""}`} onClick={() => { setTacs((x) => (sd ? [x[0], t] : [t, x[1]])); setTactic(t, sd); }}>{t === "aggressive" ? "공격적" : t === "standard" ? "표준" : "안정적"}</button>)}
+                </span>
+              ))
+            ) : (
+              <>
+                <span class="muted">작전</span>
+                {(["aggressive", "standard", "safe"] as Tactic[]).map((t) => <button class={`btn small ${tac === t ? "on" : ""}`} onClick={() => { setTac(t); setTactic(t, userSide); }}>{t === "aggressive" ? "공격적" : t === "standard" ? "표준" : "안정적"}</button>)}
+              </>
+            )}
           </div>
           <div class="row muted" style={{ justifyContent: "center", fontSize: 11 }}>
             운영: <b style={{ color: "var(--blue)" }}>{STRATEGY_KO[e.strategy[0]]}</b> vs <b style={{ color: "var(--red)" }}>{STRATEGY_KO[e.strategy[1]]}</b>
