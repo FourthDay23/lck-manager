@@ -1,6 +1,7 @@
 // Who the choice events land on: plays whole seasons headless (random allowed option each time) and counts, per
 // player, the events naming them (ModalEvent.player / .other), by kind (random, low morale, aftermath).
-// Run: node scripts/run-ts.mjs scripts/event-targets.ts [teams=T1,GEN,HLE,DK,KT,BRO] [seeds=1,2,3] [days=365]
+// Run: node scripts/run-ts.mjs scripts/event-targets.ts [teams=T1,GEN,HLE,DK,KT,BRO] [seeds=1,2,3] [days=365] [keep]
+// "keep" never picks an option that sends a player away (sale, release, transfer list), so a star stays all season.
 import { readFileSync, existsSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { autoAdvance, closeUserSeries, newGame, resolveEvent, userSeriesToday } from "../src/core/game";
@@ -15,10 +16,13 @@ const data = assembleData(dir, j("champions.json"), j("players.json"), j("staff.
 const teams = (process.argv[3] ?? "T1,GEN,HLE,DK,KT,BRO").split(",");
 const seeds = (process.argv[4] ?? "1,2,3").split(",").map(Number);
 const days = Number(process.argv[5] ?? 365);
+const keep = process.argv[6] === "keep";
 const cls = new Map(EVENT_DEFS.map((d) => [d.id, d.cls]));
 
 type Row = { name: string; n: number; rnd: number; mor: number; aft: number; startDays: number; days: number; defs: Record<string, number> };
-const agg = { runs: 0, events: 0, named: 0, top1: 0, top2: 0, starterEv: 0, benchEv: 0, starterDays: 0, benchDays: 0, players: 0, zeroStarters: 0, starters: 0 };
+const agg = { runs: 0, events: 0, named: 0, top1: 0, top2: 0, starterEv: 0, benchEv: 0, starterDays: 0, benchDays: 0, players: 0, zeroStarters: 0, starters: 0, starRuns: 0, starShare: 0 };
+/** stars (fame 40+ when the roster filled) who stayed the whole season: name -> shares per run */
+const stars = new Map<string, number[]>();
 const byDefTop: Record<string, number> = {};
 const out: string[] = [];
 for (const team of teams) for (const seed of seeds) {
@@ -32,6 +36,10 @@ for (const team of teams) for (const seed of seeds) {
   };
   const start = s.day;
   let events = 0;
+  // the star: the most famous player once the roster is full (Faker on T1); his share is the number to watch
+  let star: string | null = null;
+  let starFame = 0;
+  let teamDays = 0;
   for (let guard = 0; s.day < start + days && guard < 20000; guard++) {
     const d0 = s.day;
     autoAdvance(s, data, "day");
@@ -39,6 +47,11 @@ for (const team of teams) for (const seed of seeds) {
     if (s.day > d0) {
       const t = s.teams[s.user];
       const st = new Set(Object.values(t.lineup));
+      if (!star && t.roster.length >= 5) {
+        star = [...t.roster].sort((a, b) => s.players[b].fame - s.players[a].fame)[0];
+        starFame = s.players[star].fame;
+      }
+      if (star) teamDays++;
       for (const id of t.roster) {
         const r = row(id);
         r.days++;
@@ -58,7 +71,9 @@ for (const team of teams) for (const seed of seeds) {
         const key = ev.def ?? ev.kind;
         r.defs[key] = (r.defs[key] ?? 0) + 1;
       }
-      const ok = ev.options.map((o, i) => (o.disabled ? -1 : i)).filter((i) => i >= 0);
+      // keep: never sell, release or list a player (nor leave an overseas offer to him), so the star stays all season
+      const leaves = (label: string) => keep && (/판매|해지|이적 목록|이적 시장에 올려/.test(label) || (ev.def === "N9" && label !== "거절합니다"));
+      const ok = ev.options.map((o, i) => (o.disabled || leaves(o.label) ? -1 : i)).filter((i) => i >= 0);
       resolveEvent(s, ev.id, ok.length ? rng.pick(ok) : 0);
       if (s.events[0] === ev) s.events.shift();
       if (s.ev) s.ev.result = undefined;
@@ -102,7 +117,15 @@ for (const team of teams) for (const seed of seeds) {
     const defs = Object.entries(r.defs).sort((a, b) => b[1] - a[1]).map(([d, v]) => `${d}×${v}`).join(" ");
     return `  ${who} ${r.n} [무작위${r.rnd} 사기${r.mor} 후폭풍${r.aft}] ${defs}`;
   };
-  out.push(`${team} seed${seed}: 이벤트 ${events}, 선수 지목 ${named}, 1위 몫 ${(((list[0]?.[1].n ?? 0) / Math.max(1, named)) * 100).toFixed(0)}%`);
+  const starRow = star ? rows.get(star) : undefined;
+  const stayed = !!starRow && starRow.days >= teamDays * 0.95 && starFame >= 40;
+  const starNote = starRow ? `, 스타 ${starRow.name}(명성 ${Math.round(starFame)}) ${((starRow.n / Math.max(1, named)) * 100).toFixed(0)}%${stayed ? "" : " (스타 아님 또는 시즌 중 떠남, 제외)"}` : "";
+  if (stayed) {
+    agg.starRuns++;
+    agg.starShare += starRow!.n / Math.max(1, named);
+    stars.set(starRow!.name, [...(stars.get(starRow!.name) ?? []), Math.round((starRow!.n / Math.max(1, named)) * 100)]);
+  }
+  out.push(`${team} seed${seed}: 이벤트 ${events}, 선수 지목 ${named}, 1위 몫 ${(((list[0]?.[1].n ?? 0) / Math.max(1, named)) * 100).toFixed(0)}%${starNote}`);
   for (const x of list.slice(0, 4)) out.push(fmt(x));
   out.push(`  0회: ${list.filter(([, r]) => r.n === 0).map(([, r]) => `${r.name}${r.startDays / r.days > 0.5 ? "(주전)" : ""}`).join(", ") || "-"}`);
 }
@@ -115,4 +138,5 @@ const sRate = (agg.starterEv / Math.max(1, agg.starterDays)) * 30;
 const bRate = (agg.benchEv / Math.max(1, agg.benchDays)) * 30;
 console.log(`30일당 1인 지목: 주전 ${sRate.toFixed(2)} · 벤치 ${bRate.toFixed(2)} (벤치/주전 ${(bRate / Math.max(1e-9, sRate)).toFixed(2)}배, 설계는 0.5배)`);
 console.log(`한 번도 안 걸린 주전 ${agg.zeroStarters}/${agg.starters}`);
+console.log(`시즌 내내 남은 스타(명성 40+)의 몫 평균 ${((agg.starShare / Math.max(1, agg.starRuns)) * 100).toFixed(1)}% (${agg.starRuns}판) · ${[...stars.entries()].map(([n, v]) => `${n} ${v.join("/")}%`).join(" · ")}`);
 console.log(`1위 선수에게 간 이벤트 종류: ${Object.entries(byDefTop).sort((a, b) => b[1] - a[1]).map(([d, v]) => `${d}×${v}`).join(" ")}`);

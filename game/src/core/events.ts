@@ -69,6 +69,11 @@ const RANDOM_WEEK_MAX = 2;
 const MORALE_GAP = 3;
 const MORALE_CD = 21;
 const MAX_DEPTH = 2;
+/**
+ * Days before a player can be named by another random event. Each event has its own 60-day cooldown, but a star
+ * meets the conditions of many (most famous, best, oldest), so without this he got one every two weeks or so.
+ */
+const RANDOM_PLAYER_GAP = 21;
 const INTL: CompId[] = ["MSI", "EWC", "WORLDS"];
 
 // ---------- small helpers ----------
@@ -94,6 +99,17 @@ const topBy = <T,>(c: Ctx, xs: T[], key: (x: T) => number): T | undefined => {
   if (!xs.length) return undefined;
   const best = Math.max(...xs.map(key));
   return pickOne(c, xs.filter((x) => key(x) === best));
+};
+/**
+ * One of the team's top two by key, the leader twice as likely (ties at the cut drawn at random). For the
+ * star events (most famous, oldest, best mechanics): a star still gets them more often, but no longer every one;
+ * with one star on the team (Faker) he took 42-46% of all player events when each of these was his alone.
+ */
+const leaderPick = <T,>(c: Ctx, xs: T[], key: (x: T) => number, ok: (x: T) => boolean = () => true): T | undefined => {
+  const top = c.rng.shuffle([...xs]).sort((a, b) => key(b) - key(a)).slice(0, 2);
+  if (!top.length) return undefined;
+  const best = key(top[0]);
+  return pickOne(c, top.filter(ok), (x) => (key(x) === best ? 2 : 1));
 };
 const weightStar = (c: Ctx) => (p: Player) => (isStarter(c, p) ? 2 : 1);
 
@@ -465,13 +481,15 @@ def({
   id: "N9", pol: "neg", cls: "random",
   find: (c) => {
     if (!windowOpen(c.s) || !c.s.intl.length) return 0;
-    const top = roster(c).sort((a, b) => ovr(b) - ovr(a)).slice(0, 2).filter((p) => p.fame >= 60 && p.contract && cdOk(c, `N9:${p.id}`, 60));
+    // the team's two best by ability, famous or not (was: fame 60+ too, which on most teams left one star alone);
+    // a famous target keeps the special-event weight
+    const top = c.rng.shuffle(roster(c)).sort((a, b) => ovr(b) - ovr(a)).slice(0, 2).filter((p) => p.contract && cdOk(c, `N9:${p.id}`, 60));
     const p = pickOne(c, top);
     if (!p) return 0;
     c.p = p;
     c.d.fee = Math.round((marketValue(p, c.s.season) * 1.3) / 100) * 100;
     c.d.club = c.rng.pick(c.s.intl);
-    return 3;
+    return p.fame >= 60 ? 3 : 1;
   },
   title: () => "해외 구단의 거액 제안",
   body: (c) => `${teamName(c.s, c.d.club as string)}(${c.s.teams[c.d.club as string].region})가 ${nm(c.p!)} 영입에 이적료 ${money(c.d.fee as number)}을 제시했습니다.`,
@@ -842,9 +860,9 @@ def({
   id: "P1", pol: "pos", cls: "random",
   find: (c) => {
     const st = starters(c);
-    // every starter tied at the top mechanics counts as the team's best, not just the first of them
-    const topMech = Math.max(...st.map((p) => p.attrs.mechanics));
-    const xs = st.filter((p) => (p.form >= 3 || p.attrs.mechanics === topMech) && cdOk(c, `P1:${p.id}`, 60));
+    // in form, or among the team's two best mechanics (was: the single best, every time); ties at the cut all count
+    const cut = [...st].map((p) => p.attrs.mechanics).sort((a, b) => b - a)[1] ?? -Infinity;
+    const xs = st.filter((p) => (p.form >= 3 || p.attrs.mechanics >= cut) && cdOk(c, `P1:${p.id}`, 60));
     const p = pickOne(c, xs);
     if (!p) return 0;
     c.p = p;
@@ -894,7 +912,8 @@ def({
 def({
   id: "P3", pol: "pos", cls: "random",
   find: (c) => {
-    const p = pickOne(c, roster(c).filter((x) => x.fame >= 50 && cdOk(c, `P3:${x.id}`, 60)), (x) => x.fame * weightStar(c)(x));
+    // the team's two most famous (was: fame 50+, which on most teams meant one star or nobody)
+    const p = leaderPick(c, roster(c), (x) => x.fame, (x) => cdOk(c, `P3:${x.id}`, 60));
     if (!p) return 0;
     c.p = p;
     return 1;
@@ -942,9 +961,9 @@ def({
 def({
   id: "P5", pol: "pos", cls: "random",
   find: (c) => {
-    const vets = starters(c).filter((p) => age(p, c.s.season) >= 26 && cdOk(c, `P5:${p.id}`, 60));
+    // the mentor: one of the two oldest starters aged 24+ (was: 26+, often only one man on a team)
     const kids = roster(c).filter((p) => age(p, c.s.season) <= 20);
-    const v = pickOne(c, vets);
+    const v = leaderPick(c, starters(c).filter((p) => age(p, c.s.season) >= 24), (p) => age(p, c.s.season), (p) => cdOk(c, `P5:${p.id}`, 60));
     const k = pickOne(c, kids.filter((x) => x !== v));
     if (!v || !k) return 0;
     c.p = v;
@@ -1013,10 +1032,8 @@ def({
 def({
   id: "P8", pol: "pos", cls: "random",
   find: (c) => {
-    // the team's most famous; when several share the top (signed rookies all start at fame 1) one of them at random
-    const ros = roster(c);
-    const top = Math.max(...ros.map((x) => x.fame));
-    const p = pickOne(c, ros.filter((x) => x.fame === top && cdOk(c, `P8:${x.id}`, 60)));
+    // one of the team's two most famous, the most famous twice as likely (was: always the most famous)
+    const p = leaderPick(c, roster(c), (x) => x.fame, (x) => cdOk(c, `P8:${x.id}`, 60));
     if (!p) return 0;
     c.p = p;
     return 1;
@@ -1739,11 +1756,15 @@ export function eventsDay(s: GameState, data: GameData, rng: Rng) {
       const w = Number(d.find?.(c) ?? 0);
       if (w <= 0) continue;
       if (!cdOk(c, cdKey(c, d), d.team || !c.p ? 30 : 60)) continue;
+      // one random event per player at a time (RANDOM_PLAYER_GAP): another player's event goes instead.
+      // Team events (N10 names the most-owed player) are about everyone and do not count.
+      if (!d.team && [c.p, c.q].some((x) => x && !cdOk(c, `rnd:${x.id}`, RANDOM_PLAYER_GAP))) continue;
       cands.push({ d, c, w });
     }
     const pick = rng.weighted(cands, (x) => x.w);
     if (!pick) continue;
     ev.cd[cdKey(pick.c, pick.d)] = s.day;
+    if (!pick.d.team) for (const x of [pick.c.p, pick.c.q]) if (x) ev.cd[`rnd:${x.id}`] = s.day;
     ev.week.n++;
     fire(s, pick.c, pick.d);
     return;
