@@ -81,7 +81,7 @@ Engine.prototype.kill = function (this: Engine, src, v) {
   kill0.call(this, src, v);
 };
 // lane fronts during laning: how far from the middle, and how long a wave sits on a turret
-let frontDev = 0, frontN = 0, crashed = 0;
+let frontDev = 0, frontN = 0, crashed = 0, clash = 0;
 const laneDmg: Record<string, number> = {};
 // turrets by who took them: the eventual winner / loser, by minute and by tier; and the winner's gold lead
 const WL = [14, 16, 18, 20, 22, 25, 28, 30, 99];
@@ -191,6 +191,11 @@ for (let g = 0; g < N; g++) {
         frontN++;
         const tb = e.frontierTurret(0, lane), tr = e.frontierTurret(1, lane);
         if ((tb && e.waveAt(tb)) || (tr && e.waveAt(tr))) crashed++;
+        if (ENGINE_FLAGS.minions) {
+          let b = false, r = false;
+          for (const m of Minions.list(e)) if (m.lane === lane && Math.abs(m.u - f) < 0.04) { if (m.side === 0) b = true; else r = true; }
+          if (b && r) clash++;
+        }
       }
     }
     for (const m of [10, 14, 20, 25, 30]) if (goldAt[m] === undefined && e.t >= m * 60) goldAt[m] = e.gold(0) - e.gold(1);
@@ -246,7 +251,7 @@ if (ENGINE_FLAGS.minions) {
   console.log(`turret last hit: champion ${(lastChamp / (lastAny || 1) * 100).toFixed(0)}%`);
 }
 console.log(`champion deaths to a turret or minion blow ${f(turretBlows)} a game (${f(execs)} with no champion to credit)`);
-console.log(`laning fronts: mean distance from the middle ${(frontDev / (frontN || 1)).toFixed(3)} of the lane, a wave on a turret ${(crashed / (frontN || 1) * 100).toFixed(1)}% of lane-seconds`);
+console.log(`laning fronts: mean distance from the middle ${(frontDev / (frontN || 1)).toFixed(3)} of the lane, a wave on a turret ${(crashed / (frontN || 1) * 100).toFixed(1)}% of lane-seconds, both waves fighting at the front ${(clash / (frontN || 1) * 100).toFixed(1)}%`);
 console.log("CS (engine): " + [5, 10, 15, 20, 25].map((m) => `${m}min ` + ["Top", "Jungle", "Mid", "Bot", "Support"].map((r) => { const v = csAt[`${m}:${r}`] ?? []; return (v.reduce((x, y) => x + y, 0) / (v.length || 1)).toFixed(0); }).join("/")).join("  "));
 console.log("CS (LCK 2026): 5min 40/37/42/40/5  10min 90/77/96/91/14  15min 139/116/149/145/21  20min 188/154/201/204/26  25min 230/186/244/259/29");
 console.log(`turrets destroyed per game ${f(towers)} (winner takes ${f(winnerT)}, loser takes ${f(loserT)})   [LCK 11.60, 9.00 / 2.60]`);

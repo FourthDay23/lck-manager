@@ -1941,12 +1941,15 @@ export class Engine {
       let nearWave = false;
       for (const l of LANES) if (dist(u, this.laneFrontPos(l)) < 1100) nearWave = true;
       // real minions: also wherever enemy minions are within experience range (the front is where the waves meet,
-      // which is not where a wave under a turret or a wave walking in is; laners were 0.7 levels behind at 15:00)
+      // which is not where a wave under a turret or a wave walking in is)
       if (!nearWave && ENGINE_FLAGS.minions && Minions.anyNear(this, u, Minions.WAVE_TUNE.xpRange, (1 - u.side) as SideN)) nearWave = true;
       const solo = u.role === "Top" || u.role === "Mid";
       if (nearWave && this.t > 55) {
         const share = u.role === "Support" ? 0.6 : u.role === "Bot" ? 0.8 : 1;
-        u.xp += (solo ? GROWTH.laneXpSolo : GROWTH.laneXpDuo) * share * DT * (1 + m * GROWTH.laneXpGrow);
+        // real minions: the experience comes with each minion that dies in range, shared as in the game (minions.ts).
+        // The rate below paid for standing at the front, and with waves that crash and reset laners stand there
+        // less: they were 0.5 levels behind at 15:00
+        if (!ENGINE_FLAGS.minions) u.xp += (solo ? GROWTH.laneXpSolo : GROWTH.laneXpDuo) * share * DT * (1 + m * GROWTH.laneXpGrow);
         if (ENGINE_FLAGS.minions && u.role !== "Support") {
           // real minions: CS and its gold come from the minions this champion kills (minions.ts), not from a rate
         } else if (u.role !== "Support") {

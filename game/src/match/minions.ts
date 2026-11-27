@@ -8,8 +8,7 @@
 //   (every 2nd from 14:00, every wave from 25:00; from 14:00 a wave with one has a melee less, from 30:00 a caster
 //   less); a super minion instead in a lane whose enemy inhibitor is down (two when all three are); stats rise every
 //   90 s; minions deal 60 % to champions and structures (siege 84 % to turrets); gold 20 / 14 / 50+.
-// What stays abstract: minions keep to their lane's line (a sideways offset is for drawing and distances only), and
-// experience still comes from standing at the wave (engine.economy), not from each death.
+// What stays abstract: minions keep to their lane's line (a sideways offset is for drawing and distances only).
 import type { Engine, InhibState, SideN, TurretState, Unit } from "./engine";
 import { DT, SIM_TUNE, applyTune } from "./engine";
 import { clamp } from "../core/rng";
@@ -34,13 +33,19 @@ import * as Turrets from "./turrets";
  *   area: how much of that also lands on every other minion nearby, for a champion with full wave clear.
  * gold: minion gold multiplier on the real 20 / 14 / 50. 1.12 keeps the 21 gold a CS the engine's income was
  *   calibrated with (the 2026 role quests add minion gold the engine does not model); vsChamp: minion damage to
- *   champions (x the real 60 %); xpRange: a champion this close to enemy minions gets the lane's experience;
+ *   champions (x the real 60 %); xp: minion experience multiplier on the real 62 / 31 / 75, shared by the champions
+ *   within xpRange of the minion that died (100 / 65 / 43 / 33 / 26 % each for one to five). At the real values
+ *   mid levels match LCK 2026 to 0.1 through 25:00. Per role: xpTop the top laner's 2026 role-quest bonus (0.4
+ *   levels short at 15:00 without it), xpBot / xpSup what the carry and the support keep (at an equal share the
+ *   engine's carry is 0.6 levels over LCK at 20:00 and its support 1.1: it farms side waves alone after laning, and
+ *   real supports leave the lane to ward and roam more than the engine's do);
  * help: minions this close to an enemy champion that hits their champion turn on it (call for help), for helpFor s.
  * laneSiege: during laning, champion damage to a turret that has a defender next to it (they trade instead of hitting).
  * frontRate: how fast the lane front the engine reads follows the real meeting point (lane fraction per second).
  * towerDmg: the share of the time a champion in range of a structure is really hitting it (1 = every attack);
  *   minionDmg: minion damage to structures (1 = the real 60 %). They replace PACE_TUNE.towerDmg / minionDmg, which
  *   scaled the old made-up structure damage (ENGINE_FLAGS.minions off).
+ * splash: share of a spell's damage that lands on the minions in its area (fights, lane pokes).
  * sideCs: what is left of GROWTH.sideCs (the CS a laner away from every wave still gets after 14:00) now that the
  *   waves it passes are farmed for real; recallOnClear: a laner with gold to spend goes home when the wave in front
  *   of it is dead, and the chance per step is this much higher then.
@@ -53,11 +58,11 @@ import * as Turrets from "./turrets";
  */
 export const WAVE_TUNE = {
   reach: 1500, lastHit: 0.98, lhWindow: 2, lhEvery: 0.9, underTurret: 0.85,
-  pushLane: 0.25, pushSide: 0.6, pushGroup: 0.4, pushDefend: 0.8, area: 0.6,
-  gold: 1.12, vsChamp: 1, help: 600, helpFor: 2.5, xpRange: 1400,
+  pushLane: 0.15, pushSide: 0.6, pushGroup: 0.4, pushDefend: 0.8, area: 0.6,
+  gold: 1.12, vsChamp: 1, help: 600, helpFor: 2.5, xp: 1, xpTop: 1.04, xpBot: 0.9, xpSup: 0.8, xpRange: 1500,
   laneSiege: 0.15, frontRate: 0.05,
   towerDmg: 1, minionDmg: 1,
-  sideCs: 0.5, recallOnClear: 3, loneWave: 0.4, supPush: 0.5, pressure: 2,
+  splash: 0.6, sideCs: 0.6, recallOnClear: 3, loneWave: 0.4, supPush: 0.5, pressure: 2,
 };
 export function applyWaveTune(spec: string | undefined) {
   applyTune(WAVE_TUNE, "WAVE_TUNE", spec);
@@ -81,6 +86,8 @@ export interface Minion {
   hp: number;
   maxHp: number;
   ad: number;
+  /** attacks per second (the three of a row hit 15 % slower / as written / 15 % faster, so their targets do not
+   *  all get low in the same second and a laner can take each last hit) */
   as: number;
   range: number;
   armor: number;
@@ -253,6 +260,7 @@ function make(e: Engine, M: Mod, side: SideN, lane: LaneId, kind: MinionKind, sl
   } else {
     hp = Math.min(7500, 1500 + 100 * up); ad = Math.min(480, 180 + 5 * up); as = 0.85; range = 170; armor = 100; gold = 50 + up;
   }
+  if (kind === "melee" || kind === "caster") as *= 0.85 + 0.15 * (slot % 3);
   const m: Minion = {
     id: ++M.seq, side, lane, kind, u: side === 0 ? 0.004 : 0.996, lat: LAT[kind][slot % LAT[kind].length] + ((wave * 37 + slot * 53) % 31) - 15,
     x: 0, y: 0, hp, maxHp: hp, ad, as, range, armor, gold, tgt: null, champ: -1, champUntil: 0, moving: true, onStruct: false,
@@ -300,8 +308,21 @@ function spawn(e: Engine, M: Mod) {
 
 // ---------------------------------------------------------------- damage and death
 
+/** experience of a minion, and each champion's share of it when 1..5 of them are in range (2026 values) */
+const XP: Record<MinionKind, number> = { melee: 62, caster: 31, siege: 75, super: 75 };
+const XP_SHARE = [1, 0.65, 0.433, 0.325, 0.26];
+
 function die(e: Engine, M: Mod, m: Minion, cause: Cause, by: Unit | null) {
   m.hp = 0;
+  // experience goes to the enemy champions in range, whoever or whatever killed it
+  let n = 0;
+  for (const u of e.units) if (u.alive && u.side !== m.side && dist(u, m) < WAVE_TUNE.xpRange) n++;
+  if (n) {
+    const each = XP[m.kind] * XP_SHARE[n - 1] * WAVE_TUNE.xp;
+    for (const u of e.units) {
+      if (u.alive && u.side !== m.side && dist(u, m) < WAVE_TUNE.xpRange) u.xp += each * (u.role === "Top" ? WAVE_TUNE.xpTop : u.role === "Bot" ? WAVE_TUNE.xpBot : u.role === "Support" ? WAVE_TUNE.xpSup : 1);
+    }
+  }
   const late = e.laningPhase() ? 0 : 1;
   M.stats.deaths[late][cause]++;
   let gold = 0;
@@ -392,11 +413,15 @@ export function tick(e: Engine): void {
         let tg = m.tgt;
         if (tg && (tg.hp <= 0 || (tg.u - m.u) * dir < -0.006)) tg = null;
         if (!tg) {
-          let bd = 800 / L;
+          // the closest one, with the one straight ahead (same sideways slot) preferred: the two front rows pair off
+          // instead of all six hitting one minion (that way a melee minion fell every 2 s and a wave was gone in 8)
+          let bd = Infinity;
           for (const f of foes) {
             if (f.hp <= 0) continue;
-            const d = Math.abs(f.u - m.u);
-            if (d < bd) { bd = d; tg = f; }
+            const d = Math.abs(f.u - m.u) * L;
+            if (d > 800) continue;
+            const v = d + Math.abs(f.lat - m.lat) * 0.6;
+            if (v < bd) { bd = v; tg = f; }
           }
         }
         m.tgt = tg;
@@ -662,7 +687,7 @@ export function splash(e: Engine, u: Unit, sp: SpellData, at: Vec): void {
   const kind = sp.vfx;
   const round = kind === "circle" || kind === "zone" || kind === "knockup" || kind === "cone" || kind === "wall";
   if (!round && kind !== "line") return;
-  const dmg = e.spellDmg(u, sp);
+  const dmg = e.spellDmg(u, sp) * WAVE_TUNE.splash;
   if (dmg <= 0) return;
   const r = round ? Math.max(220, sp.radius ?? 250) : (sp.width ?? 120) / 2 + 70;
   const ax = u.x, ay = u.y, bx = at.x, by = at.y;
