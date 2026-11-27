@@ -31,6 +31,21 @@ export function sortedItems(n: PatchNote): PatchItem[] {
 
 export const PATCH_NOTES: PatchNote[] = [
   {
+    version: "0.8.0",
+    date: "2026-11-27",
+    title: "챔피언 상성",
+    items: [
+      ["UPD", "LCK 실측 챔피언 상성 반영"],
+      ["UPD", "밴픽 화면 상성 표시 추가"],
+      ["UPD", "상대 조합 맞춤 상황템 도입"],
+      ["UPD", "이적시장 개장·마감까지 남은 날 표시"],
+      ["FIX", "라인전 맞상대 상성 반영"],
+      ["FIX", "드래곤 처치 배너 한 줄 표시"],
+      ["FIX", "승리 배너 승리 팀 이름 표시"],
+      ["FIX", "스코어바 오브젝트 타이머 하나만 표시"],
+    ],
+  },
+  {
     version: "0.7.1",
     date: "2026-11-27",
     title: "안내 창 다듬기",
