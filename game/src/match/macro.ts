@@ -30,7 +30,7 @@
 //  * Heatmaps/zones only scatter positions inside the area a plan picked.
 //  * planLabel(e, side) gives the current plan in Korean for a HUD; st(e).log records plan changes when logOn.
 import type { Engine, ObjKey, SideN, Unit } from "./engine";
-import { ENGINE_FLAGS } from "./engine";
+import { ENGINE_FLAGS, SIM_TUNE } from "./engine";
 import type { LaneId, Vec } from "./map";
 import { BARON_PIT, DRAGON_PIT, FOUNTAIN, LANES, MIRROR_C, NEXUS, ROLE_LANE, dist, lanePoint, laneU, mirror } from "./map";
 import * as Nav from "./nav";
@@ -60,6 +60,8 @@ const rot = (p: Vec): Vec => ({ x: MIRROR_C - p.x, y: MIRROR_C - p.y });
 const DRAGON_HOLD = 0.8;
 /** siege score bonus when the target lane's inhibitor is already down (the nexus is next), see siegeCand */
 const BASE_OPEN_PUSH = 0.6;
+/** a sieging group whose wave has not reached the structure yet stands this far (lane fraction) behind the wave front */
+const SIEGE_WAVE_BACK = 0.012;
 /** minimum group before a team commits (spec); a safe jungler may still solo dragon / herald / grubs */
 const MIN_GROUP: Record<ObjKey, number> = { dragon: 3, herald: 3, grubs: 2, baron: 4, elder: 4 };
 const PREF: Record<ObjKey, Role[]> = {
@@ -999,7 +1001,7 @@ function assign(e: Engine, M: MacroState, b: Brain, V: View) {
       default: free.push(u);
     }
   }
-  if (p.kind === "siege") setGroup(e, b, p.id, p.members, p.target!, Math.min(3, p.members.length));
+  if (p.kind === "siege") setGroup(e, b, p.id, p.members, siegeDest(e, b, p), Math.min(3, p.members.length));
   // everybody else follows the formation
   if (V.laning) {
     for (const u of free) setJob(M.units[u.i], u, u.role === "Jungle" ? "jungle" : "old");
@@ -1119,7 +1121,8 @@ function groupTick(e: Engine, b: Brain) {
   if (!live || near < Math.min(g.quorum, live)) return;
   if (dist(g, g.dest) < 80) return;
   if (!g.pathFor) {
-    g.path = ENGINE_FLAGS.nav ? Nav.findPath(g, g.dest) : [g.dest];
+    // the group's anchor walks around enemy turrets too (its members follow it)
+    g.path = ENGINE_FLAGS.nav ? e.aroundTurret(b.side, g, Nav.findPath(g, g.dest)) : [g.dest];
     g.pathFor = g.dest;
   }
   let budget = spd * 0.9 * DT;
@@ -1146,17 +1149,49 @@ function groupSpot(e: Engine, b: Brain, u: Unit): Vec {
   return { x: g.x + fx * fwd - fy * lat, y: g.y + fy * fwd + fx * lat };
 }
 
-/** Keep a standing spot out of enemy turret range unless the tower is unguarded (nobody of theirs within 4,000 u). */
+/** Keep a standing spot out of enemy turret range unless our wave is on that turret (engine.waveAt): a turret with
+ *  no minions to shoot now shoots champions standing in range, in a fight or not (fight.ts turretShots). */
 function turretSafe(e: Engine, side: SideN, p: Vec): Vec {
-  for (const t of e.turrets) {
-    if (!t.alive || t.side === side) continue;
-    const d = dist(t.pos, p);
-    if (d >= 860) continue;
-    if (!e.units.some((x) => x.alive && x.side !== side && dist(x, t.pos) < 4000)) return p;
-    const from = d < 1 ? FOUNTAIN[side] : p;
-    return snap(toward(t.pos, from, 900));
+  let q = p;
+  // a spot pushed out of one turret's range can land in the next one's (the nexus twins are 650 u apart, mid tier 2
+  // and 3 about 1,750): look again, and if it keeps bouncing between two, step back toward our own base
+  for (let pass = 0; pass < 4; pass++) {
+    const t = e.exposedAt(side, q, 860);
+    if (!t) return q;
+    const from = pass === 3 || dist(t.pos, q) < 1 ? FOUNTAIN[side] : q;
+    q = snap(toward(t.pos, from, 900));
   }
-  return p;
+  return q;
+}
+
+/** Where a sieging group stands: on the structure once our wave is on it, until then with the wave, pushing it in
+ *  (it used to stand under the turret and hit it with no minions anywhere near). */
+function siegeDest(e: Engine, b: Brain, p: Plan): Vec {
+  const tgt = p.target!;
+  if (!p.lane || !e.exposedAt(b.side, tgt, 900)) return tgt;
+  const f = e.lanes[p.lane].front;
+  return turretSafe(e, b.side, snap(lanePoint(p.lane, f + (b.side === 0 ? -SIEGE_WAVE_BACK : SIEGE_WAVE_BACK))));
+}
+
+/** After laning, the weaker of two enemies holding the same wave keeps SIM_TUNE.laneGap away from the other instead
+ *  of standing next to it (two split pushers stood 300 u apart for a minute). The stronger one holds the wave. */
+function keepGap(e: Engine, u: Unit, lane: LaneId, p: Vec): Vec {
+  let foe: Unit | null = null, nd = SIM_TUNE.laneGap;
+  for (const x of e.units) {
+    if (!x.alive || x.side === u.side || x.fightId || x.task !== "lane") continue;
+    const d = dist(x, p);
+    if (d < nd) { nd = d; foe = x; }
+  }
+  if (!foe) return p;
+  // under our own turret the defender is the one who gives ground (it stood on top of the champion hitting the turret)
+  const home = e.turrets.some((t) => t.alive && t.side === u.side && dist(t.pos, p) < 900);
+  const pu = e.power(u), pf = e.power(foe);
+  if (!home && (pu > pf || (pu === pf && u.i < foe.i))) return p;
+  const dir = u.side === 0 ? -1 : 1;
+  const u0 = laneU(lane, p);
+  const per = dist(lanePoint(lane, u0), lanePoint(lane, u0 + dir * 0.02)) / 0.02 || 20000;
+  const want = laneU(lane, foe) + (dir * (SIM_TUNE.laneGap + 40)) / per;
+  return lanePoint(lane, dir < 0 ? Math.min(u0, want) : Math.max(u0, want));
 }
 
 // ---------- unit behaviour ----------
@@ -1242,8 +1277,9 @@ function joinFight(e: Engine, u: Unit, R = 1400): boolean {
 
 function laneJob(e: Engine, u: Unit, m: UMem, lane: LaneId) {
   const front = e.laneFrontPos(lane);
-  if (!m.spot || m.spotFor !== `lane:${lane}` || e.t - m.spotAt > 6 || dist(m.spot, front) > 1100) {
-    m.spot = e.laningPhase() ? e.laneStand(u, lane) : turretSafe(e, u.side, e.laneStand(u, lane));
+  // a new spot every 6 s, when the wave has moved on, or at once when the wave left the turret this spot is under
+  if (!m.spot || m.spotFor !== `lane:${lane}` || e.t - m.spotAt > 6 || dist(m.spot, front) > 1100 || (!e.laningPhase() && e.exposedAt(u.side, m.spot, 860))) {
+    m.spot = e.laningPhase() ? e.laneStand(u, lane) : turretSafe(e, u.side, keepGap(e, u, lane, e.laneStand(u, lane)));
     m.spotFor = `lane:${lane}`;
     m.spotAt = e.t;
   }
@@ -1256,15 +1292,15 @@ function splitJob(e: Engine, u: Unit, m: UMem, lane: LaneId) {
   const f = e.lanes[lane].front;
   const t = e.frontierTurret(enemy, lane);
   let spot: Vec;
-  if (t && Math.abs(f - t.u) < 0.045) spot = lanePoint(lane, t.u + (u.side === 0 ? -0.016 : 0.016));
-  else if (!t) spot = lanePoint(lane, laneU(lane, e.siegeTarget(enemy, lane) ?? lanePoint(lane, f)) + (u.side === 0 ? -0.016 : 0.016));
-  else spot = lanePoint(lane, f + (u.side === 0 ? -0.006 : 0.006));
+  if (t && e.waveAt(t)) spot = lanePoint(lane, t.u + (u.side === 0 ? -0.016 : 0.016));
+  else if (!t) spot = turretSafe(e, u.side, lanePoint(lane, laneU(lane, e.siegeTarget(enemy, lane) ?? lanePoint(lane, f)) + (u.side === 0 ? -0.016 : 0.016)));
+  else spot = keepGap(e, u, lane, lanePoint(lane, f + (u.side === 0 ? -0.006 : 0.006)));
   u.task = "lane";
   go(e, u, spot, 80);
 }
 
 function jungleJob(e: Engine, M: MacroState, b: Brain, u: Unit, m: UMem, laning: boolean) {
-  const ext = u as Unit & { gankLane?: LaneId };
+  const ext = u as Unit & { gankLane?: LaneId; gankThere?: number };
   // invade: an enemy camp while their jungler is on the far side
   if (m.invade !== undefined) {
     const c = e.camps[m.invade];
@@ -1278,9 +1314,9 @@ function jungleJob(e: Engine, M: MacroState, b: Brain, u: Unit, m: UMem, laning:
     }
   }
   if (laning && e.t > 195 && u.task !== "gank") {
-    if (b.P.gank > 0 && e.rng.chance((b.P.gank / 60) * DT)) {
+    if (b.P.gank > 0 && e.gankReady(u) && e.rng.chance((b.P.gank / 60) * DT)) {
       const lane = e.pickGankLane(u);
-      if (lane) { u.task = "gank"; ext.gankLane = lane; u.taskUntil = e.t + 28; }
+      if (lane) { u.task = "gank"; ext.gankLane = lane; ext.gankThere = undefined; u.taskUntil = e.t + 28; }
     } else if (b.P.invade > 0 && e.rng.chance(b.P.invade * DT / 2.5)) {
       const ej = e.units.find((x) => x.side !== u.side && x.role === "Jungle")!;
       const camp = e.camps.filter((c) => c.side !== u.side && c.kind !== "scuttle" && c.alive && dist(u, c.pos) < 4500 && (!ej.alive || dist(ej, c.pos) > 6000))
@@ -1295,8 +1331,8 @@ function jungleJob(e: Engine, M: MacroState, b: Brain, u: Unit, m: UMem, laning:
       const g = b.group;
       const nx = nextSpawn(e);
       const target = g.members.length && g.key ? { x: g.x, y: g.y } : nx ? M.geo.stage[u.side][PIT_OF[nx.k]] : e.laneFrontPos("mid");
-      if (!m.spot || m.spotFor !== "jg-idle" || e.t - m.spotAt > 8) {
-        m.spot = scatter(e, e.data.heatmap?.counts.Jungle?.[String(clamp(Math.round(e.minute()), 1, 45))], u.side, target, 0, 1400);
+      if (!m.spot || m.spotFor !== "jg-idle" || e.t - m.spotAt > 8 || e.exposedAt(u.side, m.spot, 860)) {
+        m.spot = turretSafe(e, u.side, scatter(e, e.data.heatmap?.counts.Jungle?.[String(clamp(Math.round(e.minute()), 1, 45))], u.side, target, 0, 1400));
         m.spotFor = "jg-idle";
         m.spotAt = e.t;
       }
@@ -1336,7 +1372,7 @@ function escortJob(e: Engine, b: Brain, u: Unit, m: UMem) {
     const g = b.group;
     anchor = g.members.length && g.key ? g : e.laneFrontPos("mid");
   }
-  if (!m.spot || m.spotFor !== "escort" || e.t - m.spotAt > 3 || dist(m.spot, anchor) > 700) {
+  if (!m.spot || m.spotFor !== "escort" || e.t - m.spotAt > 3 || dist(m.spot, anchor) > 700 || (!e.laningPhase() && e.exposedAt(u.side, m.spot, 860))) {
     const n = NEXUS[1 - u.side];
     const f = toward(anchor, n, 260);
     m.spot = turretSafe(e, u.side, snap({ x: f.x + (e.rng.next() - 0.5) * 300, y: f.y + (e.rng.next() - 0.5) * 300 }));
@@ -1417,7 +1453,7 @@ function groupJob(e: Engine, b: Brain, u: Unit, m: UMem) {
   if (!g.members.length || !g.key) { laneJob(e, u, m, "mid"); return; }
   if (joinFight(e, u)) return;
   let target: Vec;
-  if (dist(u, g) > 1900) target = { x: g.x, y: g.y };
+  if (dist(u, g) > 1900) target = turretSafe(e, u.side, { x: g.x, y: g.y });
   else {
     // a slowly changing personal offset so a standing group does not freeze in formation
     if (!m.spot || m.spotFor !== "gj" || e.t - m.spotAt > 7) {
@@ -1426,8 +1462,8 @@ function groupJob(e: Engine, b: Brain, u: Unit, m: UMem) {
       m.spotAt = e.t;
     }
     const s = groupSpot(e, b, u);
-    target = { x: s.x + m.spot.x, y: s.y + m.spot.y };
-    if (b.plan.kind !== "siege") target = turretSafe(e, u.side, target);
+    // also when sieging: under the turret only once our wave is on it (siegeDest keeps the group with the wave until then)
+    target = turretSafe(e, u.side, { x: s.x + m.spot.x, y: s.y + m.spot.y });
   }
   if (!u.goal || dist(u.goal, target) > 220 || (!u.path.length && dist(u, target) > 120)) {
     const q = Nav.walkable(target) ? target : snap(target);

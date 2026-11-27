@@ -10,7 +10,7 @@
 // so a team arrives together instead of trickling in. Damage stays on the engine's scale (aaDps / spellDmg, with the
 // kit's damage weight in place of SpellData.power).
 import type { Engine, Fx, SideN, Unit } from "./engine";
-import { ENGINE_FLAGS } from "./engine";
+import { ENGINE_FLAGS, SIM_TUNE } from "./engine";
 import type { SpellData } from "../data/types";
 import type { CcType, ChampionKit, FightRole, SpellKit, SpellUse } from "./kit-types";
 import { kitFor } from "./kits";
@@ -99,6 +99,8 @@ interface UState {
   commitUntil: number;
   /** a hook that landed: the caster follows it to `aim` once it has flown (HOOK_TRAVEL), see upkeep */
   hook: { at: number; aim: number; len: number; walls: boolean } | null;
+  /** outside a fight: since when it has stood in range of an enemy turret with no wave on it (-1: it is not), see turretShots */
+  towerAt: number;
 }
 
 interface EngagePlan { u: number; k: number; aim: number; count: number }
@@ -252,7 +254,7 @@ function makeUnit(e: Engine, u: Unit): UState {
     rootUntil: 0, slowUntil: 0, silenceUntil: 0, blindUntil: 0, groundUntil: 0, ccEnd: 0, buffUntil: 0, buffKind: "",
     untargetUntil: 0, bail: false, bailAt: 0, pathTo: null, pathAt: -9, hitChampAt: -9, shields: [], joinAt: 0,
     uses: effectiveUses(kit, melee), helpers: [], invulnUntil: 0, reviveUntil: 0, airUntil: 0, arenaUntil: 0,
-    arena: { x: 0, y: 0, r: 0 }, marks: new Map(), commitUntil: 0, hook: null,
+    arena: { x: 0, y: 0, r: 0 }, marks: new Map(), commitUntil: 0, hook: null, towerAt: -1,
   };
   void e;
 }
@@ -579,7 +581,10 @@ function startFights(e: Engine, M: Mod) {
     for (const foe of alive) {
       if (foe.side === u.side || calm(e, foe)) continue;
       const d = dist(u, foe);
-      if (d > 1050) continue;
+      // a ganking jungler holds at the edge of the turret's range instead of walking in (engine.jungleTick): from
+      // there it can still open the dive on a target that sits under its turret
+      const reach = d > 1050 && u.task === "gank" && e.turrets.some((t) => t.alive && t.side === foe.side && dist(t.pos, foe) < 860) ? SIM_TUNE.gankReach : 1050;
+      if (d > reach) continue;
       if (foe.fightId) {
         // walking into an ongoing fight: only when actually in contact, never from across the river
         if (d < 650 && st !== "avoid" && e.fights.has(foe.fightId) && M.f.get(foe.fightId)?.kind === "skirmish") {
@@ -2194,17 +2199,31 @@ function applyCC(e: Engine, M: Mod, src: Unit, v: Unit, cc: { type: CcType; dur:
 
 // ---------------------------------------------------------------- turrets
 
-/** Each turret shoots one fighter in range: whoever just hit a champion near it (diving), else the closest. */
+/** Each turret shoots one champion in range: a fighter who just hit a champion near it (diving), else the closest.
+ *  A champion that is not in a fight is a target only while no wave of its side is on the turret, and after
+ *  SIM_TUNE.towerGrace seconds in range (before this, turrets ignored anyone outside a fight). */
 function turretShots(e: Engine, M: Mod) {
   const m = e.minute();
+  for (const u of e.units) {
+    const s = M.u[u.i];
+    if (!u.alive || u.fightId || !e.exposedAt(u.side, u)) s.towerAt = -1;
+    else if (s.towerAt < 0) s.towerAt = e.t;
+  }
   e.turrets.forEach((t, ti) => {
     const ts = M.tower[ti];
     if (!t.alive) { ts.target = -1; return; }
     let best: Unit | null = null, bv = -Infinity;
+    let wave: boolean | null = null;
     for (const u of e.units) {
-      if (!u.alive || !u.fightId || u.side === t.side) continue;
+      if (!u.alive || u.side === t.side) continue;
       const d = dist(t.pos, u);
       if (d > 780) continue;
+      if (!u.fightId) {
+        const since = M.u[u.i].towerAt;
+        if (since < 0 || e.t - since < SIM_TUNE.towerGrace) continue;
+        wave ??= e.waveAt(t);
+        if (wave) continue;
+      }
       let v = -d;
       if (e.t - M.u[u.i].hitChampAt < 1.5) v += 1000;
       if (ts.target === u.i) v += 300;

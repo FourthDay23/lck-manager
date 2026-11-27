@@ -80,6 +80,49 @@ export function applyEarlyTune(spec: string | undefined) {
   }
 }
 
+/**
+ * Fixes for things that looked wrong in the match view (2026-11-27, measured with scripts/sim-diag.ts; 40 games before
+ * -> after): champion-seconds per game under an enemy turret with no wave, outside a fight and never shot 108 -> 9
+ * (and shot for most of those); lane opponents within 400 u with no fight after 14:00 27 -> 2 pair-seconds; a ganking
+ * jungler standing next to its target, p90 14.8 s -> 3.8 s; the herald no longer hits a turret from the pit.
+ * towerGrace: a turret with no wave on it shoots a champion outside a fight once it has stood in range this long (s);
+ *   before, turrets only shot champions that were in a fight, so a group could stand under one for half a minute.
+ * waveNear: the attacking wave counts as on a turret while the lane front is within this distance of it (u).
+ * siegePush: a sieging group now walks in with its wave (it cannot hit the turret before the wave is there) and shoves
+ *   it this much harder; at 1 games ran 0.7 min longer than before the change, at 2 the same length.
+ * sidePoke / sidePokeLo / sidePokeHi: after the laning phase, two enemies holding the same lane poke each other this
+ *   often (per second per pair) for this share of max hp; laneGap: the weaker one (under a turret: the defender) keeps
+ *   this far away (u). Before, two side laners stood 300 u apart for a minute without doing anything.
+ * gankArrive / gankWait / gankCd: a jungler who has been within gankArrive of the target for gankWait seconds with no
+ *   fight calls the gank off and waits gankCd before the next one (it used to shadow the laner for up to 28 s, and
+ *   followed a laner who had gone home through the enemy's turrets). gankPoor: chance per second that a gank at poor
+ *   odds (ratio under 0.8) goes in anyway; it was 0.1 over a stay of up to 28 s, now the stay is gankWait.
+ *   gankReach: from the edge of a turret's range the jungler can still open the dive on a target under that turret.
+ * heraldDelay / heraldNear / heraldForce: the herald is held after the take and charges once a teammate is within
+ *   heraldNear of an enemy outer turret (not before heraldDelay s), or on its own after heraldForce s.
+ * Calibration (scripts/calibrate.ts, 200 games x roster seeds 3 and 5, on the engine as it was before the GROWTH
+ * retune, before -> after): length 33.9 -> 33.9 min, kills 33.6 -> 32.8, first blood 5.45 -> 5.8 min, first tower
+ * 16.7 -> 16.85 min, solo kills 1.17 -> 0.96.
+ * Scripts can override any of them with SIM_TUNE=key:value,...
+ */
+export const SIM_TUNE = {
+  towerGrace: 0.75, waveNear: 850, siegePush: 2,
+  sidePoke: 0.04, sidePokeLo: 0.03, sidePokeHi: 0.07, laneGap: 520,
+  gankArrive: 800, gankWait: 3.5, gankCd: 20, gankPoor: 0.35, gankReach: 1500,
+  heraldDelay: 8, heraldNear: 3000, heraldForce: 90,
+};
+export function applySimTune(spec: string | undefined) {
+  // (same checks as applyEarlyTune: a typo or a missing value must not pass silently)
+  for (const kv of (spec ?? "").split(",").filter(Boolean)) {
+    const [k, v] = kv.split(":");
+    const n = Number(v);
+    if (!Object.prototype.hasOwnProperty.call(SIM_TUNE, k) || v === undefined || v === "" || !Number.isFinite(n)) {
+      throw new Error(`SIM_TUNE: bad entry "${kv}" (keys: ${Object.keys(SIM_TUNE).join(", ")})`);
+    }
+    (SIM_TUNE as Record<string, number>)[k] = n;
+  }
+}
+
 export interface Unit {
   i: number;
   side: SideN;
@@ -415,10 +458,44 @@ export class Engine {
     if (u.goal && Math.abs(u.goal.x - g.x) < 60 && Math.abs(u.goal.y - g.y) < 60) return;
     u.goal = { x: g.x, y: g.y };
     if (ENGINE_FLAGS.nav) {
-      u.path = Nav.findPath(u, g);
+      u.path = this.aroundTurret(u.side, u, Nav.findPath(u, g));
       return;
     }
     u.path = dist(u, g) > 900 ? findPath(u, g) : [g];
+  }
+  /** A path from `u` that only passes through the range of an enemy turret with no wave on it (it would shoot the
+   *  walker) is bent around it: one extra waypoint just outside the range, on the side the path already leans to. A
+   *  path that starts or ends inside the range is left alone (leaving, diving, hitting the turret). */
+  aroundTurret(side: SideN, u: Vec, path: Vec[], depth = 0): Vec[] {
+    if (!path.length) return path;
+    const g = path[path.length - 1];
+    const R = 800;
+    for (const t of this.turrets) {
+      if (!t.alive || t.side === side || dist(t.pos, u) < R + 40 || dist(t.pos, g) < R + 40) continue;
+      let a: Vec = u;
+      for (const b of path) {
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const k = clamp(((t.pos.x - a.x) * dx + (t.pos.y - a.y) * dy) / (dx * dx + dy * dy || 1), 0, 1);
+        const cx = a.x + dx * k, cy = a.y + dy * k;
+        let nx = cx - t.pos.x, ny = cy - t.pos.y;
+        const n = Math.hypot(nx, ny);
+        a = b;
+        // a path that only clips the edge is through before the turret fires (SIM_TUNE.towerGrace); at 720 from the
+        // turret, the old cut-off, the walk through the range took 1.6 s
+        if (n >= 770) continue;
+        if (this.waveAt(t)) break;
+        // straight over the turret: step aside across the walking direction
+        if (n < 30) { nx = -dy; ny = dx; }
+        const m = Math.hypot(nx, ny) || 1;
+        const w = Nav.nearestWalkable({ x: t.pos.x + (nx / m) * 1000, y: t.pos.y + (ny / m) * 1000 });
+        if (dist(w, t.pos) < R + 40) break; // a wall on that side: no room to go around
+        // the way to the extra waypoint can cut the same range again, and the rest may cross another turret's:
+        // look at the bent path once or twice more
+        const bent = [...Nav.findPath(u, w), ...Nav.findPath(w, g)];
+        return depth < 2 ? this.aroundTurret(side, u, bent, depth + 1) : bent;
+      }
+    }
+    return path;
   }
   speed(u: Unit) {
     const base = u.champ.moveSpeed || 340;
@@ -460,6 +537,24 @@ export class Engine {
     const ts = this.turrets.filter((t) => t.side === side && t.lane === lane && t.alive).sort((a, b) => a.tier - b.tier);
     return ts[0] ?? null;
   }
+  /** The attacking side's minion wave has reached this turret: it shoots minions, so champions may stand in range. */
+  waveAt(t: TurretState): boolean {
+    if (t.lane === "nexus") return LANES.some((l) => (t.side === 1 ? this.lanes[l].front >= 0.93 : this.lanes[l].front <= 0.07));
+    // by distance, not by lane fraction: 0.045 of a lane is about 1,035 u on top and bot but 760 u on mid, so on the
+    // side lanes a wave still outside the turret's own range (780) counted as on it, and on mid one inside it did not
+    return this.frontierTurret(t.side, t.lane) === t && dist(this.laneFrontPos(t.lane), t.pos) < SIM_TUNE.waveNear;
+  }
+  /** The standing enemy turret that has point `p` in range with no wave on it (it would shoot a champion of `side` there). */
+  exposedAt(side: SideN, p: Vec, range = 780): TurretState | null {
+    for (const t of this.turrets) if (t.alive && t.side !== side && dist(t.pos, p) < range && !this.waveAt(t)) return t;
+    return null;
+  }
+  /** Where a recalled or respawned champion appears: a fixed spot per champion around the fountain, not all on one point. */
+  fountainSpot(u: Unit): Vec {
+    const f = FOUNTAIN[u.side];
+    const a = ((u.i % 5) / 5) * Math.PI * 2 + 0.6;
+    return { x: f.x + Math.cos(a) * 120, y: f.y + Math.sin(a) * 120 };
+  }
   laneFrontPos(lane: LaneId) {
     return lanePoint(lane, this.lanes[lane].front);
   }
@@ -483,6 +578,7 @@ export class Engine {
     if (ENGINE_FLAGS.nav) Nav.separate(this.units, DT);
     this.lanesTick();
     this.objectivesTick();
+    this.heraldTick();
     this.economy();
     Items.tick(this);
     this.checkEnd();
@@ -525,7 +621,7 @@ export class Engine {
     for (const u of this.units) {
       if (!u.alive && this.t >= u.respawnAt) {
         u.alive = true;
-        const f = FOUNTAIN[u.side];
+        const f = this.fountainSpot(u);
         u.x = f.x; u.y = f.y;
         u.maxHp = this.maxHp(u);
         u.hp = u.maxHp;
@@ -651,7 +747,7 @@ export class Engine {
     if (u.task === "recall") {
       if (u.recallEnd !== undefined) {
         if (this.t >= u.recallEnd) {
-          const f = FOUNTAIN[u.side];
+          const f = this.fountainSpot(u);
           u.x = f.x; u.y = f.y;
           u.maxHp = this.maxHp(u);
           u.hp = u.maxHp;
@@ -667,7 +763,8 @@ export class Engine {
         u.task = "return";
         return;
       }
-      if (!this.enemies(u).some((e) => dist(e, u) < 1300)) {
+      // not next to an enemy, and not inside the range of a turret that would shoot the whole channel
+      if (!this.enemies(u).some((e) => dist(e, u) < 1300) && !this.exposedAt(u.side, u, 860)) {
         u.recallEnd = this.t + 8;
         u.path = [];
         this.fx_({ kind: "recall", side: u.side, x: u.x, y: u.y, tx: u.x, ty: u.y, color: "#7fd3ff", r: 160, w: 0, from: u.i });
@@ -808,26 +905,49 @@ export class Engine {
   }
 
   jungleTick(u: Unit) {
-    const ext = u as Unit & { route?: number[]; gankLane?: LaneId };
+    const ext = u as Unit & { route?: number[]; gankLane?: LaneId; gankThere?: number; gankOut?: number };
     if (!ext.route) ext.route = this.jungleRoute(u);
     // gank decision
     if (u.task === "gank" && ext.gankLane) {
       const lane = ext.gankLane;
       const foe = this.units.find((e) => e.side !== u.side && e.alive && ROLE_LANE[e.role] === lane && e.role !== "Jungle");
-      if (!foe || this.t > u.taskUntil) {
+      // the target sits under its turret with no wave of ours on it: wait at the edge of the range instead of walking in
+      const tower = foe ? this.exposedAt(u.side, foe, 860) : null;
+      const there = !!foe && (dist(u, foe) < SIM_TUNE.gankArrive || (!!tower && dist(u, tower.pos) < 1000));
+      if (there) {
+        if (ext.gankThere === undefined) ext.gankThere = this.t;
+        ext.gankOut = undefined;
+      } else if (ext.gankThere !== undefined) {
+        // trailing a laner who walks, the jungler drifts in and out of the arrival range: only a full second
+        // outside restarts the wait (every single step did, so such a gank ran its whole 28 s)
+        ext.gankOut ??= this.t;
+        if (this.t - ext.gankOut >= 1) ext.gankThere = ext.gankOut = undefined;
+      }
+      // arrived and no fight started (combat() would have taken the unit): the gank is not on, back to the camps
+      const stale = ext.gankThere !== undefined && this.t - ext.gankThere >= SIM_TUNE.gankWait;
+      if (!foe || this.t > u.taskUntil || stale || this.gankGone(foe, lane)) {
         u.task = "jungle";
         ext.gankLane = undefined;
+        ext.gankThere = ext.gankOut = undefined;
+        // also after a chase that never got there: the same lane was picked again in the next step
+        if (stale || this.t > u.taskUntil) this.gankCooldown(u);
       } else {
-        this.setGoal(u, { x: foe.x, y: foe.y });
+        let g: Vec = { x: foe.x, y: foe.y };
+        if (tower) {
+          const d = dist(tower.pos, u) || 1;
+          g = { x: tower.pos.x + ((u.x - tower.pos.x) / d) * 900, y: tower.pos.y + ((u.y - tower.pos.y) / d) * 900 };
+        }
+        this.setGoal(u, g);
         this.moveStep(u, DT);
         return;
       }
     }
-    if (this.t > 195 && u.task !== "gank" && this.rng.chance(EARLY_TUNE.gankRate)) {
+    if (this.t > 195 && u.task !== "gank" && this.gankReady(u) && this.rng.chance(EARLY_TUNE.gankRate)) {
       const lane = this.pickGankLane(u);
       if (lane) {
         u.task = "gank";
         ext.gankLane = lane;
+        ext.gankThere = undefined;
         u.taskUntil = this.t + 28;
         return;
       }
@@ -875,12 +995,26 @@ export class Engine {
     }
   }
 
+  /** After a gank that was called off: no new gank for SIM_TUNE.gankCd seconds (also read by macro.ts). */
+  gankCooldown(u: Unit) {
+    (u as Unit & { gankCdUntil?: number }).gankCdUntil = this.t + SIM_TUNE.gankCd;
+  }
+  gankReady(u: Unit): boolean {
+    return this.t >= ((u as Unit & { gankCdUntil?: number }).gankCdUntil ?? 0);
+  }
+  /** The lane's enemy is not there to be ganked: recalling, in its base, or (during laning) away from the wave on its
+   *  way back. Junglers used to walk after such a target through the enemy's turrets toward its base. */
+  gankGone(foe: Unit, lane: LaneId): boolean {
+    if (foe.task === "recall" || dist(foe, FOUNTAIN[foe.side]) < 4500) return true;
+    return this.laningPhase() && dist(foe, this.laneFrontPos(lane)) > 2500;
+  }
+
   pickGankLane(u: Unit): LaneId | null {
     let best: LaneId | null = null, bestV = EARLY_TUNE.gankMin;
     for (const lane of LANES) {
       const ally = this.units.find((e) => e.side === u.side && e.alive && ROLE_LANE[e.role] === lane && e.role !== "Support");
       const foe = this.units.find((e) => e.side !== u.side && e.alive && ROLE_LANE[e.role] === lane && e.role !== "Support");
-      if (!foe || !ally) continue;
+      if (!foe || !ally || this.gankGone(foe, lane)) continue;
       const front = this.lanes[lane].front;
       const pushedOnUs = u.side === 0 ? 1 - front : front; // high when the wave sits near our tower
       const v = pushedOnUs * 0.8 + (1 - foe.hp / foe.maxHp) * 0.6 + (lane === "bot" ? 0.1 : 0) + (u.rating - foe.rating) / 100 - dist(u, foe) / 20000;
@@ -895,7 +1029,7 @@ export class Engine {
     const aggro = this.tactic[u.side] === "aggressive" ? 1.4 : this.tactic[u.side] === "safe" ? 0.6 : 1;
     let r: number;
     if (u.task === "gank") {
-      r = ratio > 0.8 ? 1.2 : 0.1;
+      r = ratio > 0.8 ? 1.2 : SIM_TUNE.gankPoor;
     } else if (u.task === "siege" || u.task === "obj") {
       r = ratio > 1.15 ? 0.18 : ratio > 0.95 ? 0.04 : 0.008;
     } else if (this.laningPhase()) {
@@ -917,9 +1051,42 @@ export class Engine {
     return lane === "top" ? EARLY_TUNE.allinTop : lane === "mid" ? EARLY_TUNE.allinMid : EARLY_TUNE.allinBot;
   }
 
+  /** After the laning phase: two enemies holding the same lane poke each other now and then. No all-in from here
+   *  (solo kills are already above LCK); the weaker one keeps its distance (macro.ts keepGap). */
+  sideDuels() {
+    // pairs of lane holders close to each other: at a wave, or walking the same way to their next lane
+    const free = this.units.filter((u) => u.alive && !u.fightId && u.task === "lane" && u.recallEnd === undefined);
+    const taken = new Set<number>();
+    for (const a of free) {
+      if (a.side !== 0) continue;
+      let b: Unit | null = null, bd = 1100;
+      for (const y of free) {
+        if (y.side !== 1 || taken.has(y.i)) continue;
+        const d = dist(a, y);
+        if (d < bd) { bd = d; b = y; }
+      }
+      if (!b) continue;
+      taken.add(b.i);
+      if (!this.rng.chance(SIM_TUNE.sidePoke * DT)) continue;
+      const [src, dst] = this.rng.chance(0.5 + (a.rating - b.rating) / 120) ? [a, b] : [b, a];
+      const pokes = src.champ.spells.slice(0, 3).filter((x) => x && POKE_KINDS.has(x.vfx));
+      const sp = pokes.length ? pokes[this.rng.int(0, pokes.length - 1)] : undefined;
+      if (!sp || this.t < src.cds[sp.key === "Q" ? 0 : sp.key === "W" ? 1 : 2]) continue;
+      const fx = this.emitSpellFx(src, sp, dst, dst, false);
+      if (this.rng.chance(clamp(0.5 + (src.rating - dst.rating) / 120, 0.2, 0.85))) {
+        this.hitFx(src, dst, sp);
+        this.damage(src, dst, dst.maxHp * this.rng.range(SIM_TUNE.sidePokeLo, SIM_TUNE.sidePokeHi));
+      } else fx.miss = true;
+    }
+  }
+
   /** Laning: small pokes most of the time, a rare all-in that can become a solo kill. */
   laneDuels() {
-    if (!this.laningPhase() || this.t < 70) return;
+    if (this.t < 70) return;
+    if (!this.laningPhase()) {
+      this.sideDuels();
+      return;
+    }
     for (const lane of LANES) {
       const sideUnits = [0, 1].map((sd) => this.units.filter((u) => u.side === sd && u.alive && !u.fightId && u.task === "lane" && ROLE_LANE[u.role] === lane && u.recallEnd === undefined));
       if (!sideUnits[0].length || !sideUnits[1].length) continue;
@@ -1337,7 +1504,8 @@ export class Engine {
       for (const u of this.units) {
         if (!u.alive || u.fightId) continue;
         const d = dist(u, fp);
-        if (d < 1300) push[u.side] += 0.6 + u.champ.style.waveclear * 0.06 + this.itemPower(u) * 0.15 + (u.baronUntil > this.t ? 1.2 : 0);
+        // a sieging group shoves the wave it is walking in with (SIM_TUNE.siegePush): it can no longer hit a turret before the wave is there
+        if (d < 1300) push[u.side] += (0.6 + u.champ.style.waveclear * 0.06 + this.itemPower(u) * 0.15 + (u.baronUntil > this.t ? 1.2 : 0)) * (u.task === "siege" ? SIM_TUNE.siegePush : 1);
       }
       // super minions
       for (const side of [0, 1] as SideN[]) {
@@ -1526,14 +1694,50 @@ export class Engine {
       this.event("herald", side, `${team}, 협곡의 전령 획득`, false, taker.i, undefined, o.pos);
       o.alive = false;
       o.spawnAt = null;
-      // the herald charges the lane with the most standing enemy towers
-      const lane = LANES.map((l) => ({ l, t: this.frontierTurret((1 - side) as SideN, l) })).filter((x) => x.t).sort((a, b) => a.t!.tier - b.t!.tier)[0];
-      if (lane?.t) {
-        // dash fx: x,y = where it lands (the turret), tx,ty = where it starts (the pit)
-        this.fx_({ kind: "dash", side, x: lane.t.pos.x, y: lane.t.pos.y, tx: o.pos.x, ty: o.pos.y, color: "#b48cff", r: 300, w: 260, text: "전령 돌진" });
-        this.damageTurret(lane.t, lane.t.maxHp * 0.45, taker);
+      // the team carries it and lets it loose at a turret later (heraldTick); it used to hit a turret across the map
+      // in the same step it was taken
+      this.heraldHeld = { side, taker: taker.i, at: this.t };
+    }
+  }
+
+  /** A herald that was taken and not used yet. */
+  heraldHeld: { side: SideN; taker: number; at: number } | null = null;
+
+  /** The held herald charges an enemy outer turret once a teammate is near one (lowest tier first, then the closest),
+   *  or the old default lane on its own after SIM_TUNE.heraldForce seconds. Same damage as before: 45 % of the turret. */
+  heraldTick() {
+    const h = this.heraldHeld;
+    if (!h || this.t - h.at < SIM_TUNE.heraldDelay) return;
+    const enemy = (1 - h.side) as SideN;
+    const fronts = LANES.map((l) => ({ l, t: this.frontierTurret(enemy, l) })).filter((x): x is { l: LaneId; t: TurretState } => !!x.t);
+    if (!fronts.length) {
+      this.heraldHeld = null;
+      return;
+    }
+    const mates = this.units.filter((u) => u.alive && u.side === h.side);
+    let best: { l: LaneId; t: TurretState; by: Unit } | null = null, bv = Infinity;
+    for (const f of fronts) {
+      for (const u of mates) {
+        const d = dist(u, f.t.pos);
+        if (d > SIM_TUNE.heraldNear) continue;
+        const v = f.t.tier * 10000 + d;
+        if (v < bv) { bv = v; best = { ...f, by: u }; }
       }
     }
+    if (!best) {
+      // forced only with someone alive to bring it in (a wiped team's herald charged alone and paid its dead taker)
+      if (this.t - h.at < SIM_TUNE.heraldForce || !mates.length) return;
+      const f = fronts.sort((a, b) => a.t.tier - b.t.tier)[0];
+      best = { ...f, by: mates.find((u) => u.i === h.taker) ?? mates[0] };
+    }
+    this.heraldHeld = null;
+    // it runs in along the lane: dash fx with x,y = where it lands (the turret), tx,ty = where it starts
+    const t = best.t;
+    const back = lanePoint(best.l, t.u + (h.side === 0 ? -0.06 : 0.06));
+    const d = dist(back, t.pos) || 1;
+    const from = { x: t.pos.x + ((back.x - t.pos.x) / d) * 900, y: t.pos.y + ((back.y - t.pos.y) / d) * 900 };
+    this.fx_({ kind: "dash", side: h.side, x: t.pos.x, y: t.pos.y, tx: from.x, ty: from.y, color: "#b48cff", r: 300, w: 260, text: "전령 돌진" });
+    this.damageTurret(t, t.maxHp * 0.45, best.by);
   }
 
   // ---------- passive income ----------
