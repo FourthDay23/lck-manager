@@ -59,6 +59,15 @@ function objTimers(e: Engine) {
   return { top, pit };
 }
 
+/** of the two, only the one that comes up first (one that is up now counts as 0; baron and elder win a tie) */
+function firstTimer(e: Engine) {
+  const { top, pit } = objTimers(e);
+  type T = NonNullable<typeof top>;
+  const left = (t: T) => (t.alive ? 0 : t.at === null ? Infinity : t.at - e.t);
+  const big = (t: T) => (t.key === "baron" || t.key === "elder" ? 0 : 1);
+  return [top, pit].filter((t): t is T => !!t).sort((a, b) => left(a) - left(b) || big(a) - big(b))[0] ?? null;
+}
+
 function TimerChip({ e, t }: { e: Engine; t: { key: string; at: number | null; alive: boolean } }) {
   const icon =
     t.key === "baron" ? <BaronIcon size={28} /> :
@@ -78,7 +87,7 @@ export function Scorebar({ e, series }: { e: Engine; series?: SeriesInfo }) {
   const s = S();
   const g = [e.gold(0), e.gold(1)];
   const diff = g[0] - g[1];
-  const { top, pit } = objTimers(e);
+  const next = firstTimer(e);
   const need = series ? Math.ceil(series.bo / 2) : 0;
   const winsOf = (side: 0 | 1) => {
     if (!series) return 0;
@@ -138,8 +147,7 @@ export function Scorebar({ e, series }: { e: Engine; series?: SeriesInfo }) {
     <div class="sb-wrap">
       <div class="sb">
         <div class="sb-side left">
-          {top && <TimerChip e={e} t={top} />}
-          {pit && <TimerChip e={e} t={pit} />}
+          {next && <TimerChip e={e} t={next} />}
         </div>
         <div class="sb-center">
           <div class="sb-main">

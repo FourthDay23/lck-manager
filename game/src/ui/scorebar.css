@@ -14,8 +14,8 @@
 
 /* objective timers (left) and series label (right) */
 .sb-side { display: flex; gap: 8px; padding-top: 2px; min-width: 0; }
-/* the two timers stack beside the bar, like the broadcast's corner timers */
-.sb-side.left { flex-direction: column; align-items: flex-end; gap: 10px; }
+/* one timer (whichever objective comes up first), centred on the main bar's height beside it */
+.sb-side.left { flex-direction: column; align-items: flex-end; justify-content: center; height: 60px; padding-top: 0; }
 .sb-side.right { justify-content: flex-start; }
 .sb-timer {
   display: flex; align-items: center; gap: 6px; padding: 3px 9px 3px 5px;
