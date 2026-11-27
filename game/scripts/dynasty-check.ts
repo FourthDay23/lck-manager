@@ -8,6 +8,7 @@
 //   user=KT:   the user plays KT with a plain auto-manager (signs the best affordable free agent per role)
 // FLAT=morale,form,synergy,fatigue resets that state to a neutral value every day (to see what each one adds).
 // OUT=<file.json> writes the per-season rows for later comparison.
+// USER_SYN / AI_SYN set the synergy a club gains per scrim day (core/training.ts SCRIM_SYNERGY, default 0.25 / 0.18).
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { autoAdvance, closeUserSeries, newGame, userSeriesToday, resolveEvent, AI_MORALE } from "../src/core/game";
@@ -16,6 +17,7 @@ import { Rng } from "../src/core/rng";
 import { ovr, salaryAsk } from "../src/core/player";
 import { seasonDates, standings } from "../src/core/schedule";
 import { aiPayrollCap, joinTeam, hireStaffUser, staffAsk, payroll } from "../src/core/market";
+import { SCRIM_SYNERGY } from "../src/core/training";
 import { ROLES } from "../src/data/types";
 import type { GameState, Team } from "../src/core/types";
 
@@ -30,6 +32,8 @@ const FLAT = new Set((process.env.FLAT ?? "").split(",").filter(Boolean));
 const OUT = process.env.OUT ?? "";
 const SEED0 = Number(process.env.SEED0 ?? 1000);
 if (process.env.AI_PULL) AI_MORALE.pull = Number(process.env.AI_PULL);
+if (process.env.USER_SYN) SCRIM_SYNERGY.user = Number(process.env.USER_SYN);
+if (process.env.AI_SYN) SCRIM_SYNERGY.ai = Number(process.env.AI_SYN);
 let crashes = 0;
 
 type Parts = { ovr: number; form: number; syn: number; coach: number; morale: number; fat: number; power: number };
@@ -39,6 +43,7 @@ type Row = {
   reg12: [number, number]; // 1·2R series W-L
   titles: string[]; // CUP REG PO MSI EWC WORLDS
   parts: Record<string, Record<string, Parts>>; // snapshot name -> club id -> parts
+  over: Record<string, Record<string, number>>; // snapshot name -> AI club id -> payroll minus payroll cap (만원)
 };
 
 function partsOf(s: GameState, tid: string): Parts {
@@ -119,6 +124,7 @@ for (let run = 0; run < RUNS; run++) {
   const firstSeason = s.season;
   const lastSeason = firstSeason + SEASONS - 1;
   const snaps: Record<number, Record<string, Record<string, Parts>>> = {};
+  const overs: Record<number, Record<string, Record<string, number>>> = {};
   let guard = 0;
   while (s.season <= lastSeason && guard++ < 20000) {
     const d = seasonDates(s.season);
@@ -127,6 +133,11 @@ for (let run = 0; run < RUNS; run++) {
       if (s.day === day) {
         snaps[s.season] = snaps[s.season] ?? {};
         snaps[s.season][name] = Object.fromEntries(s.lck.map((tid) => [tid, partsOf(s, tid)]));
+        overs[s.season] = overs[s.season] ?? {};
+        overs[s.season][name] = Object.fromEntries(s.lck.filter((tid) => tid !== s.user)
+          .map((tid) => [tid, payroll(s, s.teams[tid]) - aiPayrollCap(s.teams[tid])]));
+        overs[s.season][`${name}.empty`] = Object.fromEntries(s.lck.filter((tid) => tid !== s.user)
+          .map((tid) => [tid, ROLES.filter((r) => !s.teams[tid].lineup[r]).length]));
       }
     }
     const season = s.season;
@@ -162,7 +173,7 @@ for (let run = 0; run < RUNS; run++) {
         rows.push({
           run, season: season - firstSeason + 1, team: tid,
           sw: st?.w ?? 0, sl: st?.l ?? 0, gw: st?.gw ?? 0, gl: st?.gl ?? 0, reg12: [st12?.w ?? 0, st12?.l ?? 0],
-          titles: [...titles], parts: snaps[season] ?? {},
+          titles: [...titles], parts: snaps[season] ?? {}, over: overs[season] ?? {},
         });
       }
     }
@@ -175,7 +186,7 @@ const teams = [...new Set(rows.map((r) => r.team))];
 const pct = (a: number, b: number) => (b ? (100 * a) / b : 0);
 const sd = (xs: number[]) => { const m = xs.reduce((a, b) => a + b, 0) / xs.length; return Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / xs.length); };
 const seasonsTotal = RUNS * SEASONS;
-console.log(`\n${RUNS} runs x ${SEASONS} seasons, user=${USER}${FLAT.size ? `, FLAT=${[...FLAT].join(",")}` : ""}, AI morale pull ${AI_MORALE.pull}${crashes ? `, event crashes skipped ${crashes}` : ""}`);
+console.log(`\n${RUNS} runs x ${SEASONS} seasons, user=${USER}${FLAT.size ? `, FLAT=${[...FLAT].join(",")}` : ""}, AI morale pull ${AI_MORALE.pull}, scrim synergy user ${SCRIM_SYNERGY.user} / AI ${SCRIM_SYNERGY.ai}${crashes ? `, event crashes skipped ${crashes}` : ""}`);
 const GS = ["CUP", "PO", "MSI", "WORLDS"];
 for (const sn of [0, ...Array.from({ length: SEASONS }, (_, i) => i + 1)]) {
   const rs = rows.filter((r) => !sn || r.season === sn);
@@ -262,6 +273,39 @@ for (const sn of [0, ...Array.from({ length: SEASONS }, (_, i) => i + 1)]) {
   for (const snap of ["cup", "reg", "reg2", "worlds"]) {
     if (!lead[`${snap}.power`]) continue;
     console.log(`season's best club minus league mean @${snap.padEnd(6)} ` + keys.map((k) => `${k} ${(lead[`${snap}.${k}`].reduce((a, b) => a + b, 0) / lead[`${snap}.${k}`].length).toFixed(2)}`).join(" · "));
+  }
+}
+// AI clubs over their payroll cap (core/market.ts aiPayrollCap), one count per club and season
+{
+  console.log("");
+  for (const snap of ["cup", "worlds"]) {
+    const vals = rows.filter((r) => r.over[snap]?.[r.team] !== undefined).map((r) => r.over[snap][r.team]);
+    const over = vals.filter((v) => v > 0);
+    const mean = over.length ? over.reduce((a, b) => a + b, 0) / over.length : 0;
+    const empty = rows.filter((r) => (r.over[`${snap}.empty`]?.[r.team] ?? 0) > 0).length;
+    console.log(`AI clubs over the payroll cap @${snap.padEnd(6)} ${over.length}/${vals.length} (${pct(over.length, vals.length).toFixed(1)}%) · by ${(mean / 10000).toFixed(2)}억 on average, at most ${(Math.max(0, ...over) / 10000).toFixed(2)}억 · with an empty starting slot ${empty}`);
+  }
+}
+
+// user mode: how far the user's club is ahead of the AI clubs, per part (AI = mean of the other nine LCK clubs)
+if (USER !== "none") {
+  const keys: (keyof Parts)[] = ["ovr", "syn", "morale", "coach", "power"];
+  const m = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  const sg = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(2)}`;
+  console.log("");
+  console.log(`${USER} minus AI mean (power points; raw synergy in brackets)`);
+  for (const snap of ["cup", "reg", "reg2", "worlds"]) {
+    const d: Record<string, number[]> = {};
+    const raw: { u: number[]; a: number[] } = { u: [], a: [] };
+    for (const r of rows.filter((x) => x.team === USER && x.parts[snap]?.[USER])) {
+      const ps = r.parts[snap];
+      const ai = Object.entries(ps).filter(([tid]) => tid !== USER).map(([, p]) => p);
+      for (const k of keys) (d[k] = d[k] ?? []).push(ps[USER][k] - m(ai.map((p) => p[k])));
+      raw.u.push(50 + (ps[USER].syn * 12) / MOD_GAIN);
+      raw.a.push(50 + (m(ai.map((p) => p.syn)) * 12) / MOD_GAIN);
+    }
+    if (!d.power) continue;
+    console.log(`  @${snap.padEnd(6)} ` + keys.map((k) => `${k} ${sg(m(d[k]))}`).join(" · ") + `  [synergy ${USER} ${m(raw.u).toFixed(0)} / AI ${m(raw.a).toFixed(0)}]`);
   }
 }
 if (OUT) writeFileSync(OUT, JSON.stringify(rows));

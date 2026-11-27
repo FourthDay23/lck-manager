@@ -638,6 +638,9 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
   for (const id of s.intl) {
     const t = s.teams[id];
     t.intlStrength = clamp((t.intlStrength ?? 75) + rng.normal(0, 2), 60, 95);
+    // AI scrims grow synergy all year (core/training.ts SCRIM_SYNERGY), so overseas clubs lose some in the
+    // off-season like LCK clubs do below; without it they would sit at 100 for good
+    t.synergy = clamp(t.synergy - 10, 30, 100);
   }
   s.season = season + 1;
   s.stats.seasonsPlayed++;
