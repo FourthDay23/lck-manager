@@ -33,20 +33,23 @@ import { josa } from "../core/format";
  * jungler of the side that is not doing the monster; busy: multiplier for one that is in a fight or was hit within
  * 1.5 s; tie: when both press in the same quarter second the thief wins this often at equal reflexes (tieSkill per
  * point of difference). stolenShare: the taker's share of the damage under which the take is a steal. flashIn: a
- * steal runner flashes into reach from up to this far outside it; flashAt: when the health is within this multiple
- * of its Smite damage. Scripts can override any of them with STEAL_TUNE=key:value,...
+ * steal runner flashes into reach from up to this far outside it; flashAt: when the monster's health will be inside
+ * its Smite within this many seconds; walkIn: how far short of its Smite spot a runner without Flash waits.
+ * Scripts can override any of them with STEAL_TUNE=key:value,...
  */
 export const STEAL_TUNE = {
   range: 750,
   react: 0.6, reactSkill: 0.012, thief: 0.7, busy: 0.7,
   tie: 0.3, tieSkill: 0.0125,
   stolenShare: 0.4,
-  flashIn: 400, flashAt: 1.5,
+  flashIn: 400, flashAt: 0.3, walkIn: 380,
 };
 export function applyStealTune(spec: string | undefined) {
   applyTune(STEAL_TUNE, "STEAL_TUNE", spec);
 }
 const REFLEX_REF = 73;
+/** seconds without a hit after which the damage record of a monster is forgotten (dealt, finish) */
+const OWN_FOR = 12;
 
 export interface StealStats {
   /** epic takes; of those: both junglers in reach with a charge at the last hit; a steal runner in reach */
@@ -58,6 +61,8 @@ export interface StealStats {
   /** takes whose last hit was a Smite; flashes into reach */
   smited: number;
   flashIn: number;
+  /** where the two junglers stood at each last hit and how it ended, e.g. "owner ready, thief away: own, smite" */
+  states: Record<string, number>;
 }
 
 interface State {
@@ -71,7 +76,7 @@ interface State {
 function st(e: Engine): State {
   let s = e.mods.objsmite as State | undefined;
   if (!s) {
-    s = { dmg: {}, last: {}, rate: {}, stats: { takes: {}, both: {}, steals: {}, failed: {}, smited: 0, flashIn: 0 } };
+    s = { dmg: {}, last: {}, rate: {}, stats: { takes: {}, both: {}, steals: {}, failed: {}, smited: 0, flashIn: 0, states: {} } };
     e.mods.objsmite = s;
   }
   return s;
@@ -85,8 +90,9 @@ const nm = (u: Unit) => `${u.name}(${u.champ.name})`;
 export function dealt(e: Engine, k: ObjKey, bySide: number[]): void {
   const S = st(e);
   const o = e.obj[k];
-  // back at full health: whoever hit it before no longer owns it
-  if (!S.dmg[k] || o.hp >= o.maxHp * 0.995) S.dmg[k] = [0, 0];
+  // back at full health, or left alone for a while (it has been healing): whoever hit it before no longer owns it.
+  // (The health test alone misses a new take: its first hit already puts the monster under it.)
+  if (!S.dmg[k] || o.hp >= o.maxHp * 0.995 || e.t - (S.last[k] ?? -99) > OWN_FOR) S.dmg[k] = [0, 0];
   S.dmg[k][0] += bySide[0];
   S.dmg[k][1] += bySide[1];
   if (bySide[0] + bySide[1] > 0) {
@@ -130,13 +136,14 @@ export function finish(e: Engine, k: ObjKey, at: Unit[], bySide: number[]): Fini
   const S = st(e);
   const own = ownerOf(e, k);
   // nobody has hit it, or it was left a while ago: nothing to finish
-  if (own === null || (o.hp > 0 && e.t - (S.last[k] ?? -99) > 10)) return null;
+  if (own === null || (o.hp > 0 && e.t - (S.last[k] ?? -99) > OWN_FOR)) return null;
   const thiefSide = (1 - own) as SideN;
   const near = (side: SideN, reach: number) => e.units.find((u) => u.side === side && u.role === "Jungle" && u.alive && dist(u, o.pos) < reach);
   // a steal runner just outside the reach flashes in when the monster is about to drop into its Smite
+  // (only while it is being hit: its health reaches the runner's Smite within flashAt seconds)
   const runner = near(thiefSide, STEAL_TUNE.range + STEAL_TUNE.flashIn);
   if (runner && dist(runner, o.pos) >= STEAL_TUNE.range && e.t >= runner.stunUntil && Summoners.canSmite(e, runner) && Macro.stealing(e, runner, k) &&
-    o.hp <= Summoners.smiteDamage(e, runner) * STEAL_TUNE.flashAt && e.flashToward(runner, o.pos, "engage", STEAL_TUNE.range - 150)) S.stats.flashIn++;
+    secondsTo(e, k, Summoners.smiteDamage(e, runner)) <= STEAL_TUNE.flashAt && e.flashToward(runner, o.pos, "engage", STEAL_TUNE.range - 150)) S.stats.flashIn++;
   const ready = (side: SideN) => {
     const u = near(side, STEAL_TUNE.range);
     return u && e.t >= u.stunUntil && Summoners.canSmite(e, u) ? u : undefined;
@@ -170,6 +177,13 @@ export function finish(e: Engine, k: ObjKey, at: Unit[], bySide: number[]): Fini
   const share = d[side] / Math.max(1, d[0] + d[1]);
   const steal = side !== own && share < STEAL_TUNE.stolenShare;
   bump(S.stats.takes, k);
+  {
+    const state = (sd: SideN) => {
+      const u = near(sd, STEAL_TUNE.range);
+      return !u ? "away" : !Summoners.canSmite(e, u) ? "no charge" : e.t < u.stunUntil ? "stunned" : "ready";
+    };
+    bump(S.stats.states, `owner ${state(own)}, thief ${state(thiefSide)}: ${steal ? "STEAL" : side === own ? "own" : "race won"}, ${smote ? "smite" : "damage"}`);
+  }
   if (smote) S.stats.smited++;
   if (jo && jt) bump(S.stats.both, k);
   if (steal) bump(S.stats.steals, k);

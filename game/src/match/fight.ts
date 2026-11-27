@@ -53,6 +53,9 @@ export const FIGHT_TUNE = {
   /** two teams facing each other over a monster nobody has started open a fight on contact this much less often
    *  (they stand off: the fight comes when one side starts the monster or finds an engage) */
   holdRate: 0.3,
+  /** the side that is on a monster opens a fight this much less often (it finishes the monster first), and not at all
+   *  on a jungler lurking for a steal further away than lurkReach */
+  takeRate: 0.3, lurkReach: 600,
 };
 
 type Phase = "position" | "engage" | "brawl" | "retreat";
@@ -628,6 +631,9 @@ function startFights(e: Engine, M: Mod) {
       const aim = st !== "avoid" && ENGINE_FLAGS.macro ? Macro.purpose(e, u.side, foe)?.want : undefined;
       if (aim === "stop" && d < FIGHT_TUNE.stopReach) rate = Math.max(rate, FIGHT_TUNE.stopRate);
       else if (aim === "hold" && u.task !== "gank") rate *= FIGHT_TUNE.holdRate;
+      // the side on the monster would rather finish it than go after whoever stands near (the other side has to come
+      // to it), least of all after a jungler lurking for a steal out of reach
+      else if (aim === "take") rate *= d > FIGHT_TUNE.lurkReach && Macro.stealing(e, foe) ? 0 : FIGHT_TUNE.takeRate;
       if (rate > 0 && e.rng.chance(clamp(rate * DT, 0, 0.9))) {
         begin(e, M, u, foe, myGroup, theirGroup, ratio);
         break;
@@ -1183,8 +1189,11 @@ function act(e: Engine, M: Mod, u: Unit, info: FInfo, side: [Unit[], Unit[]], ge
   if (!u.alive || u.fightId !== info.id) return;
   const s = M.u[u.i];
   if (e.t < u.stunUntil) return;
-  // a jungler on a steal run that was caught keeps going for the monster (macro.ts stealJob)
-  if (ENGINE_FLAGS.macro && Macro.stealWalk(e, u)) return;
+  // a jungler on a steal run that was caught keeps going for the monster (macro.ts stealJob); a root holds it
+  if (ENGINE_FLAGS.macro && Macro.stealing(e, u)) {
+    if (e.t >= s.rootUntil) Macro.stealWalk(e, u);
+    return;
+  }
   const foes = side[1 - u.side].filter((x) => x.alive && x.fightId === info.id);
   const allies = side[u.side].filter((x) => x.alive && x.fightId === info.id);
   if (!foes.length) return;

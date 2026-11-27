@@ -1,6 +1,7 @@
 // Where and when the engine's fights happen relative to epic monsters, with the definitions of
 // scripts/lck_objfights.py (real LCK 2026) so the two outputs can be laid side by side. Same games as calibrate.ts.
 // Run: MSYS_NO_PATHCONV=1 node scripts/run-ts.mjs scripts/objfight-diag.ts [games] [rosterSeed]
+//   in parallel: node scripts/par.mjs objfight-diag.ts [games] [rosterSeed]  (same report)
 //   JSON=C:/.../out.json writes the tables; LOG=<game#> prints that game's macro plan log and its fights.
 //   EARLY_TUNE / PACE_TUNE / SIM_TUNE / STRAT / FLAGS as in calibrate.ts.
 // Definitions (see lck_objfights.py): a fight is a chain of champion kills (15 s / 2,500 u), size = killers +
@@ -18,6 +19,7 @@ import { Rng } from "../src/core/rng";
 import { ROLES } from "../src/data/types";
 import { BARON_PIT, DRAGON_PIT, NEXUS, dist, type Vec } from "../src/match/map";
 import * as Macro from "../src/match/macro";
+import { par } from "./lib/par";
 
 const dir = existsSync("public/data/champions.json") && existsSync("public/data/players.json") ? "data" : "data-sample";
 const j = (f: string) => {
@@ -100,6 +102,8 @@ for (let g = 0; g < N; g++) {
   const d = newDraft(a, b, []);
   autoDraft(s, data, d, rng);
   const strategy = process.env.STRAT ? (process.env.STRAT.split(",").map((x) => x || null) as [never, never]) : undefined;
+  // par.game: plays the game here, or leaves it to another piece of a parallel run (scripts/par.mjs)
+  const res = par.game(g, () => {
   const e = new Engine({ s, data, blue: a, red: b, picks: { blue: d.picks.blue, red: d.picks.red }, seed: 1000 + g, strategy });
   const LOG = process.env.LOG !== undefined && Number(process.env.LOG) === g;
   if (LOG && Macro.st(e)) Macro.st(e)!.logOn = true;
@@ -182,12 +186,13 @@ for (let g = 0; g < N; g++) {
     return { t: m.t, end: m.end, size: m.size, pos: m.pos, origin: m.origin, pit, obj: pit ? inPlay(win, pit, m.t) : null,
       kills: kills.filter((k) => k.t >= m.t && k.t <= m.end + 1 && dist(k.pos, m.pos) < 2500).length };
   });
-  games.push({ dur: e.t, kills: e.kills[0] + e.kills[1], fights, win, mod: mods });
+  const game: G = { dur: e.t, kills: e.kills[0] + e.kills[1], fights, win, mod: mods };
   const M = Macro.st(e);
+  const pl: Record<string, number> = {}, ab: Record<string, number> = {}, ca: Record<string, number> = {};
   if (M) for (const sd of [0, 1] as SideN[]) {
-    for (const [k, v] of Object.entries(M.stats[sd].plans)) plans[k] = (plans[k] ?? 0) + v;
-    for (const [k, v] of Object.entries(M.stats[sd].aborts)) aborts[k] = (aborts[k] ?? 0) + v;
-    for (const [k, v] of Object.entries(M.stats[sd].calls ?? {})) calls[k] = (calls[k] ?? 0) + v;
+    for (const [k, v] of Object.entries(M.stats[sd].plans)) pl[k] = (pl[k] ?? 0) + v;
+    for (const [k, v] of Object.entries(M.stats[sd].aborts)) ab[k] = (ab[k] ?? 0) + v;
+    for (const [k, v] of Object.entries(M.stats[sd].calls ?? {})) ca[k] = (ca[k] ?? 0) + v;
   }
   if (LOG) {
     const ts = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
@@ -200,7 +205,15 @@ for (let g = 0; g < N; g++) {
     lines.sort((x, y) => x[0] - y[0]);
     for (const [, l] of lines) console.log(l);
   }
+  return { game, pl, ab, ca };
+  });
+  if (!res) continue;
+  games.push(res.game);
+  for (const [k, v] of Object.entries(res.pl)) plans[k] = (plans[k] ?? 0) + v;
+  for (const [k, v] of Object.entries(res.ab)) aborts[k] = (aborts[k] ?? 0) + v;
+  for (const [k, v] of Object.entries(res.ca)) calls[k] = (calls[k] ?? 0) + v;
 }
+par.end();
 
 const n = games.length;
 const out: Record<string, unknown> = { games: n, label: "engine" };

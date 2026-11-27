@@ -93,9 +93,9 @@ const DRAGON_HOLD = 0.8;
  * tradeObj / tradeSiege: score bonus for the other pit's monster / a far-side turret while the enemy is on a pit we
  *   are not playing for (on top of the strategy's `trade`).
  * baronFrom: before this minute a baron call needs more bodies down (takeCand).
- * stealAt: a steal run starts once the monster the enemy is on is under this share of its health; stealFrom: only for
- *   a jungler this close to the pit; stealHover / stealLoose: its chance when its team is at the pit for that monster
- *   / is not; stealBig: added for baron, elder and soul-race dragons (stealTick, T09).
+ * stealFrom: a steal run is only for a jungler this close to the pit when the enemy commits; stealHover / stealLoose:
+ *   its chance when its team is at the pit for that monster / is not; stealBig: added for baron, elder and soul-race
+ *   dragons (stealTick, T09).
  */
 export const OBJ_TUNE = {
   hover: 2300,
@@ -106,7 +106,7 @@ export const OBJ_TUNE = {
   backOff: 1.5,
   tradeObj: 0.35, tradeSiege: 0.3,
   baronFrom: 24,
-  stealAt: 0.92, stealFrom: 3600, stealHover: 0.7, stealLoose: 0.3, stealBig: 0.2,
+  stealFrom: 3600, stealHover: 0.85, stealLoose: 0.45, stealBig: 0.15,
 };
 export function applyObjTune(spec: string | undefined) {
   applyTune(OBJ_TUNE, "OBJ_TUNE", spec);
@@ -213,6 +213,8 @@ interface Brain {
   cool: Partial<Record<string, number>>;
   rolls: Partial<Record<ObjKey, { at: number; solo: number; h: number }>>;
   wonFight: boolean;
+  /** lost the fight of the last 20 s (two kills or more behind in it) */
+  lostFight: boolean;
   /** when takeCand last gave a monster up for lack of power (concedeAt), by monster */
   gaveUp: Partial<Record<ObjKey, number>>;
   /** the enemy is on a pit we are not playing for (think): the monster and its pit */
@@ -421,6 +423,12 @@ function enemyOn(e: Engine, M: MacroState, side: SideN, k: ObjKey): boolean {
   return o.alive && o.hp < o.maxHp * 0.97 && (p.kind === "take" || p.kind === "contest") && p.obj === k && p.phase === "commit";
 }
 
+/** The other side's plan is committed on monster k (walking in on it or hitting it). */
+function enemyCommitted(e: Engine, M: MacroState, side: SideN, k: ObjKey): boolean {
+  const p = M.brains[1 - side].plan;
+  return e.obj[k].alive && (p.kind === "take" || p.kind === "contest") && p.obj === k && p.phase === "commit";
+}
+
 /** The enemy is on a pit we are not playing for (three or more of them within OBJ_TUNE.near, its monster in play, and
  *  we have no plan there or only hover): what we do elsewhere now is a trade for it. */
 function tradeCtx(e: Engine, b: Brain, V: View): Brain["trade"] {
@@ -495,7 +503,7 @@ export function init(e: Engine): void {
       side, strat, P: STRATEGY_PARAMS[strat] ?? STRATEGY_PARAMS.balanced, plan: noPlan(0), next: 1 + side * 1.25,
       formation: "lanes", formUntil: 0, splitter, side2: pickSplitter(e, side, splitter), splitLane: "top",
       group: { key: "", x: 0, y: 0, path: [], dest: { x: 0, y: 0 }, pathFor: null, members: [], quorum: 1 },
-      hist: [], cool: {}, rolls: {}, wonFight: false, gaveUp: {}, trade: null, steal: null, stealTried: {},
+      hist: [], cool: {}, rolls: {}, wonFight: false, lostFight: false, gaveUp: {}, trade: null, steal: null, stealTried: {},
     };
   }) as [Brain, Brain];
   const units = e.units.map((): UMem => ({ job: "old", spotFor: "", spotAt: -99, retreatUntil: 0 }));
@@ -572,6 +580,7 @@ function think(e: Engine, M: MacroState, b: Brain) {
   while (b.hist.length && e.t - b.hist[0].t > 20) b.hist.shift();
   const h0 = b.hist[0];
   b.wonFight = e.kills[b.side] - h0.my - (e.kills[1 - b.side] - h0.th) >= 2;
+  b.lostFight = e.kills[1 - b.side] - h0.th - (e.kills[b.side] - h0.my) >= 2;
   // side laner(s)
   const sp = e.units[b.splitter];
   if (!sp || (!sp.alive && sp.respawnAt - e.t > 25)) {
@@ -693,7 +702,11 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
   if (lan && area < 1 && !cur) return null;
   // too weak to show up at all: concede it (choosePlan ends a plan that has not committed as "concede") and look for a
   // trade. Between this and the hold line the side hovers. A committed take is called off by planValid instead.
-  if (!solo && !(cur && cur.phase === "commit") && raw < concedeAt(e, b, k)) {
+  // A side that has just lost the fight and is down bodies gives an ordinary monster up as well, instead of staying
+  // for a second fight over it (4+ fights about a dragon: 2.4-2.8 a game, LCK 2026 1.66; baron, elder and soul-race
+  // dragons are still played for).
+  const beaten = b.lostFight && V.numAdv <= -1 && !bigObj(e, b.side, k);
+  if (!solo && !(cur && cur.phase === "commit") && (raw < concedeAt(e, b, k) || beaten)) {
     b.gaveUp[k] = e.t;
     return null;
   }
@@ -793,6 +806,8 @@ function contestCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Pl
   // the side about to lose the soul race fights for the dragon from the enemy's 2nd stack on (engine 200 games: one
   // team took all four dragons in 48% of games; LCK 2026 ~22%); a team behind still flanks a baron / elder
   if (ratio < contestMin(e, b, k)) return null;
+  // not straight back in after a lost fight with two or more down
+  if (b.lostFight && V.numAdv <= -2 && !bigObj(e, b.side, k)) return null;
   const val = objValue(e, b.side, k, true) * (b.P.obj[k] ?? 1);
   let score = val * b.P.contest * (hitting ? 1 : 0.7) - 0.3 + clamp(ratio - 1, -1, 0.8) * 1.3 + (can.length - onIt.length) * 0.15 + b.P.fight;
   if (V.minute < b.P.avoidUntil && ratio < 1.3) score -= 0.4;
@@ -1099,25 +1114,34 @@ function pickHitters(e: Engine, b: Brain, p: Plan) {
 }
 
 /**
- * Steal runs (T09). While the enemy is on a monster (enemyOn) and it is below OBJ_TUNE.stealAt of its health, a
- * jungler close by with a Smite charge may go for it: once per monster, more often when its team is at the pit
- * anyway (hovering, or gathered for it) than when it gave the monster up, and for the monsters that matter (bigObj).
- * It walks to open ground inside Smite's reach (stealJob), over the wall if that is nearer; the Smite fight itself is
- * objsmite.ts. Not for the grubs (three small monsters, T07).
+ * Steal runs (T09). When the enemy commits to a monster (walks in on it: a dragon dies about 11 s after the first
+ * hit, so waiting for the hit leaves no time) a jungler close by with a Smite charge may go for it: once per monster,
+ * more often when its team is at the pit anyway (hovering, or gathered for it) than when it gave the monster up, and
+ * for the monsters that matter (bigObj). It waits outside Smite's reach and goes in at the last moment (stealJob);
+ * the Smite fight itself is objsmite.ts. Not for the grubs (three small monsters, T07).
  */
 function stealTick(e: Engine, M: MacroState, b: Brain) {
   const s = b.steal;
   if (s) {
     const u = e.units[s.by];
-    if (!e.obj[s.k].alive || !u.alive || e.t > s.until || hpf(u) < 0.2 || !enemyOn(e, M, b.side, s.k)) {
-      log(M, e, b, `steal run over: ${!e.obj[s.k].alive ? "monster gone" : !u.alive ? "dead" : e.t > s.until ? "time" : hpf(u) < 0.2 ? "hurt" : "enemy left"}, ${Math.round(dist(u, PIT_POS[PIT_OF[s.k]]))} u from the pit${u.fightId ? ", in a fight" : ""}`);
+    if (!e.obj[s.k].alive || !u.alive || e.t > s.until || hpf(u) < 0.2 || !enemyCommitted(e, M, b.side, s.k)) {
+      const why = !e.obj[s.k].alive ? "monster gone" : !u.alive ? "dead" : e.t > s.until ? "time" : hpf(u) < 0.2 ? "hurt" : "enemy left";
+      const d = dist(u, PIT_POS[PIT_OF[s.k]]);
+      bump(M.stats[b.side].calls, `stealend:${why}, ${d < STEAL_TUNE.range ? "in reach" : d < STEAL_TUNE.range + STEAL_TUNE.flashIn ? "a flash away" : d < 2000 ? "close" : "far"}`);
+      log(M, e, b, `steal run over: ${why}, ${Math.round(d)} u from the pit${u.fightId ? ", in a fight" : ""}`);
       b.steal = null;
+      // back to what it was doing (stealJob put it on the objective task)
+      if (u.task === "obj") u.task = "jungle";
+      u.objTarget = undefined;
+      u.goal = null;
+      u.path = [];
+      M.units[u.i].spotFor = "";
     }
     return;
   }
   for (const k of OBJS) {
     const o = e.obj[k];
-    if (k === "grubs" || !o.alive || o.hp > o.maxHp * OBJ_TUNE.stealAt || !enemyOn(e, M, b.side, k)) continue;
+    if (k === "grubs" || !o.alive || !enemyCommitted(e, M, b.side, k)) continue;
     const key = o.spawnAt ?? -1;
     if (b.stealTried[k] === key) continue;
     const jg = e.units.find((u) => u.side === b.side && u.role === "Jungle")!;
@@ -1130,7 +1154,8 @@ function stealTick(e: Engine, M: MacroState, b: Brain) {
     const there = p.kind === "take" && p.obj === k;
     const chance = (there ? OBJ_TUNE.stealHover : OBJ_TUNE.stealLoose) + (bigObj(e, b.side, k) ? OBJ_TUNE.stealBig : 0);
     if (!e.rng.chance(clamp(chance * (0.6 + 0.4 * b.P.contest), 0, 0.95))) continue;
-    b.steal = { k, by: jg.i, until: e.t + 16 };
+    b.steal = { k, by: jg.i, until: e.t + 40 };
+    M.units[jg.i].spotFor = "";
     bump(M.stats[b.side].calls, `steal:${k}`);
     log(M, e, b, `steal run on ${k} by ${jg.name} (${Math.round((o.hp / o.maxHp) * 100)}% left)`);
     return;
@@ -1164,7 +1189,7 @@ function ringSpot(e: Engine, u: Unit, pit: Vec, r: number, lo: number, hi: numbe
     if (d < lo || d > hi) continue;
     let len = 0, prev: Vec = u;
     for (const w of Nav.findPath(u, q)) { len += dist(prev, w); prev = w; }
-    for (const x of e.units) if (x.alive && x.side !== u.side) len += Math.max(0, 1300 - dist(x, q)) * 2;
+    for (const x of e.units) if (x.alive && x.side !== u.side) len += Math.max(0, 1400 - dist(x, q)) * 4;
     if (len < bv) { bv = len; best = q; }
   }
   return best;
@@ -1181,29 +1206,21 @@ function stealJob(e: Engine, b: Brain, u: Unit, m: UMem) {
   const pit = PIT_POS[PIT_OF[k]];
   u.task = "obj";
   u.objTarget = k;
-  const reach = STEAL_TUNE.range - 120;
-  const d = dist(u, pit);
-  const walk = Math.max(0, d - reach) / e.speed(u);
-  const left = secondsTo(e, k, Summoners.smiteDamage(e, u));
-  const flash = Summoners.isReady(e, u, "flash") && d < STEAL_TUNE.range + STEAL_TUNE.flashIn;
-  if (d < STEAL_TUNE.range - 40 || (!flash && left <= walk + 0.5)) {
-    // in: straight at the monster (the reach is counted from its centre)
-    const tag = `steal:in:${k}`;
-    if (!m.spot || m.spotFor !== tag) {
-      m.spot = ringSpot(e, u, pit, reach - 60, 0, reach) ?? snap(toward(pit, u, reach - 60));
-      m.spotFor = tag;
-      m.spotAt = e.t;
-    }
-    go(e, u, m.spot, 50);
-    return;
-  }
-  const tag = `steal:wait:${k}`;
-  if (!m.spot || m.spotFor !== tag || e.t - m.spotAt > 4) {
-    m.spot = ringSpot(e, u, pit, STEAL_TUNE.range + 300, STEAL_TUNE.range + 120, STEAL_TUNE.range + 520) ?? snap(toward(pit, u, STEAL_TUNE.range + 300));
+  // where it will Smite from: open ground inside the reach (counted from the monster's centre), nearest by foot
+  const tag = `steal:${k}`;
+  if (!m.spot || m.spotFor !== tag || (e.t - m.spotAt > 6 && dist(u, pit) > STEAL_TUNE.range + 700)) {
+    m.spot = ringSpot(e, u, pit, STEAL_TUNE.range - 180, 0, STEAL_TUNE.range - 120) ?? snap(toward(pit, u, STEAL_TUNE.range - 180));
     m.spotFor = tag;
     m.spotAt = e.t;
   }
-  go(e, u, m.spot, 60);
+  const toSpot = dist(u, m.spot);
+  const flash = Summoners.isReady(e, u, "flash");
+  // it waits on its way in, this far short of that spot: with Flash up as far out as the Flash still reaches from
+  // (objsmite.ts flashes it in), without it a short walk away
+  const out = flash ? STEAL_TUNE.flashIn - 100 : STEAL_TUNE.walkIn;
+  const left = secondsTo(e, k, Summoners.smiteDamage(e, u));
+  const dive = dist(u, pit) < STEAL_TUNE.range - 40 || (!flash && left <= toSpot / e.speed(u) + 0.5);
+  if (dive || toSpot > out + 40) go(e, u, m.spot, 40);
 }
 
 /** Per-step phase changes (gather -> commit as soon as the group is there). */
