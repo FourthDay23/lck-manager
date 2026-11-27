@@ -130,9 +130,12 @@ export function applyGrowthTune(spec: string | undefined) {
  * Set 2026-11-27 after turret shots outside fights and sieges that wait for the wave (SIM_TUNE) made games 34.6-37.2
  * min with first towers at 16.7-17.2 and too few kills from 10 to 30 min (2.8 / 6.4 / 9.7 per 10-min block); with
  * these, EARLY_TUNE and SIM_TUNE.siegePush 3.2: 31.9 min, 28.8 kills, first tower 15.9 (200 games, roster seed 3).
+ * 2026-11-27 (T08): engage 3.8 -> 2.7. Fights over epic monsters (macro.ts OBJ_TUNE) now bring 10 kills a game where
+ * they brought 3; chance meetings of two groups are cut by as much so kills stay at 29.7 (120 games, seed 3: 32.7
+ * kills at 3.8, kills from such meetings 11.5 -> 5.5 a game).
  * Scripts can override them with PACE_TUNE=key:value,...
  */
-export const PACE_TUNE = { towerDmg: 1.6, minionDmg: 1.3, engage: 3.8 };
+export const PACE_TUNE = { towerDmg: 1.6, minionDmg: 1.3, engage: 2.7 };
 export function applyPaceTune(spec: string | undefined) {
   applyTune(PACE_TUNE, "PACE_TUNE", spec);
 }
@@ -216,7 +219,7 @@ export interface Unit {
 export type ObjKey = "dragon" | "grubs" | "herald" | "baron" | "elder";
 export const OBJ_KO: Record<ObjKey, string> = { dragon: "드래곤", grubs: "공허 유충", herald: "협곡의 전령", baron: "내셔 남작", elder: "장로 드래곤" };
 
-/** an epic monster starts to heal once no live champion is within this distance of it (objectivesTick) */
+/** an epic monster heals unless a champion within this distance is fighting or walking in on it (objectivesTick) */
 const OBJ_LEASH = 1300;
 export interface ObjState { key: ObjKey; alive: boolean; spawnAt: number | null; hp: number; maxHp: number; pos: Vec; takenBy?: SideN; type?: string; left?: number }
 export interface CampState { id: number; side: SideN; kind: CampKind | "scuttle"; pos: Vec; alive: boolean; spawnAt: number; hp: number; maxHp: number }
@@ -1713,10 +1716,11 @@ export class Engine {
       if (!o.alive) continue;
       const at = this.units.filter((u) => u.alive && !u.fightId && dist(u, o.pos) < 650 && (!ENGINE_FLAGS.macro || Macro.hitsObjective(this, u, k)));
       if (!at.length) {
-        // it heals only once everybody has left: while champions stand at the pit (a fight over it: nobody in a fight
-        // can hit it) it keeps the damage it has taken, so the side that wins the fight finishes it. Before, it
-        // healed 2 % a second through the fight (30 % over a 15 s fight) and the take started over.
-        if (!this.units.some((u) => u.alive && dist(u, o.pos) < OBJ_LEASH)) o.hp = Math.min(o.maxHp, o.hp + o.maxHp * 0.02 * DT);
+        // it does not heal while it is being fought over: champions in a fight at the pit (nobody in a fight can hit
+        // it) or walking in on it. It keeps the damage it has taken, so the side that wins the fight finishes it.
+        // Before, it healed 2 % a second through the fight (30 % over a 15 s fight) and the take started over.
+        // Bystanders do not count (both river scuttles are 1,000 u from a pit).
+        if (!this.units.some((u) => u.alive && (u.fightId !== 0 || u.task === "obj") && dist(u, o.pos) < OBJ_LEASH)) o.hp = Math.min(o.maxHp, o.hp + o.maxHp * 0.02 * DT);
         continue;
       }
       const bySide = [0, 0];

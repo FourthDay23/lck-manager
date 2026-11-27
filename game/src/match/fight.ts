@@ -45,14 +45,14 @@ export const FIGHT_TUNE = {
   bigRetreat: 0.05,
   /** fights next to a pit with a monster in play (macro.purpose). stopRate: chance per second that a champion whose
    *  side has to stop a take opens the fight once it is within stopReach of an enemy, whatever the odds (it came to
-   *  fight; from further out the usual rates apply); objHold: extra seconds
-   *  the two teams face each other before either may engage; stopEdge / takeEdge: engage threshold shift for the side
-   *  that has to stop the take / that is on the monster; stopWait / holdWait: seconds in formation after which the
-   *  side that must stop it goes in at stopGo odds / a standoff over a monster nobody started is called off */
+   *  fight; from further out the usual rates apply); objHold: extra seconds the two teams face each other before
+   *  either may engage; stopEdge / takeEdge: engage threshold shift for the side that has to stop the take / that is
+   *  on the monster; stopWait / holdWait: seconds in formation after which the side that must stop it goes in at
+   *  stopGo odds / a standoff over a monster nobody started is called off */
   stopRate: 0.6, stopReach: 850, objHold: 1.5, stopEdge: -0.14, takeEdge: 0.05, stopWait: 5, stopGo: 0.75, holdWait: 14,
   /** two teams facing each other over a monster nobody has started open a fight on contact this much less often
    *  (they stand off: the fight comes when one side starts the monster or finds an engage) */
-  holdRate: 0.6,
+  holdRate: 0.5,
 };
 
 type Phase = "position" | "engage" | "brawl" | "retreat";
@@ -623,7 +623,8 @@ function startFights(e: Engine, M: Mod) {
       rate *= startMod(e, M, u, st, foe, myGroup, ratio);
       // the enemy is on the monster and this side came to stop it: on contact the fight is on (at poor odds the base
       // rate left the two teams standing in the pit together, both hitting the monster)
-      const aim = st !== "avoid" && rate > 0 && ENGINE_FLAGS.macro ? Macro.purpose(e, u.side, foe)?.want : undefined;
+      // (also where the base rate is 0: lane opponents during laning, unless they are on the objective task)
+      const aim = st !== "avoid" && ENGINE_FLAGS.macro ? Macro.purpose(e, u.side, foe)?.want : undefined;
       if (aim === "stop" && d < FIGHT_TUNE.stopReach) rate = Math.max(rate, FIGHT_TUNE.stopRate);
       else if (aim === "hold" && u.task !== "gank") rate *= FIGHT_TUNE.holdRate;
       if (rate > 0 && e.rng.chance(clamp(rate * DT, 0, 0.9))) {

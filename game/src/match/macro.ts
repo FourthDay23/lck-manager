@@ -33,12 +33,14 @@
 // Objective fights (2026-11-27, T08; measured with scripts/objfight-diag.ts against scripts/lck_objfights.py)
 //  * Before: a take was dropped as "outnumbered" whenever every enemy that could arrive out-muscled the plan's own
 //    three or four members, so two even teams both left the same dragon; the side without the area waited 2,700 u
-//    back and usually left as well. Fights over a dragon came with 18 % of dragon kills (LCK 2026: 31 %).
+//    back and usually left as well. Fights over a dragon came with 25 % of dragon kills (LCK 2026: 31 %), fights of
+//    six or more before 14:00 0.04 times a game (0.77).
 //  * Now each side makes one of three calls on an epic monster from its whole-team presence-weighted power there:
-//    hold the area (stage at the entrance, start it), hover (대치: stand HOVER_DIST out on its own side and collapse
+//    hold the area (stage at the entrance, start it), hover (대치: stand OBJ_TUNE.hover out on its own side and collapse
 //    on the take when the contest odds are there), or concede (below concedeAt: no plan, and the trade context below).
 //  * Standoff: a side that holds the area does not start the monster while enemies near the pit match it; it waits
-//    (the fight module opens the fight if somebody finds an engage) and starts it after STANDOFF seconds at even odds.
+//    (the fight module opens the fight if somebody finds an engage) and starts it after its standoff time
+//    (OBJ_TUNE.standoffMin..standoffMax seconds) at even odds.
 //    Guards stand on the fan points nearest the enemy, between it and the pit.
 //  * Trade: while three or more enemies are on a pit we are not playing for, the other pit's monster and a turret on
 //    the far side of the map are worth more (tradeCtx); the plan remembers what it was traded for (HUD label).
@@ -78,7 +80,8 @@ const DRAGON_HOLD = 0.8;
  * hover: how far from the pit the side without the area waits, on its own side (was 2,700 u).
  * concede / concedeBig / concedeMinor: below this share of the enemy's presence-weighted power at the pit a side gives
  *   the monster up instead of showing up (dragon / soul-point dragon, baron, elder / herald, grubs).
- * contest / contestBig / contestEpic: the same yardstick for collapsing on an enemy take (was 0.95 / 0.8 / 0.65).
+ * contest / contestBig / contestEpic: the same yardstick for collapsing on an enemy take (was 0.95 / 0.8 / 0.65, but
+ *   weighed against every enemy within 25 s; now both sides over the same few seconds, see contestCand).
  * standoffEdge: a side holding the area starts the monster at once when it has this power edge over the enemies
  *   within `near` of the pit; otherwise it waits standoffMin..standoffMax seconds and starts it at standoffGo.
  * groupFrom: the minute from which a dragon is played as a group objective even if none has been taken (laningFor).
@@ -92,8 +95,8 @@ const DRAGON_HOLD = 0.8;
 export const OBJ_TUNE = {
   hover: 2300,
   concede: 0.6, concedeBig: 0.45, concedeMinor: 0.7,
-  contest: 0.9, contestBig: 0.78, contestEpic: 0.65,
-  near: 2600, standoffEdge: 1.25, standoffMin: 6, standoffMax: 14, standoffGo: 0.9,
+  contest: 0.95, contestBig: 0.78, contestEpic: 0.65,
+  near: 2600, standoffEdge: 1.25, standoffMin: 5, standoffMax: 12, standoffGo: 0.9,
   seen: 2300, laneReach: 16, guard: 820, groupFrom: 11, stage: 0,
   backOff: 1.5,
   tradeObj: 0.35, tradeSiege: 0.3,
@@ -167,10 +170,14 @@ interface Plan {
   /** we hold the area: set up close and start it; without it hover on our side (OBJ_TUNE.hover) */
   prio: boolean;
   emergency?: boolean;
-  /** how long this side stands off before it starts the monster at even odds (rolled when the group first gathers) */
+  /** how long this side stands off before it starts the monster at even odds, and since when it has been standing
+   *  off (both set the first time its gathered group finds matching enemies at the pit) */
   standoff?: number;
+  standAt?: number;
   /** the monster the enemy was on when this plan was picked as the trade for it */
   trade?: ObjKey;
+  /** contest: the seconds both sides were weighed over when it was picked (contestCand); planValid uses the same */
+  hz?: number;
 }
 
 interface Group {
@@ -396,6 +403,13 @@ function inPlay(e: Engine, pk: Pit, lead: number): ObjKey | null {
     if (o.alive || (o.spawnAt !== null && o.spawnAt >= e.t && o.spawnAt - e.t < lead)) return k;
   }
   return null;
+}
+
+/** The other side is on the monster: its plan is committed on it and the monster has taken damage. (Health below full
+ *  alone also holds after our own called-off take, since a monster no longer heals while it is being fought over.) */
+function enemyOn(e: Engine, M: MacroState, side: SideN, k: ObjKey): boolean {
+  const o = e.obj[k], p = M.brains[1 - side].plan;
+  return o.alive && o.hp < o.maxHp * 0.97 && (p.kind === "take" || p.kind === "contest") && p.obj === k && p.phase === "commit";
 }
 
 /** The enemy is on a pit we are not playing for (three or more of them within OBJ_TUNE.near, its monster in play, and
@@ -714,10 +728,10 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
     // baron needs two down or a won fight with a body up (LCK first baron median 24:53)
     // (T08: with fights over the 2nd / 3rd dragon and the herald there is a won fight around 20:00 far more often, and
     // on the old rule (before 23 min: two down, or one down after a won fight) the first baron came at 21.8 min, the
-    // first inhibitor at 24.0 and games ran 2.4 min short. Before OBJ_TUNE.baronFrom it now takes four down, or three
-    // down after a won fight.)
+    // first inhibitor at 24.0 and games ran 2.4 min short. Before OBJ_TUNE.baronFrom it now takes three down, or two
+    // down after a won fight; with four / three the first baron came at 26.8 min, LCK 2026: 24.9.)
     const veryEarly = V.minute < OBJ_TUNE.baronFrom;
-    const down = V.numAdv >= (veryEarly ? 4 : 2) || (V.numAdv >= 1 && !veryEarly && (honest > 1.35 || b.wonFight)) || (V.numAdv >= 3 && veryEarly && b.wonFight);
+    const down = V.numAdv >= (veryEarly ? 3 : 2) || (V.numAdv >= 1 && !veryEarly && (honest > 1.35 || b.wonFight)) || (V.numAdv >= 2 && veryEarly && b.wonFight);
     // elder without a pick or a won fight needs a stomp: a full-strength enemy can flip it (LCK elder takers had more
     // champions alive in 52% of takes)
     const safe = down || honest > (k === "elder" ? 2.4 : late ? 1.75 : early ? 2.4 : 2.0) || (b.wonFight && !veryEarly && honest > 1.05);
@@ -746,12 +760,13 @@ function contestCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Pl
   const pit = PIT_POS[PIT_OF[k]];
   // the enemy is on it, or its group stands at the entrance (OBJ_TUNE.seen): a dragon dies about 11 s after the first
   // hit, so an answer that starts at the first hit (before: two enemies inside 1,400 u) mostly arrived too late
-  // Baron and elder take 20-30 s, long enough to answer the first hit: those are answered once they are started
-  // (answering every enemy pair seen near the baron pit made 2.0 fights a game about baron; LCK 2026: 0.9).
+  // Baron and elder take 20-30 s, long enough to answer once the enemy stands on them: for those the old trigger
+  // stays (answering every enemy pair seen near the baron pit made 2.0 fights a game about baron; LCK 2026: 0.9).
   const onIt = V.theirs.filter((x) => dist(x, pit) < 1400);
   const hitting = o.hp < o.maxHp * 0.97;
   const slow = k === "baron" || k === "elder";
-  if (hitting ? !onIt.length : slow || V.theirs.filter((x) => dist(x, pit) < OBJ_TUNE.seen).length < 2) return null;
+  const coming = slow ? onIt.length : V.theirs.filter((x) => dist(x, pit) < OBJ_TUNE.seen).length;
+  if (hitting ? !onIt.length : coming < 2) return null;
   let dps = 0;
   for (const x of onIt) if (dist(x, pit) < 650 && !x.fightId) dps += e.aaDps(x) * 1.2 + 30;
   const ttk = o.hp / Math.max(60, dps);
@@ -776,7 +791,7 @@ function contestCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Pl
     // h = hitters needed in the pit before anyone damages it (hitsObjective): all of `can` meant a contest that won the
     // fight rarely started hitting (one member a few hundred units out blocked it) while the dragon regenerated
     obj: k, need: Math.min(3, can.length), h: Math.min(3, can.length), hitters: can.map((u) => u.i), phase: "gather",
-    until: e.t + 15, expires: e.t + 60, engage: ratio >= 0.9 - b.P.fight, emergency: true, ratio, prio: true,
+    until: e.t + 15, expires: e.t + 60, engage: ratio >= 0.9 - b.P.fight, emergency: true, ratio, prio: true, hz,
   });
 }
 
@@ -916,13 +931,13 @@ function planValid(e: Engine, M: MacroState, b: Brain, V: View, p: Plan): string
     } else if (!late && o.alive && p.kind === "contest") {
       // the candidate's yardstick with some slack (before: a flat 1.3, so a baron contest allowed at 0.65 of the
       // enemy's power was called off again in the next think)
-      const ourW = powerAt(e, mem, pit, 25);
-      const thW = powerAt(e, V.foes, pit, 25);
+      const ourW = powerAt(e, mem, pit, p.hz ?? 25);
+      const thW = powerAt(e, V.foes, pit, p.hz ?? 25);
       if ((ourW + 1) / (thW + 1) < contestMin(e, b, k) - 0.12) return "outnumbered";
     } else if (!late && o.alive && p.phase === "commit") {
       // a committed take is called off by what stands at the pit: the enemies there against our members there.
       // (Before, every enemy that could arrive within 25 s was weighed against the plan's own three or four members
-      // from the moment the plan started, so two even teams both dropped the same dragon as "outnumbered", 3.2 such
+      // from the moment the plan started, so two even teams both dropped the same dragon as "outnumbered", 3.5 such
       // aborts a game. Whether to show up at all is takeCand's call on whole-team power, see concedeAt.)
       const a = atPit(e, b.side, pit, p.members);
       if (a.thN > 0 && a.thP > a.ourP * (OBJ_TUNE.backOff + b.P.fight)) return "outnumbered";
@@ -1010,7 +1025,7 @@ function choosePlan(e: Engine, M: MacroState, b: Brain, V: View) {
         } else if (cur.kind === "contest" || cur.kind === "defend" || cur.kind === "siege") {
           for (const i of fresh.members) if (!cur.members.includes(i)) cur.members.push(i);
           if (cur.kind === "siege") cur.target = fresh.target;
-          if (cur.kind === "contest") cur.hitters = cur.members.slice();
+          if (cur.kind === "contest") { cur.hitters = cur.members.slice(); cur.hz = fresh.hz; }
         }
       }
     }
@@ -1100,8 +1115,10 @@ function planTick(e: Engine, M: MacroState, b: Brain) {
     const a = atPit(e, b.side, pit, p.members);
     if (a.thN > 0 && a.edge < OBJ_TUNE.standoffEdge) {
       p.standoff ??= OBJ_TUNE.standoffMin + e.rng.next() * (OBJ_TUNE.standoffMax - OBJ_TUNE.standoffMin);
-      const theyStarted = o.hp < o.maxHp * 0.97;
-      go = (e.t - p.phaseAt > p.standoff && a.edge >= OBJ_TUNE.standoffGo) || (theyStarted && a.edge >= contestMin(e, b, p.obj!));
+      // counted from the moment the two groups first face each other, not from the start of the gathering (a group
+      // that needed 15 s to gather would start the monster the moment it was complete)
+      p.standAt ??= e.t;
+      go = (e.t - p.standAt > p.standoff && a.edge >= OBJ_TUNE.standoffGo) || (enemyOn(e, M, b.side, p.obj!) && a.edge >= contestMin(e, b, p.obj!));
       if (go) bump(M.stats[b.side].calls, `standoff:${p.obj}`);
     } else bump(M.stats[b.side].calls, `start:${p.obj}`);
   }
@@ -1709,10 +1726,11 @@ export function hitsObjective(e: Engine, u: Unit, k: ObjKey): boolean {
   const p = M.brains[u.side].plan;
   if ((p.kind !== "take" && p.kind !== "contest") || p.obj !== k || p.phase !== "commit") return false;
   if (!p.hitters.includes(u.i)) return false;
-  // a contest answers the enemy's take: its hitters race for a monster the enemy has started, they do not start one.
-  // (Now that a contest begins when the enemy is seen at the entrance, it would otherwise be a take without any of
-  // takeCand's checks: 29 % of barons fell to a contest. A won contest goes on as a take, see choosePlan.)
-  if (p.kind === "contest" && e.obj[k].hp >= e.obj[k].maxHp * 0.97) return false;
+  // a contest answers the enemy's take: its hitters race for a monster the enemy is on, they do not start one or
+  // finish one the enemy has left. (Now that a contest begins when the enemy is seen at the entrance, it would
+  // otherwise be a take without any of takeCand's checks: 29 % of barons fell to a contest. A won contest goes on as a
+  // take, see choosePlan.)
+  if (p.kind === "contest" && !enemyOn(e, M, u.side, k)) return false;
   if (p.solo) return u.role === "Jungle";
   // counted live: a hitter may have been pulled into a fight earlier this step
   const pit = PIT_POS[PIT_OF[k]];
@@ -1771,11 +1789,9 @@ export function purpose(e: Engine, side: SideN, f: Vec): { k: ObjKey; want: Purp
     if (!k) return null;
     const on = (p: Plan) => (p.kind === "take" || p.kind === "contest") && p.obj !== undefined && PIT_OF[p.obj] === pk;
     const mine = M.brains[side].plan, theirs = M.brains[1 - side].plan;
-    const o = e.obj[k];
-    const started = o.alive && o.hp < o.maxHp * 0.97;
     if (on(mine) && mine.kind === "contest") return { k, want: "stop" };
     if (on(mine) && mine.phase === "commit") return { k, want: "take" };
-    if (started && on(theirs) && theirs.phase === "commit") return { k, want: "stop" };
+    if (on(theirs) && enemyOn(e, M, side, k)) return { k, want: "stop" };
     return { k, want: "hold" };
   }
   return null;
