@@ -1,0 +1,42 @@
+/* start screen footer tabs and the document modal (ui/info/InfoTabs.tsx) */
+.info-tabs { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 4px; margin-bottom: 6px; }
+.info-tab { background: transparent; border: 0; padding: 3px 8px; font: inherit; font-size: 12px; color: var(--muted); cursor: pointer; }
+.info-tab:hover { color: var(--gold); background: #1b2032; }
+.info-tab:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+.info-tab.strong { color: var(--text); font-weight: bold; }
+.info-ver { font-size: 11px; color: var(--dim); padding: 0 6px; }
+html[data-vh="s"] .info-tabs { margin-bottom: 2px; }
+html[data-vh="s"] .info-tab { padding: 1px 6px; }
+
+/* the modal (.modal-bg / .modal from styles.css): head with tabs and close stays, the body scrolls */
+/* rendered inside the footer (.dim .center, 11px), so reset what it would inherit */
+.modal.info-box { display: flex; flex-direction: column; overflow: hidden; padding: 0; height: calc(var(--app-h, 100vh) * 0.9); text-align: left; color: var(--text); font-size: 13px; }
+.info-head { flex: none; display: flex; align-items: flex-start; gap: 8px; padding: 12px 18px 8px; border-bottom: 2px solid var(--line); }
+.info-head-tabs { flex: 1; margin-bottom: 0; }
+.info-body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 18px 18px; line-height: 1.7; scrollbar-width: thin; }
+.info-title { margin: 4px 0 2px; font-size: 18px; }
+.info-date { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.info-doc { max-width: 760px; }
+.info-doc .info-h3 { margin: 18px 0 6px; font-size: 14px; color: var(--gold); }
+.info-doc .info-h4 { margin: 14px 0 4px; font-size: 13px; color: var(--text); }
+.info-doc .info-p { margin: 4px 0; }
+.info-doc .info-num { margin: 4px 0 4px 1.6em; text-indent: -1.6em; }
+.info-doc .info-num.sub { margin-left: 3.2em; }
+.info-doc .info-ul { margin: 4px 0; padding-left: 1.4em; }
+.info-doc .info-ul li { margin: 2px 0; }
+.info-doc .info-ul li.deep { margin-left: 1.4em; list-style: circle; }
+.info-doc a { word-break: break-all; }
+.info-table-wrap { overflow-x: auto; margin: 6px 0 8px; }
+.info-table { min-width: 480px; }
+table.t.info-table td { vertical-align: top; line-height: 1.6; }
+table.t.info-table td:first-child { min-width: 6em; color: var(--text); }
+
+/* patch notes: one block per version, one line per change */
+.patch { padding: 10px 0 8px; border-bottom: 1px solid #222739; }
+.patch:last-child { border-bottom: 0; }
+.patch-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.patch-ver { font-family: "Galmuri14", "Galmuri11"; font-size: 15px; color: var(--gold); }
+.patch-name { font-weight: bold; }
+.patch-date { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.patch-items { margin: 4px 0 0; padding-left: 1.4em; }
+.patch-items li { margin: 1px 0; }
