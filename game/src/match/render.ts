@@ -557,6 +557,7 @@ export class MatchRenderer {
     else if (f.sum === "barrier") this.burst(f.x, f.y, "#ffd36b", 10, now);
     else if (f.sum === "cleanse") this.burst(f.x, f.y, "#bfefff", 10, now);
     else if (f.sum === "ghost") this.burst(f.x, f.y, "#8fd0ff", 8, now);
+    else if (f.sum === "smite") this.burst(f.tx, f.ty, "#ffe28a", 10, now); // a camp or a champion (objectives: kind "smite")
     else if (arrive) {
       this.burst(f.x, f.y, "#b48cff", 16, now);
       this.shake = Math.max(this.shake, 2);
@@ -662,6 +663,21 @@ export class MatchRenderer {
           c.fillRect(x - 1, y - size / 2 - 9 - k * 6, 3, 7);
           c.fillRect(x - 3, y - size / 2 - 7 - k * 6, 7, 3);
         }
+      }
+      if (s.name === "smite" && k < 0.5) {
+        // Smite: a bolt coming down on the monster (or champion) it hit, and a ring spreading from it
+        const p = v && v.alive ? this.unitPos(v, now, false) : { x: s.tx, y: s.ty };
+        const bx = Math.round(this.sx(p.x)), by = Math.round(this.sy(p.y));
+        const bh = wide ? 12 : 20;
+        c.fillStyle = "#05070d";
+        c.fillRect(bx - 2, by - bh - 1, 5, bh + 2);
+        c.fillStyle = k < 0.15 ? "#ffffff" : "#fff3a0";
+        c.fillRect(bx - 1, by - bh, 3, bh);
+        c.strokeStyle = "#ffe28a";
+        c.lineWidth = 2;
+        c.beginPath();
+        c.arc(bx, by, 3 + k * (wide ? 14 : 22), 0, Math.PI * 2);
+        c.stroke();
       }
       if (!u || !u.alive) continue;
       const p = this.unitPos(u, now, false);

@@ -1063,6 +1063,9 @@ export class Engine {
     // cost 2.6x as much per camp and junglers went home at 28 % hp after 2-4 camps)
     const hurt = (c.maxHp / (GROWTH.campHp * GROWTH.campHp)) * 0.004 * DT * 4 * GROWTH.campHurt;
     u.hp = Math.max(u.maxHp * 0.25, u.hp - hurt);
+    // the jungler finishes the camp with Smite once it is within Smite's damage (summoners.ts: charges, upgrades and
+    // when a charge is kept for an epic monster)
+    if (c.hp > 0 && Summoners.wantsCampSmite(this, u, c)) Summoners.smite(this, u, { camp: c });
     if (c.hp > 0) return;
     c.alive = false;
     const timing = c.kind === "scuttle" ? this.meta.camps.scuttle : this.meta.camps[c.kind];
@@ -1071,6 +1074,8 @@ export class Engine {
     u.gold += (big ? 100 : c.kind === "scuttle" ? 120 : 75) * GROWTH.campGold;
     u.xp += big ? GROWTH.campXpBig : GROWTH.campXpSmall;
     u.cs += 4;
+    // every camp has one large monster: the jungle pet's treat (Smite's upgrades)
+    Summoners.feedPet(this, u);
   }
 
   /**
@@ -1722,27 +1727,34 @@ export class Engine {
         const hitter = at[Math.floor(this.rng.next() * at.length)];
         this.fx_({ kind: "objhit", side: hitter.side, x: hitter.x, y: hitter.y, tx: o.pos.x, ty: o.pos.y, color: "#ffd36b", r: 0, w: 0, from: hitter.i });
       }
-      if (o.hp <= 0) {
-        // last hit: smite fight between junglers near the pit
-        let side: SideN = bySide[0] >= bySide[1] ? 0 : 1;
-        const jg = [0, 1].map((sd) => this.units.find((u) => u.side === sd && u.role === "Jungle" && u.alive && dist(u, o.pos) < 900));
+      // last hit: the taking side's jungler, near the pit with a Smite charge, finishes it once its health is within
+      // Smite's damage (summoners.ts: charges, the pet's upgrades 600 / 1000 / 1400); without one, the team's damage does
+      let side: SideN = bySide[0] >= bySide[1] ? 0 : 1;
+      const jg = [0, 1].map((sd) => this.units.find((u) => u.side === sd && u.role === "Jungle" && u.alive && dist(u, o.pos) < 900));
+      const mine = jg[side];
+      if (o.hp <= (mine && Summoners.canSmite(this, mine) ? Summoners.smiteDamage(this, mine) : 0)) {
         let steal = false;
         const other = (1 - side) as SideN;
-        if (jg[other] && (contested || this.rng.chance(0.3))) {
+        // smite fight: the other jungler, with a charge of its own, Smites it too
+        const thief = jg[other] && Summoners.canSmite(this, jg[other]!) ? jg[other] : undefined;
+        if (thief && (contested || this.rng.chance(0.3))) {
           // no jungler on the taking side: an average-ish rating of 60 on the raw scale (unit ratings are compressed)
           const noJg = RATING_REF + (60 - RATING_REF) * RATING_SPREAD;
-          const pSteal = clamp(0.12 + (jg[other]!.rating - (jg[side]?.rating ?? noJg)) / 120 + (jg[side] ? 0 : 0.35), 0.03, 0.6);
+          const pSteal = clamp(0.12 + (thief.rating - (jg[side]?.rating ?? noJg)) / 120 + (jg[side] ? 0 : 0.35), 0.03, 0.6);
           if (this.rng.chance(pSteal)) {
             side = other;
             steal = true;
-          }
+          } else Summoners.spend(this, thief, "smite", { quiet: true, why: "lost" }); // it lost the smite fight: the charge is gone all the same
         }
         const taker = jg[side] ?? at.find((u) => u.side === side) ?? at[0];
-        // the jungler's Smite takes the last hit (anyone else's is just the last hit: no spell to show)
-        const smote = Summoners.has(taker, "smite");
-        if (smote) Summoners.spend(this, taker, "smite", { quiet: true });
+        // the jungler's Smite takes the last hit (anyone else's, or one with no charge left, is just the last hit: no
+        // spell to show)
+        const smote = Summoners.smite(this, taker, { obj: k }, { quiet: true, why: steal ? "steal" : "obj" }) > 0;
         this.fx_({ kind: "smite", side, x: o.pos.x, y: o.pos.y, tx: o.pos.x, ty: o.pos.y, color: "#ffe28a", r: 320, w: 0, from: taker.i, sum: smote ? "smite" : undefined });
+        // the jungle pet eats a treat for an epic monster its team takes with the jungler there
+        const pet = this.units.find((u) => u.side === side && u.role === "Jungle" && u.alive && dist(u, o.pos) < 1500);
         this.secure(k, side, taker, steal);
+        if (pet) Summoners.feedPet(this, pet);
       }
     }
   }
