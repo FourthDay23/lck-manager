@@ -33,7 +33,8 @@ import * as Turrets from "./turrets";
  *   area: how much of that also lands on every other minion nearby, for a champion with full wave clear.
  * gold: minion gold multiplier on the real 20 / 14 / 50. 1.12 keeps the 21 gold a CS the engine's income was
  *   calibrated with (the 2026 role quests add minion gold the engine does not model); vsChamp: minion damage to
- *   champions (x the real 60 %); xp: minion experience multiplier on the real 62 / 31 / 75, shared by the champions
+ *   champions (x the real 60 %). At the full amount first blood came at 4.5 min and solo kills at 1.9-2.0 a game
+ *   (LCK 5.1 / 1.6): the engine's laners trade inside the enemy wave where players step out of it; 0.5 gives 5.0 / 1.6; xp: minion experience multiplier on the real 62 / 31 / 75, shared by the champions
  *   within xpRange of the minion that died (100 / 65 / 43 / 33 / 26 % each for one to five). At the real values
  *   mid levels match LCK 2026 to 0.1 through 25:00. Per role: xpTop the top laner's 2026 role-quest bonus (0.4
  *   levels short at 15:00 without it), xpBot / xpSup what the carry and the support keep (at an equal share the
@@ -59,7 +60,7 @@ import * as Turrets from "./turrets";
 export const WAVE_TUNE = {
   reach: 1500, lastHit: 0.98, lhWindow: 2, lhEvery: 0.9, underTurret: 0.85,
   pushLane: 0.15, pushSide: 0.6, pushGroup: 0.4, pushDefend: 0.8, area: 0.6,
-  gold: 1.12, vsChamp: 1, help: 600, helpFor: 2.5, xp: 1, xpTop: 1.04, xpBot: 0.9, xpSup: 0.8, xpRange: 1500,
+  gold: 1.12, vsChamp: 0.5, help: 600, helpFor: 2.5, xp: 1, xpTop: 1.04, xpBot: 0.9, xpSup: 0.8, xpRange: 1500,
   laneSiege: 0.15, frontRate: 0.05,
   towerDmg: 1, minionDmg: 1,
   splash: 0.6, sideCs: 0.6, recallOnClear: 3, loneWave: 0.4, supPush: 0.5, pressure: 2,

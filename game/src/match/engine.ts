@@ -74,9 +74,12 @@ export const EARLY_TUNE = {
   // 6.5 min and 2.8 kills by 10 min; these give 5.5 and 3.8 (200 games, seed 3)
   gankRate: 0.012,
   gankMin: 0.15,
-  allinTop: 0.0013,
-  allinMid: 0.0009,
-  allinBot: 0.0013,
+  // 2026-11-28, with real minions (minions.ts: a wave now joins a trade next to it, and laners stand under the enemy
+  // turret while their wave is on it): 0.0013 / 0.0009 / 0.0013 gave 1.5 all-in kills a game (0.9 before) and 4.4
+  // kills by 10 min
+  allinTop: 0.001,
+  allinMid: 0.0007,
+  allinBot: 0.001,
   meet: 0.006,
   meetEdge: 0.02,
 };
@@ -638,7 +641,8 @@ export class Engine {
       // our wave is on their turret: step up and hit it while the turret shoots the minions (at the front-based
       // spot a ranged laner stood 1,000 u from the turret and never touched it)
       const t = this.frontierTurret((1 - u.side) as SideN, lane);
-      if (t && this.waveAt(t)) p = lanePoint(lane, t.u + ((u.champ.ranged ? 560 : 330) / Minions.laneLength(lane)) * (u.side === 0 ? -1 : 1));
+      // (not when hurt: under half health a poke and one turret shot after the wave died was a death)
+      if (t && u.hp > u.maxHp * 0.5 && this.waveAt(t)) p = lanePoint(lane, t.u + ((u.champ.ranged ? 560 : 330) / Minions.laneLength(lane)) * (u.side === 0 ? -1 : 1));
       // and never inside the range of a turret with no wave on it
       const x = this.exposedAt(u.side, p, 860);
       if (x) p = lanePoint(lane, (x.lane === lane ? x.u : laneU(lane, x.pos)) + (1000 / Minions.laneLength(lane)) * (u.side === 0 ? -1 : 1));
