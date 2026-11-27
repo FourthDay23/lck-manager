@@ -21,6 +21,7 @@ import * as Macro from "./macro";
 import * as Fight from "./fight";
 import * as Items from "./items";
 import type { SideLoadout } from "./items";
+import * as Matchup from "./matchup";
 import * as Stats from "./stats";
 import * as Summoners from "./summoners";
 import type { SummonerName } from "./summoners.gen";
@@ -399,6 +400,8 @@ export class Engine {
     if (ENGINE_FLAGS.macro) Macro.init(this);
     if (ENGINE_FLAGS.fight) Fight.init(this);
     Items.init(this, cfg.loadout);
+    // LCK champion matchups between lane opponents (matchup.ts: lane damage, pokes, CS share)
+    Matchup.init(this);
     // real numbers: level-1 health includes the rune shards and the starter item, known only after Items.init
     if (this.realStats()) for (const u of this.units) u.hp = u.maxHp = this.maxHp(u);
   }
@@ -1156,14 +1159,16 @@ export class Engine {
       if (!b) continue;
       taken.add(b.i);
       if (!this.rng.chance(SIM_TUNE.sidePoke * DT)) continue;
-      const [src, dst] = this.rng.chance(0.5 + (a.rating - b.rating) / 120) ? [a, b] : [b, a];
+      // the LCK matchup (matchup.ts) tilts who pokes, whether it lands and how hard, faded after laning
+      const mu = Matchup.pairEdge(this, a, b) * Matchup.MATCHUP_TUNE.init;
+      const [src, dst] = this.rng.chance(0.5 + (a.rating - b.rating) / 120 + mu) ? [a, b] : [b, a];
       const pokes = src.champ.spells.slice(0, 3).filter((x) => x && POKE_KINDS.has(x.vfx));
       const sp = pokes.length ? pokes[this.rng.int(0, pokes.length - 1)] : undefined;
       if (!sp || this.t < src.cds[sp.key === "Q" ? 0 : sp.key === "W" ? 1 : 2]) continue;
       const fx = this.emitSpellFx(src, sp, dst, dst, false);
-      if (this.rng.chance(clamp(0.5 + (src.rating - dst.rating) / 120, 0.2, 0.85))) {
+      if (this.rng.chance(clamp(0.5 + (src.rating - dst.rating) / 120 + (src === a ? mu : -mu), 0.2, 0.85))) {
         this.hitFx(src, dst, sp);
-        this.damage(src, dst, dst.maxHp * this.rng.range(SIM_TUNE.sidePokeLo, SIM_TUNE.sidePokeHi));
+        this.damage(src, dst, dst.maxHp * this.rng.range(SIM_TUNE.sidePokeLo, SIM_TUNE.sidePokeHi) * Matchup.dmgMul(this, src, dst));
       } else fx.miss = true;
     }
   }
@@ -1180,22 +1185,25 @@ export class Engine {
       if (!sideUnits[0].length || !sideUnits[1].length) continue;
       const a = sideUnits[0][0], b = sideUnits[1][0];
       if (dist(a, b) > 1300) continue;
+      // the lane's LCK matchup (matchup.ts, from blue's side): who pokes, whether it lands, how hard, who wants to all-in
+      const mu = Matchup.laneEdge(this, a);
       // poke
       if (this.rng.chance(0.09 * DT)) {
-        const [src, dst] = this.rng.chance(0.5 + (a.rating - b.rating) / 120) ? [a, b] : [b, a];
+        const [src, dst] = this.rng.chance(0.5 + (a.rating - b.rating) / 120 + mu * Matchup.MATCHUP_TUNE.init) ? [a, b] : [b, a];
         // pokes only use spells that hit from where the caster stands (no dashes, no ally heals/shields, no self buffs)
         const pokes = src.champ.spells.slice(0, 3).filter((x) => x && POKE_KINDS.has(x.vfx));
         const sp = pokes.length ? pokes[this.rng.int(0, pokes.length - 1)] : undefined;
         if (sp && this.t >= src.cds[sp.key === "Q" ? 0 : sp.key === "W" ? 1 : 2]) {
           const fx = this.emitSpellFx(src, sp, dst, dst, false);
-          if (this.rng.chance(clamp(0.5 + (src.rating - dst.rating) / 120, 0.2, 0.85))) {
+          const tilt = (src.side === 0 ? mu : -mu) * Matchup.MATCHUP_TUNE.init;
+          if (this.rng.chance(clamp(0.5 + (src.rating - dst.rating) / 120 + tilt, 0.2, 0.85))) {
             this.hitFx(src, dst, sp);
-            this.damage(src, dst, dst.maxHp * this.rng.range(0.05, 0.13));
+            this.damage(src, dst, dst.maxHp * this.rng.range(0.05, 0.13) * Matchup.dmgMul(this, src, dst));
           } else fx.miss = true;
         }
       }
-      const pa = sideUnits[0].reduce((s, u) => s + this.power(u), 0);
-      const pb = sideUnits[1].reduce((s, u) => s + this.power(u), 0);
+      const pa = sideUnits[0].reduce((s, u) => s + this.power(u), 0) * Math.exp(Matchup.MATCHUP_TUNE.dmg * mu);
+      const pb = sideUnits[1].reduce((s, u) => s + this.power(u), 0) * Math.exp(-Matchup.MATCHUP_TUNE.dmg * mu);
       const ratio = Math.max(pa / pb, pb / pa);
       const lowHp = Math.min(...[...sideUnits[0], ...sideUnits[1]].map((u) => u.hp / u.maxHp));
       const rate = Engine.allinRate(lane) * (1 + Math.max(0, ratio - 1) * 3) * (lowHp < 0.45 ? 3 : 1) *
@@ -1856,7 +1864,9 @@ export class Engine {
         const share = u.role === "Support" ? 0.6 : u.role === "Bot" ? 0.8 : 1;
         u.xp += (solo ? GROWTH.laneXpSolo : GROWTH.laneXpDuo) * share * DT * (1 + m * GROWTH.laneXpGrow);
         if (u.role !== "Support") {
-          const rate = (GROWTH.laneCs / 60) * (0.85 + u.rating / 500) * (lane ? 1 : 0.9);
+          // the lane's LCK matchup moves the CS share between the two laners (zero-sum on average, matchup.ts)
+          const mu = this.laningPhase() && lane && u.role !== "Jungle" ? Matchup.laneEdge(this, u) * Matchup.MATCHUP_TUNE.cs : 0;
+          const rate = (GROWTH.laneCs / 60) * (0.85 + u.rating / 500) * (lane ? 1 : 0.9) * clamp(1 + mu, 0.5, 1.5);
           const gained = rate * DT * (this.rng.next() < 0.5 ? 1.6 : 0.4);
           u.cs += gained;
           u.gold += gained * 21;

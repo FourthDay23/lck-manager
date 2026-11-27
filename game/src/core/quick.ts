@@ -6,6 +6,7 @@ import { clamp, logistic, Rng } from "./rng";
 import type { GameRecord, GameState, Series, Team } from "./types";
 import { metaBonus, teamMetaBonus } from "./meta";
 import { defaultEdgePower } from "../match/items";
+import * as Matchup from "../match/matchup";
 
 // Power points per logit of win odds. Fitted on real LCK 2025-26 games (1,057, per-game lineups' OVR):
 // 10.8 over all games, 7.4 on gaps under 10; 9.5 sits inside both 95% intervals. Was 4.5. scripts/real-scale.ts
@@ -135,7 +136,9 @@ export function quickGame(s: GameState, data: GameData, sr: Series, blue: string
   const buildEdge = (champs: string[]) => champs.reduce((a, c, i) => a + defaultEdgePower(data.items, c, ROLES[i]), 0);
   const buildDiff = buildEdge(picks.blue) - buildEdge(picks.red);
   // blue side: +0.22 logit at equal strength in LCK 2025-26 (inside the logit, as in draftWinProb)
-  const pBlue = logistic((teamPower(s, blue) - teamPower(s, red) + aiEdge(s, blue, red) + metaDiff + buildDiff) / POWER_SCALE + 0.22);
+  // champion matchups and composition counters measured on LCK, in win logit (match/matchup.ts)
+  const muDiff = Matchup.draftEdge(data, Matchup.byRole(picks.blue), Matchup.byRole(picks.red));
+  const pBlue = logistic((teamPower(s, blue) - teamPower(s, red) + aiEdge(s, blue, red) + metaDiff + buildDiff) / POWER_SCALE + 0.22 + muDiff);
   const blueWins = rng.chance(clamp(pBlue, 0.03, 0.97));
   const winner = blueWins ? blue : red;
   const duration = Math.round(clamp(rng.normal(1900, 260), 1380, 2700));

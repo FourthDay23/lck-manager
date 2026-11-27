@@ -17,8 +17,10 @@ const j = (f: string) => {
   const p = `public/${dir}/${f}`;
   return existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : null;
 };
-// ITEMS=0 runs the engine without items.json (the older gold-only item model and flat kill gold)
-const data = assembleData(dir, j("champions.json"), j("players.json"), j("staff.json"), j("teams.json"), j("intl.json"), j("meta.json"), j("heatmap.json"), process.env.ITEMS === "0" ? null : j("items.json"));
+// ITEMS=0 runs the engine without items.json (the older gold-only item model and flat kill gold);
+// MATCHUPS=0 without the LCK champion matchups (matchups.json, match/matchup.ts). The reference formula below
+// (gameWinProb) knows nothing of the drafted champions, so with matchups on its bucket table and slope also carry them
+const data = assembleData(dir, j("champions.json"), j("players.json"), j("staff.json"), j("teams.json"), j("intl.json"), j("meta.json"), j("heatmap.json"), process.env.ITEMS === "0" ? null : j("items.json"), process.env.MATCHUPS === "0" ? null : j("matchups.json"));
 // ITEM_TUNE=beyond:0.85,objectiveBounty:0 overrides items.ts weights for this run
 for (const kv of (process.env.ITEM_TUNE ?? "").split(",").filter(Boolean)) {
   const [k, v] = kv.split(":");

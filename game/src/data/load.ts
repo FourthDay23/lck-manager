@@ -3,6 +3,7 @@ import type {
 } from "./types";
 import { ROLES } from "./types";
 import type { ItemData } from "../match/items";
+import type { MatchupData } from "../match/matchup";
 
 export interface GameData {
   source: "data" | "data-sample";
@@ -17,6 +18,8 @@ export interface GameData {
   heatmap: HeatmapData | null;
   /** real LCK item / keystone / bounty statistics (items.json); null runs the engine's older gold-only model */
   items: ItemData | null;
+  /** champion matchups and composition counters measured on LCK games (matchups.json); null counts every pair even */
+  matchups: MatchupData | null;
 }
 
 async function getJson<T>(dir: string, file: string): Promise<T | null> {
@@ -89,16 +92,17 @@ export async function loadData(): Promise<GameData> {
     players = await getJson("data-sample", "players.json");
   }
   if (!champs || !players) throw new Error("public/data 폴더에 champions.json, players.json이 없습니다");
-  const [staff, teams, intl, meta, heatmap, items] = await Promise.all([
+  const [staff, teams, intl, meta, heatmap, items, matchups] = await Promise.all([
     getJson<{ staff: StaffData[] }>(dir, "staff.json"),
     getJson<{ teams: TeamData[] }>(dir, "teams.json"),
     getJson<{ teams: IntlTeamData[] }>(dir, "intl.json"),
     getJson<MetaData>(dir, "meta.json"),
     getJson<HeatmapData>(dir, "heatmap.json"),
     getJson<ItemData>(dir, "items.json"),
+    getJson<MatchupData>(dir, "matchups.json"),
   ]);
   if (!teams) throw new Error("teams.json이 없습니다");
-  return assembleData(dir, champs, players, staff, teams, intl, meta, heatmap, items);
+  return assembleData(dir, champs, players, staff, teams, intl, meta, heatmap, items, matchups);
 }
 
 export function assembleData(
@@ -111,6 +115,7 @@ export function assembleData(
   meta: MetaData | null,
   heatmap: HeatmapData | null,
   items: ItemData | null = null,
+  matchups: MatchupData | null = null,
 ): GameData {
   const mergedMeta: MetaData = {
     ...DEFAULT_META,
@@ -131,6 +136,7 @@ export function assembleData(
     meta: mergedMeta,
     heatmap,
     items: items?.champs ? items : null,
+    matchups: matchups?.roles ? matchups : null,
   };
 }
 

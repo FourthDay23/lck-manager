@@ -22,6 +22,7 @@ import type { ChampionData, Role } from "../data/types";
 import { FOUNTAIN } from "./map";
 // circular with core/quick.ts (which imports defaultEdgePower); read only inside functions, so load order is safe
 import { POWER_SCALE } from "../core/quick";
+import * as Matchup from "./matchup";
 
 export interface ItemStats { ad?: number; ap?: number; hp?: number; armor?: number; mr?: number; as?: number; crit?: number; haste?: number; leth?: number; mpen?: number; ms?: number }
 export interface ItemDef { name: string; cost: number; kind: "legendary" | "boots" | "support"; stats: ItemStats; n: number; w: number; removed?: boolean; iconVer?: string; from?: number[] }
@@ -275,7 +276,8 @@ export function init(e: Engine, loadouts?: [SideLoadout | undefined, SideLoadout
     const lo = loadouts?.[u.side]?.[u.role] ?? { build: 0, keystone: 0 };
     const build = ci && ci.builds[lo.build] ? lo.build : 0;
     const ksIdx = ci && ci.keystones[lo.keystone] ? lo.keystone : 0;
-    const path = ci ? buildPath(items, ci, build, items.roleDefaults[u.role]) : [];
+    // the LCK build, turned toward magic resist / armor / anti-heal against such enemies like LCK players (matchup.ts)
+    const path = ci ? Matchup.counterPath(e, u, buildPath(items, ci, build, items.roleDefaults[u.role]), ci.path, ci.builds[build]?.core ?? [], items) : [];
     const cum = [0];
     for (const id of path) cum.push(cum[cum.length - 1] + (items.items[String(id)]?.cost ?? 3000));
     const b = ci?.builds[build], k = ci?.keystones[ksIdx];

@@ -6,3 +6,17 @@
 .sug-item > span { font-size: 11px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .sug-item > span .muted { display: inline-block; max-width: 132px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
 .sug-item:hover img { box-shadow: 0 0 0 2px var(--gold); }
+
+/* LCK matchups (match/matchup.ts): arrow on a champion against the opponent already in the slot, lines after the draft */
+.cbox .mu { position: absolute; right: 6px; top: 38px; padding: 0 3px; font-size: 9px; background: rgba(10, 12, 20, 0.85); }
+.cbox .mu.up { color: var(--green); }
+.cbox .mu.down { color: var(--red); }
+.slot .mu-line { font-size: 10px; }
+.mu-table { margin-top: 8px; background: #0f1220; padding: 6px 8px; box-shadow: inset 0 0 0 1px #262c44; }
+.mu-table h3 { margin: 0 0 4px; }
+.mu-row { display: grid; grid-template-columns: 32px minmax(0, 1.3fr) 64px minmax(0, 1.2fr); gap: 6px; align-items: center; font-size: 11px; padding: 2px 0; border-top: 1px solid #1c2134; }
+.mu-row > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.mu-role { color: var(--muted); }
+.mu-val { text-align: right; font-variant-numeric: tabular-nums; }
+.mu-rec { font-size: 10px; }
+.mu-sum { border-top: 1px solid #2b3149; }

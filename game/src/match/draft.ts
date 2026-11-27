@@ -9,6 +9,7 @@ import type { GameState, Player } from "../core/types";
 import { metaBonus, metaTier, teamMetaBonus } from "../core/meta";
 import type { SideLoadout } from "./items";
 import { champItems, optionEdge } from "./items";
+import * as Matchup from "./matchup";
 
 export type Side = "blue" | "red";
 export type StepKind = "ban" | "pick";
@@ -101,11 +102,45 @@ export function pickValue(s: GameState, data: GameData, d: DraftState, side: Sid
   if (c.damage === "AD" && ad >= 3) v -= 8;
   const engage = mine.reduce((a, x) => a + x.style.engage, 0);
   if (engage < 8 && mine.length >= 2) v += c.style.engage * 0.8;
-  // lane matchup: early vs scaling, very rough
-  const enemySide: Side = side === "blue" ? "red" : "blue";
-  const foe = d.picks[enemySide][r] ? data.champ.get(d.picks[enemySide][r]!) : undefined;
-  if (foe) v += (c.style.early - foe.style.early) * 0.6;
-  return v;
+  // lane matchup measured on LCK (matchup.ts): against the revealed opponent, else the risk of being counter-picked
+  return v + matchupValue(s, data, d, side, c, r);
+}
+
+/**
+ * Pick-value points per win logit. Ten mastery points are worth 5.5 here and move the engine rating by about 1.6,
+ * roughly 0.033 win logit for the team; the S-tier patch bonus (+20 here) is about 0.12 logit. Both give ~160.
+ */
+export const MU_VALUE = 160;
+
+/** The matchup part of a pick's value: against the opponent already picked for the role, otherwise minus the risk
+ *  that the opponent still answers with a counter (a blind pick). */
+export function matchupValue(s: GameState, data: GameData, d: DraftState, side: Side, c: ChampionData, r: Role): number {
+  const enemy: Side = side === "blue" ? "red" : "blue";
+  const foe = d.picks[enemy][r];
+  if (foe) return Matchup.edge(data, r, c.id, foe) * MU_VALUE;
+  return -blindRisk(s, data, d, side, c, r) * MU_VALUE;
+}
+
+/** How much a counter-pick would cost: half the worst LCK matchup the enemy player of that role can still answer
+ *  with (counters still open, weighted by how well that player plays them). 0 once the role's opponent is picked. */
+export function blindRisk(s: GameState, data: GameData, d: DraftState, side: Side, c: ChampionData, r: Role): number {
+  const enemy: Side = side === "blue" ? "red" : "blue";
+  if (d.picks[enemy][r] || !data.matchups) return 0;
+  const p = lineupOf(s, enemy === "blue" ? d.blue : d.red)[r];
+  const gone = unavailable(d);
+  let worst = 0;
+  for (const o of Matchup.opponents(data, r, c.id)) {
+    if (o.m >= 0 || gone.has(o.id)) continue;
+    const oc = data.champ.get(o.id);
+    if (!oc) continue;
+    worst = Math.max(worst, -o.m * Matchup.MATCHUP_TUNE.gain * counterChance(p, oc));
+  }
+  return worst * 0.5;
+}
+
+/** How likely a player answers with champion c at all: 0 below mastery 45, 1 from 80. */
+function counterChance(p: Player | undefined, c: ChampionData): number {
+  return clamp((mastery(p, c) - 45) / 35, 0, 1);
 }
 
 export function bestPicks(s: GameState, data: GameData, d: DraftState, side: Side, n: number, rng: Rng | null, noise = 0) {
@@ -140,6 +175,18 @@ export function banValue(s: GameState, data: GameData, d: DraftState, side: Side
     if (v > best) {
       best = v;
       why = `${p.name} 숙련 ${Math.round(m)}`;
+    }
+  }
+  // protect our picks: ban what beats them in LCK while the enemy still has that role open
+  for (const r of openRoles(d, enemy)) {
+    const ours = d.picks[side][r];
+    if (!ours) continue;
+    const e = Matchup.edge(data, r, c.id, ours);
+    if (e <= 0) continue;
+    const v = e * MU_VALUE * counterChance(lu[r], c);
+    if (v > best) {
+      best = v;
+      why = `우리 ${data.champ.get(ours)?.name ?? ours} 카운터 차단`;
     }
   }
   const meta = metaScore(c);
@@ -193,6 +240,9 @@ export function coachSuggestions(s: GameState, data: GameData, d: DraftState, si
     return { coach: hc?.name ?? null, items: bestBans(s, data, d, side, n, rng, noise).map((x) => ({ champ: x.champ, role: undefined as Role | undefined, why: x.why })) };
   }
   const lu = lineupOf(s, team.id);
+  const enemy: Side = side === "blue" ? "red" : "blue";
+  // a coach with a weak draft rating only knows which way a matchup goes, a good one (or a good analysis room) the size
+  const exact = Matchup.coachExact(draft, team.facilities.analysis);
   return {
     coach: hc?.name ?? null,
     items: bestPicks(s, data, d, side, n, rng, noise).map((x) => {
@@ -200,7 +250,13 @@ export function coachSuggestions(s: GameState, data: GameData, d: DraftState, si
       const m = p ? Math.round(mastery(p, x.champ)) : 0;
       const tier = metaTier(s, x.champ.id);
       const tierTxt = tier === "S" ? " · S티어" : tier === "A" ? " · A티어" : tier === "N" ? " · 너프됨" : "";
-      const why = (p && p.mastery[x.champ.id] ? `${p.name} 숙련 ${m}` : `${x.role} 프로 메타 (${Math.round(x.champ.pro.presence * 100)}%)`) + tierTxt;
+      const foe = d.picks[enemy][x.role];
+      let muTxt = "";
+      if (foe) {
+        const e = Matchup.edge(data, x.role, x.champ.id, foe);
+        if (Matchup.notable(e)) muTxt = ` · vs ${data.champ.get(foe)?.name ?? foe} ${Matchup.edgeWord(e, exact)}`;
+      } else if (Matchup.notable(blindRisk(s, data, d, side, x.champ, x.role))) muTxt = " · 카운터 주의";
+      const why = (p && p.mastery[x.champ.id] ? `${p.name} 숙련 ${m}` : `${x.role} 프로 메타 (${Math.round(x.champ.pro.presence * 100)}%)`) + tierTxt + muTxt;
       return { champ: x.champ, role: x.role, why };
     }),
   };
@@ -246,8 +302,9 @@ export function draftWinProb(s: GameState, data: GameData, d: DraftState): numbe
   const pb = teamPower(s, d.blue) + (compBonus(data, d.picks.blue) + teamMetaBonus(s, Object.values(d.picks.blue))) * MOD_GAIN + masteryBonus(s, data, d.blue, d.picks.blue);
   const pr = teamPower(s, d.red) + (compBonus(data, d.picks.red) + teamMetaBonus(s, Object.values(d.picks.red))) * MOD_GAIN + masteryBonus(s, data, d.red, d.picks.red);
   const lo = loadoutEdgePower(data, d, "blue") - loadoutEdgePower(data, d, "red");
-  // blue side: +0.22 logit at equal strength (LCK 2025-26; the engine's swapped-side games land close to it)
-  return logistic((pb - pr + aiEdge(s, d.blue, d.red) + lo) / POWER_SCALE + 0.22);
+  // blue side: +0.22 logit at equal strength (LCK 2025-26; the engine's swapped-side games land close to it);
+  // champion matchups and composition counters measured on LCK are already win logit (matchup.ts)
+  return logistic((pb - pr + aiEdge(s, d.blue, d.red) + lo) / POWER_SCALE + 0.22 + Matchup.draftEdge(data, d.picks.blue, d.picks.red));
 }
 
 /** Win-rate edge of the chosen builds / keystones (LCK statistics, items.ts) on the team power scale. */

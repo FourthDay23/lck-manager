@@ -16,6 +16,7 @@ import type { CcType, ChampionKit, FightRole, SpellKit, SpellUse } from "./kit-t
 import { kitFor } from "./kits";
 import * as Stats from "./stats";
 import * as Procs from "./procs";
+import * as Matchup from "./matchup";
 import { buffOf, setCCHook, setFightShields, shieldLeft } from "./procs-lib";
 import * as Nav from "./nav";
 import * as Macro from "./macro";
@@ -384,6 +385,13 @@ function legacySupport(e: Engine, u: Unit, weight: number) {
  *  lifelines, spell storing), then saves (Guardian Angel, Zhonya's, passives), and afterwards life steal / riders. */
 function hurt(e: Engine, M: Mod, src: Unit | null, v: Unit, amount: number, kind: Procs.Kind = "spell") {
   if (!v.alive || amount <= 0) return;
+  // LCK champion matchups (matchup.ts). Not on Death's Dance's stored damage ("raw": it was multiplied when it was
+  // stored), and a killing blow stays one (an execute such as Collector's deals exactly the health left)
+  if (src && kind !== "raw") {
+    const lethal = amount >= v.hp + v.shield;
+    amount *= Matchup.dmgMul(e, src, v);
+    if (lethal) amount = Math.max(amount, v.hp + v.shield + 1);
+  }
   const real = e.realStats();
   if (real) {
     amount = Procs.incoming(e, src, v, amount, kind, M.deal);

@@ -33,7 +33,8 @@ import { standings } from "../../core/schedule";
 import type { CamMode } from "../../match/render";
 import { ChampIcon, TeamLogo, Bar } from "../components";
 import { autosave } from "../App";
-import { seriesWinProb } from "../../core/quick";
+import { headCoach, seriesWinProb } from "../../core/quick";
+import * as Matchup from "../../match/matchup";
 import { META_LABEL, metaTier } from "../../core/meta";
 import { tutSpot } from "../Tutorial";
 import { appH, localRect, onScale, toLocal } from "../scale";
@@ -367,6 +368,26 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
   const role = selRole && open.includes(selRole) ? selRole : open[0];
   const sug = useMemo(() => (st && myTurn ? coachSuggestions(s, data, d, userSide, rng) : { coach: null, items: [] }), [d.step, myTurn]);
   const sugIds = new Set(sug.items.map((x) => x.champ.id));
+  // LCK matchups (matchup.ts): our coach's draft rating decides whether we see numbers or only the direction
+  const enemySide: Side = userSide === "blue" ? "red" : "blue";
+  const exact = Matchup.coachExact(headCoach(s, s.teams[myTeam])?.attrs.draft ?? 35, s.teams[myTeam].facilities.analysis);
+  const picking = myTurn && st![1] === "pick";
+  const foe = picking ? d.picks[enemySide][role] : undefined;
+  const foeName = foe ? data.champ.get(foe)?.name ?? foe : "";
+  const muTitle = (c: ChampionData) => {
+    if (!picking || !data.matchups) return "";
+    const lines: string[] = [];
+    const pr = foe ? Matchup.pair(data, role, c.id, foe) : null;
+    if (pr) {
+      const rec = `LCK ${pr.n}판 ${pr.wins}승 ${pr.n - pr.wins}패${pr.gold !== null ? ` · 14분 골드 ${pr.gold >= 0 ? "+" : ""}${pr.gold}` : ""}`;
+      lines.push(`vs ${foeName}: 상성 ${Matchup.edgeWord(pr.m * Matchup.MATCHUP_TUNE.gain, exact)} (${rec})`);
+    } else if (foe) lines.push(`vs ${foeName}: LCK 맞대결 없음 (비슷하게 봅니다)`);
+    const bw = Matchup.bestWorst(data, role, c.id);
+    const nm = (o: { id: string }) => data.champ.get(o.id)?.name ?? o.id;
+    if (bw.good.length) lines.push(`${ROLE_KO[role]}에서 강한 상대: ${bw.good.map(nm).join(", ")}`);
+    if (bw.bad.length) lines.push(`${ROLE_KO[role]}에서 약한 상대: ${bw.bad.map(nm).join(", ")}`);
+    return lines.length ? "\n" + lines.join("\n") : "";
+  };
   let list = data.champions;
   if (roleF) list = list.filter((c) => (c.roles[roleF] ?? 0) >= 0.1);
   if (q) list = list.filter((c) => c.name.includes(q) || c.nameEn.toLowerCase().includes(q.toLowerCase()));
@@ -474,6 +495,8 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
           const p = lup[r];
           const isMine = sd === userSide;
           const selectable = isMine && myTurn && st?.[1] === "pick" && !c;
+          const oc = d.picks[sd === "blue" ? "red" : "blue"][r];
+          const e = c && oc ? Matchup.edge(data, r, c, oc) : 0;
           return (
             <div class={`slot frame dark ${c ? "" : "empty"} ${selectable && role === r ? "active" : ""} ${selectable && role === r && pendC ? "prev" : ""}`} style={{ cursor: selectable ? "pointer" : "default" }} onClick={() => selectable && setSelRole(r)}>
               {c ? <ChampIcon id={c} size={44} /> : selectable && role === r && pendC ? <ChampIcon id={pendC.id} size={44} /> : <span style={{ width: 44, height: 44, background: "#0b0d14", display: "inline-block" }} />}
@@ -481,6 +504,11 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
                 <div class="muted" style={{ fontSize: 11 }}>{ROLE_KO[r]}</div>
                 <b>{p?.name ?? "-"}</b>
                 <div style={{ fontSize: 11 }}>{c ? `${data.champ.get(c)?.name} · 숙련 ${Math.round(mastery(p, data.champ.get(c)!))}` : selectable && role === r ? (pendC ? <span class="gold">{pendC.name} · 선택 중</span> : "← 이 자리에 픽") : ""}</div>
+                {Matchup.notable(e) && (
+                  <div class={`mu-line ${e > 0 ? "pos" : "neg"}`} title={`LCK 상성 (vs ${data.champ.get(oc!)?.name ?? oc})`}>
+                    {e > 0 ? "▲" : "▼"} 상성 {Matchup.edgeWord(e, exact)}
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -531,11 +559,14 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
                 const fear = d.fearless.has(c.id);
                 const p = myTurn && st![1] === "pick" ? lu[role] : undefined;
                 const m = p ? p.mastery[c.id] : undefined;
+                // against the opponent already picked for this slot: green up / red down (LCK matchup)
+                const mu = foe && !off ? Matchup.edge(data, role, c.id, foe) : 0;
                 return (
-                  <div class={`cbox ${off ? "off" : ""} ${fear ? "fear" : ""} ${sugIds.has(c.id) && !off ? "sug" : ""} ${pendC?.id === c.id ? "pend" : ""}`} onClick={() => choose(c)} title={`${c.name} · 출현율 ${Math.round(c.pro.presence * 100)}%`}>
+                  <div class={`cbox ${off ? "off" : ""} ${fear ? "fear" : ""} ${sugIds.has(c.id) && !off ? "sug" : ""} ${pendC?.id === c.id ? "pend" : ""}`} onClick={() => choose(c)} title={`${c.name} · 출현율 ${Math.round(c.pro.presence * 100)}%${off ? "" : muTitle(c)}`}>
                     <ChampIcon id={c.id} size={52} />
                     {pendC?.id === c.id && <span class="pstamp">{st![1] === "ban" ? "밴" : "픽"}</span>}
                     {m !== undefined && !off && <span class="m">{Math.round(m)}</span>}
+                    {Matchup.notable(mu) && <span class={`mu ${mu > 0 ? "up" : "down"}`}>{mu > 0 ? "▲" : "▼"}</span>}
                     {metaTier(s, c.id) && <span class={`tier t${metaTier(s, c.id)}`}>{META_LABEL[metaTier(s, c.id)!]}</span>}
                     {c.name}
                   </div>
@@ -576,6 +607,7 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
           <>
             <h2>밴픽 완료</h2>
             <div data-tut="draft-comp"><CompCompare d={d} /></div>
+            <MatchupCompare d={d} userSide={userSide} exact={exact} />
             {!auto && <LoadoutPicker d={d} side={userSide} onChange={bump} />}
             <div data-tut="draft-go">
               <div class="center" style={{ margin: "10px 0" }}>
@@ -612,6 +644,46 @@ function CompCompare({ d }: { d: DraftState }) {
           <div style={{ flex: 1 }}><Bar v={b.prof[k]} max={10} color="#ff5a5a" /></div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Lane-by-lane LCK matchups after the draft, from our side, plus the composition counters and the total. */
+function MatchupCompare({ d, userSide, exact }: { d: DraftState; userSide: Side; exact: boolean }) {
+  const data = D();
+  if (!data.matchups) return null;
+  const mine = d.picks[userSide], theirs = d.picks[userSide === "blue" ? "red" : "blue"];
+  const comp = Matchup.compEdge(data, mine, theirs);
+  const total = Matchup.draftEdge(data, mine, theirs);
+  const nm = (id?: string) => (id ? data.champ.get(id)?.name ?? id : "-");
+  return (
+    <div class="mu-table">
+      <h3>라인 상성 <span class="muted" style={{ fontSize: 11 }}>(LCK {data.matchups.games}경기 기준, 우리 쪽에서 본 값)</span></h3>
+      {ROLES.map((r) => {
+        const pr = Matchup.pair(data, r, mine[r], theirs[r]);
+        const e = pr ? pr.m * Matchup.MATCHUP_TUNE.gain : 0;
+        const rec = pr ? `LCK ${pr.n}판 ${pr.wins}승 ${pr.n - pr.wins}패${pr.gold !== null ? ` · 14분 골드 ${pr.gold >= 0 ? "+" : ""}${pr.gold}` : ""}` : "LCK 맞대결 없음";
+        return (
+          <div class="mu-row" title={rec}>
+            <span class="mu-role">{ROLE_KO[r]}</span>
+            <span class="mu-pair">{nm(mine[r])} <span class="muted">vs</span> {nm(theirs[r])}</span>
+            <span class={`mu-val ${!Matchup.notable(e) ? "muted" : e > 0 ? "pos" : "neg"}`}>{pr ? Matchup.edgeWord(e, exact) : "비슷"}</span>
+            <span class="mu-rec muted">{pr ? `${pr.n}판 ${pr.wins}승 ${pr.n - pr.wins}패` : "맞대결 없음"}</span>
+          </div>
+        );
+      })}
+      <div class="mu-row">
+        <span class="mu-role">조합</span>
+        <span class="mu-pair muted">돌진·포킹·받아치기 상성</span>
+        <span class={`mu-val ${!Matchup.notable(comp) ? "muted" : comp > 0 ? "pos" : "neg"}`}>{Matchup.edgeWord(comp, exact)}</span>
+        <span class="mu-rec muted" />
+      </div>
+      <div class="mu-row mu-sum">
+        <span class="mu-role">합계</span>
+        <span class="mu-pair muted">예상 승률에 들어간 상성</span>
+        <span class={`mu-val ${!Matchup.notable(total) ? "muted" : total > 0 ? "pos" : "neg"}`}>{Matchup.edgeWord(total, exact)}</span>
+        <span class="mu-rec muted" />
+      </div>
     </div>
   );
 }
