@@ -3,7 +3,7 @@
 // (lck-manager.kro.kr/#privacy) opens that document straight away.
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { CURRENT_VERSION, PATCH_NOTES } from "./patchnotes";
+import { CURRENT_VERSION, PATCH_KIND_LABEL, PATCH_KIND_ORDER, PATCH_NOTES, sortedItems, type PatchKind } from "./patchnotes";
 import { PRIVACY_EFFECTIVE, PRIVACY_POLICY, SERVICE_GUIDE, TERMS, TERMS_EFFECTIVE } from "./docs";
 import "./info.css";
 
@@ -126,6 +126,11 @@ function InfoModal({ tab, onTab, onClose }: { tab: TabId; onTab: (id: TabId) => 
 function PatchNotes() {
   return (
     <div class="patch-list">
+      <div class="patch-legend">
+        {PATCH_KIND_ORDER.map((k) => (
+          <span class="patch-legend-item"><PatchCard kind={k} />{PATCH_KIND_LABEL[k]}</span>
+        ))}
+      </div>
       {PATCH_NOTES.map((n, i) => (
         <section class="patch">
           <div class="patch-head">
@@ -134,11 +139,18 @@ function PatchNotes() {
             {i === 0 && <span class="tag gold">최신</span>}
             <span class="patch-date">{n.date.replaceAll("-", ".")}</span>
           </div>
-          <ul class="patch-items">{n.items.map((x) => <li>{x}</li>)}</ul>
+          <ul class="patch-items">
+            {sortedItems(n).map(([kind, text]) => <li><PatchCard kind={kind} />{text}</li>)}
+          </ul>
         </section>
       ))}
     </div>
   );
+}
+
+/** UPD (sky blue) / FIX (yellow) / BUG (red) card in front of a patch note line. */
+function PatchCard({ kind }: { kind: PatchKind }) {
+  return <span class={`patch-card ${kind.toLowerCase()}`} title={PATCH_KIND_LABEL[kind]}>{kind}</span>;
 }
 
 // ---------- the light markup of docs.ts ----------
