@@ -11,6 +11,7 @@ import { store, useStore } from "../store";
 import type { GameState } from "../core/types";
 import { ROLES } from "../data/types";
 import { autosave } from "./App";
+import { appH, appW, toLocal } from "./scale";
 import "./tutorial.css";
 
 /** Places the match screens report (tutSpot). */
@@ -60,16 +61,17 @@ const PARTS: Record<string, Step[]> = {
   ],
   // the first time it is our turn to ban
   ban: [
-    { sel: tut("draft-head"), title: "밴픽 · 순서", body: "블루와 레드가 번갈아 고릅니다. 밴 3개씩 → 픽 3개씩 → 밴 2개씩 → 픽 2개씩 순서입니다. 여기에 지금 누구 차례인지, 몇 번째인지 나오고, 차례인 팀의 판은 테두리가 빛납니다." },
+    { sel: tut("draft-head"), title: "밴픽 · 순서", body: "블루와 레드가 번갈아 고릅니다. 밴 3개씩 → 픽 3개씩 → 밴 2개씩 → 픽 2개씩 순서입니다. 여기에 지금 단계(빨간 '밴' · 금색 '픽')와 누구 차례인지, 몇 번째인지 나옵니다. 단계가 바뀌면 화면 가운데에 크게 알려 주고, 차례인 팀의 판에는 '밴 차례' · '픽 차례' 표시가 붙습니다." },
     { sel: tut("draft-grid"), title: "밴픽 · 챔피언 목록", body: "왼쪽 위 S · A 표시는 이번 패치에서 강한 챔피언, '너프'는 약해진 챔피언입니다. 초록 테두리는 감독이 이번 차례에 추천하는 챔피언입니다. 흐린 챔피언은 이미 밴 · 픽됐거나, 이번 시리즈에서 이미 써서(F, 피어리스) 고를 수 없습니다." },
-    { sel: tut("draft-sug"), title: "밴픽 · 감독 추천", body: "감독이 이번 차례에 고를 만한 챔피언과 그 이유를 보여 줍니다. 누르면 바로 그 챔피언을 고릅니다. 감독의 밴픽 능력이 높을수록 추천이 많고 정확합니다." },
-    { sel: tut("draft-filter"), title: "밴픽 · 찾기", body: "포지션 버튼과 검색으로 목록을 좁힐 수 있습니다. '추천대로'를 누르면 감독 추천대로 이번 차례를 바로 진행합니다. 이제 밴할 챔피언을 직접 눌러 보세요." },
+    { sel: tut("draft-sug"), title: "밴픽 · 감독 추천", body: "감독이 이번 차례에 고를 만한 챔피언과 그 이유를 보여 줍니다. 누르면 그 챔피언이 후보로 올라갑니다(확정은 아래 버튼). 감독의 밴픽 능력이 높을수록 추천이 많고 정확합니다." },
+    { sel: tut("draft-filter"), title: "밴픽 · 찾기", body: "포지션 버튼과 검색으로 목록을 좁힐 수 있습니다. '추천대로'를 누르면 감독이 고를 챔피언이 후보로 올라갑니다." },
+    { sel: tut("draft-confirm"), title: "밴픽 · 확정", body: "챔피언을 누르면 먼저 후보로만 올라가고, 이 버튼을 눌러야 확정됩니다(Enter도 됨). 확정 전에는 다른 챔피언을 눌러 바꿀 수 있습니다. 버튼은 밴 차례에 빨간 '밴하기', 픽 차례에 금색 '선택하기'로 바뀝니다. 이제 밴할 챔피언을 골라 확정해 보세요." },
   ],
   // the first time it is our turn to pick
   pick: [
     { sel: tut("draft-mine"), title: "픽 · 넣을 자리", body: "우리 팀 판입니다. 금색 테두리가 이번 픽이 들어갈 자리이고, 다른 빈 자리를 누르면 그 포지션으로 바꿉니다. 고른 챔피언 아래에는 그 선수의 숙련도가 나옵니다." },
     { sel: tut("draft-grid"), title: "픽 · 선수의 선호 챔피언", body: "픽 차례에는 챔피언 아이콘 왼쪽 아래에 금색 숫자로 지금 자리 선수의 숙련도가 나옵니다. 선수가 많이 다뤄 본 선호 챔피언일수록 숫자가 높고, 숙련도가 높을수록 경기에서 잘 다룹니다. 숫자가 없는 챔피언은 그 선수가 프로 경기에서 써 본 적이 없는 챔피언입니다." },
-    { sel: tut("draft-sug"), title: "픽 · 추천 픽", body: "픽 차례의 감독 추천은 어느 포지션에 넣을지와 이유(선수 숙련도, 프로 메타 출현율, 티어)를 같이 보여 줍니다. 추천을 누르면 그 포지션에 바로 들어갑니다. 목록의 초록 테두리도 같은 추천입니다." },
+    { sel: tut("draft-sug"), title: "픽 · 추천 픽", body: "픽 차례의 감독 추천은 어느 포지션에 넣을지와 이유(선수 숙련도, 프로 메타 출현율, 티어)를 같이 보여 줍니다. 추천을 누르면 그 포지션의 후보로 올라가고, 금색 '선택하기'를 눌러야 들어갑니다. 목록의 초록 테두리도 같은 추천입니다." },
   ],
   // the draft is over: runes, builds, then the game
   loadout: [
@@ -195,10 +197,13 @@ function readyForMatch(s: GameState): boolean {
 }
 
 /** Light up at most the top 45% of the screen of a long panel, inside the viewport, so the step box fits below it. */
-function clip(r: DOMRect): DOMRect {
+function clip(screenRect: DOMRect): DOMRect {
+  // measured in screen pixels; the lit box is placed in the app's CSS pixels (they differ under the screen zoom)
+  const r = toLocal(screenRect);
+  const H = appH(), W = appW();
   const top = Math.max(8, r.top);
-  const bottom = Math.min(r.bottom, top + innerHeight * 0.45, innerHeight - 8);
-  const left = Math.max(8, r.left), right = Math.min(r.right, innerWidth - 8);
+  const bottom = Math.min(r.bottom, top + H * 0.45, H - 8);
+  const left = Math.max(8, r.left), right = Math.min(r.right, W - 8);
   return new DOMRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top));
 }
 
@@ -282,13 +287,14 @@ export function TutorialLayer() {
   let box: Record<string, string | number> = { left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
   if (rect) {
     // beside the lit part when there is room, otherwise below it (or above when it sits low on the screen)
+    const vw = appW(), vh = appH();
     let x = rect.right + 16, y = rect.top;
-    if (x + W > innerWidth - 10) x = rect.left - W - 16;
+    if (x + W > vw - 10) x = rect.left - W - 16;
     if (x < 10) {
-      x = Math.min(innerWidth - W - 10, Math.max(10, rect.left + 12));
-      y = rect.bottom + 14 + 230 <= innerHeight ? rect.bottom + 14 : rect.top - 244;
+      x = Math.min(vw - W - 10, Math.max(10, rect.left + 12));
+      y = rect.bottom + 14 + 230 <= vh ? rect.bottom + 14 : rect.top - 244;
     }
-    box = { left: x, top: Math.max(10, Math.min(innerHeight - 240, y)) };
+    box = { left: x, top: Math.max(10, Math.min(vh - 240, y)) };
   }
   if (!t) {
     // one-time tip: same look, a single button

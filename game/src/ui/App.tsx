@@ -81,7 +81,7 @@ export function App() {
     for (const note of migrateSave(st.s, st.data)) inbox(st.s, note);
     autosave();
   }
-  if (!st.s) return st.screen.name === "exhibition" ? <div class="main" style={{ height: "100vh" }}><ExhibitionScreen /></div> : <StartScreen />;
+  if (!st.s) return st.screen.name === "exhibition" ? <div class="main" style={{ height: "var(--app-h, 100vh)" }}><ExhibitionScreen /></div> : <StartScreen />;
   const s = st.s;
   if (s.over) return <GameOverScreen />;
   const me = s.teams[s.user];

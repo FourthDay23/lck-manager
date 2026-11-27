@@ -4,6 +4,41 @@ import { saveGame, slotMeta, deleteSlot, loadGame, downloadSave, readSaveFile } 
 import { migrateSave } from "../../core/game";
 import { inbox } from "../../core/news";
 import { startTutorial } from "../Tutorial";
+import { SCALE_STEPS, isCrisp, scaleMode, setScaleMode, uiZoom } from "../scale";
+import type { ScaleMode } from "../scale";
+
+/** Screen scale (ui/scale.ts): auto, or a fixed size; the sizes where this device draws the pixel font sharp are marked. */
+function ScaleSettings() {
+  const [, setV] = useState(0);
+  const mode = scaleMode();
+  const dpr = window.devicePixelRatio || 1;
+  // the usual steps, plus the sharp ones for this screen (one CSS pixel = 1, 2... device pixels)
+  const steps = [...SCALE_STEPS];
+  for (let n = 1; n <= 3; n++) {
+    const z = n / dpr;
+    if (z >= 0.5 && z <= 1.6 && !steps.some((x) => Math.abs(x - z) < 0.01)) steps.push(z);
+  }
+  steps.sort((a, b) => a - b);
+  const pick = (m: ScaleMode) => { setScaleMode(m); setV((v) => v + 1); };
+  const pct = (z: number) => `${Math.round(z * 100)}%`;
+  return (
+    <div class="frame pad">
+      <h2>화면 배율</h2>
+      <div class="muted" style={{ marginBottom: 6 }}>
+        '자동'은 윈도우·브라우저 배율 그대로의 크기로 보여 주고, 100% 아래로 줄여서 글자가 깨지는 것만 막습니다(지금 {pct(uiZoom())}{isCrisp(uiZoom()) ? ", 선명" : ""}).
+        픽셀 글꼴이라 '선명' 표시가 붙은 배율에서 글자가 가장 또렷하고, 나머지 배율에서는 조금 흐릴 수 있습니다. 시작 화면과 경기 화면은 배율과 상관없이 창에 맞춰집니다.
+      </div>
+      <div class="row" style={{ flexWrap: "wrap" }}>
+        <button class={`btn small ${mode === "auto" ? "on" : ""}`} onClick={() => pick("auto")}>자동</button>
+        {steps.map((z) => (
+          <button class={`btn small ${mode !== "auto" && Math.abs(mode - z) < 0.005 ? "on" : ""}`} onClick={() => pick(z)}>
+            {pct(z)}{isCrisp(z, dpr) ? " · 선명" : ""}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function SettingsScreen() {
   const s = S();
@@ -72,6 +107,7 @@ export function SettingsScreen() {
           </label>
         </div>
       </div>
+      <ScaleSettings />
       <div class="frame pad">
         <h2>튜토리얼</h2>
         <div class="row">

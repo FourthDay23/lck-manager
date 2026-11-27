@@ -1,0 +1,75 @@
+/* kill banners on the match board (KillBanner.tsx): the first item of .banner-wrap, objective banners stack below */
+.kb {
+  --kc: var(--blue);
+  position: relative; display: flex; flex-direction: column; align-items: center; pointer-events: none;
+  animation: kb-in 0.28s steps(4) both;
+  transition: opacity 0.3s steps(3), transform 0.3s steps(3);
+  filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.45));
+}
+.kb.red { --kc: var(--red); }
+.kb.out { opacity: 0; transform: translateY(-8px); }
+
+/* the special-kill ribbon above the banner */
+.kb-label {
+  position: relative; z-index: 1; margin-bottom: -2px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 2px 14px; font-family: "Galmuri14"; font-size: 15px; color: #fff; text-shadow: 2px 2px 0 #000;
+  background: #2a3048; box-shadow: 0 0 0 2px #0b0d14;
+}
+.t-first_blood { background: #b3242f; }
+.t-shutdown { background: #b8820f; }
+.t-solo { background: #6a3fc0; }
+.t-double { background: #d0641c; }
+.t-multi, .t-team { background: #2a3048; }
+.kb.blue .t-team { background: #1d4f8a; }
+.kb.red .t-team { background: #8a2430; }
+.t-triple, .t-quadra, .t-penta, .t-ace { background: linear-gradient(180deg, #ffe08a, #f2c14e 55%, #c48a1a); color: #2a1a02; text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.45); }
+
+.kb-body { display: flex; align-items: stretch; background: rgba(8, 10, 18, 0.93); box-shadow: 0 0 0 2px var(--kc), 0 0 0 4px #0b0d14; }
+.kb-who { display: flex; align-items: center; gap: 8px; padding: 5px 10px; }
+.kb.blue .kb-who.killer { background: linear-gradient(90deg, rgba(74, 163, 255, 0.45), rgba(74, 163, 255, 0.06)); }
+.kb.red .kb-who.killer { background: linear-gradient(90deg, rgba(255, 90, 90, 0.45), rgba(255, 90, 90, 0.06)); }
+.kb.blue .kb-who.victim { background: linear-gradient(270deg, rgba(255, 90, 90, 0.28), rgba(255, 90, 90, 0.03)); }
+.kb.red .kb-who.victim { background: linear-gradient(270deg, rgba(74, 163, 255, 0.28), rgba(74, 163, 255, 0.03)); }
+.kb-who img { display: block; flex: none; box-shadow: 0 0 0 2px var(--kc), 0 0 0 4px #0b0d14; }
+.kb-who.victim img, .kb-vics img, .kb-row .kb-vi img { filter: grayscale(0.85) brightness(0.75); }
+.kb-who.victim img, .kb-vics img { box-shadow: 0 0 0 2px #0b0d14; }
+.kb-name { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.kb-name.right { align-items: flex-end; text-align: right; }
+.kb-name b { font-family: "Galmuri14"; font-weight: normal; font-size: 16px; color: #fff; text-shadow: 2px 2px 0 #000; white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+.kb-who.victim .kb-name b { color: #b9bfd0; }
+.kb-name small { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #c4c9da; white-space: nowrap; }
+.kb-x { flex: none; align-self: center; margin: 0 1px; }
+.kb-vics { display: flex; gap: 3px; }
+.kb-tower {
+  width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; background: #2a3048; color: #e8ecf5; box-shadow: 0 0 0 2px var(--kc), 0 0 0 4px #0b0d14;
+}
+.kb-tower.small { width: 26px; height: 26px; font-size: 9px; }
+
+/* chips for the lesser tags under the banner (a shutdown that was also a double kill...) */
+.kb-extra { display: flex; gap: 4px; margin-top: 4px; }
+.kb-chip { font-size: 10px; padding: 1px 5px; color: #fff; box-shadow: 0 0 0 1px #0b0d14; white-space: nowrap; }
+.kb-chip.t-triple, .kb-chip.t-quadra, .kb-chip.t-penta, .kb-chip.t-ace { text-shadow: none; }
+
+/* plain kills a touch smaller; special kills as they are; triple kills and up, aces big and gold */
+.kb:not(.special):not(.mega) .kb-name b { font-size: 14px; }
+.kb.mega { animation: kb-in-mega 0.42s steps(6) both; }
+.kb.mega .kb-label { font-size: 26px; padding: 4px 24px; box-shadow: 0 0 0 2px #0b0d14, 0 0 18px rgba(242, 193, 78, 0.75); animation: kb-shine 0.8s steps(2) infinite; }
+.kb.mega .kb-body, .kb.mega .kb-rows { box-shadow: 0 0 0 2px var(--gold), 0 0 0 4px #0b0d14, 0 0 24px rgba(242, 193, 78, 0.45); }
+.kb.mega .kb-name b { font-size: 20px; max-width: 140px; }
+.kb.mega .kb-who img { box-shadow: 0 0 0 2px var(--gold), 0 0 0 4px #0b0d14; }
+.kb.mega .kb-who.victim img { box-shadow: 0 0 0 2px #0b0d14; }
+
+/* several players' kills merged: one line each */
+.kb-rows { display: flex; flex-direction: column; gap: 3px; padding: 6px 8px 5px; background: rgba(8, 10, 18, 0.93); box-shadow: 0 0 0 2px var(--kc), 0 0 0 4px #0b0d14; }
+.kb-row { display: grid; grid-template-columns: 26px 84px 16px 26px 84px minmax(0, auto); align-items: center; gap: 5px; font-size: 12px; }
+.kb-row img { display: block; box-shadow: 0 0 0 2px var(--kc); }
+.kb-row .kb-vi img { box-shadow: 0 0 0 2px #0b0d14; }
+.kb-rn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; text-shadow: 1px 1px 0 #000; }
+.kb-rn.victim { color: #b9bfd0; }
+.kb-more { font-size: 10px; color: var(--muted); text-align: center; }
+
+@keyframes kb-in { 0% { transform: scale(1.45); opacity: 0; } 60% { transform: scale(0.97); opacity: 1; } 100% { transform: none; opacity: 1; } }
+@keyframes kb-in-mega { 0% { transform: scale(2); opacity: 0; } 50% { transform: scale(0.94); opacity: 1; } 75% { transform: scale(1.04); } 100% { transform: none; opacity: 1; } }
+@keyframes kb-shine { 50% { filter: brightness(1.3); } }

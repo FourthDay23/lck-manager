@@ -2,6 +2,7 @@ import { options, render } from "preact";
 import "./styles.css";
 import { App } from "./ui/App";
 import { store } from "./store";
+import { initScale } from "./ui/scale";
 
 // Preact 11 no longer adds "px" to numeric style values, so `style={{ fontSize: 11 }}` was silently dropped.
 // Add the unit here once for every element instead of rewriting every style in the UI.
@@ -20,5 +21,8 @@ options.vnode = (vnode) => {
 };
 
 if (import.meta.env.DEV) (window as unknown as { __store: typeof store }).__store = store;
+
+// the screen scale (ui/scale.ts) is set before the first paint, so the app does not jump in size
+initScale();
 
 render(<App />, document.getElementById("app")!);

@@ -11,7 +11,7 @@ import {
   COMP_KEYS, DRAFT_ORDER, aiStep, applyStep, autoDraft, coachSuggestions, compProfile, currentStep, draftWinProb,
   lineupOf, mastery, newDraft, openRoles, unavailable,
 } from "../../match/draft";
-import type { DraftState, Side } from "../../match/draft";
+import type { DraftState, Side, StepKind } from "../../match/draft";
 import { Engine, ENGINE_FLAGS } from "../../match/engine";
 import { planLabel } from "../../match/macro";
 import type { GameEvent, ObjKey, Tactic } from "../../match/engine";
@@ -22,6 +22,8 @@ import { MatchRenderer } from "../../match/render";
 import { DEFAULT_SPEED, Pacer, SPEEDS } from "../../match/pacing";
 import "../caption.css";
 import "../draft.css";
+import "../draft-turn.css";
+import { KILL_EV, KillBanner, KillQueue } from "../KillBanner";
 import { ItemStrip, LoadoutPicker, RuneBadge } from "../Loadout";
 import { SummonerSpells } from "../Summoners";
 import { LivePlayerStats, RecordStats } from "../PlayerStats";
@@ -34,6 +36,7 @@ import { autosave } from "../App";
 import { seriesWinProb } from "../../core/quick";
 import { META_LABEL, metaTier } from "../../core/meta";
 import { tutSpot } from "../Tutorial";
+import { appH, localRect, onScale, toLocal } from "../scale";
 import { chooseSetBreak, setBreakDue, setBreakOptions } from "../../core/events";
 
 interface Live {
@@ -293,6 +296,22 @@ export function GameResult({ g }: { g: GameRecord }) {
 }
 
 // ---------------- draft ----------------
+/** which part of the draft step i is in: 0 first bans, 1 first picks, 2 second bans, 3 second picks */
+function draftPhase(i: number): number {
+  let ph = 0;
+  for (let k = 1; k <= i && k < DRAFT_ORDER.length; k++) if (DRAFT_ORDER[k][1] !== DRAFT_ORDER[k - 1][1]) ph++;
+  return ph;
+}
+const phaseName = (ph: number, kind: StepKind) => `${Math.floor(ph / 2) + 1}차 ${kind === "ban" ? "밴" : "픽"}`;
+/** first and last step of the phase step i is in (for the "3/6" counter and the phase banner) */
+function phaseRange(i: number): [number, number] {
+  const ph = draftPhase(i);
+  let a = i, b = i;
+  while (a > 0 && draftPhase(a - 1) === ph) a--;
+  while (b < DRAFT_ORDER.length - 1 && draftPhase(b + 1) === ph) b++;
+  return [a, b];
+}
+
 export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSide: Side; onDone: (mode: "watch" | "skip") => void; auto?: boolean }) {
   const s = S();
   const data = D();
@@ -304,12 +323,34 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
   const rng = useMemo(() => new Rng((s.seed ^ d.step * 977 ^ s.day) >>> 0), [d]);
   const st = currentStep(d);
   const myTurn = !!st && !auto && st[0] === userSide;
-  // AI steps play out with a short delay so the draft can be followed
+  /** the champion we clicked this turn: like the LoL client, a click only hovers it and the button locks it in */
+  const [pend, setPend] = useState<{ id: string; step: number } | null>(null);
+  const pendC = pend && pend.step === d.step && myTurn ? data.champ.get(pend.id) : undefined;
+  // the phase (1차 밴 / 1차 픽 / 2차 밴 / 2차 픽) changes: a banner across the board, so a pick is never taken for a ban
+  const ph = st ? draftPhase(d.step) : -1;
+  const prevPh = useRef<number | null>(null);
+  const [flash, setFlash] = useState<{ key: number; kind: StepKind; text: string; sub: string } | null>(null);
+  useEffect(() => {
+    if (st && ph !== prevPh.current) {
+      const [a, b] = phaseRange(d.step);
+      const per = Math.ceil((b - a + 1) / 2);
+      const first = s.teams[st[0] === "blue" ? d.blue : d.red].short;
+      setFlash({ key: d.step, kind: st[1], text: `${phaseName(ph, st[1])} 단계`, sub: `${st[0] === "blue" ? "블루" : "레드"} ${first}부터 · 팀마다 ${per}개씩 ${st[1] === "ban" ? "밴" : "픽"}` });
+    }
+    prevPh.current = ph;
+  }, [ph, d]);
+  useEffect(() => {
+    if (!flash) return;
+    const id = setTimeout(() => setFlash(null), 1700);
+    return () => clearTimeout(id);
+  }, [flash]);
+  // AI steps play out with a short delay so the draft can be followed (longer at a new phase, under its banner)
   useEffect(() => {
     if (!st || myTurn) return;
-    const id = setTimeout(() => { aiStep(s, data, d, rng); bump(); }, 550);
+    const phaseStart = d.step === 0 || DRAFT_ORDER[d.step - 1][1] !== st[1];
+    const id = setTimeout(() => { aiStep(s, data, d, rng); bump(); }, phaseStart ? 1500 : 550);
     return () => clearTimeout(id);
-  });
+  }, [d, d.step, myTurn]);
   // tutorial: the draft screen, our first ban and pick turns, then runes and builds (not in watched AI drafts)
   const stepKind = !st ? "done" : myTurn ? st[1] : "wait";
   useEffect(() => {
@@ -331,7 +372,8 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
   if (q) list = list.filter((c) => c.name.includes(q) || c.nameEn.toLowerCase().includes(q.toLowerCase()));
   const tierRank = (id: string) => { const t = metaTier(s, id); return t === "S" ? 0 : t === "A" ? 1 : t === "N" ? 3 : 2; };
   const shown = [...list].sort((a, b) => tierRank(a.id) - tierRank(b.id) || b.pro.presence - a.pro.presence || a.name.localeCompare(b.name, "ko"));
-  /** `forRole`: a coach suggestion names the slot it is for (an open one), which wins over the selected slot */
+  /** Hover a champion (nothing is locked in yet). `forRole`: a coach suggestion names the slot it is for (an open
+   *  one), which wins over the selected slot; a pick moves the slot to a role the champion plays. */
   const choose = (c: ChampionData, forRole?: Role | null) => {
     if (!st || !myTurn || blocked.has(c.id)) return;
     if (st[1] === "pick") {
@@ -340,23 +382,92 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
         const best = open.slice().sort((x, y) => (c.roles[y] ?? 0) - (c.roles[x] ?? 0))[0];
         if (best && (c.roles[best] ?? 0) >= 0.03) r = best;
       }
-      applyStep(d, c.id, r);
-    } else applyStep(d, c.id);
+      setSelRole(r);
+    }
+    setPend({ id: c.id, step: d.step });
+  };
+  /** the lock-in button (밴하기 / 선택하기): the hovered champion goes into the next ban, or the selected slot */
+  const confirm = () => {
+    if (!st || !myTurn || !pendC || blocked.has(pendC.id)) return;
+    if (st[1] === "pick") applyStep(d, pendC.id, role);
+    else applyStep(d, pendC.id);
+    setPend(null);
     setSelRole(null);
     bump();
   };
+  /** 추천대로: hover what the coach would take (played on a copy of the draft), still to be locked in */
+  const recommend = () => {
+    if (!st || !myTurn) return;
+    const copy = structuredClone(d);
+    aiStep(s, data, copy, rng);
+    const h = copy.history[copy.history.length - 1];
+    const c = h && data.champ.get(h.champ);
+    if (c) choose(c, h.role ?? null);
+    // so that Enter right after locks it in instead of pressing 추천대로 again
+    (document.activeElement as HTMLElement | null)?.blur?.();
+  };
+  // Enter locks in, Esc lets go (not while the tutorial is up, nor when Enter would press a focused button).
+  // One listener for the screen; it reads this render's state through a ref, so a key right after a click counts.
+  const keys = useRef({ confirm, hovered: !!pendC });
+  keys.current = { confirm, hovered: !!pendC };
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (store.tut || !keys.current.hovered) return;
+      const tag = (ev.target as HTMLElement | null)?.tagName;
+      if (ev.key === "Enter" && tag !== "BUTTON" && tag !== "TEXTAREA") {
+        ev.preventDefault();
+        keys.current.confirm();
+      } else if (ev.key === "Escape") setPend(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  // The champion list is only as tall as the window leaves, so the lock-in bar and the coach's suggestions under it
+  // are always on screen (150 to 430 px; it scrolls inside).
+  const gridRef = useRef<HTMLDivElement>(null);
+  const fitGrid = () => {
+    const g = gridRef.current;
+    const frame = g?.closest(".dr-center");
+    if (!g || !frame) return;
+    const scroller = g.closest(".main") as HTMLElement | null;
+    const view = scroller ? toLocal(scroller.getBoundingClientRect()) : new DOMRect(0, 0, 0, appH());
+    const visH = scroller ? scroller.clientHeight : appH();
+    const r = localRect(g);
+    // the grid's top in the scroller's content, and what the center panel has under the grid
+    const top = r.top - view.top + (scroller?.scrollTop ?? 0);
+    const below = localRect(frame).bottom - r.bottom + 6;
+    g.style.maxHeight = `${Math.max(150, Math.min(430, Math.floor(visH - top - below)))}px`;
+  };
+  useEffect(() => {
+    // the draft opens at the top of the page
+    const scroller = gridRef.current?.closest(".main") as HTMLElement | null;
+    if (scroller) scroller.scrollTop = 0;
+    addEventListener("resize", fitGrid);
+    const off = onScale(fitGrid);
+    return () => { removeEventListener("resize", fitGrid); off(); };
+  }, []);
+  // again after every render: the turn text, the filter row and the suggestions can change height
+  useEffect(fitGrid);
   const side = (sd: Side) => {
     const team = sd === "blue" ? d.blue : d.red;
     const lup = lineupOf(s, team);
     const active = st && st[0] === sd;
     return (
-      <div class="frame pad" data-tut={sd === userSide ? "draft-mine" : undefined} style={{ boxShadow: active ? `0 0 0 2px ${sd === "blue" ? "var(--blue)" : "var(--red)"}` : undefined }}>
+      <div class={`frame pad dr-team ${active ? `turn ${st![1]}` : ""}`} data-tut={sd === userSide ? "draft-mine" : undefined} style={{ boxShadow: active ? `0 0 0 2px ${sd === "blue" ? "var(--blue)" : "var(--red)"}` : undefined }}>
         <div class="row" style={{ justifyContent: "space-between" }}>
           <div class="row"><TeamLogo id={team} size={26} /><b style={{ color: sd === "blue" ? "var(--blue)" : "var(--red)" }}>{s.teams[team].short}</b></div>
-          <span class="muted" style={{ fontSize: 11 }}>{sd === "blue" ? "블루" : "레드"}</span>
+          <span class="row" style={{ gap: 4 }}>
+            {active && <span class={`dr-tag ${st![1]}`}>{st![1] === "ban" ? "밴 차례" : "픽 차례"}</span>}
+            <span class="muted" style={{ fontSize: 11 }}>{sd === "blue" ? "블루" : "레드"}</span>
+          </span>
         </div>
         <div class="banrow" style={{ margin: "6px 0" }}>
-          {[0, 1, 2, 3, 4].map((i) => <div class={`b ${d.bans[sd][i] ? "" : "empty"}`}>{d.bans[sd][i] && <ChampIcon id={d.bans[sd][i]} size={30} />}</div>)}
+          {[0, 1, 2, 3, 4].map((i) => {
+            // the ban this turn fills: pulses red, and shows the champion we are about to ban
+            const next = !!active && st![1] === "ban" && i === d.bans[sd].length;
+            const prev = next && sd === userSide ? pendC?.id : undefined;
+            return <div class={`b ${d.bans[sd][i] ? "" : "empty"} ${next ? "next" : ""} ${prev ? "prev" : ""}`}>{d.bans[sd][i] ? <ChampIcon id={d.bans[sd][i]} size={30} /> : prev ? <ChampIcon id={prev} size={30} /> : null}</div>;
+          })}
         </div>
         {ROLES.map((r) => {
           const c = d.picks[sd][r];
@@ -364,12 +475,12 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
           const isMine = sd === userSide;
           const selectable = isMine && myTurn && st?.[1] === "pick" && !c;
           return (
-            <div class={`slot frame dark ${c ? "" : "empty"} ${selectable && role === r ? "active" : ""}`} style={{ cursor: selectable ? "pointer" : "default" }} onClick={() => selectable && setSelRole(r)}>
-              {c ? <ChampIcon id={c} size={44} /> : <span style={{ width: 44, height: 44, background: "#0b0d14", display: "inline-block" }} />}
+            <div class={`slot frame dark ${c ? "" : "empty"} ${selectable && role === r ? "active" : ""} ${selectable && role === r && pendC ? "prev" : ""}`} style={{ cursor: selectable ? "pointer" : "default" }} onClick={() => selectable && setSelRole(r)}>
+              {c ? <ChampIcon id={c} size={44} /> : selectable && role === r && pendC ? <ChampIcon id={pendC.id} size={44} /> : <span style={{ width: 44, height: 44, background: "#0b0d14", display: "inline-block" }} />}
               <div>
                 <div class="muted" style={{ fontSize: 11 }}>{ROLE_KO[r]}</div>
                 <b>{p?.name ?? "-"}</b>
-                <div style={{ fontSize: 11 }}>{c ? `${data.champ.get(c)?.name} · 숙련 ${Math.round(mastery(p, data.champ.get(c)!))}` : selectable && role === r ? "← 이 자리에 픽" : ""}</div>
+                <div style={{ fontSize: 11 }}>{c ? `${data.champ.get(c)?.name} · 숙련 ${Math.round(mastery(p, data.champ.get(c)!))}` : selectable && role === r ? (pendC ? <span class="gold">{pendC.name} · 선택 중</span> : "← 이 자리에 픽") : ""}</div>
               </div>
             </div>
           );
@@ -381,33 +492,49 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
   const prob = done ? draftWinProb(s, data, d) : 0;
   const userProb = userSide === "blue" ? prob : 1 - prob;
   return (
-    <div class="grid3" style={{ gridTemplateColumns: "250px 1fr 250px" }}>
+    <div class={`grid3 draft-board ${st ? `mode-${st[1]}` : "mode-done"}`} style={{ gridTemplateColumns: "250px minmax(0, 1fr) 250px", position: "relative" }}>
       {side("blue")}
-      <div class="frame pad">
+      <div class={`frame pad dr-center ${st ? st[1] : ""}`}>
         {!done ? (
           <>
-            <div class="row" data-tut="draft-head" style={{ justifyContent: "space-between" }}>
-              <h2 style={{ margin: 0 }}>
-                <span style={{ color: st![0] === "blue" ? "var(--blue)" : "var(--red)" }}>{st![0] === "blue" ? "블루" : "레드"}</span>{" "}
-                {st![1] === "ban" ? "밴" : "픽"} <span class="muted" style={{ fontSize: 12 }}>({d.step + 1}/{DRAFT_ORDER.length})</span>
-              </h2>
-              <span class={myTurn ? "gold" : "muted"}>{myTurn ? (st![1] === "pick" ? `우리 차례: ${ROLE_KO[role]} 픽` : "우리 차례: 밴") : "상대가 고르는 중..."}</span>
-            </div>
+            {(() => {
+              // what is being decided now, in its colour (ban red, pick gold), who decides it, and where in the order
+              const [a, b] = phaseRange(d.step);
+              const turnTeam = s.teams[st![0] === "blue" ? d.blue : d.red].short;
+              const kind = st![1] === "ban" ? "밴" : "픽";
+              return (
+                <div class={`dr-phase ${st![1]} ${st![0]} ${myTurn ? "mine" : ""}`} data-tut="draft-head">
+                  <div class="dr-kind">{kind}</div>
+                  <div class="dr-info">
+                    <div class="dr-title">
+                      <span class="dr-side">{st![0] === "blue" ? "블루" : "레드"} {turnTeam}</span> {phaseName(ph, st![1])} <span class="dr-count">{d.step - a + 1}/{b - a + 1}</span>
+                    </div>
+                    <div class="dr-turn">
+                      {myTurn
+                        ? (st![1] === "pick" ? `우리 차례 · ${ROLE_KO[role]} 자리에 넣을 챔피언을 고르세요` : "우리 차례 · 상대가 못 쓰게 할 챔피언을 고르세요")
+                        : `${auto ? "" : "상대 차례 · "}${turnTeam} ${kind} 고르는 중...`}
+                    </div>
+                  </div>
+                  <div class="dr-total">{d.step + 1}<small>/{DRAFT_ORDER.length}</small></div>
+                </div>
+              );
+            })()}
             <div class="row" data-tut="draft-filter" style={{ margin: "6px 0" }}>
               <button class={`btn small ${roleF === "" ? "on" : ""}`} onClick={() => setRoleF("")}>전체</button>
               {ROLES.map((r) => <button class={`btn small ${roleF === r ? "on" : ""}`} onClick={() => setRoleF(r)}>{ROLE_KO[r]}</button>)}
               <input type="text" placeholder="챔피언 검색" value={q} onInput={(e) => setQ((e.target as HTMLInputElement).value)} style={{ width: 120 }} />
-              {myTurn && <button class="btn small" onClick={() => { aiStep(s, data, d, rng); bump(); }}>추천대로</button>}
+              {myTurn && <button class="btn small" onClick={recommend}>추천대로</button>}
             </div>
-            <div class="cgrid" data-tut="draft-grid">
+            <div class={`cgrid ${myTurn ? `pickable mode-${st![1]}` : ""}`} data-tut="draft-grid" ref={gridRef}>
               {shown.map((c) => {
                 const off = blocked.has(c.id);
                 const fear = d.fearless.has(c.id);
                 const p = myTurn && st![1] === "pick" ? lu[role] : undefined;
                 const m = p ? p.mastery[c.id] : undefined;
                 return (
-                  <div class={`cbox ${off ? "off" : ""} ${fear ? "fear" : ""} ${sugIds.has(c.id) && !off ? "sug" : ""}`} onClick={() => choose(c)} title={`${c.name} · 출현율 ${Math.round(c.pro.presence * 100)}%`}>
+                  <div class={`cbox ${off ? "off" : ""} ${fear ? "fear" : ""} ${sugIds.has(c.id) && !off ? "sug" : ""} ${pendC?.id === c.id ? "pend" : ""}`} onClick={() => choose(c)} title={`${c.name} · 출현율 ${Math.round(c.pro.presence * 100)}%`}>
                     <ChampIcon id={c.id} size={52} />
+                    {pendC?.id === c.id && <span class="pstamp">{st![1] === "ban" ? "밴" : "픽"}</span>}
                     {m !== undefined && !off && <span class="m">{Math.round(m)}</span>}
                     {metaTier(s, c.id) && <span class={`tier t${metaTier(s, c.id)}`}>{META_LABEL[metaTier(s, c.id)!]}</span>}
                     {c.name}
@@ -415,6 +542,23 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
                 );
               })}
             </div>
+            {/* lock-in bar: a click above only hovers; this button (wording and colour follow ban / pick) decides */}
+            {!auto && (
+              <div class={`dr-confirm ${st![1]} ${myTurn ? "" : "wait"} ${pendC ? "ready" : ""}`} data-tut="draft-confirm">
+                <div class="dr-pend">
+                  {pendC ? <ChampIcon id={pendC.id} size={40} /> : <span class="dr-pend-empty" />}
+                  <div style={{ minWidth: 0 }}>
+                    <div class="muted" style={{ fontSize: 11 }}>
+                      {!myTurn ? "상대 차례입니다" : pendC ? (st![1] === "ban" ? "밴할 챔피언 (확정 전에는 바꿀 수 있습니다)" : `${ROLE_KO[role]} 자리에 넣을 챔피언 (확정 전에는 바꿀 수 있습니다)`) : `챔피언을 누르면 ${st![1] === "ban" ? "밴" : "픽"} 후보로 올라갑니다`}
+                    </div>
+                    <b>{!myTurn ? "기다리는 중..." : pendC ? `${pendC.name}${st![1] === "pick" ? ` → ${ROLE_KO[role]} ${lu[role]?.name ?? ""}` : ""}` : "아직 고르지 않았습니다"}</b>
+                  </div>
+                </div>
+                <button class={`btn lock ${st![1]}`} disabled={!myTurn || !pendC} onClick={confirm} title="Enter로도 확정합니다">
+                  {st![1] === "ban" ? "밴하기" : "선택하기"}
+                </button>
+              </div>
+            )}
             {/* always the same height and one line, so the board does not jump between turns */}
             <div class="frame dark pad sug-panel" data-tut="draft-sug">
               <h3>{!myTurn ? "감독 추천" : sug.coach ? `감독 ${sug.coach}의 추천` : "감독이 없어 추천이 거의 없습니다"}{myTurn ? ` (${sug.items.length}개)` : ""}</h3>
@@ -446,6 +590,11 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
         )}
       </div>
       {side("red")}
+      {flash && (
+        <div class={`dr-flash ${flash.kind}`} key={flash.key}>
+          <div class="dr-flash-in"><b>{flash.text}</b><span>{flash.sub}</span></div>
+        </div>
+      )}
     </div>
   );
 }
@@ -490,6 +639,9 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
   const [, setTick] = useState(0);
   const [banners, setBanners] = useState<{ id: number; ev: GameEvent; spawn?: boolean }[]>([]);
   const evSeen = useRef(0);
+  /** kill banners (KillBanner.tsx): their own cursor into e.events and a queue that merges kills at high speed */
+  const killSeen = useRef(0);
+  const kq = useRef(new KillQueue());
   /** objectives alive at the last UI tick: a change to alive is a spawn banner (also covers the elder dragon) */
   const objAlive = useRef<Partial<Record<ObjKey, boolean>>>({});
   const st = useRef({ speed, paused, slowmo });
@@ -557,12 +709,16 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
           }
         }
         if (evs.length > evSeen.current) {
-          // big plays, and every objective taken (like kills)
-          const fresh = evs.slice(evSeen.current).filter((x) => x.big || OBJ_TAKEN.has(x.type));
+          // big plays, and every objective taken (kills have their own banner, KillBanner.tsx)
+          const fresh = evs.slice(evSeen.current).filter((x) => (x.big || OBJ_TAKEN.has(x.type)) && !KILL_EV.has(x.type));
           evSeen.current = evs.length;
           for (const ev of fresh.slice(-2)) add.push({ id: now + 10 + add.length, ev });
         }
         if (add.length) setBanners((b) => [...b, ...add].slice(-3));
+        // every kill goes to the kill banner queue, which merges what comes too fast to read
+        for (let i = killSeen.current; i < evs.length; i++) if (KILL_EV.has(evs[i].type)) kq.current.push(evs[i], now);
+        killSeen.current = evs.length;
+        kq.current.tick(now);
       }
       raf = requestAnimationFrame(loop);
     };
@@ -576,10 +732,42 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
   }, [banners]);
   useEffect(() => { if (rend.current) rend.current.mode = cam; }, [cam]);
   useEffect(() => tutSpot("match"), []);
+  // The whole map and the scoreboard above it fit the window (with the controls under the map when there is room),
+  // as wide as the middle column allows.
+  // The map is a canvas, so it can take any size; the text around it keeps its size (ui/scale.ts).
+  const boardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const scroller = boardRef.current?.closest(".main") as HTMLElement | null;
+    // the draft was scrolled down to its start button: come back up to the scoreboard
+    if (scroller) scroller.scrollTop = 0;
+    const fit = () => {
+      const b = boardRef.current;
+      if (!b) return;
+      const view = scroller ? toLocal(scroller.getBoundingClientRect()) : new DOMRect(0, 0, 0, appH());
+      const visH = scroller ? scroller.clientHeight : appH();
+      // the board's top in the scroller's content, the same at any scroll position
+      const top = localRect(b).top - view.top + (scroller?.scrollTop ?? 0);
+      let below = 0;
+      for (let n = b.nextElementSibling; n; n = n.nextElementSibling) below += (n as HTMLElement).offsetHeight;
+      const withCtrl = visH - top - below - 8;
+      const size = withCtrl >= 420 ? withCtrl : visH - top - 8;
+      // up to 800 px when the window has room (the map got smaller on screens the crisp zoom shrinks)
+      b.style.maxWidth = `${Math.max(300, Math.min(800, Math.floor(size)))}px`;
+    };
+    fit();
+    // again once the scoreboard's fonts and logos have laid out
+    const late = setTimeout(fit, 400);
+    addEventListener("resize", fit);
+    const off = onScale(fit);
+    return () => { clearTimeout(late); removeEventListener("resize", fit); off(); };
+  }, []);
   const skipToEnd = () => {
     e.runToEnd();
     rend.current?.syncFx();
     if (rend.current) rend.current.lerp = 1; // the jump to the end is not something to glide through
+    // the rest of the game's kills are not announced one by one
+    killSeen.current = e.events.length;
+    kq.current.clear();
     setTick((x) => x + 1);
   };
   const team = (side: 0 | 1) => (
@@ -609,7 +797,7 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
       <div class="match">
         {team(0)}
         <div>
-          <div class="frame board">
+          <div class="frame board" ref={boardRef}>
             <canvas ref={canvas} class="px" />
             {/* one tag: what the camera shows and how fast the clock runs right now */}
             <div class="live-tag">
@@ -624,6 +812,7 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
               return <div class="cut-caption" key={c.at}><span>{c.text}</span></div>;
             })()}
             <div class="banner-wrap">
+              <KillBanner e={e} q={kq.current} now={performance.now()} />
               {banners.map(({ id, ev, spawn }) => {
                 const a = ev.actor !== undefined ? e.units[ev.actor] : null;
                 const v = ev.victim !== undefined ? e.units[ev.victim] : null;

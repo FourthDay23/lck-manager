@@ -59,7 +59,7 @@ export function StartScreen() {
   };
   return (
     <div class="start">
-      <div class="center" style={{ marginBottom: 14 }}>
+      <div class="center start-head">
         <div class="title-logo">LCK MANAGER</div>
         <div class="muted">나만의 LOL 프로게임단 육성하기</div>
       </div>
@@ -139,7 +139,7 @@ export function StartScreen() {
           <div class="muted" style={{ fontSize: 12 }}>이 주소는 아직 http입니다. https가 열리면 브라우저가 다른 주소로 보고 여기 저장한 슬롯이 보이지 않습니다. 그때는 저장 · 설정 화면의 "세이브 파일로 내보내기"로 옮기면 됩니다.</div>
         </div>
       )}
-      <div class="dim center" style={{ fontSize: 11, padding: 10 }}>
+      <div class="dim center start-foot">
         <InfoTabs />
         데이터 출처: Leaguepedia, Riot Data Dragon, CommunityDragon(경기 화면 아이콘). 이 게임은 Riot Games가 보증하거나 후원하지 않습니다. 게임 속 뉴스와 사건은 가상입니다.
         <br />
