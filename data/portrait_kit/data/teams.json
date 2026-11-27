@@ -1,0 +1,254 @@
+{
+ "T1": {
+  "name": "T1",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ]
+ },
+ "GEN": {
+  "name": "Gen.G",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ]
+ },
+ "HLE": {
+  "name": "Hanwha Life Esports",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ]
+ },
+ "DK": {
+  "name": "Dplus Kia",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ]
+ },
+ "KT": {
+  "name": "KT Rolster",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ]
+ },
+ "BFX": {
+  "name": "BNK FEARX",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ]
+ },
+ "DNS": {
+  "name": "DN SOOPers",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ]
+ },
+ "NS": {
+  "name": "Nongshim RedForce",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ]
+ },
+ "BRO": {
+  "name": "HANJIN BRION",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ]
+ },
+ "KRX": {
+  "name": "Kiwoom DRX",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ]
+ },
+ "T1EA": {
+  "name": "T1 Esports Academy",
+  "colors": [
+   "#e2012d",
+   "#101010"
+  ]
+ },
+ "GENGA": {
+  "name": "Gen.G Global Academy",
+  "colors": [
+   "#aa8a00",
+   "#101010"
+  ]
+ },
+ "HLEC": {
+  "name": "Hanwha Life Esports Challengers",
+  "colors": [
+   "#f37021",
+   "#101010"
+  ]
+ },
+ "DKC": {
+  "name": "Dplus Kia Challengers",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ]
+ },
+ "KTC": {
+  "name": "KT Rolster Challengers",
+  "colors": [
+   "#e60012",
+   "#101010"
+  ]
+ },
+ "BFXY": {
+  "name": "BNK FEARX Youth",
+  "colors": [
+   "#fce700",
+   "#101010"
+  ]
+ },
+ "DNSC": {
+  "name": "DN SOOPers Challengers",
+  "colors": [
+   "#0a51f1",
+   "#101828"
+  ]
+ },
+ "NSEA": {
+  "name": "Nongshim Esports Academy",
+  "colors": [
+   "#de2027",
+   "#ffffff"
+  ]
+ },
+ "BROC": {
+  "name": "HANJIN BRION Challengers",
+  "colors": [
+   "#004c29",
+   "#f0f0f0"
+  ]
+ },
+ "KRXC": {
+  "name": "Kiwoom DRX Challengers",
+  "colors": [
+   "#d40881",
+   "#001c58"
+  ]
+ },
+ "BLG": {
+  "name": "Bilibili Gaming",
+  "colors": [
+   "#34d0f4",
+   "#fa7299"
+  ]
+ },
+ "KC": {
+  "name": "Karmine Corp",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ]
+ },
+ "IG": {
+  "name": "Invictus Gaming",
+  "colors": [
+   "#d6261f",
+   "#f5c400"
+  ]
+ },
+ "AL": {
+  "name": "Anyone's Legend",
+  "colors": [
+   "#852423",
+   "#b92829"
+  ]
+ },
+ "TL": {
+  "name": "Team Liquid",
+  "colors": [
+   "#081723",
+   "#071423"
+  ]
+ },
+ "LOS": {
+  "name": "LØS",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ]
+ },
+ "MVK": {
+  "name": "MVK Esports",
+  "colors": [
+   "#fe5900",
+   "#101010"
+  ]
+ },
+ "C9": {
+  "name": "Cloud9",
+  "colors": [
+   "#00aff1",
+   "#101010"
+  ]
+ },
+ "G2": {
+  "name": "G2 Esports",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ]
+ },
+ "LYON": {
+  "name": "LYON",
+  "colors": [
+   "#7b2ff7",
+   "#f0f0f0"
+  ]
+ },
+ "TES": {
+  "name": "Top Esports",
+  "colors": [
+   "#ff3e23",
+   "#101010"
+  ]
+ },
+ "CFO": {
+  "name": "CTBC Flying Oyster",
+  "colors": [
+   "#16a2a8",
+   "#101828"
+  ]
+ },
+ "MKOI": {
+  "name": "Movistar KOI",
+  "colors": [
+   "#4b9cee",
+   "#4a9cec"
+  ]
+ },
+ "FUR": {
+  "name": "FURIA",
+  "colors": [
+   "#020202",
+   "#d8d8d8"
+  ]
+ },
+ "DCG": {
+  "name": "Deep Cross Gaming",
+  "colors": [
+   "#0e65cd",
+   "#000000"
+  ]
+ },
+ "TSW": {
+  "name": "Team Secret Whales",
+  "colors": [
+   "#000000",
+   "#f0f0f0"
+  ]
+ }
+}

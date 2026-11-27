@@ -31,8 +31,10 @@ def safe(name: str) -> str:
 
 
 def main() -> None:
-    if OUT.exists():
-        shutil.rmtree(OUT)
+    # rebuild only the team folders this script writes; prompt files and anything else under team_photos stay
+    for section in SECTION_DIR.values():
+        if (OUT / section).exists():
+            shutil.rmtree(OUT / section)
     manifest, sman = manifests()
     counts = {}
     total = missing = 0

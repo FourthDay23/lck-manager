@@ -1,0 +1,834 @@
+[
+ {
+  "category": "1_jungle",
+  "subject": "blue_sentinel",
+  "label": "블루(푸른 파수꾼)",
+  "variant": "",
+  "file": "1_jungle_blue_sentinel.png",
+  "local": "1_jungle_blue_sentinel.png",
+  "size": [
+   1227,
+   889
+  ],
+  "wiki_file": "Blue Sentinel Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Blue_Sentinel_Render.png?05fd9",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Blue_Sentinel_Render.png",
+  "uploaded": "2019-08-05T20:00:50Z"
+ },
+ {
+  "category": "1_jungle",
+  "subject": "red_brambleback",
+  "label": "레드(붉은 덩굴정령)",
+  "variant": "",
+  "file": "1_jungle_red_brambleback.png",
+  "local": "1_jungle_red_brambleback.png",
+  "size": [
+   1154,
+   878
+  ],
+  "wiki_file": "Red Brambleback Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Red_Brambleback_Render.png?87cd0",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Red_Brambleback_Render.png",
+  "uploaded": "2019-08-05T23:49:03Z"
+ },
+ {
+  "category": "1_jungle",
+  "subject": "gromp",
+  "label": "두꺼비(그롬프)",
+  "variant": "",
+  "file": "1_jungle_gromp.png",
+  "local": "1_jungle_gromp.png",
+  "size": [
+   935,
+   879
+  ],
+  "wiki_file": "Gromp Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Gromp_Render.png?e479e",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Gromp_Render.png",
+  "uploaded": "2019-08-05T23:43:05Z"
+ },
+ {
+  "category": "1_jungle",
+  "subject": "krug",
+  "label": "돌거북(크룩)",
+  "variant": "고대 크룩(큰 놈)",
+  "file": "1_jungle_ancient_krug.png",
+  "local": "1_jungle_ancient_krug.png",
+  "size": [
+   542,
+   628
+  ],
+  "wiki_file": "Ancient Krug Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Ancient_Krug_Render.png?ea8dd",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Ancient_Krug_Render.png",
+  "uploaded": "2025-01-12T05:06:09Z"
+ },
+ {
+  "category": "1_jungle",
+  "subject": "krug",
+  "label": "돌거북(크룩)",
+  "variant": "크룩(중간)",
+  "file": "1_jungle_krug.png",
+  "local": "1_jungle_krug.png",
+  "size": [
+   575,
+   605
+  ],
+  "wiki_file": "Krug Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Krug_Render.png?82903",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Krug_Render.png",
+  "uploaded": "2025-01-12T05:06:13Z"
+ },
+ {
+  "category": "1_jungle",
+  "subject": "krug",
+  "label": "돌거북(크룩)",
+  "variant": "작은 크룩",
+  "file": "1_jungle_mini_krug.png",
+  "local": "1_jungle_mini_krug.png",
+  "size": [
+   817,
+   873
+  ],
+  "wiki_file": "Mini Krug Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Mini_Krug_Render.png?571c7",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Mini_Krug_Render.png",
+  "uploaded": "2019-08-05T20:10:40Z"
+ },
+ {
+  "category": "1_jungle",
+  "subject": "murkwolf",
+  "label": "늑대(어스름 늑대)",
+  "variant": "큰 어스름 늑대",
+  "file": "1_jungle_greater_murk_wolf.png",
+  "local": "1_jungle_greater_murk_wolf.png",
+  "size": [
+   698,
+   899
+  ],
+  "wiki_file": "Greater Murk Wolf Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Greater_Murk_Wolf_Render.png?39018",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Greater_Murk_Wolf_Render.png",
+  "uploaded": "2019-08-05T23:29:13Z"
+ },
+ {
+  "category": "1_jungle",
+  "subject": "murkwolf",
+  "label": "늑대(어스름 늑대)",
+  "variant": "어스름 늑대(꼬마)",
+  "file": "1_jungle_murk_wolf.png",
+  "local": "1_jungle_murk_wolf.png",
+  "size": [
+   1116,
+   886
+  ],
+  "wiki_file": "Murk Wolf Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Murk_Wolf_Render.png?bfe7a",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Murk_Wolf_Render.png",
+  "uploaded": "2019-08-05T23:25:48Z"
+ },
+ {
+  "category": "1_jungle",
+  "subject": "raptor",
+  "label": "칼날부리",
+  "variant": "붉은 칼날부리(큰 놈)",
+  "file": "1_jungle_crimson_raptor.png",
+  "local": "1_jungle_crimson_raptor.png",
+  "size": [
+   751,
+   857
+  ],
+  "wiki_file": "Crimson Raptor Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Crimson_Raptor_Render.png?6345a",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Crimson_Raptor_Render.png",
+  "uploaded": "2019-08-05T19:56:15Z"
+ },
+ {
+  "category": "1_jungle",
+  "subject": "raptor",
+  "label": "칼날부리",
+  "variant": "칼날부리(꼬마)",
+  "file": "1_jungle_raptor.png",
+  "local": "1_jungle_raptor.png",
+  "size": [
+   647,
+   869
+  ],
+  "wiki_file": "Raptor Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Raptor_Render.png?bb810",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Raptor_Render.png",
+  "uploaded": "2019-08-05T20:46:22Z"
+ },
+ {
+  "category": "1_jungle",
+  "subject": "scuttle_crab",
+  "label": "바위게(협곡 바위게)",
+  "variant": "",
+  "file": "1_jungle_rift_scuttler.png",
+  "local": "1_jungle_rift_scuttler.png",
+  "size": [
+   745,
+   688
+  ],
+  "wiki_file": "Rift Scuttler Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Rift_Scuttler_Render.png?928e2",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Rift_Scuttler_Render.png",
+  "uploaded": "2020-05-29T01:07:22Z"
+ },
+ {
+  "category": "2_dragons",
+  "subject": "dragon_generic",
+  "label": "드래곤(공통)",
+  "variant": "원소 드래곤 기본형",
+  "file": "2_dragon_base.png",
+  "local": "2_dragon_base.png",
+  "size": [
+   1253,
+   738
+  ],
+  "wiki_file": "Dragon Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Dragon_Render.png?6a9b5",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Dragon_Render.png",
+  "uploaded": "2019-08-06T00:08:00Z"
+ },
+ {
+  "category": "2_dragons",
+  "subject": "dragon_generic",
+  "label": "드래곤(공통)",
+  "variant": "드래곤 전체 모음",
+  "file": "2_dragon_all.png",
+  "local": "2_dragon_all.png",
+  "size": [
+   1504,
+   661
+  ],
+  "wiki_file": "Dragon All Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Dragon_All_Render.png?aa9e3",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Dragon_All_Render.png",
+  "uploaded": "2018-08-28T17:08:08Z"
+ },
+ {
+  "category": "2_dragons",
+  "subject": "infernal",
+  "label": "화염 드래곤",
+  "variant": "",
+  "file": "2_dragon_infernal.png",
+  "local": "2_dragon_infernal.png",
+  "size": [
+   1263,
+   550
+  ],
+  "wiki_file": "Infernal Drake Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Infernal_Drake_Render.png?95a26",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Infernal_Drake_Render.png",
+  "uploaded": "2020-04-07T19:29:43Z"
+ },
+ {
+  "category": "2_dragons",
+  "subject": "ocean",
+  "label": "바다 드래곤",
+  "variant": "",
+  "file": "2_dragon_ocean.png",
+  "local": "2_dragon_ocean.png",
+  "size": [
+   921,
+   580
+  ],
+  "wiki_file": "Ocean Drake Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Ocean_Drake_Render.png?e7393",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Ocean_Drake_Render.png",
+  "uploaded": "2020-04-07T19:30:25Z"
+ },
+ {
+  "category": "2_dragons",
+  "subject": "mountain",
+  "label": "대지 드래곤",
+  "variant": "",
+  "file": "2_dragon_mountain.png",
+  "local": "2_dragon_mountain.png",
+  "size": [
+   800,
+   707
+  ],
+  "wiki_file": "Mountain Drake Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Mountain_Drake_Render.png?af360",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Mountain_Drake_Render.png",
+  "uploaded": "2020-04-07T19:28:23Z"
+ },
+ {
+  "category": "2_dragons",
+  "subject": "cloud",
+  "label": "바람 드래곤",
+  "variant": "",
+  "file": "2_dragon_cloud.png",
+  "local": "2_dragon_cloud.png",
+  "size": [
+   1110,
+   578
+  ],
+  "wiki_file": "Cloud Drake Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Cloud_Drake_Render.png?70933",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Cloud_Drake_Render.png",
+  "uploaded": "2020-04-07T19:26:45Z"
+ },
+ {
+  "category": "2_dragons",
+  "subject": "hextech",
+  "label": "마법공학 드래곤",
+  "variant": "",
+  "file": "2_dragon_hextech.png",
+  "local": "2_dragon_hextech.png",
+  "size": [
+   1416,
+   637
+  ],
+  "wiki_file": "Hextech Drake Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Hextech_Drake_Render.png?e400f",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Hextech_Drake_Render.png",
+  "uploaded": "2021-11-20T03:09:16Z"
+ },
+ {
+  "category": "2_dragons",
+  "subject": "chemtech",
+  "label": "화학공학 드래곤",
+  "variant": "",
+  "file": "2_dragon_chemtech.png",
+  "local": "2_dragon_chemtech.png",
+  "size": [
+   1125,
+   848
+  ],
+  "wiki_file": "Chemtech Drake Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chemtech_Drake_Render.png?efcb8",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chemtech_Drake_Render.png",
+  "uploaded": "2021-11-20T03:08:26Z"
+ },
+ {
+  "category": "2_dragons",
+  "subject": "elder",
+  "label": "장로 드래곤",
+  "variant": "",
+  "file": "2_dragon_elder.png",
+  "local": "2_dragon_elder.png",
+  "size": [
+   2374,
+   1412
+  ],
+  "wiki_file": "Elder Dragon Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Elder_Dragon_Render.png?da0c6",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Elder_Dragon_Render.png",
+  "uploaded": "2026-08-23T14:04:34Z"
+ },
+ {
+  "category": "3_epic",
+  "subject": "baron",
+  "label": "내셔 남작(바론)",
+  "variant": "사냥꾼 바론(기본)",
+  "file": "3_epic_baron_hunting.png",
+  "local": "3_epic_baron_hunting.png",
+  "size": [
+   1174,
+   1824
+  ],
+  "wiki_file": "Hunting Baron Nashor Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Hunting_Baron_Nashor_Render.png?12374",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Hunting_Baron_Nashor_Render.png",
+  "uploaded": "2024-12-28T20:54:23Z"
+ },
+ {
+  "category": "3_epic",
+  "subject": "baron",
+  "label": "내셔 남작(바론)",
+  "variant": "모든 것을 보는 바론",
+  "file": "3_epic_baron_all_seeing.png",
+  "local": "3_epic_baron_all_seeing.png",
+  "size": [
+   1174,
+   1824
+  ],
+  "wiki_file": "All-Seeing Baron Nashor Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/All-Seeing_Baron_Nashor_Render.png?70807",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:All-Seeing_Baron_Nashor_Render.png",
+  "uploaded": "2024-12-28T20:53:10Z"
+ },
+ {
+  "category": "3_epic",
+  "subject": "baron",
+  "label": "내셔 남작(바론)",
+  "variant": "영역 바론",
+  "file": "3_epic_baron_territorial.png",
+  "local": "3_epic_baron_territorial.png",
+  "size": [
+   1174,
+   1824
+  ],
+  "wiki_file": "Territorial Baron Nashor Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Territorial_Baron_Nashor_Render.png?9a73f",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Territorial_Baron_Nashor_Render.png",
+  "uploaded": "2024-12-28T20:53:57Z"
+ },
+ {
+  "category": "3_epic",
+  "subject": "rift_herald",
+  "label": "협곡의 전령",
+  "variant": "",
+  "file": "3_epic_rift_herald.png",
+  "local": "3_epic_rift_herald.png",
+  "size": [
+   1282,
+   926
+  ],
+  "wiki_file": "Rift Herald Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Rift_Herald_Render.png?0e9fc",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Rift_Herald_Render.png",
+  "uploaded": "2023-11-29T01:26:36Z"
+ },
+ {
+  "category": "3_epic",
+  "subject": "void_grubs",
+  "label": "공허 유충",
+  "variant": "공허 유충",
+  "file": "3_epic_voidgrub.png",
+  "local": "3_epic_voidgrub.png",
+  "size": [
+   538,
+   790
+  ],
+  "wiki_file": "Voidgrub Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Voidgrub_Render.png?d1778",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Voidgrub_Render.png",
+  "uploaded": "2023-11-22T09:32:50Z"
+ },
+ {
+  "category": "3_epic",
+  "subject": "void_grubs",
+  "label": "공허 유충",
+  "variant": "공허 진드기(유충이 낳는 것)",
+  "file": "3_epic_voidmite.png",
+  "local": "3_epic_voidmite.png",
+  "size": [
+   471,
+   590
+  ],
+  "wiki_file": "Voidmite Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Voidmite_Render.png?b55a2",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Voidmite_Render.png",
+  "uploaded": "2023-11-22T09:32:49Z"
+ },
+ {
+  "category": "3_epic",
+  "subject": "atakhan",
+  "label": "아타칸 (26.1에서 삭제, 참고용)",
+  "variant": "탐식 아타칸",
+  "file": "3_epic_atakhan_voracious.png",
+  "local": "3_epic_atakhan_voracious.png",
+  "size": [
+   934,
+   837
+  ],
+  "wiki_file": "Voracious Atakhan Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Voracious_Atakhan_Render.png?b19a7",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Voracious_Atakhan_Render.png",
+  "uploaded": "2024-11-28T01:29:39Z"
+ },
+ {
+  "category": "3_epic",
+  "subject": "atakhan",
+  "label": "아타칸 (26.1에서 삭제, 참고용)",
+  "variant": "파멸 아타칸",
+  "file": "3_epic_atakhan_thornbound.png",
+  "local": "3_epic_atakhan_thornbound.png",
+  "size": [
+   934,
+   837
+  ],
+  "wiki_file": "Thornbound Atakhan Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Thornbound_Atakhan_Render.png?76bb1",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Thornbound_Atakhan_Render.png",
+  "uploaded": "2024-11-28T01:30:17Z"
+ },
+ {
+  "category": "4_minions",
+  "subject": "melee",
+  "label": "근거리 미니언",
+  "variant": "파랑 팀",
+  "file": "4_minion_melee_order.png",
+  "local": "4_minion_melee_order.png",
+  "size": [
+   746,
+   670
+  ],
+  "wiki_file": "Order Minion Melee Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Minion_Melee_Render.png?894fb",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Minion_Melee_Render.png",
+  "uploaded": "2020-06-01T04:52:37Z"
+ },
+ {
+  "category": "4_minions",
+  "subject": "melee",
+  "label": "근거리 미니언",
+  "variant": "빨강 팀",
+  "file": "4_minion_melee_chaos.png",
+  "local": "4_minion_melee_chaos.png",
+  "size": [
+   775,
+   740
+  ],
+  "wiki_file": "Chaos Minion Melee Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Minion_Melee_Render.png?894fb",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Minion_Melee_Render.png",
+  "uploaded": "2020-06-01T04:52:37Z"
+ },
+ {
+  "category": "4_minions",
+  "subject": "ranged",
+  "label": "원거리(마법사) 미니언",
+  "variant": "파랑 팀",
+  "file": "4_minion_ranged_order.png",
+  "local": "4_minion_ranged_order.png",
+  "size": [
+   421,
+   486
+  ],
+  "wiki_file": "Order Minion Caster Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Minion_Caster_Render.png?6cc86",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Minion_Caster_Render.png",
+  "uploaded": "2020-06-01T04:35:20Z"
+ },
+ {
+  "category": "4_minions",
+  "subject": "ranged",
+  "label": "원거리(마법사) 미니언",
+  "variant": "빨강 팀",
+  "file": "4_minion_ranged_chaos.png",
+  "local": "4_minion_ranged_chaos.png",
+  "size": [
+   628,
+   647
+  ],
+  "wiki_file": "Chaos Minion Caster Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Minion_Caster_Render.png?33576",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Minion_Caster_Render.png",
+  "uploaded": "2020-06-01T04:34:47Z"
+ },
+ {
+  "category": "4_minions",
+  "subject": "siege",
+  "label": "공성 미니언(대포)",
+  "variant": "파랑 팀",
+  "file": "4_minion_siege_order.png",
+  "local": "4_minion_siege_order.png",
+  "size": [
+   519,
+   520
+  ],
+  "wiki_file": "Order Minion Siege Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Minion_Siege_Render.png?42e8b",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Minion_Siege_Render.png",
+  "uploaded": "2020-06-01T05:09:45Z"
+ },
+ {
+  "category": "4_minions",
+  "subject": "siege",
+  "label": "공성 미니언(대포)",
+  "variant": "빨강 팀",
+  "file": "4_minion_siege_chaos.png",
+  "local": "4_minion_siege_chaos.png",
+  "size": [
+   608,
+   581
+  ],
+  "wiki_file": "Chaos Minion Siege Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Minion_Siege_Render.png?42e8b",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Minion_Siege_Render.png",
+  "uploaded": "2020-06-01T05:09:45Z"
+ },
+ {
+  "category": "4_minions",
+  "subject": "super",
+  "label": "슈퍼 미니언",
+  "variant": "파랑 팀",
+  "file": "4_minion_super_order.png",
+  "local": "4_minion_super_order.png",
+  "size": [
+   848,
+   697
+  ],
+  "wiki_file": "Order Minion Super Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Minion_Super_Render.png?c49c8",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Minion_Super_Render.png",
+  "uploaded": "2020-06-01T05:31:55Z"
+ },
+ {
+  "category": "4_minions",
+  "subject": "super",
+  "label": "슈퍼 미니언",
+  "variant": "빨강 팀",
+  "file": "4_minion_super_chaos.png",
+  "local": "4_minion_super_chaos.png",
+  "size": [
+   821,
+   687
+  ],
+  "wiki_file": "Chaos Minion Super Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Minion_Super_Render.png?54565",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Minion_Super_Render.png",
+  "uploaded": "2020-06-01T05:31:53Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "turret",
+  "label": "포탑",
+  "variant": "파랑 진영 모양, 파란 빛",
+  "file": "5_turret_order_blue.png",
+  "local": "5_turret_order_blue.png",
+  "size": [
+   485,
+   992
+  ],
+  "wiki_file": "Order Turret Blue Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Turret_Blue_Render.png?a617b",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Turret_Blue_Render.png",
+  "uploaded": "2020-06-01T19:40:32Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "turret",
+  "label": "포탑",
+  "variant": "파랑 진영 모양, 빨간 빛",
+  "file": "5_turret_order_red.png",
+  "local": "5_turret_order_red.png",
+  "size": [
+   485,
+   992
+  ],
+  "wiki_file": "Order Turret Red Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Turret_Red_Render.png?cc28f",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Turret_Red_Render.png",
+  "uploaded": "2020-06-01T19:40:33Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "turret",
+  "label": "포탑",
+  "variant": "빨강 진영 모양, 파란 빛",
+  "file": "5_turret_chaos_blue.png",
+  "local": "5_turret_chaos_blue.png",
+  "size": [
+   403,
+   1031
+  ],
+  "wiki_file": "Chaos Turret Blue Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Turret_Blue_Render.png?8cbee",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Turret_Blue_Render.png",
+  "uploaded": "2020-06-01T19:40:34Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "turret",
+  "label": "포탑",
+  "variant": "빨강 진영 모양, 빨간 빛",
+  "file": "5_turret_chaos_red.png",
+  "local": "5_turret_chaos_red.png",
+  "size": [
+   403,
+   1031
+  ],
+  "wiki_file": "Chaos Turret Red Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Turret_Red_Render.png?8cbee",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Turret_Red_Render.png",
+  "uploaded": "2020-06-01T19:40:34Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "turret",
+  "label": "포탑",
+  "variant": "포탑 방패: 파랑 진영, 파란 빛",
+  "file": "5_turret_plating_order_blue.png",
+  "local": "5_turret_plating_order_blue.png",
+  "size": [
+   535,
+   768
+  ],
+  "wiki_file": "Order Turret Shield Blue Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Turret_Shield_Blue_Render.png?fbbb2",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Turret_Shield_Blue_Render.png",
+  "uploaded": "2020-07-08T20:06:09Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "turret",
+  "label": "포탑",
+  "variant": "포탑 방패: 파랑 진영, 빨간 빛",
+  "file": "5_turret_plating_order_red.png",
+  "local": "5_turret_plating_order_red.png",
+  "size": [
+   535,
+   768
+  ],
+  "wiki_file": "Order Turret Shield Red Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Turret_Shield_Red_Render.png?44ada",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Turret_Shield_Red_Render.png",
+  "uploaded": "2020-07-08T20:06:10Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "turret",
+  "label": "포탑",
+  "variant": "포탑 방패: 빨강 진영, 파란 빛",
+  "file": "5_turret_plating_chaos_blue.png",
+  "local": "5_turret_plating_chaos_blue.png",
+  "size": [
+   572,
+   811
+  ],
+  "wiki_file": "Chaos Turret Shield Blue Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Turret_Shield_Blue_Render.png?44ada",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Turret_Shield_Blue_Render.png",
+  "uploaded": "2020-07-08T20:06:10Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "turret",
+  "label": "포탑",
+  "variant": "포탑 방패: 빨강 진영, 빨간 빛",
+  "file": "5_turret_plating_chaos_red.png",
+  "local": "5_turret_plating_chaos_red.png",
+  "size": [
+   572,
+   811
+  ],
+  "wiki_file": "Chaos Turret Shield Red Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Turret_Shield_Red_Render.png?23a80",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Turret_Shield_Red_Render.png",
+  "uploaded": "2020-07-08T20:06:11Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "inhibitor",
+  "label": "억제기",
+  "variant": "파랑 진영 모양, 파란 빛",
+  "file": "5_inhibitor_order_blue.png",
+  "local": "5_inhibitor_order_blue.png",
+  "size": [
+   774,
+   781
+  ],
+  "wiki_file": "Order Inhibitor Blue Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Inhibitor_Blue_Render.png?9b052",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Inhibitor_Blue_Render.png",
+  "uploaded": "2020-06-01T19:35:54Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "inhibitor",
+  "label": "억제기",
+  "variant": "파랑 진영 모양, 빨간 빛",
+  "file": "5_inhibitor_order_red.png",
+  "local": "5_inhibitor_order_red.png",
+  "size": [
+   774,
+   781
+  ],
+  "wiki_file": "Order Inhibitor Red Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Inhibitor_Red_Render.png?9b052",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Inhibitor_Red_Render.png",
+  "uploaded": "2020-06-01T19:35:54Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "inhibitor",
+  "label": "억제기",
+  "variant": "빨강 진영 모양, 파란 빛",
+  "file": "5_inhibitor_chaos_blue.png",
+  "local": "5_inhibitor_chaos_blue.png",
+  "size": [
+   542,
+   681
+  ],
+  "wiki_file": "Chaos Inhibitor Blue Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Inhibitor_Blue_Render.png?858a7",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Inhibitor_Blue_Render.png",
+  "uploaded": "2020-06-01T19:35:55Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "inhibitor",
+  "label": "억제기",
+  "variant": "빨강 진영 모양, 빨간 빛",
+  "file": "5_inhibitor_chaos_red.png",
+  "local": "5_inhibitor_chaos_red.png",
+  "size": [
+   542,
+   681
+  ],
+  "wiki_file": "Chaos Inhibitor Red Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Inhibitor_Red_Render.png?858a7",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Inhibitor_Red_Render.png",
+  "uploaded": "2020-06-01T19:35:55Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "nexus",
+  "label": "넥서스",
+  "variant": "파랑 진영 모양, 파란 빛",
+  "file": "5_nexus_order_blue.png",
+  "local": "5_nexus_order_blue.png",
+  "size": [
+   978,
+   799
+  ],
+  "wiki_file": "Order Nexus Blue Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Nexus_Blue_Render.png?342e9",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Nexus_Blue_Render.png",
+  "uploaded": "2020-06-01T19:35:56Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "nexus",
+  "label": "넥서스",
+  "variant": "파랑 진영 모양, 빨간 빛",
+  "file": "5_nexus_order_red.png",
+  "local": "5_nexus_order_red.png",
+  "size": [
+   978,
+   799
+  ],
+  "wiki_file": "Order Nexus Red Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Order_Nexus_Red_Render.png?1f44d",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Order_Nexus_Red_Render.png",
+  "uploaded": "2020-06-01T19:35:57Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "nexus",
+  "label": "넥서스",
+  "variant": "빨강 진영 모양, 파란 빛",
+  "file": "5_nexus_chaos_blue.png",
+  "local": "5_nexus_chaos_blue.png",
+  "size": [
+   826,
+   865
+  ],
+  "wiki_file": "Chaos Nexus Blue Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Nexus_Blue_Render.png?1f44d",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Nexus_Blue_Render.png",
+  "uploaded": "2020-06-01T19:35:57Z"
+ },
+ {
+  "category": "5_structures",
+  "subject": "nexus",
+  "label": "넥서스",
+  "variant": "빨강 진영 모양, 빨간 빛",
+  "file": "5_nexus_chaos_red.png",
+  "local": "5_nexus_chaos_red.png",
+  "size": [
+   826,
+   865
+  ],
+  "wiki_file": "Chaos Nexus Red Render.png",
+  "url": "https://wiki.leagueoflegends.com/en-us/images/Chaos_Nexus_Red_Render.png?ff0dd",
+  "page": "https://wiki.leagueoflegends.com/en-us/File:Chaos_Nexus_Red_Render.png",
+  "uploaded": "2020-06-01T19:35:58Z"
+ }
+]

@@ -1,0 +1,3009 @@
+[
+ {
+  "folder": "1_LCK/01_T1",
+  "team": "T1",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Doran (Choi Hyeon-jun)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Doran",
+    "role": "Top",
+    "photo": "01_Top_Doran.png",
+    "face": "p_Doran_Choi_Hyeon-jun.png"
+   },
+   {
+    "id": "Oner",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Oner",
+    "role": "Jungle",
+    "photo": "02_Jungle_Oner.png",
+    "face": "p_Oner.png"
+   },
+   {
+    "id": "Faker",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Faker",
+    "role": "Mid",
+    "photo": "03_Mid_Faker.png",
+    "face": "p_Faker.png"
+   },
+   {
+    "id": "Peyz",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Peyz",
+    "role": "Bot",
+    "photo": "04_Bot_Peyz.png",
+    "face": "p_Peyz.png"
+   },
+   {
+    "id": "Keria",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Keria",
+    "role": "Support",
+    "photo": "05_Support_Keria.png",
+    "face": "p_Keria.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/01_T1",
+  "team": "T1",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Tom (Im Jae-hyeon)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Tom",
+    "role": "Head Coach",
+    "photo": "06_HeadCoach_Tom.png",
+    "face": "s_Tom_Im_Jae-hyeon.png"
+   },
+   {
+    "id": "kkOma",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "kkOma",
+    "role": "Head Coach",
+    "photo": "07_HeadCoach_kkOma.png",
+    "face": "s_kkOma.png"
+   },
+   {
+    "id": "Easyhoon",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Easyhoon",
+    "role": "Coach",
+    "photo": "08_Coach_Easyhoon.png",
+    "face": "s_Easyhoon.png"
+   },
+   {
+    "id": "Mata",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Mata",
+    "role": "Coach",
+    "photo": "09_Coach_Mata.png",
+    "face": "s_Mata.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/02_GEN",
+  "team": "GEN",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Kiin",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Kiin",
+    "role": "Top",
+    "photo": "01_Top_Kiin.png",
+    "face": "p_Kiin.png"
+   },
+   {
+    "id": "Canyon",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Canyon",
+    "role": "Jungle",
+    "photo": "02_Jungle_Canyon.png",
+    "face": "p_Canyon.png"
+   },
+   {
+    "id": "Chovy",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Chovy",
+    "role": "Mid",
+    "photo": "03_Mid_Chovy.png",
+    "face": "p_Chovy.png"
+   },
+   {
+    "id": "Ruler",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Ruler",
+    "role": "Bot",
+    "photo": "04_Bot_Ruler.png",
+    "face": "p_Ruler.png"
+   },
+   {
+    "id": "Duro",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Duro",
+    "role": "Support",
+    "photo": "05_Support_Duro.png",
+    "face": "p_Duro.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/02_GEN",
+  "team": "GEN",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Ryu",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Ryu",
+    "role": "Head Coach",
+    "photo": "06_HeadCoach_Ryu.png",
+    "face": "s_Ryu.png"
+   },
+   {
+    "id": "Helper (Kwon Yeong-jae)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Helper",
+    "role": "Head Coach",
+    "photo": "07_HeadCoach_Helper.png",
+    "face": "s_Helper_Kwon_Yeong-jae.png"
+   },
+   {
+    "id": "Lyn",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Lyn",
+    "role": "Coach",
+    "photo": "08_Coach_Lyn.png",
+    "face": "s_Lyn.png"
+   },
+   {
+    "id": "Nova (Park Chan-ho)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Nova",
+    "role": "Coach",
+    "photo": "09_Coach_Nova.png",
+    "face": "s_Nova_Park_Chan-ho.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/03_HLE",
+  "team": "HLE",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Zeus",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Zeus",
+    "role": "Top",
+    "photo": "01_Top_Zeus.png",
+    "face": "p_Zeus.png"
+   },
+   {
+    "id": "Kanavi",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Kanavi",
+    "role": "Jungle",
+    "photo": "02_Jungle_Kanavi.png",
+    "face": "p_Kanavi.png"
+   },
+   {
+    "id": "Zeka (Kim Geon-woo)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Zeka",
+    "role": "Mid",
+    "photo": "03_Mid_Zeka.png",
+    "face": "p_Zeka_Kim_Geon-woo.png"
+   },
+   {
+    "id": "Gumayusi",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Gumayusi",
+    "role": "Bot",
+    "photo": "04_Bot_Gumayusi.png",
+    "face": "p_Gumayusi.png"
+   },
+   {
+    "id": "Delight",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Delight",
+    "role": "Support",
+    "photo": "05_Support_Delight.png",
+    "face": "p_Delight.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/03_HLE",
+  "team": "HLE",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Peanut",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Peanut",
+    "role": "Jungle",
+    "photo": "06_Jungle_Peanut.png",
+    "face": "p_Peanut.png"
+   },
+   {
+    "id": "Homme",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Homme",
+    "role": "Head Coach",
+    "photo": "07_HeadCoach_Homme.png",
+    "face": "s_Homme.png"
+   },
+   {
+    "id": "Mowgli",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Mowgli",
+    "role": "Head Coach",
+    "photo": "08_HeadCoach_Mowgli.png",
+    "face": "s_Mowgli.png"
+   },
+   {
+    "id": "Sin (Yeon Hyeong-mo)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Sin",
+    "role": "Coach",
+    "photo": "09_Coach_Sin.png",
+    "face": "s_Sin_Yeon_Hyeong-mo.png"
+   },
+   {
+    "id": "Shine (Shin Dong-wook)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Shine",
+    "role": "Coach",
+    "photo": "10_Coach_Shine.png",
+    "face": "s_Shine_Shin_Dong-wook.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/04_DK",
+  "team": "DK",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Siwoo",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Siwoo",
+    "role": "Top",
+    "photo": "01_Top_Siwoo.png",
+    "face": "p_Siwoo.png"
+   },
+   {
+    "id": "Lucid (Choi Yong-hyeok)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Lucid",
+    "role": "Jungle",
+    "photo": "02_Jungle_Lucid.png",
+    "face": "p_Lucid_Choi_Yong-hyeok.png"
+   },
+   {
+    "id": "ShowMaker",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "ShowMaker",
+    "role": "Mid",
+    "photo": "03_Mid_ShowMaker.png",
+    "face": "p_ShowMaker.png"
+   },
+   {
+    "id": "Smash (Shin Geum-jae)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Smash",
+    "role": "Bot",
+    "photo": "04_Bot_Smash.png",
+    "face": "p_Smash_Shin_Geum-jae.png"
+   },
+   {
+    "id": "Career",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Career",
+    "role": "Support",
+    "photo": "05_Support_Career.png",
+    "face": "p_Career.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/04_DK",
+  "team": "DK",
+  "batch": 2,
+  "people": [
+   {
+    "id": "BeryL",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "BeryL",
+    "role": "Support",
+    "photo": "06_Support_BeryL.png",
+    "face": "p_BeryL.png"
+   },
+   {
+    "id": "cvMax",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "cvMax",
+    "role": "Head Coach",
+    "photo": "07_HeadCoach_cvMax.png",
+    "face": "s_cvMax.png"
+   },
+   {
+    "id": "Bengi",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Bengi",
+    "role": "Head Coach",
+    "photo": "08_HeadCoach_Bengi.png",
+    "face": "s_Bengi.png"
+   },
+   {
+    "id": "Hachani",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Hachani",
+    "role": "Coach",
+    "photo": "09_Coach_Hachani.png",
+    "face": "s_Hachani.png"
+   },
+   {
+    "id": "PoohManDu",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "PoohManDu",
+    "role": "Coach",
+    "photo": "10_Coach_PoohManDu.png",
+    "face": "s_PoohManDu.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/05_KT",
+  "team": "KT",
+  "batch": 1,
+  "people": [
+   {
+    "id": "PerfecT (Lee Seung-min)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "PerfecT",
+    "role": "Top",
+    "photo": "01_Top_PerfecT.png",
+    "face": "p_PerfecT_Lee_Seung-min.png"
+   },
+   {
+    "id": "Cuzz",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Cuzz",
+    "role": "Jungle",
+    "photo": "02_Jungle_Cuzz.png",
+    "face": "p_Cuzz.png"
+   },
+   {
+    "id": "Bdd",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Bdd",
+    "role": "Mid",
+    "photo": "03_Mid_Bdd.png",
+    "face": "p_Bdd.png"
+   },
+   {
+    "id": "Jiwoo",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Jiwoo",
+    "role": "Bot",
+    "photo": "04_Bot_Jiwoo.png",
+    "face": "p_Jiwoo.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/05_KT",
+  "team": "KT",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Effort",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Effort",
+    "role": "Support",
+    "photo": "05_Support_Effort.png",
+    "face": "p_Effort.png"
+   },
+   {
+    "id": "Score",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Score",
+    "role": "Head Coach",
+    "photo": "06_HeadCoach_Score.png",
+    "face": "s_Score.png"
+   },
+   {
+    "id": "Museong",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Museong",
+    "role": "Coach",
+    "photo": "07_Coach_Museong.png",
+    "face": "s_Museong.png"
+   },
+   {
+    "id": "Sonstar",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Sonstar",
+    "role": "Coach",
+    "photo": "08_Coach_Sonstar.png",
+    "face": "s_Sonstar.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/06_BFX",
+  "team": "BFX",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Clear (Song Hyeon-min)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Clear",
+    "role": "Top",
+    "photo": "01_Top_Clear.png",
+    "face": "p_Clear_Song_Hyeon-min.png"
+   },
+   {
+    "id": "Raptor (Jeon Eo-jin)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Raptor",
+    "role": "Jungle",
+    "photo": "02_Jungle_Raptor.png",
+    "face": "p_Raptor_Jeon_Eo-jin.png"
+   },
+   {
+    "id": "VicLa",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "VicLa",
+    "role": "Mid",
+    "photo": "03_Mid_VicLa.png",
+    "face": "p_VicLa.png"
+   },
+   {
+    "id": "Taeyoon (Kim Tae-yoon)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Taeyoon",
+    "role": "Bot",
+    "photo": "04_Bot_Taeyoon.png",
+    "face": "p_Taeyoon_Kim_Tae-yoon.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/06_BFX",
+  "team": "BFX",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Kellin",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Kellin",
+    "role": "Support",
+    "photo": "05_Support_Kellin.png",
+    "face": "p_Kellin.png"
+   },
+   {
+    "id": "Daystar",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Daystar",
+    "role": "Mid",
+    "photo": "06_Mid_Daystar.png",
+    "face": "p_Daystar.png"
+   },
+   {
+    "id": "Rather",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Rather",
+    "role": "Head Coach",
+    "photo": "07_HeadCoach_Rather.png",
+    "face": "s_Rather.png"
+   },
+   {
+    "id": "Lira",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Lira",
+    "role": "Coach",
+    "photo": "08_Coach_Lira.png",
+    "face": "s_Lira.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/07_DNS",
+  "team": "DNS",
+  "batch": 1,
+  "people": [
+   {
+    "id": "DuDu (Lee Dong-ju)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "DuDu",
+    "role": "Top",
+    "photo": "01_Top_DuDu.png",
+    "face": "p_DuDu_Lee_Dong-ju.png"
+   },
+   {
+    "id": "Sharvel",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Sharvel",
+    "role": "Jungle",
+    "photo": "02_Jungle_Sharvel.png",
+    "face": "p_Sharvel.png"
+   },
+   {
+    "id": "Clozer",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Clozer",
+    "role": "Mid",
+    "photo": "03_Mid_Clozer.png",
+    "face": "p_Clozer.png"
+   },
+   {
+    "id": "deokdam",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "deokdam",
+    "role": "Bot",
+    "photo": "04_Bot_deokdam.png",
+    "face": "p_deokdam.png"
+   },
+   {
+    "id": "Peter (Jeong Yoon-su)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Peter",
+    "role": "Support",
+    "photo": "05_Support_Peter.png",
+    "face": "p_Peter_Jeong_Yoon-su.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/07_DNS",
+  "team": "DNS",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Pyosik",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Pyosik",
+    "role": "Jungle",
+    "photo": "06_Jungle_Pyosik.png",
+    "face": "p_Pyosik.png"
+   },
+   {
+    "id": "BuLLDoG (Lee Tae-young)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "BuLLDoG",
+    "role": "Mid",
+    "photo": "07_Mid_BuLLDoG.png",
+    "face": "p_BuLLDoG_Lee_Tae-young.png"
+   },
+   {
+    "id": "Life",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Life",
+    "role": "Support",
+    "photo": "08_Support_Life.png",
+    "face": "p_Life.png"
+   },
+   {
+    "id": "Ggoong",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Ggoong",
+    "role": "Head Coach",
+    "photo": "09_HeadCoach_Ggoong.png",
+    "face": "s_Ggoong.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/07_DNS",
+  "team": "DNS",
+  "batch": 3,
+  "people": [
+   {
+    "id": "FanTaSy (Jeong Myeong-hoon)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "FanTaSy",
+    "role": "Head Coach",
+    "photo": "10_HeadCoach_FanTaSy.png",
+    "face": "s_FanTaSy_Jeong_Myeong-hoon.png"
+   },
+   {
+    "id": "oDin (Ju Yeong-dal)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "oDin",
+    "role": "Head Coach",
+    "photo": "11_HeadCoach_oDin.png",
+    "face": "s_oDin_Ju_Yeong-dal.png"
+   },
+   {
+    "id": "Minit",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Minit",
+    "role": "Coach",
+    "photo": "12_Coach_Minit.png",
+    "face": "s_Minit.png"
+   },
+   {
+    "id": "Punch",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Punch",
+    "role": "Coach",
+    "photo": "13_Coach_Punch.png",
+    "face": "s_Punch.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/08_NS",
+  "team": "NS",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Kingen",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Kingen",
+    "role": "Top",
+    "photo": "01_Top_Kingen.png",
+    "face": "p_Kingen.png"
+   },
+   {
+    "id": "Sponge",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Sponge",
+    "role": "Jungle",
+    "photo": "02_Jungle_Sponge.png",
+    "face": "p_Sponge.png"
+   },
+   {
+    "id": "Scout",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Scout",
+    "role": "Mid",
+    "photo": "03_Mid_Scout.png",
+    "face": "p_Scout.png"
+   },
+   {
+    "id": "Diable",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Diable",
+    "role": "Bot",
+    "photo": "04_Bot_Diable.png",
+    "face": "p_Diable.png"
+   },
+   {
+    "id": "Lehends",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Lehends",
+    "role": "Support",
+    "photo": "05_Support_Lehends.png",
+    "face": "p_Lehends.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/08_NS",
+  "team": "NS",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Calix (Syun Hyun-bin)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Calix",
+    "role": "Mid",
+    "photo": "06_Mid_Calix.png",
+    "face": "p_Calix_Syun_Hyun-bin.png"
+   },
+   {
+    "id": "DanDy",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "DanDy",
+    "role": "Head Coach",
+    "photo": "07_HeadCoach_DanDy.png",
+    "face": "s_DanDy.png"
+   },
+   {
+    "id": "Chelly (Park Seung-jin)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Chelly",
+    "role": "Coach",
+    "photo": "08_Coach_Chelly.png",
+    "face": "s_Chelly_Park_Seung-jin.png"
+   },
+   {
+    "id": "Crazy (Kim Jae-hee)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Crazy",
+    "role": "Coach",
+    "photo": "09_Coach_Crazy.png",
+    "face": "s_Crazy_Kim_Jae-hee.png"
+   },
+   {
+    "id": "SSUN (Kim Tae-yang)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "SSUN",
+    "role": "Coach",
+    "photo": "10_Coach_SSUN.png",
+    "face": "s_SSUN_Kim_Tae-yang.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/09_BRO",
+  "team": "BRO",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Casting",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Casting",
+    "role": "Top",
+    "photo": "01_Top_Casting.png",
+    "face": "p_Casting.png"
+   },
+   {
+    "id": "GIDEON",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "GIDEON",
+    "role": "Jungle",
+    "photo": "02_Jungle_GIDEON.png",
+    "face": "p_GIDEON.png"
+   },
+   {
+    "id": "Roamer",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Roamer",
+    "role": "Mid",
+    "photo": "03_Mid_Roamer.png",
+    "face": "p_Roamer.png"
+   },
+   {
+    "id": "Teddy",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Teddy",
+    "role": "Bot",
+    "photo": "04_Bot_Teddy.png",
+    "face": "p_Teddy.png"
+   },
+   {
+    "id": "Namgung",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Namgung",
+    "role": "Support",
+    "photo": "05_Support_Namgung.png",
+    "face": "p_Namgung.png"
+   },
+   {
+    "id": "Croco",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Croco",
+    "role": "Jungle",
+    "photo": "06_Jungle_Croco.png",
+    "face": "p_Croco.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/09_BRO",
+  "team": "BRO",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Hype (Byeon Jeong-hyeon)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Hype",
+    "role": "Bot",
+    "photo": "07_Bot_Hype.png",
+    "face": "p_Hype_Byeon_Jeong-hyeon.png"
+   },
+   {
+    "id": "Ssong",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Ssong",
+    "role": "Head Coach",
+    "photo": "08_HeadCoach_Ssong.png",
+    "face": "s_Ssong.png"
+   },
+   {
+    "id": "Edgar",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Edgar",
+    "role": "Head Coach",
+    "photo": "09_HeadCoach_Edgar.png",
+    "face": "s_Edgar.png"
+   },
+   {
+    "id": "Duke (Lee Ho-seong)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Duke",
+    "role": "Coach",
+    "photo": "10_Coach_Duke.png",
+    "face": "s_Duke_Lee_Ho-seong.png"
+   },
+   {
+    "id": "GuGer",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "GuGer",
+    "role": "Coach",
+    "photo": "11_Coach_GuGer.png",
+    "face": "s_GuGer.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/10_KRX",
+  "team": "KRX",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Willer",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Willer",
+    "role": "Jungle",
+    "photo": "01_Jungle_Willer.png",
+    "face": "p_Willer.png"
+   },
+   {
+    "id": "Ucal",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Ucal",
+    "role": "Mid",
+    "photo": "02_Mid_Ucal.png",
+    "face": "p_Ucal.png"
+   },
+   {
+    "id": "Aiming",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Aiming",
+    "role": "Bot",
+    "photo": "03_Bot_Aiming.png",
+    "face": "p_Aiming.png"
+   },
+   {
+    "id": "Andil",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Andil",
+    "role": "Support",
+    "photo": "04_Support_Andil.png",
+    "face": "p_Andil.png"
+   }
+  ]
+ },
+ {
+  "folder": "1_LCK/10_KRX",
+  "team": "KRX",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Joker (Cho Jae-eup)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Joker",
+    "role": "Head Coach",
+    "photo": "05_HeadCoach_Joker.png",
+    "face": "s_Joker_Cho_Jae-eup.png"
+   },
+   {
+    "id": "Naehyun",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Naehyun",
+    "role": "Coach",
+    "photo": "06_Coach_Naehyun.png",
+    "face": "s_Naehyun.png"
+   },
+   {
+    "id": "Saroo",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Saroo",
+    "role": "Coach",
+    "photo": "07_Coach_Saroo.png",
+    "face": "s_Saroo.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/01_T1EA",
+  "team": "T1EA",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Haetae",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Haetae",
+    "role": "Top",
+    "photo": "01_Top_Haetae.png",
+    "face": "p_Haetae.png"
+   },
+   {
+    "id": "Painter",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Painter",
+    "role": "Jungle",
+    "photo": "02_Jungle_Painter.png",
+    "face": "p_Painter.png"
+   },
+   {
+    "id": "Guti (Moon Jeong-hwan)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Guti",
+    "role": "Mid",
+    "photo": "03_Mid_Guti.png",
+    "face": "p_Guti_Moon_Jeong-hwan.png"
+   },
+   {
+    "id": "Eclipse (Kim Min-jun)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Eclipse",
+    "role": "Bot",
+    "photo": "04_Bot_Eclipse.png",
+    "face": "p_Eclipse_Kim_Min-jun.png"
+   },
+   {
+    "id": "Cloud (Moon Hyeon-ho)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Cloud",
+    "role": "Support",
+    "photo": "05_Support_Cloud.png",
+    "face": "p_Cloud_Moon_Hyeon-ho.png"
+   },
+   {
+    "id": "Guardian (Seong Tae-hyo)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Guardian",
+    "role": "Top",
+    "photo": "06_Top_Guardian.png",
+    "face": "p_Guardian_Seong_Tae-hyo.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/01_T1EA",
+  "team": "T1EA",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Carim",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Carim",
+    "role": "Jungle",
+    "photo": "07_Jungle_Carim.png",
+    "face": "p_Carim.png"
+   },
+   {
+    "id": "Poby",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Poby",
+    "role": "Mid",
+    "photo": "08_Mid_Poby.png",
+    "face": "p_Poby.png"
+   },
+   {
+    "id": "Cypher",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Cypher",
+    "role": "Bot",
+    "photo": "09_Bot_Cypher.png",
+    "face": "p_Cypher.png"
+   },
+   {
+    "id": "Jinbeom",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Jinbeom",
+    "role": "Bot",
+    "photo": "10_Bot_Jinbeom.png",
+    "face": "p_Jinbeom.png"
+   },
+   {
+    "id": "DooTi",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "DooTi",
+    "role": "Head Coach",
+    "photo": "11_HeadCoach_DooTi.png",
+    "face": "s_DooTi.png"
+   },
+   {
+    "id": "Nagne",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Nagne",
+    "role": "Coach",
+    "photo": "12_Coach_Nagne.png",
+    "face": "s_Nagne.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/02_GENGA",
+  "team": "GENGA",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Ripple",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Ripple",
+    "role": "Top",
+    "photo": "01_Top_Ripple.png",
+    "face": "p_Ripple.png"
+   },
+   {
+    "id": "Courage (Jeon Hyun-min)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Courage",
+    "role": "Jungle",
+    "photo": "02_Jungle_Courage.png",
+    "face": "p_Courage_Jeon_Hyun-min.png"
+   },
+   {
+    "id": "Kemish",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Kemish",
+    "role": "Mid",
+    "photo": "03_Mid_Kemish.png",
+    "face": "p_Kemish.png"
+   },
+   {
+    "id": "MUDAI",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "MUDAI",
+    "role": "Bot",
+    "photo": "04_Bot_MUDAI.png",
+    "face": "p_MUDAI.png"
+   },
+   {
+    "id": "Lumos",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Lumos",
+    "role": "Support",
+    "photo": "05_Support_Lumos.png",
+    "face": "p_Lumos.png"
+   },
+   {
+    "id": "Hanbyeol",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Hanbyeol",
+    "role": "Top",
+    "photo": "06_Top_Hanbyeol.png",
+    "face": "p_Hanbyeol.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/02_GENGA",
+  "team": "GENGA",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Wet",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Winner",
+    "role": "Jungle",
+    "photo": "07_Jungle_Winner.png",
+    "face": "p_Wet.png"
+   },
+   {
+    "id": "About",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "About",
+    "role": "Bot",
+    "photo": "08_Bot_About.png",
+    "face": "p_About.png"
+   },
+   {
+    "id": "SIRIUSS",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "SIRIUSS",
+    "role": "Support",
+    "photo": "09_Support_SIRIUSS.png",
+    "face": "p_SIRIUSS.png"
+   },
+   {
+    "id": "Jerry (Kang Sung-jun)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Jerry",
+    "role": "Coach",
+    "photo": "10_Coach_Jerry.png",
+    "face": "s_Jerry_Kang_Sung-jun.png"
+   },
+   {
+    "id": "Gyul",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Gyul",
+    "role": "Coach",
+    "photo": "11_Coach_Gyul.png",
+    "face": "s_Gyul.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/03_HLEC",
+  "team": "HLEC",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Panther (Park Ji-ho)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Panther",
+    "role": "Top",
+    "photo": "01_Top_Panther.png",
+    "face": "p_Panther_Park_Ji-ho.png"
+   },
+   {
+    "id": "Jackal (Lee Su-min)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Jackal",
+    "role": "Jungle",
+    "photo": "02_Jungle_Jackal.png",
+    "face": "p_Jackal_Lee_Su-min.png"
+   },
+   {
+    "id": "Cracker (Lee Jeong-wook)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Cracker",
+    "role": "Mid",
+    "photo": "03_Mid_Cracker.png",
+    "face": "p_Cracker_Lee_Jeong-wook.png"
+   },
+   {
+    "id": "Pyeonsik",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Pyeonsik",
+    "role": "Bot",
+    "photo": "04_Bot_Pyeonsik.png",
+    "face": "p_Pyeonsik.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/03_HLEC",
+  "team": "HLEC",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Bluffing",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Bluffing",
+    "role": "Support",
+    "photo": "05_Support_Bluffing.png",
+    "face": "p_Bluffing.png"
+   },
+   {
+    "id": "Rooster",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Rooster",
+    "role": "Top",
+    "photo": "06_Top_Rooster.png",
+    "face": "p_Rooster.png"
+   },
+   {
+    "id": "Valiant (Han Kang-hyun)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Valiant",
+    "role": "Support",
+    "photo": "07_Support_Valiant.png",
+    "face": "p_Valiant_Han_Kang-hyun.png"
+   },
+   {
+    "id": "Sensation",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Sensation",
+    "role": "Head Coach",
+    "photo": "08_HeadCoach_Sensation.png",
+    "face": "s_Sensation.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/04_DKC",
+  "team": "DKC",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Jaehyuk",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Jaehyuk",
+    "role": "Top",
+    "photo": "01_Top_Jaehyuk.png",
+    "face": "p_Jaehyuk.png"
+   },
+   {
+    "id": "Solid (Nam Hyeon-seo)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Solid",
+    "role": "Jungle",
+    "photo": "02_Jungle_Solid.png",
+    "face": "p_Solid_Nam_Hyeon-seo.png"
+   },
+   {
+    "id": "Garden (Seol Jeong-won)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Garden",
+    "role": "Mid",
+    "photo": "03_Mid_Garden.png",
+    "face": "p_Garden_Seol_Jeong-won.png"
+   },
+   {
+    "id": "Wayne (Hwang Seo-hyeon)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Wayne",
+    "role": "Bot",
+    "photo": "04_Bot_Wayne.png",
+    "face": "p_Wayne_Hwang_Seo-hyeon.png"
+   },
+   {
+    "id": "Loopy",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Loopy",
+    "role": "Support",
+    "photo": "05_Support_Loopy.png",
+    "face": "p_Loopy.png"
+   },
+   {
+    "id": "Nevid",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Nevid",
+    "role": "Top",
+    "photo": "06_Top_Nevid.png",
+    "face": "p_Nevid.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/04_DKC",
+  "team": "DKC",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Berr",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Berr",
+    "role": "Support",
+    "photo": "07_Support_Berr.png",
+    "face": "p_Berr.png"
+   },
+   {
+    "id": "Bible",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Bible",
+    "role": "Support",
+    "photo": "08_Support_Bible.png",
+    "face": "p_Bible.png"
+   },
+   {
+    "id": "Thumb",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Thumb",
+    "role": "Support",
+    "photo": "09_Support_Thumb.png",
+    "face": "p_Thumb.png"
+   },
+   {
+    "id": "Woong (Kim Sun-woong)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Woong",
+    "role": "Head Coach",
+    "photo": "10_HeadCoach_Woong.png",
+    "face": "s_Woong_Kim_Sun-woong.png"
+   },
+   {
+    "id": "ALT (Lee Han-young)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "ALT",
+    "role": "Head Coach",
+    "photo": "11_HeadCoach_ALT.png",
+    "face": "s_ALT_Lee_Han-young.png"
+   },
+   {
+    "id": "Sungmin",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Sungmin",
+    "role": "Coach",
+    "photo": "12_Coach_Sungmin.png",
+    "face": "s_Sungmin.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/05_KTC",
+  "team": "KTC",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Sero",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Sero",
+    "role": "Top",
+    "photo": "01_Top_Sero.png",
+    "face": "p_Sero.png"
+   },
+   {
+    "id": "Sylvie",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Sylvie",
+    "role": "Jungle",
+    "photo": "02_Jungle_Sylvie.png",
+    "face": "p_Sylvie.png"
+   },
+   {
+    "id": "Hwichan",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Hwichan",
+    "role": "Mid",
+    "photo": "03_Mid_Hwichan.png",
+    "face": "p_Hwichan.png"
+   },
+   {
+    "id": "FenRir (Park Kang-jun)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "FenRir",
+    "role": "Bot",
+    "photo": "04_Bot_FenRir.png",
+    "face": "p_FenRir_Park_Kang-jun.png"
+   },
+   {
+    "id": "Pollu",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Pollu",
+    "role": "Support",
+    "photo": "05_Support_Pollu.png",
+    "face": "p_Pollu.png"
+   },
+   {
+    "id": "YoungJae",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "YoungJae",
+    "role": "Jungle",
+    "photo": "06_Jungle_YoungJae.png",
+    "face": "p_YoungJae.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/05_KTC",
+  "team": "KTC",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Zinie",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Zinie",
+    "role": "Mid",
+    "photo": "07_Mid_Zinie.png",
+    "face": "p_Zinie.png"
+   },
+   {
+    "id": "Paduck",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Paduck",
+    "role": "Bot",
+    "photo": "08_Bot_Paduck.png",
+    "face": "p_Paduck.png"
+   },
+   {
+    "id": "Ghost (Jang Yong-jun)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Ghost",
+    "role": "Support",
+    "photo": "09_Support_Ghost.png",
+    "face": "p_Ghost_Jang_Yong-jun.png"
+   },
+   {
+    "id": "Way (Han Gil)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Way",
+    "role": "Support",
+    "photo": "10_Support_Way.png",
+    "face": "p_Way_Han_Gil.png"
+   },
+   {
+    "id": "Spark (Kang Byung-ryul)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Spark",
+    "role": "Head Coach",
+    "photo": "11_HeadCoach_Spark.png",
+    "face": "s_Spark_Kang_Byung-ryul.png"
+   },
+   {
+    "id": "Lilac (Jeon Ho-jin)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Lilac",
+    "role": "Coach",
+    "photo": "12_Coach_Lilac.png",
+    "face": "s_Lilac_Jeon_Ho-jin.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/06_BFXY",
+  "team": "BFXY",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Kangin",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Kangin",
+    "role": "Top",
+    "photo": "01_Top_Kangin.png",
+    "face": "p_Kangin.png"
+   },
+   {
+    "id": "Grizzly",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Grizzly",
+    "role": "Jungle",
+    "photo": "02_Jungle_Grizzly.png",
+    "face": "p_Grizzly.png"
+   },
+   {
+    "id": "MG (Lee Ji-hoon)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "MG",
+    "role": "Mid",
+    "photo": "03_Mid_MG.png",
+    "face": "p_MG_Lee_Ji-hoon.png"
+   },
+   {
+    "id": "Slayer (Kim Jin-young)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Slayer",
+    "role": "Bot",
+    "photo": "04_Bot_Slayer.png",
+    "face": "p_Slayer_Kim_Jin-young.png"
+   },
+   {
+    "id": "Luon",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Luon",
+    "role": "Support",
+    "photo": "05_Support_Luon.png",
+    "face": "p_Luon.png"
+   },
+   {
+    "id": "Soboro",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Soboro",
+    "role": "Top",
+    "photo": "06_Top_Soboro.png",
+    "face": "p_Soboro.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/06_BFXY",
+  "team": "BFXY",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Zephyr (Hwang Hyeok-su)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Zephyr",
+    "role": "Jungle",
+    "photo": "07_Jungle_Zephyr.png",
+    "face": "p_Zephyr_Hwang_Hyeok-su.png"
+   },
+   {
+    "id": "Bonnie",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Bonnie",
+    "role": "Jungle",
+    "photo": "08_Jungle_Bonnie.png",
+    "face": "p_Bonnie.png"
+   },
+   {
+    "id": "FIESTA (An Hyeon-seo)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "FIESTA",
+    "role": "Mid",
+    "photo": "09_Mid_FIESTA.png",
+    "face": "p_FIESTA_An_Hyeon-seo.png"
+   },
+   {
+    "id": "Envyy",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Envyy",
+    "role": "Bot",
+    "photo": "10_Bot_Envyy.png",
+    "face": "p_Envyy.png"
+   },
+   {
+    "id": "Key (Kim Han-gi)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Key",
+    "role": "Coach",
+    "photo": "11_Coach_Key.png",
+    "face": "s_Key_Kim_Han-gi.png"
+   },
+   {
+    "id": "Dopil",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Dopil",
+    "role": "Coach",
+    "photo": "12_Coach_Dopil.png",
+    "face": "s_Dopil.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/07_DNSC",
+  "team": "DNSC",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Lancer",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Lancer",
+    "role": "Top",
+    "photo": "01_Top_Lancer.png",
+    "face": "p_Lancer.png"
+   },
+   {
+    "id": "DDoiV",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "DDoiV",
+    "role": "Jungle",
+    "photo": "02_Jungle_DDoiV.png",
+    "face": "p_DDoiV.png"
+   },
+   {
+    "id": "Flip (Kim Sang-wook)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Flip",
+    "role": "Mid",
+    "photo": "03_Mid_Flip.png",
+    "face": "p_Flip_Kim_Sang-wook.png"
+   },
+   {
+    "id": "Enosh",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Enosh",
+    "role": "Bot",
+    "photo": "04_Bot_Enosh.png",
+    "face": "p_Enosh.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/07_DNSC",
+  "team": "DNSC",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Quantum (Son Jeong-hwan)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Quantum",
+    "role": "Support",
+    "photo": "05_Support_Quantum.png",
+    "face": "p_Quantum_Son_Jeong-hwan.png"
+   },
+   {
+    "id": "Pungyeon",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Pungyeon",
+    "role": "Mid",
+    "photo": "06_Mid_Pungyeon.png",
+    "face": "p_Pungyeon.png"
+   },
+   {
+    "id": "RapidStar",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "RapidStar",
+    "role": "Head Coach",
+    "photo": "07_HeadCoach_RapidStar.png",
+    "face": "s_RapidStar.png"
+   },
+   {
+    "id": "Cube (Kim Chang-seong)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Cube",
+    "role": "Coach",
+    "photo": "08_Coach_Cube.png",
+    "face": "s_Cube_Kim_Chang-seong.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/08_NSEA",
+  "team": "NSEA",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Janus (Eom Ye-jun)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Janus",
+    "role": "Top",
+    "photo": "01_Top_Janus.png",
+    "face": "p_Janus_Eom_Ye-jun.png"
+   },
+   {
+    "id": "MihawK",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "MihawK",
+    "role": "Jungle",
+    "photo": "02_Jungle_MihawK.png",
+    "face": "p_MihawK.png"
+   },
+   {
+    "id": "SeTab",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "SeTab",
+    "role": "Mid",
+    "photo": "03_Mid_SeTab.png",
+    "face": "p_SeTab.png"
+   },
+   {
+    "id": "Lucy (Hyun Soo-hoon)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Lucy",
+    "role": "Bot",
+    "photo": "04_Bot_Lucy.png",
+    "face": "p_Lucy_Hyun_Soo-hoon.png"
+   },
+   {
+    "id": "Pleata",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Pleata",
+    "role": "Support",
+    "photo": "05_Support_Pleata.png",
+    "face": "p_Pleata.png"
+   },
+   {
+    "id": "Burdol",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Burdol",
+    "role": "Top",
+    "photo": "06_Top_Burdol.png",
+    "face": "p_Burdol.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/08_NSEA",
+  "team": "NSEA",
+  "batch": 2,
+  "people": [
+   {
+    "id": "vital",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "vital",
+    "role": "Bot",
+    "photo": "07_Bot_vital.png",
+    "face": "p_vital.png"
+   },
+   {
+    "id": "Trigger (Kim Eui-joo)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Trigger",
+    "role": "Bot",
+    "photo": "08_Bot_Trigger.png",
+    "face": "p_Trigger_Kim_Eui-joo.png"
+   },
+   {
+    "id": "Crack (Noh Ji-seong)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Crack",
+    "role": "Support",
+    "photo": "09_Support_Crack.png",
+    "face": "p_Crack_Noh_Ji-seong.png"
+   },
+   {
+    "id": "bon0",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "bon0",
+    "role": "Coach",
+    "photo": "10_Coach_bon0.png",
+    "face": "s_bon0.png"
+   },
+   {
+    "id": "Dawn (Kim Jin-young)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Dawn",
+    "role": "Coach",
+    "photo": "11_Coach_Dawn.png",
+    "face": "s_Dawn_Kim_Jin-young.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/09_BROC",
+  "team": "BROC",
+  "batch": 1,
+  "people": [
+   {
+    "id": "DDahyuk",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "DDahyuk",
+    "role": "Top",
+    "photo": "01_Top_DDahyuk.png",
+    "face": "p_DDahyuk.png"
+   },
+   {
+    "id": "Dinai",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Dinai",
+    "role": "Jungle",
+    "photo": "02_Jungle_Dinai.png",
+    "face": "p_Dinai.png"
+   },
+   {
+    "id": "Tempester",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Tempester",
+    "role": "Mid",
+    "photo": "03_Mid_Tempester.png",
+    "face": "p_Tempester.png"
+   },
+   {
+    "id": "OddEye",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "OddEye",
+    "role": "Bot",
+    "photo": "04_Bot_OddEye.png",
+    "face": "p_OddEye.png"
+   },
+   {
+    "id": "PlanB",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "PlanB",
+    "role": "Support",
+    "photo": "05_Support_PlanB.png",
+    "face": "p_PlanB.png"
+   },
+   {
+    "id": "Lonely (Han Gyu-joon)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Lonely",
+    "role": "Top",
+    "photo": "06_Top_Lonely.png",
+    "face": "p_Lonely_Han_Gyu-joon.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/09_BROC",
+  "team": "BROC",
+  "batch": 2,
+  "people": [
+   {
+    "id": "HamBak",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "HamBak",
+    "role": "Jungle",
+    "photo": "07_Jungle_HamBak.png",
+    "face": "p_HamBak.png"
+   },
+   {
+    "id": "Ellim",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Ellim",
+    "role": "Jungle",
+    "photo": "08_Jungle_Ellim.png",
+    "face": "p_Ellim.png"
+   },
+   {
+    "id": "Fisher (Lee Jeong-tae)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Fisher",
+    "role": "Mid",
+    "photo": "09_Mid_Fisher.png",
+    "face": "p_Fisher_Lee_Jeong-tae.png"
+   },
+   {
+    "id": "Starlit",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Starlit",
+    "role": "Mid",
+    "photo": "10_Mid_Starlit.png",
+    "face": "p_Starlit.png"
+   },
+   {
+    "id": "Bull",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Bull",
+    "role": "Bot",
+    "photo": "11_Bot_Bull.png",
+    "face": "p_Bull.png"
+   },
+   {
+    "id": "Levy",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Levy",
+    "role": "Bot",
+    "photo": "12_Bot_Levy.png",
+    "face": "p_Levy.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/09_BROC",
+  "team": "BROC",
+  "batch": 3,
+  "people": [
+   {
+    "id": "Leo (Han Gyeo-re)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Leo",
+    "role": "Bot",
+    "photo": "13_Bot_Leo.png",
+    "face": "p_Leo_Han_Gyeo-re.png"
+   },
+   {
+    "id": "Kice",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Kice",
+    "role": "Support",
+    "photo": "14_Support_Kice.png",
+    "face": "p_Kice.png"
+   },
+   {
+    "id": "Ssumday",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Ssumday",
+    "role": "Coach",
+    "photo": "15_Coach_Ssumday.png",
+    "face": "s_Ssumday.png"
+   },
+   {
+    "id": "Cheoni",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Cheoni",
+    "role": "Coach",
+    "photo": "16_Coach_Cheoni.png",
+    "face": "s_Cheoni.png"
+   },
+   {
+    "id": "Drinker",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Drinker",
+    "role": "Coach",
+    "photo": "17_Coach_Drinker.png",
+    "face": "s_Drinker.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/10_KRXC",
+  "team": "KRXC",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Frog (Lee Min-hoi)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Frog",
+    "role": "Top",
+    "photo": "01_Top_Frog.png",
+    "face": "p_Frog_Lee_Min-hoi.png"
+   },
+   {
+    "id": "Winner (Woo Joo-sung)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Winner",
+    "role": "Jungle",
+    "photo": "02_Jungle_Winner.png",
+    "face": "p_Winner_Woo_Joo-sung.png"
+   },
+   {
+    "id": "AKaJe",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "AKaJe",
+    "role": "Mid",
+    "photo": "03_Mid_AKaJe.png",
+    "face": "p_AKaJe.png"
+   },
+   {
+    "id": "Vincenzo (Ha Seung-min)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Vincenzo",
+    "role": "Jungle",
+    "photo": "04_Jungle_Vincenzo.png",
+    "face": "p_Vincenzo_Ha_Seung-min.png"
+   },
+   {
+    "id": "Minous",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Minous",
+    "role": "Support",
+    "photo": "05_Support_Minous.png",
+    "face": "p_Minous.png"
+   },
+   {
+    "id": "Rich (Lee Jae-won)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Rich",
+    "role": "Top",
+    "photo": "06_Top_Rich.png",
+    "face": "p_Rich_Lee_Jae-won.png"
+   }
+  ]
+ },
+ {
+  "folder": "2_LCK_CL/10_KRXC",
+  "team": "KRXC",
+  "batch": 2,
+  "people": [
+   {
+    "id": "Juhan",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Juhan",
+    "role": "Jungle",
+    "photo": "07_Jungle_Juhan.png",
+    "face": "p_Juhan.png"
+   },
+   {
+    "id": "LazyFeel",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "LazyFeel",
+    "role": "Bot",
+    "photo": "08_Bot_LazyFeel.png",
+    "face": "p_LazyFeel.png"
+   },
+   {
+    "id": "Alive",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Alive",
+    "role": "Bot",
+    "photo": "09_Bot_Alive.png",
+    "face": "p_Alive.png"
+   },
+   {
+    "id": "Frozen (Kim Tae-il)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Frozen",
+    "role": "Head Coach",
+    "photo": "10_HeadCoach_Frozen.png",
+    "face": "s_Frozen_Kim_Tae-il.png"
+   },
+   {
+    "id": "Catch (Yun Sang-ho)",
+    "alsoIds": [],
+    "kind": "staff",
+    "name": "Catch",
+    "role": "Coach",
+    "photo": "11_Coach_Catch.png",
+    "face": "s_Catch_Yun_Sang-ho.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/01_BLG",
+  "team": "BLG",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:BLG:Bin (Chen Ze-Bin)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Bin",
+    "role": "Top",
+    "photo": "01_Top_Bin.png",
+    "face": "p_intl_BLG_Bin_Chen_Ze-Bin.png"
+   },
+   {
+    "id": "intl:BLG:Xun",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Xun",
+    "role": "Jungle",
+    "photo": "02_Jungle_Xun.png",
+    "face": "p_intl_BLG_Xun.png"
+   },
+   {
+    "id": "intl:BLG:Knight (Zhuo Ding)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Knight",
+    "role": "Mid",
+    "photo": "03_Mid_Knight.png",
+    "face": "p_intl_BLG_Knight_Zhuo_Ding.png"
+   },
+   {
+    "id": "Viper (Park Do-hyeon)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Viper",
+    "role": "Bot",
+    "photo": "04_Bot_Viper.png",
+    "face": "p_Viper_Park_Do-hyeon.png"
+   },
+   {
+    "id": "intl:BLG:ON",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "ON",
+    "role": "Support",
+    "photo": "05_Support_ON.png",
+    "face": "p_intl_BLG_ON.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/02_KC",
+  "team": "KC",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:KC:Canna",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Canna",
+    "role": "Top",
+    "photo": "01_Top_Canna.png",
+    "face": "p_intl_KC_Canna.png"
+   },
+   {
+    "id": "intl:KC:Yike",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Yike",
+    "role": "Jungle",
+    "photo": "02_Jungle_Yike.png",
+    "face": "p_intl_KC_Yike.png"
+   },
+   {
+    "id": "kyeahoo",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "kyeahoo",
+    "role": "Mid",
+    "photo": "03_Mid_kyeahoo.png",
+    "face": "p_kyeahoo.png"
+   },
+   {
+    "id": "intl:KC:Caliste",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Caliste",
+    "role": "Bot",
+    "photo": "04_Bot_Caliste.png",
+    "face": "p_intl_KC_Caliste.png"
+   },
+   {
+    "id": "intl:KC:Busio",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Busio",
+    "role": "Support",
+    "photo": "05_Support_Busio.png",
+    "face": "p_intl_KC_Busio.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/03_IG",
+  "team": "IG",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:IG:TheShy",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "TheShy",
+    "role": "Top",
+    "photo": "01_Top_TheShy.png",
+    "face": "p_intl_IG_TheShy.png"
+   },
+   {
+    "id": "intl:IG:Wei (Yan Yang-Wei)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Wei",
+    "role": "Jungle",
+    "photo": "02_Jungle_Wei.png",
+    "face": "p_intl_IG_Wei_Yan_Yang-Wei.png"
+   },
+   {
+    "id": "intl:IG:Rookie",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Rookie",
+    "role": "Mid",
+    "photo": "03_Mid_Rookie.png",
+    "face": "p_intl_IG_Rookie.png"
+   },
+   {
+    "id": "intl:IG:JiaQi",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "JiaQi",
+    "role": "Bot",
+    "photo": "04_Bot_JiaQi.png",
+    "face": "p_intl_IG_JiaQi.png"
+   },
+   {
+    "id": "intl:IG:Meiko",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Meiko",
+    "role": "Support",
+    "photo": "05_Support_Meiko.png",
+    "face": "p_intl_IG_Meiko.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/04_AL",
+  "team": "AL",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:AL:Breathe",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Breathe",
+    "role": "Top",
+    "photo": "01_Top_Breathe.png",
+    "face": "p_intl_AL_Breathe.png"
+   },
+   {
+    "id": "intl:AL:Tarzan (Lee Seung-yong)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Tarzan",
+    "role": "Jungle",
+    "photo": "02_Jungle_Tarzan.png",
+    "face": "p_intl_AL_Tarzan_Lee_Seung-yong.png"
+   },
+   {
+    "id": "intl:AL:Shanks",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Shanks",
+    "role": "Mid",
+    "photo": "03_Mid_Shanks.png",
+    "face": "p_intl_AL_Shanks.png"
+   },
+   {
+    "id": "intl:AL:Hope (Wang Jie)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Hope",
+    "role": "Bot",
+    "photo": "04_Bot_Hope.png",
+    "face": "p_intl_AL_Hope_Wang_Jie.png"
+   },
+   {
+    "id": "intl:AL:Kael (Kim Jin-hong)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Kael",
+    "role": "Support",
+    "photo": "05_Support_Kael.png",
+    "face": "p_intl_AL_Kael_Kim_Jin-hong.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/05_TL",
+  "team": "TL",
+  "batch": 1,
+  "people": [
+   {
+    "id": "Morgan",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Morgan",
+    "role": "Top",
+    "photo": "01_Top_Morgan.png",
+    "face": "p_Morgan.png"
+   },
+   {
+    "id": "intl:TL:Josedeodo",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Josedeodo",
+    "role": "Jungle",
+    "photo": "02_Jungle_Josedeodo.png",
+    "face": "p_intl_TL_Josedeodo.png"
+   },
+   {
+    "id": "intl:TL:Quid",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Quid",
+    "role": "Mid",
+    "photo": "03_Mid_Quid.png",
+    "face": "p_intl_TL_Quid.png"
+   },
+   {
+    "id": "intl:TL:Yeon (Sean Sung)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Yeon",
+    "role": "Bot",
+    "photo": "04_Bot_Yeon.png",
+    "face": "p_intl_TL_Yeon_Sean_Sung.png"
+   },
+   {
+    "id": "intl:TL:CoreJJ",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "CoreJJ",
+    "role": "Support",
+    "photo": "05_Support_CoreJJ.png",
+    "face": "p_intl_TL_CoreJJ.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/06_LOS",
+  "team": "LOS",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:LOS:Zest (Kim Dong-min)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Zest",
+    "role": "Top",
+    "photo": "01_Top_Zest.png",
+    "face": "p_intl_LOS_Zest_Kim_Dong-min.png"
+   },
+   {
+    "id": "intl:LOS:Curse (Raí Yamada)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Curse",
+    "role": "Jungle",
+    "photo": "02_Jungle_Curse.png",
+    "face": "p_intl_LOS_Curse_Ra_Yamada.png"
+   },
+   {
+    "id": "intl:LOS:Feisty",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Feisty",
+    "role": "Mid",
+    "photo": "03_Mid_Feisty.png",
+    "face": "p_intl_LOS_Feisty.png"
+   },
+   {
+    "id": "intl:LOS:Duduhh",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Duduhh",
+    "role": "Bot",
+    "photo": "04_Bot_Duduhh.png",
+    "face": "p_intl_LOS_Duduhh.png"
+   },
+   {
+    "id": "intl:LOS:Ackerman (Gabriel Aparicio)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Ackerman",
+    "role": "Support",
+    "photo": "05_Support_Ackerman.png",
+    "face": "p_intl_LOS_Ackerman_Gabriel_Aparicio.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/07_MVK",
+  "team": "MVK",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:MVK:Kratos (Ngô Đức Khánh)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Kratos",
+    "role": "Top",
+    "photo": "01_Top_Kratos.png",
+    "face": "p_intl_MVK_Kratos_Ng_c_Kh_nh.png"
+   },
+   {
+    "id": "intl:MVK:Gury",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Gury",
+    "role": "Jungle",
+    "photo": "02_Jungle_Gury.png",
+    "face": "p_intl_MVK_Gury.png"
+   },
+   {
+    "id": "intl:MVK:Chika",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Chika",
+    "role": "Mid",
+    "photo": "03_Mid_Chika.png",
+    "face": "p_intl_MVK_Chika.png"
+   },
+   {
+    "id": "intl:MVK:Harky",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Harky",
+    "role": "Bot",
+    "photo": "04_Bot_Harky.png",
+    "face": "p_intl_MVK_Harky.png"
+   },
+   {
+    "id": "intl:MVK:SiuLoong",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "SiuLoong",
+    "role": "Support",
+    "photo": "05_Support_SiuLoong.png",
+    "face": "p_intl_MVK_SiuLoong.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/08_C9",
+  "team": "C9",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:C9:Thanatos (Park Seung-kyu)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Thanatos",
+    "role": "Top",
+    "photo": "01_Top_Thanatos.png",
+    "face": "p_intl_C9_Thanatos_Park_Seung-kyu.png"
+   },
+   {
+    "id": "intl:C9:Blaber",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Blaber",
+    "role": "Jungle",
+    "photo": "02_Jungle_Blaber.png",
+    "face": "p_intl_C9_Blaber.png"
+   },
+   {
+    "id": "Loki (Lee Sang-min)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Loki",
+    "role": "Mid",
+    "photo": "03_Mid_Loki.png",
+    "face": "p_Loki_Lee_Sang-min.png"
+   },
+   {
+    "id": "intl:C9:Tactical",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Tactical",
+    "role": "Bot",
+    "photo": "04_Bot_Tactical.png",
+    "face": "p_intl_C9_Tactical.png"
+   },
+   {
+    "id": "intl:C9:Vulcan (Philippe Laflamme)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Vulcan",
+    "role": "Support",
+    "photo": "05_Support_Vulcan.png",
+    "face": "p_intl_C9_Vulcan_Philippe_Laflamme.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/09_G2",
+  "team": "G2",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:G2:BrokenBlade",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "BrokenBlade",
+    "role": "Top",
+    "photo": "01_Top_BrokenBlade.png",
+    "face": "p_intl_G2_BrokenBlade.png"
+   },
+   {
+    "id": "intl:G2:SkewMond",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "SkewMond",
+    "role": "Jungle",
+    "photo": "02_Jungle_SkewMond.png",
+    "face": "p_intl_G2_SkewMond.png"
+   },
+   {
+    "id": "intl:G2:Caps",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Caps",
+    "role": "Mid",
+    "photo": "03_Mid_Caps.png",
+    "face": "p_intl_G2_Caps.png"
+   },
+   {
+    "id": "intl:G2:Hans Sama",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Hans Sama",
+    "role": "Bot",
+    "photo": "04_Bot_Hans_Sama.png",
+    "face": "p_intl_G2_Hans_Sama.png"
+   },
+   {
+    "id": "intl:G2:Labrov",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Labrov",
+    "role": "Support",
+    "photo": "05_Support_Labrov.png",
+    "face": "p_intl_G2_Labrov.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/10_LYON",
+  "team": "LYON",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:LYON:Dhokla",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Dhokla",
+    "role": "Top",
+    "photo": "01_Top_Dhokla.png",
+    "face": "p_intl_LYON_Dhokla.png"
+   },
+   {
+    "id": "intl:LYON:Inspired",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Inspired",
+    "role": "Jungle",
+    "photo": "02_Jungle_Inspired.png",
+    "face": "p_intl_LYON_Inspired.png"
+   },
+   {
+    "id": "intl:LYON:Saint (Kang Sung-in)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Saint",
+    "role": "Mid",
+    "photo": "03_Mid_Saint.png",
+    "face": "p_intl_LYON_Saint_Kang_Sung-in.png"
+   },
+   {
+    "id": "Berserker (Kim Min-cheol)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Berserker",
+    "role": "Bot",
+    "photo": "04_Bot_Berserker.png",
+    "face": "p_Berserker_Kim_Min-cheol.png"
+   },
+   {
+    "id": "intl:LYON:Isles",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Isles",
+    "role": "Support",
+    "photo": "05_Support_Isles.png",
+    "face": "p_intl_LYON_Isles.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/11_TES",
+  "team": "TES",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:TES:369",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "369",
+    "role": "Top",
+    "photo": "01_Top_369.png",
+    "face": "p_intl_TES_369.png"
+   },
+   {
+    "id": "intl:TES:Tian",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Tian",
+    "role": "Jungle",
+    "photo": "02_Jungle_Tian.png",
+    "face": "p_intl_TES_Tian.png"
+   },
+   {
+    "id": "intl:TES:Creme",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Creme",
+    "role": "Mid",
+    "photo": "03_Mid_Creme.png",
+    "face": "p_intl_TES_Creme.png"
+   },
+   {
+    "id": "intl:TES:JackeyLove",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "JackeyLove",
+    "role": "Bot",
+    "photo": "04_Bot_JackeyLove.png",
+    "face": "p_intl_TES_JackeyLove.png"
+   },
+   {
+    "id": "intl:TES:Zhuo",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Zhuo",
+    "role": "Support",
+    "photo": "05_Support_Zhuo.png",
+    "face": "p_intl_TES_Zhuo.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/12_CFO",
+  "team": "CFO",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:CFO:Rest",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Rest",
+    "role": "Top",
+    "photo": "01_Top_Rest.png",
+    "face": "p_intl_CFO_Rest.png"
+   },
+   {
+    "id": "intl:CFO:Shad0w",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Shad0w",
+    "role": "Jungle",
+    "photo": "02_Jungle_Shad0w.png",
+    "face": "p_intl_CFO_Shad0w.png"
+   },
+   {
+    "id": "intl:CFO:POUT",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Pout",
+    "role": "Mid",
+    "photo": "03_Mid_Pout.png",
+    "face": "p_intl_CFO_POUT.png"
+   },
+   {
+    "id": "intl:CFO:Doggo",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Doggo",
+    "role": "Bot",
+    "photo": "04_Bot_Doggo.png",
+    "face": "p_intl_CFO_Doggo.png"
+   },
+   {
+    "id": "intl:CFO:Kino",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Kino",
+    "role": "Support",
+    "photo": "05_Support_Kino.png",
+    "face": "p_intl_CFO_Kino.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/13_MKOI",
+  "team": "MKOI",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:MKOI:Myrwn",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Myrwn",
+    "role": "Top",
+    "photo": "01_Top_Myrwn.png",
+    "face": "p_intl_MKOI_Myrwn.png"
+   },
+   {
+    "id": "intl:MKOI:Elyoya",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Elyoya",
+    "role": "Jungle",
+    "photo": "02_Jungle_Elyoya.png",
+    "face": "p_intl_MKOI_Elyoya.png"
+   },
+   {
+    "id": "intl:MKOI:Jojopyun",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Jojopyun",
+    "role": "Mid",
+    "photo": "03_Mid_Jojopyun.png",
+    "face": "p_intl_MKOI_Jojopyun.png"
+   },
+   {
+    "id": "intl:MKOI:Supa",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Supa",
+    "role": "Bot",
+    "photo": "04_Bot_Supa.png",
+    "face": "p_intl_MKOI_Supa.png"
+   },
+   {
+    "id": "intl:MKOI:Alvaro (Álvaro Fernández)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Alvaro",
+    "role": "Support",
+    "photo": "05_Support_Alvaro.png",
+    "face": "p_intl_MKOI_Alvaro_lvaro_Fern_ndez.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/14_FUR",
+  "team": "FUR",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:FUR:Guigo",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Guigo",
+    "role": "Top",
+    "photo": "01_Top_Guigo.png",
+    "face": "p_intl_FUR_Guigo.png"
+   },
+   {
+    "id": "intl:FUR:Tatu (Pedro Seixas)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Tatu",
+    "role": "Jungle",
+    "photo": "02_Jungle_Tatu.png",
+    "face": "p_intl_FUR_Tatu_Pedro_Seixas.png"
+   },
+   {
+    "id": "intl:FUR:Tutsz",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Tutsz",
+    "role": "Mid",
+    "photo": "03_Mid_Tutsz.png",
+    "face": "p_intl_FUR_Tutsz.png"
+   },
+   {
+    "id": "intl:FUR:Ayu (Andrey Saraiva)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Ayu",
+    "role": "Bot",
+    "photo": "04_Bot_Ayu.png",
+    "face": "p_intl_FUR_Ayu_Andrey_Saraiva.png"
+   },
+   {
+    "id": "intl:FUR:JoJo (Gabriel Dzelme)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "JoJo",
+    "role": "Support",
+    "photo": "05_Support_JoJo.png",
+    "face": "p_intl_FUR_JoJo_Gabriel_Dzelme.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/15_DCG",
+  "team": "DCG",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:DCG:Flauren",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Flauren",
+    "role": "Top",
+    "photo": "01_Top_Flauren.png",
+    "face": "p_intl_DCG_Flauren.png"
+   },
+   {
+    "id": "intl:DCG:Pop9",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Pop9",
+    "role": "Jungle",
+    "photo": "02_Jungle_Pop9.png",
+    "face": "p_intl_DCG_Pop9.png"
+   },
+   {
+    "id": "intl:DCG:HongSuo",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "HongSuo",
+    "role": "Mid",
+    "photo": "03_Mid_HongSuo.png",
+    "face": "p_intl_DCG_HongSuo.png"
+   },
+   {
+    "id": "intl:DCG:Feng (Chen Chun-Feng)",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Feng",
+    "role": "Bot",
+    "photo": "04_Bot_Feng.png",
+    "face": "p_intl_DCG_Feng_Chen_Chun-Feng.png"
+   },
+   {
+    "id": "intl:DCG:ShiauC",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "ShiauC",
+    "role": "Support",
+    "photo": "05_Support_ShiauC.png",
+    "face": "p_intl_DCG_ShiauC.png"
+   }
+  ]
+ },
+ {
+  "folder": "3_INTL/16_TSW",
+  "team": "TSW",
+  "batch": 1,
+  "people": [
+   {
+    "id": "intl:TSW:Pun",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Pun",
+    "role": "Top",
+    "photo": "01_Top_Pun.png",
+    "face": "p_intl_TSW_Pun.png"
+   },
+   {
+    "id": "intl:TSW:Hizto",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Hizto",
+    "role": "Jungle",
+    "photo": "02_Jungle_Hizto.png",
+    "face": "p_intl_TSW_Hizto.png"
+   },
+   {
+    "id": "intl:TSW:Dire",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Dire",
+    "role": "Mid",
+    "photo": "03_Mid_Dire.png",
+    "face": "p_intl_TSW_Dire.png"
+   },
+   {
+    "id": "intl:TSW:Eddie",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Eddie",
+    "role": "Bot",
+    "photo": "04_Bot_Eddie.png",
+    "face": "p_intl_TSW_Eddie.png"
+   },
+   {
+    "id": "intl:TSW:Bie",
+    "alsoIds": [],
+    "kind": "player",
+    "name": "Bie",
+    "role": "Support",
+    "photo": "05_Support_Bie.png",
+    "face": "p_intl_TSW_Bie.png"
+   }
+  ]
+ }
+]
