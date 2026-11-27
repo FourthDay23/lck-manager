@@ -75,6 +75,18 @@ function TimerChip({ e, t }: { e: Engine; t: { key: string; at: number | null; a
     t.key === "grubs" ? <GrubIcon size={26} /> :
     t.key === "elder" ? <DrakeIcon type="장로" size={28} /> :
     <DrakeIcon type={e.obj.dragon.type ?? ""} size={28} />;
+  // the voidgrubs die one by one: how many are left, and a pip per grub in the colour of the team that took it
+  if (t.key === "grubs" && t.alive) {
+    return (
+      <div class="sb-timer up grubs" title="남은 공허 유충">
+        {icon}
+        <b>{e.obj.grubs.left ?? 3}마리</b>
+        <span class="sb-gpips">
+          {e.grubUnits.map((g) => <i class={g.alive ? "live" : g.takenBy === 0 ? "blue" : g.takenBy === 1 ? "red" : "gone"} />)}
+        </span>
+      </div>
+    );
+  }
   return (
     <div class={`sb-timer ${t.alive ? "up" : ""} ${t.key}`}>
       {icon}
@@ -131,7 +143,7 @@ export function Scorebar({ e, series }: { e: Engine; series?: SeriesInfo }) {
     const soul = e.soul === side;
     return (
       <div class={`sb-objs ${side ? "red" : "blue"}`}>
-        <span class={`sb-cnt ${e.grubs[side] ? "" : "zero"}`}><GrubIcon /><b>{e.grubs[side]}</b></span>
+        <span class={`sb-cnt ${e.grubs[side] ? "" : "zero"}`} title={`공허 유충 ${e.grubs[side]}마리 (구조물 피해 +${Math.round((e.grubSiege(side) - 1) * 100)}%)`}><GrubIcon /><b>{e.grubs[side]}</b></span>
         <span class={`sb-cnt ${e.barons[side] ? "" : "zero"}`}><BaronIcon /><b>{e.barons[side]}</b></span>
         <span class={`sb-drakes ${soul ? "soul" : ""}`}>
           {e.dragons[side].map((d) => <DrakeIcon type={d} />)}

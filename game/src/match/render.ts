@@ -266,7 +266,8 @@ export class MatchRenderer {
       if (!near.length) continue;
       const contested = new Set(near.map((u) => u.side)).size > 1;
       const side = near[0].side;
-      const hitting = o.hp < o.maxHp - 1;
+      // the grubs' health stays down with the dead ones: go by when the camp was last hit
+      const hitting = k === "grubs" ? e.t - (o.hitAt ?? -99) < 3 : o.hp < o.maxHp - 1;
       const noun = k === "dragon" && o.type ? `${o.type} 드래곤` : OBJ_NOUN[k];
       const reason = contested
         ? `${josa(noun, "을를")} 두고 양 팀 ${near.length}명이 모였습니다`
@@ -813,7 +814,8 @@ export class MatchRenderer {
       }
       if (f.kind === "blink") { this.burst(f.x, f.y, "#fff3a0", 8, now); this.burst(f.tx, f.ty, "#fff3a0", 8, now); }
       if (f.kind === "heal") this.burst(f.tx, f.ty, "#7dff8a", 6, now, -1);
-      if (f.kind === "smite") { this.burst(f.x, f.y, "#ffe28a", 18, now); this.shake = 6; }
+      // a single voidgrub's last hit (r 200) is a small pop; the other epic monsters shake the screen
+      if (f.kind === "smite") { this.burst(f.x, f.y, "#ffe28a", f.r < 300 ? 8 : 18, now); if (f.r >= 300) this.shake = 6; }
       if (f.kind === "global") this.shake = Math.max(this.shake, 3);
     }
     this.fxSeen = this.e.fxSeq;
@@ -1356,6 +1358,10 @@ export class MatchRenderer {
     for (const [k, col] of items) {
       const o = this.e.obj[k];
       const x = Math.round(this.sx(o.pos.x)), y = Math.round(this.sy(o.pos.y));
+      if (k === "grubs") {
+        if (o.alive) this.drawGrubs(now, col);
+        continue;
+      }
       if (o.alive) {
         const pulse = 1 + Math.sin(now / 250) * 0.15;
         const r = (this.cam.size > 9000 ? 5 : 9) * pulse;
@@ -1375,6 +1381,46 @@ export class MatchRenderer {
         }
       }
     }
+  }
+
+  /** The three voidgrubs, one dot each: a live one pulses (with its own health ring while it is being hit), a dead
+   *  one stays as a hollow ring in the colour of the team that took it until the camp is done or leaves. */
+  private drawGrubs(now: number, col: string) {
+    const c = this.ctx;
+    const far = this.cam.size > 9000;
+    // the engine puts them 260 u from the pit's point: at least 7 px, so the dots do not merge on the whole-map view
+    const pit = this.e.obj.grubs.pos;
+    const px = this.sx(pit.x), py = this.sy(pit.y);
+    this.e.grubUnits.forEach((g, i) => {
+      let x = this.sx(g.pos.x), y = this.sy(g.pos.y);
+      const d = Math.hypot(x - px, y - py) || 1;
+      if (d < 7) { x = px + ((x - px) / d) * 7; y = py + ((y - py) / d) * 7; }
+      x = Math.round(x); y = Math.round(y);
+      const r0 = far ? 3 : 6;
+      if (!g.alive) {
+        if (g.takenBy === undefined) return;
+        c.strokeStyle = g.takenBy === 0 ? "#4aa3ff" : "#ff5a5a";
+        c.lineWidth = far ? 1 : 2;
+        c.beginPath();
+        c.arc(x, y, r0, 0, Math.PI * 2);
+        c.stroke();
+        return;
+      }
+      const r = r0 * (1 + Math.sin(now / 250 + i * 2.1) * 0.15);
+      c.fillStyle = col;
+      c.beginPath();
+      c.arc(x, y, r, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = "#0a0d16";
+      c.fillRect(x - 1, y - 1, 2, 2);
+      if (g.hp < g.maxHp) {
+        c.strokeStyle = "#ffe28a";
+        c.lineWidth = far ? 1 : 2;
+        c.beginPath();
+        c.arc(x, y, r + 2, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, g.hp / g.maxHp));
+        c.stroke();
+      }
+    });
   }
 
   /** Unit positions before the latest engine step, and how far (0..1) the clock has run toward the next step.
