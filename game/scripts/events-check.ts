@@ -5,7 +5,7 @@ import { assembleData } from "../src/data/load";
 import { autoAdvance, closeUserSeries, newGame, resolveEvent, userSeriesToday } from "../src/core/game";
 import { playQuickSeries } from "../src/core/quick";
 import { Rng } from "../src/core/rng";
-import { EVENT_DEFS, chooseSetBreak, endSetBreak, forceEvent, setBreakDue } from "../src/core/events";
+import { EVENT_DEFS, chooseSetBreak, endSetBreak, eventsDay, forceEvent, setBreakDue } from "../src/core/events";
 import { weekStartOf } from "../src/core/evmemo";
 
 const dir = existsSync("public/data/players.json") ? "data" : "data-sample";
@@ -113,6 +113,34 @@ console.log("never fired", never.join(" ") || "-");
 console.log("set breaks checked", setBreaks, "| queue left", s.ev?.queue.length, "| promises left", s.ev?.promises.length);
 console.log("memo sample", Object.entries(s.ev?.memo ?? {}).slice(0, 3).map(([k, v]) => `${s.players[k]?.name ?? k}: ${v.slice(-3).map((m) => m.text).join(" / ")}`).join(" | "));
 if (rnd.length && (negShare < 0.45 || negShare > 0.75)) fail(`random negative share ${negShare.toFixed(2)} is far from 0.6`);
+
+// the next series is a bracket slot whose opponent is not decided yet (playoff seed waiting for a quarterfinal):
+// the daily check two days before must not crash (P14 read teams[null].name) or name no opponent ("FA의")
+{
+  const t = JSON.parse(JSON.stringify(s)) as typeof s;
+  const next = t.series.filter((x) => !x.done && x.a && x.b && (x.a === t.user || x.b === t.user)).sort((a, b) => a.day - b.day)[0]
+    ?? t.series.find((x) => x.a === t.user || x.b === t.user)!;
+  if (next.a === t.user) next.b = null;
+  else next.a = null;
+  next.done = false;
+  next.comp = "PO";
+  next.stage = "SF";
+  t.day = next.day - 2;
+  t.teams[t.user].facilities.analysis = Math.max(1, t.teams[t.user].facilities.analysis);
+  const snap = JSON.stringify(t);
+  let crashed = 0;
+  for (let k = 0; k < 200; k++) {
+    const u = JSON.parse(snap) as typeof s;
+    u.events = [];
+    try {
+      eventsDay(u, data, new Rng(1000 + k));
+      for (const e of u.events) if (/FA의|undefined|null/.test(e.body)) fail(`${e.def} names no opponent before the bracket is decided: ${e.body}`);
+    } catch (e) {
+      if (++crashed <= 2) fail(`daily check before an undecided bracket series threw: ${(e as Error).message}`);
+    }
+  }
+  console.log(`undecided bracket opponent: 200 daily checks, ${crashed} crashes`);
+}
 
 // every option of every event, forced on a copy of the end state: no crash, a result, chances under 1
 const base = JSON.stringify(s);

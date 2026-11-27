@@ -100,7 +100,11 @@ function lastSeries(s: GameState): Series | undefined {
 function bigSeries(sr: Series | undefined): boolean {
   return !!sr && (sr.comp === "PO" || INTL.includes(sr.comp) || sr.stage === "F" || sr.stage === "SF");
 }
-const oppOf = (s: GameState, sr: Series) => (sr.a === s.user ? sr.b! : sr.a!);
+/**
+ * The user's opponent in a series, or null while it is not decided: a bracket series (playoffs, international)
+ * is in the schedule before the series that feeds it is played. nextSeries() can return one of those.
+ */
+const oppOf = (s: GameState, sr: Series): string | null => (sr.a === s.user ? sr.b : sr.a) ?? null;
 
 // ---------- effects (each one adds a line to the result) ----------
 function mo(c: Ctx, p: Player, v: number) {
@@ -556,8 +560,10 @@ def({
   find: (c) => {
     const sr = userSeriesOn(c.s, c.s.day);
     if (!sr || !bigSeries(sr) || !cdOk(c, "N13", 30)) return 0;
+    const opp = oppOf(c.s, sr);
+    if (!opp) return 0;
     c.d.sr = sr.id;
-    c.d.opp = oppOf(c.s, sr);
+    c.d.opp = opp;
     return 3;
   },
   title: () => "상대의 도발 인터뷰",
@@ -1095,7 +1101,10 @@ def({
     const sr = nextSeries(c.s);
     if (!sr || sr.day - c.s.day > 3 || sr.day === c.s.day || !cdOk(c, "P13", 30)) return 0;
     if (c.t.facilities.analysis < 1 && !staffOf(c).some((x) => x.role === "Analyst")) return 0;
-    c.d.opp = oppOf(c.s, sr);
+    // nothing to analyse until the bracket names the opponent (the text read "FA의 밴픽 버릇")
+    const opp = oppOf(c.s, sr);
+    if (!opp) return 0;
+    c.d.opp = opp;
     return 1;
   },
   title: () => "분석관의 상대 약점 발견",
@@ -1112,7 +1121,9 @@ def({
   find: (c) => {
     const sr = nextSeries(c.s);
     if (!sr || sr.day - c.s.day > 2 || sr.day === c.s.day) return 0;
+    // a bracket series whose opponent is not decided yet: no derby until it is (this threw on teams[null].name)
     const opp = oppOf(c.s, sr);
+    if (!opp || !c.s.teams[opp]) return 0;
     const oppName = c.s.teams[opp].name;
     const xs = starters(c).filter((p) => (p.lastTeamName === oppName || p.history.some((h) => h.includes(`${oppName} 입단`))) && cdOk(c, `P14:${p.id}`, 60));
     const p = pickOne(c, xs);
