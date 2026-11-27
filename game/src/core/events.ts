@@ -1477,6 +1477,12 @@ def({
 
 const BY_ID = new Map(DEFS.map((d) => [d.id, d]));
 
+/** What the event dialog shows about an event (ui/Overlays.tsx): good or bad news, random / low morale / aftermath, club-wide, match-day morning. */
+export function eventInfo(defId: string | undefined): { pol: Pol; cls: Cls; team: boolean; matchDay: boolean } | undefined {
+  const d = defId ? BY_ID.get(defId) : undefined;
+  return d && { pol: d.pol, cls: d.cls, team: !!d.team, matchDay: !!d.matchDay };
+}
+
 // ---------- making and resolving events ----------
 function ctxFor(s: GameState, rng: Rng, data: GameData | null, defId: string, depth = 0): Ctx {
   return { s, rng, data, t: s.teams[s.user], p: null, q: null, d: {}, depth, def: defId, lines: [] };
