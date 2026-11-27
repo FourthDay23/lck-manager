@@ -86,6 +86,15 @@ const trust = (c: Ctx, p: Player | null) => (p && hasMemo(c.s, p.id, "배신", 3
 const cdOk = (c: Ctx, key: string, days: number) => c.s.day - (evState(c.s).cd[key] ?? -9999) >= days;
 const lowestAttr = (p: Player): AttrKey => [...ATTR_KEYS].sort((a, b) => p.attrs[a] - p.attrs[b])[0];
 const pickOne = <T,>(c: Ctx, xs: T[], w: (x: T) => number = () => 1): T | undefined => (xs.length ? c.rng.weighted(xs, w) : undefined);
+/**
+ * The one with the highest key. A tie is drawn at random: sorting and taking [0] hands every tie to the first in
+ * roster order, and ties are common (signed rookies all start at fame 1, morale bottoms out at 0).
+ */
+const topBy = <T,>(c: Ctx, xs: T[], key: (x: T) => number): T | undefined => {
+  if (!xs.length) return undefined;
+  const best = Math.max(...xs.map(key));
+  return pickOne(c, xs.filter((x) => key(x) === best));
+};
 const weightStar = (c: Ctx) => (p: Player) => (isStarter(c, p) ? 2 : 1);
 
 function userSeriesOn(s: GameState, day: number): Series | undefined {
@@ -264,7 +273,7 @@ def({
     if (!sr || sr.winner === c.s.user || c.s.day - sr.day > 2) return 0;
     const deaths = new Map<string, number>();
     for (const g of sr.games) for (const [pid, b] of Object.entries(g.box ?? {})) if (c.s.players[pid]?.team === c.s.user) deaths.set(pid, (deaths.get(pid) ?? 0) + b.d);
-    const worst = [...deaths.entries()].sort((a, b) => b[1] - a[1])[0];
+    const worst = topBy(c, [...deaths.entries()], (x) => x[1]);
     const p = worst ? c.s.players[worst[0]] : null;
     if (!p || p.fame < 40 || !cdOk(c, `N1:${p.id}`, 60)) return 0;
     c.p = p;
@@ -491,7 +500,9 @@ def({
   find: (c) => {
     const owed = owedOf(c);
     if (owed.length < 2 || !cdOk(c, "N10", 30)) return 0;
-    c.p = owed.sort((a, b) => b.p.unpaid - a.p.unpaid)[0].p;
+    const most = topBy(c, owed, (x) => x.p.unpaid);
+    if (!most) return 0;
+    c.p = most.p;
     return 3;
   },
   title: () => "연봉 체불 항의",
@@ -831,8 +842,9 @@ def({
   id: "P1", pol: "pos", cls: "random",
   find: (c) => {
     const st = starters(c);
-    const topMech = [...st].sort((a, b) => b.attrs.mechanics - a.attrs.mechanics)[0];
-    const xs = st.filter((p) => (p.form >= 3 || p === topMech) && cdOk(c, `P1:${p.id}`, 60));
+    // every starter tied at the top mechanics counts as the team's best, not just the first of them
+    const topMech = Math.max(...st.map((p) => p.attrs.mechanics));
+    const xs = st.filter((p) => (p.form >= 3 || p.attrs.mechanics === topMech) && cdOk(c, `P1:${p.id}`, 60));
     const p = pickOne(c, xs);
     if (!p) return 0;
     c.p = p;
@@ -1001,8 +1013,11 @@ def({
 def({
   id: "P8", pol: "pos", cls: "random",
   find: (c) => {
-    const p = roster(c).sort((a, b) => b.fame - a.fame)[0];
-    if (!p || !cdOk(c, `P8:${p.id}`, 60)) return 0;
+    // the team's most famous; when several share the top (signed rookies all start at fame 1) one of them at random
+    const ros = roster(c);
+    const top = Math.max(...ros.map((x) => x.fame));
+    const p = pickOne(c, ros.filter((x) => x.fame === top && cdOk(c, `P8:${x.id}`, 60)));
+    if (!p) return 0;
     c.p = p;
     return 1;
   },
@@ -1196,20 +1211,21 @@ def({
   id: "M1", pol: "neg", cls: "morale",
   find: (c) => {
     const st = starters(c);
-    let best: { a: Player; b: Player; pr: number } | null = null;
+    // 21 days for each player, not each pair (design 6-2): keyed by pair, a hot-tempered starter is in every
+    // pair and came straight back with the next teammate, a quarrel every few days for the same player
+    const pairs: { a: Player; b: Player; pr: number }[] = [];
     for (let i = 0; i < st.length; i++) for (let j = i + 1; j < st.length; j++) {
       const a = st[i], b = st[j];
       if (a.persona.temper < 0.6 && b.persona.temper < 0.6) continue;
-      const key = [a.id, b.id].sort().join(":");
-      if (!cdOk(c, `m:M1:${key}`, MORALE_CD)) continue;
+      if (!cdOk(c, `m:M1:${a.id}`, MORALE_CD) || !cdOk(c, `m:M1:${b.id}`, MORALE_CD)) continue;
       let pr = moraleChance(50, (a.morale + b.morale) / 2);
       if (hasMemo(c.s, a.id, "앙금", 9999, b.id) || hasMemo(c.s, b.id, "앙금", 9999, a.id)) pr *= 2;
-      if (pr > 0 && (!best || pr > best.pr)) best = { a, b, pr };
+      if (pr > 0) pairs.push({ a, b, pr });
     }
+    const best = topBy(c, pairs, (x) => x.pr);
     if (!best) return 0;
     c.p = best.a;
     c.q = best.b;
-    c.d.cdKey = `m:M1:${[best.a.id, best.b.id].sort().join(":")}`;
     return Math.min(1, best.pr);
   },
   title: () => "팀 내 언쟁",
@@ -1241,8 +1257,7 @@ def({
   find: (c) => {
     const st = headCoachOf(c);
     if (!st) return 0;
-    const xs = roster(c).filter((p) => p.morale < 45 && cdOk(c, `m:M2:${p.id}`, MORALE_CD)).sort((a, b) => a.morale - b.morale);
-    const p = xs[0];
+    const p = topBy(c, roster(c).filter((x) => x.morale < 45 && cdOk(c, `m:M2:${x.id}`, MORALE_CD)), (x) => -x.morale);
     if (!p) return 0;
     c.p = p;
     c.d.staff = st.id;
@@ -1266,7 +1281,7 @@ def({
 def({
   id: "M3", pol: "neg", cls: "morale",
   find: (c) => {
-    const p = roster(c).filter((x) => x.morale < 30 && cdOk(c, `m:M3:${x.id}`, MORALE_CD)).sort((a, b) => a.morale - b.morale)[0];
+    const p = topBy(c, roster(c).filter((x) => x.morale < 30 && cdOk(c, `m:M3:${x.id}`, MORALE_CD)), (x) => -x.morale);
     if (!p) return 0;
     c.p = p;
     return moraleChance(30, p.morale);
@@ -1589,6 +1604,13 @@ function cdKey(c: Ctx, d: Def): string {
   return d.team || !c.p ? d.id : `${d.id}:${c.p.id}`;
 }
 
+/** Cooldowns a low-morale event starts: one per player it names (a quarrel, M1, names two). */
+function moraleCdKeys(c: Ctx, d: Def): string[] {
+  const keys = [cdKey(c, d)];
+  if (c.q && !c.d.cdKey) keys.push(`m:${d.id}:${c.q.id}`);
+  return keys;
+}
+
 function checkPromises(s: GameState, rng: Rng) {
   const ev = evState(s);
   const keep: typeof ev.promises = [];
@@ -1697,9 +1719,9 @@ export function eventsDay(s: GameState, data: GameData, rng: Rng) {
       const c = ctxFor(s, rng, data, d.id);
       const pr = Number(d.find?.(c) ?? 0);
       if (pr > 0 && rng.chance(pr)) {
-        ev.cd[cdKey(c, d)] = s.day;
+        for (const k of moraleCdKeys(c, d)) ev.cd[k] = s.day;
         ev.lastMorale = s.day;
-        if (c.p) addMemo(s, c.p.id, { tag: d.id === "M3" ? "말수" : "사기저하", day: s.day, ev: d.id, text: `사기 저하: ${d.title(c)}` });
+        for (const p of [c.p, c.q]) if (p) addMemo(s, p.id, { tag: d.id === "M3" ? "말수" : "사기저하", day: s.day, ev: d.id, text: `사기 저하: ${d.title(c)}` });
         fire(s, c, d);
         return;
       }
