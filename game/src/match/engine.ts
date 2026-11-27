@@ -130,12 +130,12 @@ export function applyGrowthTune(spec: string | undefined) {
  * Set 2026-11-27 after turret shots outside fights and sieges that wait for the wave (SIM_TUNE) made games 34.6-37.2
  * min with first towers at 16.7-17.2 and too few kills from 10 to 30 min (2.8 / 6.4 / 9.7 per 10-min block); with
  * these, EARLY_TUNE and SIM_TUNE.siegePush 3.2: 31.9 min, 28.8 kills, first tower 15.9 (200 games, roster seed 3).
- * 2026-11-27 (T08): engage 3.8 -> 2.7. Fights over epic monsters (macro.ts OBJ_TUNE) now bring 10 kills a game where
+ * 2026-11-27 (T08): engage 3.8 -> 2.4. Fights over epic monsters (macro.ts OBJ_TUNE) now bring 10 kills a game where
  * they brought 3; chance meetings of two groups are cut by as much so kills stay at 29.7 (120 games, seed 3: 32.7
  * kills at 3.8, kills from such meetings 11.5 -> 5.5 a game).
  * Scripts can override them with PACE_TUNE=key:value,...
  */
-export const PACE_TUNE = { towerDmg: 1.6, minionDmg: 1.3, engage: 2.7 };
+export const PACE_TUNE = { towerDmg: 1.6, minionDmg: 1.3, engage: 2.4 };
 export function applyPaceTune(spec: string | undefined) {
   applyTune(PACE_TUNE, "PACE_TUNE", spec);
 }

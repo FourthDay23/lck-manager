@@ -52,7 +52,7 @@ export const FIGHT_TUNE = {
   stopRate: 0.6, stopReach: 850, objHold: 1.5, stopEdge: -0.14, takeEdge: 0.05, stopWait: 5, stopGo: 0.75, holdWait: 14,
   /** two teams facing each other over a monster nobody has started open a fight on contact this much less often
    *  (they stand off: the fight comes when one side starts the monster or finds an engage) */
-  holdRate: 0.5,
+  holdRate: 0.3,
 };
 
 type Phase = "position" | "engage" | "brawl" | "retreat";
