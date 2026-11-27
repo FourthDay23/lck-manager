@@ -7,6 +7,10 @@
 /* on cooldown: the icon goes dark and the seconds left sit on top */
 .pl .sum.cd img { filter: grayscale(1) brightness(0.42); }
 .pl .sum b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: normal; letter-spacing: -0.5px; color: #fff; text-shadow: 1px 1px 0 #000; }
+/* Smite: the charges left in the lower right corner, and the jungle pet's upgrade as the frame colour */
+.pl .sum i { position: absolute; right: -1px; bottom: -2px; font-size: 8px; font-style: normal; line-height: 8px; color: #ffe28a; text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000; }
+.pl .sum.tier1 { box-shadow: 0 0 0 1px #ff9a3c, 0 0 0 2px #05070d; }
+.pl .sum.tier2 { box-shadow: 0 0 0 1px #ff4f6a, 0 0 0 2px #05070d; }
 /* a Teleport being channelled right now */
 .pl .sum.busy { box-shadow: 0 0 0 1px #b48cff, 0 0 0 2px #05070d; }
 .pl .sum.busy img { filter: none; }
