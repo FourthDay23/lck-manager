@@ -74,6 +74,8 @@ export interface Staff {
   lastTeamName: string | null;
   /** The user's hiring talks with this coach (core/staffNeg.ts). */
   talk?: StaffTalk;
+  /** His role in the data, while he works another one at his club (set by the old-save cleanup in game.ts, undone by market.ts releaseStaff). */
+  ownRole?: Staff["role"];
 }
 
 export interface StaffTalk {

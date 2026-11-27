@@ -605,13 +605,24 @@ export function hireStaffUser(s: GameState, st: Staff, salary: number, years: nu
   return { ok: true, msg: `${st.name} 선임 완료.` };
 }
 
+/** A coach leaves his club (contract over, or fired) and is a free agent again. */
+export function releaseStaff(s: GameState, st: Staff) {
+  const t = st.team ? s.teams[st.team] : null;
+  if (t) t.staff = t.staff.filter((x) => x !== st.id);
+  st.team = null;
+  st.contract = null;
+  // a head coach an old save had signed as a coach (game.ts oneStaffRecordPerPerson) is a head coach again
+  if (st.ownRole) {
+    st.role = st.ownRole;
+    delete st.ownRole;
+  }
+}
+
 export function fireStaffUser(s: GameState, st: Staff) {
   const t = s.teams[s.user];
   const pen = Math.round(((st.contract?.salary ?? 0) * 0.3) / 100) * 100;
   spend(s, "위약금", pen);
-  t.staff = t.staff.filter((x) => x !== st.id);
-  st.team = null;
-  st.contract = null;
+  releaseStaff(s, st);
   addNews(s, { kind: "release", title: `${t.name}, '${st.name}'와 결별`, body: `위약금 ${money(pen)}.`, teams: [t.id] });
 }
 

@@ -13,7 +13,7 @@ import { playQuickSeries } from "./quick";
 import { academySeasonEnd, autoCallUp, setupAcademies } from "./academy";
 import { patchDue, rollPatch } from "./meta";
 import { training } from "./training";
-import { aiDailyMarket, autoLineup, joinTeam, releasePlayer, staffAsk, windowOpen } from "./market";
+import { aiDailyMarket, autoLineup, joinTeam, releasePlayer, releaseStaff, staffAsk, windowOpen } from "./market";
 import { economyDay, earn, spend, seriesRewards, sponsorFor } from "./economy";
 import type { CompId, Difficulty, GameState, ModalEvent, Player, Series, Staff, Team } from "./types";
 import { COMP_NAME } from "./types";
@@ -635,17 +635,11 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
   }
   for (const st of Object.values(s.staff)) {
     if (st.team && st.contract && st.contract.until <= season && st.team !== s.user && rng.chance(0.5)) {
-      const t = s.teams[st.team];
-      t.staff = t.staff.filter((x) => x !== st.id);
-      st.team = null;
-      st.contract = null;
+      releaseStaff(s, st);
     } else if (st.team && st.contract && st.contract.until <= season) {
       if (st.team === s.user) {
-        const t = s.teams[st.team];
-        t.staff = t.staff.filter((x) => x !== st.id);
         inbox(s, `${st.name}와의 계약이 끝났습니다.`);
-        st.team = null;
-        st.contract = null;
+        releaseStaff(s, st);
       } else st.contract.until = season + 1;
     }
   }
@@ -783,7 +777,8 @@ export function migrateSave(s: GameState, data: GameData): string[] {
       s.series = s.series.filter((x) => !(x.season === s.season && late.includes(x.comp)));
       buildSeasonLate(s, s.season, rng);
       notes.push(`${s.season} 시즌 일정에 EWC 선발전(7월 15일)과 EWC(7월 22일)를 넣고, 정규 시즌 3R을 8월 5일, 플레이오프를 9월 10일로 옮겼습니다.`);
-    } else {
+    } else if (!(s.version >= 2)) {
+      // said once, when the v1 save is first opened: every load comes through here, and this season stays without EWC
       notes.push("이번 시즌은 이미 진행돼서 EWC는 다음 시즌부터 들어갑니다.");
     }
   }
@@ -836,15 +831,30 @@ function oneStaffRecordPerPerson(s: GameState, data: GameData): string[] {
       if (playerKeys.has(key)) for (const st of list) leave(st, "선수로도 등록된 같은 사람이라 선수 기록만 남겼습니다.");
       continue;
     }
-    if (list.length === 1 && list[0].id === d.id) continue;
+    if (list.length === 1 && list[0].id === d.id) {
+      // nothing to merge. Roles never change in play, so one that differs from the data's was kept by an earlier
+      // cleanup (before ownRole) or the data changed: free, he takes his own role now; signed, when that contract ends.
+      const st = list[0];
+      if (st.role !== d.role && !st.ownRole) {
+        if (st.team) st.ownRole = d.role;
+        else st.role = d.role;
+      }
+      continue;
+    }
     const score = (st: Staff) => (st.team === s.user ? 4 : 0) + (st.team ? 2 : 0) + (st.role === "Head Coach" ? 1 : 0);
     const keep = [...list].sort((a, b) => score(b) - score(a) || Number(b.id === d.id) - Number(a.id === d.id))[0];
     for (const st of list) {
       if (st !== keep) leave(st, `${roleKo(keep)} '${keep.name}'와 같은 사람이 중복 등록돼 있었습니다.`);
     }
-    // the merged data (record, fame, attrs) for the one person; a signed coach keeps his job and contract
-    const merged: Staff = { ...staffFromData(d), team: keep.team, contract: keep.contract, talk: keep.talk };
-    if (keep.team) merged.role = keep.role;
+    // the merged data (record, fame, attrs) for the one person; a signed coach keeps his job and contract, and
+    // the user's talks carry over whichever of the records they were held with
+    const talk = keep.talk ?? list.find((st) => st.talk)?.talk;
+    const merged: Staff = { ...staffFromData(d), team: keep.team, contract: keep.contract, talk };
+    if (keep.team && keep.role !== merged.role) {
+      // e.g. the head coach signed as a coach: he is a head coach again once he leaves (market.ts releaseStaff)
+      merged.ownRole = merged.role;
+      merged.role = keep.role;
+    }
     delete s.staff[keep.id];
     s.staff[d.id] = merged;
     const t = keep.team ? s.teams[keep.team] : null;

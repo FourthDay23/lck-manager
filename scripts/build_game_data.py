@@ -148,6 +148,31 @@ def page_rank(page: str) -> tuple:
     return (int(year), 0 if league == "LCK CL" else 1, event_index)
 
 
+# Where an event sits in the year, the same for both leagues.
+EVENT_PHASE = {"Cup": 0, "Kickoff": 0, "Rounds 1-2": 1, "Road to MSI": 2, "Rounds 3-5": 3, "Rounds 3-4": 3,
+               "Season Play-In": 4, "Season Playoffs": 5}
+
+
+def page_time(page: str) -> tuple:
+    """Sort key for a tournament page by when it was played: year, part of the season, league tier.
+    page_rank puts every LCK page of a year after that year's LCK CL pages, so it cannot say which came later."""
+    m = re.match(r"(LCK CL|LCK)/(\d{4}) Season/(.+)$", page)
+    if not m:
+        return (0, 0, 0)
+    league, year, event = m.groups()
+    phase = next((p for e, p in EVENT_PHASE.items() if event.startswith(e)), -1)
+    return (int(year), phase, 0 if league == "LCK CL" else 1)
+
+
+def player_role(role: str) -> str | None:
+    """The position of a roster row, or None for a coach / staff row. A sub listed for two positions ("Top,Bot")
+    is a player, with the first one as his position."""
+    for part in role.split(","):
+        if part.strip() in ROLES:
+            return part.strip()
+    return None
+
+
 # ------------------------------------------------------------------------------------------------- stats
 
 def game_rows():
@@ -406,8 +431,8 @@ def roster_only_players(players, tr_rows, people):
         if "Showmatch" in row["Page"]:
             continue  # legends showmatch rosters are not real 2026 teams
         for link, role in zip((row["Links"] or "").split(";;"), (row["Roles"] or "").split(";;")):
-            link, role = link.strip(), role.strip()
-            if role in ROLES and link and link.lower() not in known:
+            link, role = link.strip(), player_role(role)
+            if role and link and link.lower() not in known:
                 tier = 1 if row["Page"].startswith("LCK/") else 2
                 person = people.get(link, {})
                 extra[link] = {
@@ -444,15 +469,15 @@ def build_staff(tr_rows, rc_rows, rows, winners, people, players):
     for row in tr_rows:
         if "Showmatch" in row["Page"]:
             continue
-        rank = page_rank(row["Page"])
+        when = page_time(row["Page"])
         for link, role in zip((row["Links"] or "").split(";;"), (row["Roles"] or "").split(";;")):
             link, role = link.strip(), role.strip()
             if not link:
                 continue
             key = link.lower()
-            if key not in latest or rank >= latest[key][0]:
-                latest[key] = (rank, role)
-            if role not in ROLES:
+            if key not in latest or when >= latest[key][0]:
+                latest[key] = (when, role)
+            if not player_role(role):
                 membership[key].append((row["Page"], canon_team(row["Team"])))
                 spellings[key][link] += 1
     player_ids = {p["id"].lower() for p in players}
@@ -484,7 +509,7 @@ def build_staff(tr_rows, rc_rows, rows, winners, people, players):
         if role is None:
             continue  # managers, streamers, directors are not coaching staff
         # a player-coach whose latest roster row has him playing (Bible, LCK CL 2025) is a player, not staff
-        if key in player_ids and latest[key][1] in ROLES:
+        if key in player_ids and player_role(latest[key][1]):
             print(f"  staff: {link} left out, his latest roster row is as a player ({latest[key][1]})")
             continue
         w = sum(results[m][0] for m in set(member))
@@ -601,11 +626,11 @@ def build_teams(tr_rows, players, staff, winners, fetch_logos: bool):
         if own:
             last = own[-1]
             for link, role in zip((last["Links"] or "").split(";;"), (last["Roles"] or "").split(";;")):
-                link, role = link.strip(), role.strip()
-                if role in ROLES and link.lower() in player_ids:
+                link, role = link.strip(), player_role(role)
+                if role and link.lower() in player_ids:
                     roster.append(player_ids[link.lower()])
                     roster_roles.append(role)
-                elif role not in ROLES and link.lower() in staff_ids and staff_ids[link.lower()] not in staff_list:
+                elif not role and link.lower() in staff_ids and staff_ids[link.lower()] not in staff_list:
                     staff_list.append(staff_ids[link.lower()])
         logo_owner = parent or tid  # academies use the parent club's logo
         path = logo_dir / f"{logo_owner}.png"
@@ -623,6 +648,16 @@ def build_teams(tr_rows, players, staff, winners, fetch_logos: bool):
             "titles": {k: titles.get(k, 0) for k in ("lck", "msi", "worlds", "cup", "firstStand", "ewc")},
         })
     return teams
+
+
+def drop_players_who_coach(players, staff):
+    """A former player who is on the staff list is staff only: build_staff leaves a person out when his latest
+    roster row has him playing, so whoever is still on both lists has a staff row as his latest."""
+    coaching = {s["id"].lower() for s in staff}
+    for p in players:
+        if p["id"].lower() in coaching:
+            print(f"  players: {p['id']} left out, his latest roster row is as staff")
+    return [p for p in players if p["id"].lower() not in coaching]
 
 
 def check_one_record_per_person(players, staff):
@@ -673,14 +708,20 @@ def main() -> int:
     players.sort(key=lambda p: (p["tier"], -p["ovr"]))
     staff = build_staff(tr_rows, load("rc_staff"), rows, winners, people, players)
     staff.sort(key=lambda s: (s["tier"], -s["fame"]))
+    players = drop_players_who_coach(players, staff)
     check_one_record_per_person(players, staff)
     teams = build_teams(tr_rows, players, staff, winners, fetch_logos=not args.no_logos)
 
     today = date.today().isoformat()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    (OUT_DIR / "players.json").write_text(json.dumps({"generated": today, "players": players}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    (OUT_DIR / "staff.json").write_text(json.dumps({"generated": today, "staff": staff}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    (OUT_DIR / "teams.json").write_text(json.dumps({"generated": today, "eventWinners": winners, "teams": teams}, ensure_ascii=False, indent=1), encoding="utf-8")
+
+    def write(name: str, payload: dict, **fmt):
+        # newline="\n": the repository keeps LF, and Windows would turn every line of teams.json into CRLF
+        (OUT_DIR / name).write_text(json.dumps(payload, ensure_ascii=False, **fmt), encoding="utf-8", newline="\n")
+
+    write("players.json", {"generated": today, "players": players}, separators=(",", ":"))
+    write("staff.json", {"generated": today, "staff": staff}, separators=(",", ":"))
+    write("teams.json", {"generated": today, "eventWinners": winners, "teams": teams}, indent=1)
     print(f"players {len(players)} (tier1 {sum(p['tier'] == 1 for p in players)}, tier2 {sum(p['tier'] == 2 for p in players)}), "
           f"staff {len(staff)}, teams {len(teams)} ({sum(1 for t in teams if t['logo'])} with logos)")
     if args.sanity:

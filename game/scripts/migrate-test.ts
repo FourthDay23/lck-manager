@@ -5,6 +5,7 @@ import { autoAdvance, closeUserSeries, migrateSave, newGame, userSeriesToday, re
 import { playQuickSeries } from "../src/core/quick";
 import { Rng } from "../src/core/rng";
 import { fmtDate } from "../src/core/format";
+import { seasonDates } from "../src/core/schedule";
 
 const j = (f: string) => (existsSync(`public/data/${f}`) ? JSON.parse(readFileSync(`public/data/${f}`, "utf8")) : null);
 const data = assembleData("data", j("champions.json"), j("players.json"), j("staff.json"), j("teams.json"), j("intl.json"), j("meta.json"), j("heatmap.json"));
@@ -36,3 +37,14 @@ for (let i = 0; i < 800 && s.season === 2027; i++) {
 }
 console.log("2027 done:", s.comps.filter((c) => c.season === 2027).map((c) => `${c.id}:${c.champion ? s.teams[c.champion].short : "-"}`).join(" "));
 console.log("patches seen", s.meta?.history.map((h) => h.patch).join(","));
+
+// a v1 save opened after MSI hears once that EWC starts next season, not again on every load
+const late = newGame(data, { team: "KRX", difficulty: "normal", manager: "t", seed: 4 });
+late.comps = late.comps.filter((c) => c.id !== "EWC" && c.id !== "EWCQ");
+late.version = 1;
+late.day = seasonDates(late.season).msi + 1;
+const told = (notes: string[]) => notes.filter((n) => n.includes("EWC는 다음 시즌부터")).length;
+const first = told(migrateSave(late, data));
+const second = told(migrateSave(late, data));
+console.log(`${first === 1 && second === 0 ? "ok  " : "FAIL"} late v1 save: the EWC note ${first} time(s) on the first load, ${second} on the next`);
+if (first !== 1 || second !== 0) process.exitCode = 1;
