@@ -6,8 +6,13 @@
   transform: translateX(-50%);
   max-width: 88%;
   pointer-events: none;
-  animation: captionIn 0.25s steps(3) both, captionOut 0.5s steps(4) 2.7s both;
+  /* the renderer decides how long a line stays (at least 3 s, see render.ts say); it only fades in here */
+  animation: captionIn 0.25s steps(3) both;
 }
+/* how fast the clock runs right now, inside the LIVE tag */
+.live-tag .pace { margin-left: 8px; padding: 0 5px; color: #9aa3b8; box-shadow: inset 0 0 0 1px #262c44; }
+.live-tag .pace.slow { color: #e8ecf5; }
+.live-tag .pace.real { color: #1a1406; background: var(--gold); box-shadow: none; }
 .cut-caption span {
   display: inline-block;
   padding: 5px 14px 5px 12px;

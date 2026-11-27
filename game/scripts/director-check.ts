@@ -2,6 +2,9 @@
 // given playback speed and measures, for every fight of 3+ champions, whether its spot was already on screen when it
 // started (the camera got there first), how long before, and how often the camera cuts.
 //   node scripts/run-ts.mjs scripts/director-check.ts [games] [speed]
+// OBSOLETE since 2026-11-27: the camera this measured (a director cutting between scored shots: shotId, shotSince)
+// was replaced by "the whole map while fast-forwarding, a close-up only for a teamfight" (src/match/pacing.ts and
+// render.ts autoCam). Kept for its numbers in the wiki; the current check is scripts/view-diag.ts.
 import { readFileSync, existsSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { newGame } from "../src/core/game";
@@ -11,6 +14,7 @@ import { newDraft, autoDraft } from "../src/match/draft";
 import { Rng } from "../src/core/rng";
 import { ROLES } from "../src/data/types";
 
+throw new Error("director-check.ts measured the old broadcast camera; run scripts/view-diag.ts instead");
 // ---- browser stubs: a 2D context that ignores every call, and images that never load ----
 const noop = () => undefined;
 const ctx = new Proxy({}, { get: (_t, k) => (k === "measureText" ? () => ({ width: 10 }) : k === "createLinearGradient" || k === "createRadialGradient" ? () => ({ addColorStop: noop }) : noop), set: () => true });

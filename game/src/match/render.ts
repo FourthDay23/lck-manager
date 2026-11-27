@@ -12,9 +12,16 @@ export type CamMode = "auto" | "all" | "top" | "mid" | "bot" | "jungle" | "follo
 interface Cam { x: number; y: number; size: number }
 /** A candidate camera shot for the broadcast director. `reason` is the caption shown when the camera cuts to it. */
 interface Shot { id: string; x: number; y: number; size: number; score: number; label: string; reason: string }
-/** Caption explaining the latest camera cut; `at` is real time (performance.now()). */
+/** The line under the board; `at` is the real time (performance.now()) it came up. */
 export interface CutCaption { text: string; at: number }
-export const CAPTION_MS = 3200;
+interface Caption extends CutCaption { prio: number; x?: number; y?: number; born: number }
+/** A caption stays at least this long before another may replace it (unless that one matters far more), and at most CAPTION_MS. */
+export const CAPTION_MIN = 3000;
+export const CAPTION_MS = 4200;
+/** ms the whole map shows where the camera is about to go in */
+const CUE_MS = 350;
+/** ms a death marker stays on the map */
+const DEATH_MS = 2800;
 const LANE_KO: Record<string, string> = { top: "탑", mid: "미드", bot: "바텀" };
 const OBJ_NOUN: Record<string, string> = { baron: "내셔 남작", elder: "장로 드래곤", dragon: "드래곤", herald: "협곡의 전령", grubs: "공허 유충" };
 
@@ -75,22 +82,39 @@ export class MatchRenderer {
   ctx: CanvasRenderingContext2D;
   mode: CamMode = "auto";
   followIdx = 1;
-  /** Broadcast director state: current shot, when it started, and what to call it on screen. */
-  shotId: string | null = null;
-  shotSince = 0;
-  /** game time of the last cut (holds are counted in real and game time) */
-  shotSinceT = 0;
-  /** the next frame jumps straight to the target instead of panning */
+  /** the next frame jumps straight to the target instead of gliding */
   private snap = true;
-  shotLast: Shot | null = null;
-  shotLabel = "";
-  idleSince = 0;
-  idleSinceT = 0;
-  /** real time of the last re-frame inside a shot (rate-limited so a moving fight does not jerk the view) */
-  private reframedAt = 0;
-  /** Why the auto camera last cut, for the subtitle under the board. Null in manual camera modes. */
-  cut: CutCaption | null = null;
-  private fallbackKey = "";
+  /** What the auto camera shows, for the LIVE tag: "전체 맵", or the teamfight it is in on. */
+  shotLabel = "전체 맵";
+  /**
+   * Auto camera (see pacing.ts): the whole map while the game is fast-forwarded, a close-up only while the clock is
+   * slowed for a teamfight. `focusId` is that fight (0 = none), set by the match loop every frame.
+   */
+  private focusId = 0;
+  private focusSize = 0;
+  /** real time the focus was set: the spot is marked on the whole map for CUE_MS before the camera goes in */
+  private focusAt = 0;
+  /** the camera is in the close-up */
+  private close = false;
+  /** the frame the close-up is heading for (it only moves when the fight leaves the middle of the view) */
+  private aim: Cam | null = null;
+  private following = false;
+  /** the spot about to be shown, and the close-up just left: both drawn as a box on the whole map */
+  private cue: Cam | null = null;
+  private left: { cam: Cam; at: number } | null = null;
+  private leftAt = -1e9;
+  private drawnAt = 0;
+  /** false while the game is paused: the idle attack animations stop too */
+  animate = true;
+  /** One line under the board; see say(). */
+  private cap: Caption | null = null;
+  private capNext: Caption | null = null;
+  private sceneSeen = new Map<string, number>();
+  private sceneT = -1;
+  /** champions that just died: a grey marker stays where they fell */
+  private deaths: { x: number; y: number; side: 0 | 1; champ: string; born: number }[] = [];
+  /** how far each icon is drawn from its unit so that icons do not cover each other (world units) */
+  private spread: Vec[] = [];
   cam: Cam = { ...PRESETS.all };
   fxSeen = 0;
   live: LiveFx[] = [];
@@ -122,15 +146,21 @@ export class MatchRenderer {
     this.skills.reset();
     this.stepFrom = [];
     this.lerp = 1;
-    // broadcast director: a new game starts with no shot, no position history and a cut
-    this.shotId = null;
-    this.shotLast = null;
-    this.shotLabel = "";
-    this.shotSince = this.shotSinceT = this.idleSince = this.idleSinceT = this.reframedAt = 0;
+    // auto camera: a new game starts on the whole map with nothing queued
+    this.shotLabel = "전체 맵";
+    this.labelFor = this.saidFor = 0;
+    this.focusId = this.focusSize = this.focusAt = 0;
+    this.close = this.following = false;
+    this.aim = this.cue = null;
+    this.left = null;
+    this.leftAt = -1e9;
+    this.cap = this.capNext = null;
+    this.sceneSeen.clear();
+    this.sceneT = -1;
+    this.deaths = [];
+    this.spread = [];
     this.prevPos = null;
     this.upCache = null;
-    this.fallbackKey = "";
-    this.cut = null;
     this.snap = true;
     for (const u of e.units) champImage(this.version, u.champ.id);
   }
@@ -205,7 +235,8 @@ export class MatchRenderer {
       const cx = m.reduce((a, u) => a + u.x, 0) / m.length, cy = m.reduce((a, u) => a + u.y, 0) / m.length;
       const spread = Math.max(...m.map((u) => Math.hypot(u.x - cx, u.y - cy)));
       const n = m.length;
-      const label = n >= 7 ? "대규모 한타" : n >= 4 ? "한타" : n === 3 ? "소규모 교전" : f.origin === "gank" ? "갱킹" : "교전";
+      // the same words as the pacing: a teamfight is six or more (pacing.ts), anything smaller is a skirmish
+      const label = n >= 8 ? "대규모 한타" : n >= 6 ? "한타" : n >= 3 ? "소규모 교전" : f.origin === "gank" ? "갱킹" : "교전";
       const place = this.placeOf(cx, cy);
       let reason: string;
       if (f.origin === "gank") {
@@ -213,7 +244,7 @@ export class MatchRenderer {
         reason = jg ? `${josa(this.tag(jg), "이가")} ${josa(place, "으로")} 갱킹을 왔습니다` : `${place}에 갱킹이 들어왔습니다`;
       } else if (n === 2) {
         reason = `${place}에서 ${josa(this.tag(m[0]), "과와")} ${josa(this.tag(m[1]), "이가")} 맞붙었습니다`;
-      } else if (n >= 4) {
+      } else if (n >= 6) {
         reason = `${place}에서 ${this.headcount(m)} ${josa(label, "이가")} 열렸습니다`;
       } else {
         reason = `${place}에서 ${this.headcount(m)} 교전이 벌어졌습니다`;
@@ -373,97 +404,206 @@ export class MatchRenderer {
   }
   private upCache: { t: number; shots: Shot[] } | null = null;
 
-  /** Pick a shot like a broadcast observer: hold it for a moment, cut away for something bigger, then fall back.
-   *  Cuts are instant (see draw); a new shot over the same spot only changes the caption. */
-  private director(now: number): Cam {
-    const shots = this.shots();
-    const best = shots.reduce<Shot | null>((a, b) => (!a || b.score > a.score ? b : a), null);
-    let cur = this.shotId ? shots.find((x) => x.id === this.shotId) ?? null : null;
-    const held = now - this.shotSince;
-    const heldGame = this.e.t - this.shotSinceT;
-    // the scene the camera already shows took a new name (a planned objective became the fight over it, a gank on
-    // the way became the gank): follow it without a cut
-    if (!cur && best && this.shotLast && Math.hypot(best.x - this.shotLast.x, best.y - this.shotLast.y) < this.shotLast.size * 0.25 && best.score >= 10) {
-      cur = best;
-      this.shotId = best.id;
-      if (best.reason !== this.shotLast.reason) this.cut = { text: best.reason, at: now };
-    }
-    // hold a shot ~2.5 s (and 5 game s) before cutting to something better; something far bigger cuts sooner
-    let cutAway = false;
-    if (cur && best && best.id !== cur.id && ((held > 2500 && heldGame > 5 && best.score > cur.score * 1.35) || (held > 1000 && best.score > cur.score * 2.2))) {
-      cur = null;
-      cutAway = true;
-    }
-    // the scene just ended: stay on it a moment (1.5 s, 3 game s) unless something big is on (not when the camera
-    // is leaving a live scene for a bigger one: that cut happens now)
-    if (!cur && !cutAway && this.shotLast && now - this.idleSince < 1500 && this.e.t - this.idleSinceT < 3 && !(best && best.score >= 30)) {
-      return { x: this.shotLast.x, y: this.shotLast.y, size: this.shotLast.size };
-    }
-    if (!cur && best && best.score >= 10 && (held > 900 || !this.shotLast)) {
-      cur = best;
-      this.shotId = best.id;
-      this.shotSince = now;
-      this.shotSinceT = this.e.t;
-      this.snap = true;
-      // a cut: say why
-      this.cut = { text: best.reason, at: now };
-      this.fallbackKey = "";
-    }
-    if (cur) {
-      // once an objective shot turns into a stand-off, keep calling it that until the camera cuts away
-      if (this.shotLast?.id === cur.id && this.shotLabel.endsWith("대치") && !cur.label.endsWith("대치")) cur = { ...cur, label: `${cur.label} 대치` };
-      this.shotLast = cur;
-      this.shotLabel = cur.label;
-      this.idleSince = now;
-      this.idleSinceT = this.e.t;
-      return { x: cur.x, y: cur.y, size: cur.size };
-    }
-    // linger on the last shot briefly after it ends, then go wide or tour the lanes
-    if (this.shotLast && now - this.idleSince < 1600) return { x: this.shotLast.x, y: this.shotLast.y, size: this.shotLast.size };
-    const ended = this.shotLast?.label ?? null;
-    this.shotId = null;
-    this.shotLast = null;
-    if (this.e.t < 14 * 60 && this.e.t > 60) {
-      const lanes: (keyof typeof PRESETS)[] = ["bot", "mid", "top", "bot"];
-      const pick = lanes[Math.floor(now / 7000) % lanes.length];
-      this.shotLabel = pick === "bot" ? "바텀 라인전" : pick === "mid" ? "미드 라인전" : "탑 라인전";
-      const key = `lane:${pick}`;
-      if (key !== this.fallbackKey) {
-        this.cut = { text: ended ? `${ended} 장면이 끝나 ${josa(this.shotLabel, "으로")} 돌아갑니다` : `큰 장면이 없어 ${josa(this.shotLabel, "을를")} 보여 줍니다`, at: now };
-        this.fallbackKey = key;
+  /** The match loop passes on what pacing.ts decided: the teamfight to frame (0 = none) and how big it is. */
+  setFocus(id: number, size: number, now: number) {
+    if (id && !this.focusId) this.focusAt = now;
+    this.focusId = id;
+    if (id) this.focusSize = size;
+  }
+
+  /** The frame that holds a fight: its champions with room around them for spells and for the ones walking in. */
+  private fightFrame(id: number): Cam | null {
+    const f = this.e.fights.get(id);
+    const all = this.e.units.filter((u) => u.alive && u.fightId === id);
+    if (!f || !all.length) return null;
+    // someone still a screen away would stretch the frame until nobody can be made out: frame the ones at the fight
+    // (the ones walking in come into the frame as they arrive)
+    const near = all.filter((u) => Math.hypot(u.x - f.x, u.y - f.y) < 1700);
+    const m = near.length >= 2 ? near : all;
+    const xs = m.map((u) => u.x), ys = m.map((u) => u.y);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, size: Math.max(2600, Math.min(5000, Math.max(x1 - x0, y1 - y0) + 1400)) };
+  }
+
+  /**
+   * Auto camera. Fast-forward is watched on the whole map: at 8x and more a close-up is a blur (a champion crosses the
+   * view in about a second) and every cut costs the viewer their bearings. Only a teamfight, which runs in real time,
+   * gets a close-up: the spot is boxed on the whole map for a moment, then the camera cuts in, stays on one frame
+   * (following only when the fight leaves the middle), and cuts back out when the fight is over.
+   */
+  private autoCam(now: number): Cam {
+    const e = this.e;
+    const frame = this.focusId ? this.fightFrame(this.focusId) : null;
+    if (!this.close) {
+      this.cue = null;
+      if (!this.focusId || !frame) {
+        this.shotLabel = "전체 맵";
+        this.labelFor = 0;
+        return { ...PRESETS.all };
       }
-      return { ...PRESETS[pick] };
+      this.shotLabel = this.fightLabel(frame);
+      // mark the spot first; and never go back in within 1.5 s of coming out (the fight is in real time by then, so
+      // nothing is missed on the whole map, and out-in-out is what made the old camera hard to watch)
+      if (now - this.focusAt < CUE_MS || now - this.leftAt < 1500) {
+        this.cue = this.fit(frame);
+        return { ...PRESETS.all };
+      }
+      this.close = true;
+      this.following = false;
+      this.aim = this.fit(frame);
+      this.snap = true;
+      this.announce(frame, now);
+      return frame;
     }
-    this.shotLabel = "전체 맵";
-    if (this.fallbackKey !== "all") {
-      this.cut = {
-        text: this.e.t <= 60 ? "양 팀이 라인으로 향합니다" : ended ? `${ended} 장면이 끝나 전체 맵으로 돌아갑니다` : "큰 장면이 없어 전체 맵을 보여 줍니다",
-        at: now,
-      };
-      this.fallbackKey = "all";
+    if (!this.focusId) {
+      // the fight is over: back to the whole map, with the place just left marked for a moment
+      this.left = { cam: { ...this.cam }, at: now };
+      this.leftAt = now;
+      this.close = false;
+      this.aim = null;
+      this.snap = true;
+      this.shotLabel = "전체 맵";
+      this.labelFor = 0;
+      return { ...PRESETS.all };
     }
-    return { ...PRESETS.all };
+    if (frame && this.aim) {
+      // hold the frame; move only when someone in the fight is near the edge or the frame no longer fits
+      const c = this.cam;
+      this.shotLabel = this.fightLabel(frame);
+      if (Math.hypot(frame.x - c.x, frame.y - c.y) > c.size) {
+        // the focus moved to a fight somewhere else (the first one ended, or a far bigger one took over): that is
+        // a cut, not a pan, and it is said like any other teamfight the camera goes to
+        this.aim = this.fit(frame);
+        this.following = false;
+        this.snap = true;
+        this.announce(frame, now);
+        return frame;
+      }
+      const edge = c.size * 0.43;
+      const m = e.units.filter((u) => u.alive && u.fightId === this.focusId && Math.hypot(u.x - frame.x, u.y - frame.y) < frame.size);
+      const out = m.some((u) => Math.abs(u.x - c.x) > edge || Math.abs(u.y - c.y) > edge);
+      if (!this.following && (out || frame.size > c.size * 1.3 || frame.size < c.size * 0.5)) {
+        // one move to where the fight is now, a little roomier so the next one is not needed at once, then hold
+        // again (chasing the frame every step never came to rest)
+        this.following = true;
+        // (kept inside the map here, or "arrived" below would never come true at the map's edge)
+        this.aim = this.fit({ x: frame.x, y: frame.y, size: Math.min(5200, frame.size * 1.18) });
+      } else if (this.following && Math.hypot(this.aim.x - c.x, this.aim.y - c.y) < c.size * 0.03 && Math.abs(this.aim.size - c.size) < c.size * 0.05) {
+        this.following = false;
+      }
+    }
+    return this.aim ? { ...this.aim } : { ...this.cam };
+  }
+
+  /** The place is named once per fight: one that drifts along the river would otherwise flip the tag between "미드"
+   *  and "위쪽 강가". Its size may still grow into a 대규모 한타. */
+  private fightLabel(frame: Cam): string {
+    if (this.labelFor !== this.focusId) {
+      this.labelFor = this.focusId;
+      this.labelPlace = this.placeOf(frame.x, frame.y);
+    }
+    return `${this.labelPlace} ${this.focusSize >= 8 ? "대규모 한타" : "한타"}`;
+  }
+  private labelPlace = "";
+  private labelFor = 0;
+  /** the fight the opening line was last said for (one line per fight, however the frame moves) */
+  private saidFor = 0;
+
+  /** The line for the teamfight the camera goes to, unless one about this very spot has only just come up. */
+  private announce(frame: Cam, now: number) {
+    if (this.saidFor === this.focusId) return;
+    this.saidFor = this.focusId;
+    const cur = this.cap;
+    if (cur && cur.x !== undefined && now - cur.at < 2500 && Math.hypot(cur.x - frame.x, (cur.y ?? 0) - frame.y) < 1800) return;
+    const m = this.e.units.filter((u) => u.alive && u.fightId === this.focusId);
+    this.say(`${this.placeOf(frame.x, frame.y)}에서 ${this.headcount(m)} ${josa(this.focusSize >= 8 ? "대규모 한타" : "한타", "이가")} 열렸습니다`, 5, now, frame);
+  }
+
+  /** Keep a view inside the map so no black edges show. */
+  private fit(c: Cam): Cam {
+    const half = c.size / 2;
+    if (c.size >= MAP.maxX - MAP.minX) return c;
+    return { x: Math.max(MAP.minX + half, Math.min(MAP.maxX - half, c.x)), y: Math.max(MAP.minY + half, Math.min(MAP.maxY - half, c.y)), size: c.size };
   }
 
   private target(now: number): Cam {
     let c: Cam;
-    if (this.mode === "auto") c = this.director(now);
+    if (this.mode === "auto") c = this.autoCam(now);
     else {
-      // manual camera: no captions, and the director starts fresh when auto comes back
-      this.cut = null;
-      this.fallbackKey = "";
+      // manual camera: the auto camera starts fresh when it comes back
+      this.close = false;
+      this.aim = this.cue = null;
       if (this.mode === "jungle" || this.mode === "follow") {
         const u = this.e.units[this.followIdx] ?? this.e.units[1];
         c = { x: u.x, y: u.y, size: this.mode === "jungle" ? 6200 : 5200 };
       } else c = { ...PRESETS[this.mode] };
     }
-    // keep the view inside the map so no black edges show
-    const half = c.size / 2;
-    if (c.size < MAP.maxX - MAP.minX) {
-      c.x = Math.max(MAP.minX + half, Math.min(MAP.maxX - half, c.x));
-      c.y = Math.max(MAP.minY + half, Math.min(MAP.maxY - half, c.y));
+    return this.fit(c);
+  }
+
+  // ---------- the line under the board ----------
+  /**
+   * Queue one line of commentary. Only one shows at a time, for at least CAPTION_MIN: before this a new sentence came
+   * up every 2.1 s and three in four were replaced inside 2 s, which nobody can read. A line that matters far more
+   * (a teamfight opening, its result) may cut in; a line that has waited too long is dropped rather than shown late.
+   */
+  say(text: string, prio: number, now: number, at?: Vec) {
+    const c: Caption = { text, prio, at: now, born: now, x: at?.x, y: at?.y };
+    const cur = this.cap;
+    if (!cur || now - cur.at >= CAPTION_MIN || prio >= cur.prio + 2) {
+      this.cap = c;
+      this.capNext = null;
+    } else if (!this.capNext || prio >= this.capNext.prio) this.capNext = c;
+  }
+
+  /** The line to show now, or null. */
+  caption(now: number): CutCaption | null {
+    const next = this.capNext;
+    // a waiting line is dropped once it is stale; the limit has to be longer than CAPTION_MIN, or a line queued in the
+    // first half second of the current one could never come up
+    if (next && now - next.born > (next.prio >= 5 ? 5000 : CAPTION_MIN + 400)) this.capNext = null;
+    else if (next && (!this.cap || now - this.cap.at >= CAPTION_MIN)) {
+      this.cap = { ...next, at: now };
+      this.capNext = null;
     }
-    return c;
+    return this.cap && now - this.cap.at <= CAPTION_MS ? this.cap : null;
+  }
+
+  /** The result of the teamfight the camera just left (pacing.ts FightResult). */
+  sayResult(r: { kills: [number, number]; taken: { side: 0 | 1; text: string }[]; x: number; y: number }, now: number) {
+    const n = this.e.names;
+    const took = r.taken.map((t) => `${n[t.side]} ${t.text}`).join(", ");
+    const text = r.kills[0] + r.kills[1] === 0
+      // (the place as the tag named this fight, so "바론 둥지 한타" does not end as "위쪽 강가 한타")
+      ? took ? `한타 결과: ${took}` : `${this.labelFor ? this.labelPlace : this.placeOf(r.x, r.y)} 한타는 킬 없이 끝났습니다`
+      : `한타 결과: ${n[0]} ${r.kills[0]}킬, ${n[1]} ${r.kills[1]}킬${took ? ` · ${took}` : ""}`;
+    this.say(text, 7, now, r);
+  }
+
+  /**
+   * New scenes on the map become captions (once each): fights, ganks, objective set-ups, sieges. "About to clash" and
+   * replays of what just happened are left out: the first may never happen, the second is what the banners are for.
+   */
+  private scenes(now: number) {
+    const e = this.e;
+    if (e.t === this.sceneT) return;
+    this.sceneT = e.t;
+    for (const s of this.shots()) {
+      const kind = s.id[0];
+      if (kind === "c" || kind === "e" || s.score < 10) continue;
+      const seen = this.sceneSeen.has(s.id);
+      this.sceneSeen.set(s.id, e.t);
+      if (seen) continue;
+      // the teamfight the camera is in gets its own line (autoCam); while it is there only big news from elsewhere counts
+      if (s.id === `f${this.focusId}`) continue;
+      const prio = kind === "o" ? (s.label.endsWith("대치") ? 4 : 3) : kind === "f" ? (s.score >= 28 ? 3 : s.score >= 20 ? 2 : 1) : 2;
+      if (this.close && prio < 4) continue;
+      // the same spot again inside a few seconds (a gank on the way, then the gank): the first line is enough
+      const cur = this.cap;
+      if (cur && cur.x !== undefined && now - cur.at < 4000 && Math.hypot(cur.x - s.x, (cur.y ?? 0) - s.y) < 1800 && prio <= cur.prio) continue;
+      this.say(s.reason, prio, now, s);
+    }
+    for (const [id, t] of this.sceneSeen) if (e.t - t > 10) this.sceneSeen.delete(id);
   }
 
   // world -> buffer px
@@ -487,7 +627,11 @@ export class MatchRenderer {
       this.live.push(...made);
       // ultimates: gold sparks off the caster and a small jolt
       if (made[0].key === "R" && !made[0].pve && made[0].kind !== "hit") { this.burst(f.x, f.y, "#ffd36b", 10, now); this.shake = Math.max(this.shake, 2); }
-      if (f.kind === "kill") this.burst(f.x, f.y, f.color, 14, now);
+      if (f.kind === "kill") {
+        this.burst(f.x, f.y, f.color, 14, now);
+        const v = f.to !== undefined ? this.e.units[f.to] : undefined;
+        if (v) this.deaths.push({ x: f.x, y: f.y, side: v.side, champ: v.champ.id, born: now });
+      }
       if (f.kind === "blink") { this.burst(f.x, f.y, "#fff3a0", 8, now); this.burst(f.tx, f.ty, "#fff3a0", 8, now); }
       if (f.kind === "heal") this.burst(f.tx, f.ty, "#7dff8a", 6, now, -1);
       if (f.kind === "smite") { this.burst(f.x, f.y, "#ffe28a", 18, now); this.shake = 6; }
@@ -512,16 +656,23 @@ export class MatchRenderer {
 
   draw(now: number) {
     this.ingest(now);
+    const dt = Math.max(0, Math.min(100, now - this.drawnAt));
+    this.drawnAt = now;
     const tgt = this.target(now);
+    // the scale changed in one frame (a cut): icon offsets go straight to their new values instead of easing
+    let jumped = false;
     if (this.mode === "auto") {
-      // broadcast camera: cut, never pan. Inside one shot it stays put and re-frames (also a cut) only when the
-      // action drifts out of the middle or no longer fits.
-      const drift = Math.hypot(tgt.x - this.cam.x, tgt.y - this.cam.y);
-      const off = drift > this.cam.size * 0.3 || tgt.size > this.cam.size * 1.45 || tgt.size < this.cam.size * 0.6;
-      // re-frame at most every 1.5 s, unless the action is leaving the screen
-      if (this.snap || (off && now - this.reframedAt > 1500) || drift > this.cam.size * 0.45) {
-        if (!this.snap) this.reframedAt = now;
+      this.scenes(now);
+      // going in and coming out are cuts (a pan across the map at speed was what made the view hard to watch);
+      // inside the close-up the camera follows at the pace of the fight, which now runs in real time
+      if (this.snap || !this.close) {
+        jumped = Math.abs(tgt.size - this.cam.size) > this.cam.size * 0.05;
         this.cam = { ...tgt };
+      } else {
+        const k = 1 - Math.exp(-dt / 420);
+        this.cam.x += (tgt.x - this.cam.x) * k;
+        this.cam.y += (tgt.y - this.cam.y) * k;
+        this.cam.size += (tgt.size - this.cam.size) * k;
       }
       this.snap = false;
     } else {
@@ -541,25 +692,246 @@ export class MatchRenderer {
     }
     c.fillStyle = "#05070d";
     c.fillRect(0, 0, RES, RES);
+    this.layout(jumped);
     this.drawMap();
     this.drawLanes(now);
     this.drawStructures();
     this.drawCamps();
     this.drawObjectives(now);
+    this.drawDeaths(now);
     this.skills.under(this.e, this.live, now);
+    this.drawWork(now);
     this.drawUnits(now);
     this.skills.over(this.e, this.live, now);
     this.drawParticles(now);
     this.skills.drawTags(this.e, now);
+    this.drawMarks(now);
     c.restore();
-    if (this.cam.size < 12000) this.drawInset();
+    if (this.cam.size < 12000) this.drawInset(now);
     this.live = this.live.filter((f) => now - f.born < f.life);
+    this.deaths = this.deaths.filter((d) => now - d.born < DEATH_MS);
   }
 
-  /** Broadcast-style minimap in the corner while the camera is zoomed in. */
-  private drawInset() {
+  private iconSize() {
+    return this.cam.size < 9000 ? 22 : 15;
+  }
+
+  /** Where a unit is between two engine steps (see lerp), before icons are moved apart. */
+  private rawPos(u: Unit): Vec {
+    const p = this.stepFrom[u.i];
+    if (p && this.lerp < 1) {
+      const dx = u.x - p.x, dy = u.y - p.y;
+      // a dash, flash or respawn jumps: draw it where it landed rather than sliding across
+      if (dx * dx + dy * dy < 400 * 400) return { x: p.x + dx * this.lerp, y: p.y + dy * this.lerp };
+    }
+    return { x: u.x, y: u.y };
+  }
+
+  /**
+   * Move icons apart where they would cover each other. An icon is a fixed 15 or 22 px, which is 110 to 440 map units
+   * depending on the zoom, while champions in a fight stand 70 to 170 apart: in a teamfight 44 % of the icons had
+   * another one on top (scripts/view-diag.ts). Only where things are drawn changes, by less than one icon.
+   */
+  private layout(jumped: boolean) {
+    const us = this.e.units;
+    const px = this.cam.size / RES;
+    const need = this.iconSize() * 0.96 * px, max = this.iconSize() * 0.9 * px;
+    const p = us.map((u) => (u.alive ? this.rawPos(u) : null));
+    const off = us.map(() => ({ x: 0, y: 0 }));
+    for (let it = 0; it < 6; it++) {
+      for (let i = 0; i < us.length; i++) {
+        const a = p[i];
+        if (!a) continue;
+        for (let j = i + 1; j < us.length; j++) {
+          const b = p[j];
+          if (!b) continue;
+          let dx = b.x + off[j].x - a.x - off[i].x, dy = b.y + off[j].y - a.y - off[i].y;
+          let d = Math.hypot(dx, dy);
+          if (d >= need) continue;
+          if (d < 1) {
+            // the same spot (the fountain after a recall): a fixed direction per pair, so the icons do not flicker
+            const ang = (i * 7 + j * 3) * 0.7;
+            dx = Math.cos(ang);
+            dy = Math.sin(ang);
+            d = 1;
+          }
+          const push = ((need - d) / 2) * 0.85;
+          off[i].x -= (dx / d) * push; off[i].y -= (dy / d) * push;
+          off[j].x += (dx / d) * push; off[j].y += (dy / d) * push;
+        }
+      }
+    }
+    us.forEach((u, i) => {
+      const o = off[i];
+      const l = Math.hypot(o.x, o.y);
+      if (l > max) { o.x *= max / l; o.y *= max / l; }
+      const s = this.spread[i];
+      // eased, so an icon slides aside instead of popping; straight to the new place after a cut
+      this.spread[i] = !s || jumped || !u.alive ? o : { x: s.x + (o.x - s.x) * 0.3, y: s.y + (o.y - s.y) * 0.3 };
+    });
+  }
+
+  /** A grey marker where a champion just fell, with a cross in the killer's colour. */
+  private drawDeaths(now: number) {
     const c = this.ctx;
-    const S = 104, X = RES - S - 6, Y = 6;
+    const size = this.cam.size < 9000 ? 16 : 11;
+    for (const d of this.deaths) {
+      const age = (now - d.born) / DEATH_MS;
+      const x = Math.round(this.sx(d.x)), y = Math.round(this.sy(d.y));
+      if (x < -20 || y < -20 || x > RES + 20 || y > RES + 20) continue;
+      c.globalAlpha = age < 0.7 ? 0.9 : 0.9 * (1 - (age - 0.7) / 0.3);
+      c.fillStyle = "#05070d";
+      c.fillRect(x - size / 2 - 1, y - size / 2 - 1, size + 2, size + 2);
+      const img = imgCache.get(d.champ);
+      if (img?.complete && img.naturalWidth) c.drawImage(img, x - size / 2, y - size / 2, size, size);
+      c.fillStyle = "rgba(20,22,30,0.72)";
+      c.fillRect(x - size / 2, y - size / 2, size, size);
+      c.strokeStyle = d.side ? BLUE : RED;
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(x - size / 2 + 2, y - size / 2 + 2); c.lineTo(x + size / 2 - 2, y + size / 2 - 2);
+      c.moveTo(x + size / 2 - 2, y - size / 2 + 2); c.lineTo(x - size / 2 + 2, y + size / 2 - 2);
+      c.stroke();
+    }
+    c.globalAlpha = 1;
+  }
+
+  /** What a champion outside a fight is working on, if anything: a turret, an objective, a jungle camp or the wave. */
+  private workTarget(u: Unit): Vec | null {
+    const e = this.e;
+    if (u.fightId || u.recallEnd !== undefined || u.task === "recall" || e.t < u.stunUntil) return null;
+    const within = (p: Vec, r: number) => Math.hypot(p.x - u.x, p.y - u.y) < r;
+    for (const t of e.turrets) {
+      if (!t.alive || t.side === u.side || t.hp >= t.maxHp || !within(t.pos, 760)) continue;
+      // same rule as the engine (lanesTick): in the laning phase a defended turret takes no champion damage
+      if (e.laningPhase() && e.units.some((d) => d.alive && d.side === t.side && Math.hypot(d.x - t.pos.x, d.y - t.pos.y) < 1300)) continue;
+      return t.pos;
+    }
+    for (const ih of e.inhibs) if (ih.alive && ih.side !== u.side && ih.hp < 3000 && within(ih.pos, 700)) return ih.pos;
+    if (e.nexus[1 - u.side] < 4000 && within(NEXUS[1 - u.side], 900)) return NEXUS[1 - u.side];
+    for (const o of Object.values(e.obj)) if (o.alive && o.hp < o.maxHp && Math.hypot(o.pos.x - u.x, o.pos.y - u.y) < 660) return o.pos;
+    for (const cp of e.camps) if (cp.alive && cp.hp < cp.maxHp && Math.hypot(cp.pos.x - u.x, cp.pos.y - u.y) < 320) return cp.pos;
+    if (e.t < 60 || u.role === "Support") return null;
+    for (const lane of LANES) {
+      const f = e.lanes[lane].front;
+      const p = lanePoint(lane, f + (u.side === 0 ? 0.01 : -0.01));
+      if (Math.hypot(p.x - u.x, p.y - u.y) < 1050) return p;
+    }
+    return null;
+  }
+
+  /**
+   * Champions outside a fight visibly do their work: a shot or a swing at the wave, the camp, the turret. The engine
+   * only moves numbers for these (CS, camp and turret health), so a laner stood frozen for half of the laning phase
+   * and turrets lost health with nothing to see. Drawing only: timed off the wall clock, no effect on the game.
+   */
+  private drawWork(now: number) {
+    this.lunge = [];
+    if (!this.animate) return;
+    const c = this.ctx;
+    const wide = this.cam.size >= 9000;
+    for (const u of this.e.units) {
+      if (!u.alive) continue;
+      const tg = this.workTarget(u);
+      if (!tg) continue;
+      const period = 760 + ((u.i * 137) % 360);
+      const ph = ((now + u.i * 311) % period) / period;
+      if (ph > 0.26) continue;
+      const k = ph / 0.26; // 0..1 through one attack
+      const from = this.rawPos(u);
+      const dx = tg.x - from.x, dy = tg.y - from.y, d = Math.hypot(dx, dy) || 1;
+      if (u.champ.ranged) {
+        // a shot travelling to the target
+        const x = this.sx(from.x + dx * k), y = this.sy(from.y + dy * k);
+        const x2 = this.sx(from.x + dx * Math.max(0, k - 0.3)), y2 = this.sy(from.y + dy * Math.max(0, k - 0.3));
+        const col = u.side ? "#ffd0d0" : "#cfe6ff";
+        c.strokeStyle = col;
+        c.lineWidth = 1;
+        c.globalAlpha = 0.7;
+        c.beginPath();
+        c.moveTo(x2, y2);
+        c.lineTo(x, y);
+        c.stroke();
+        c.globalAlpha = 1;
+        // the head of the shot, and a small flash where it lands
+        const h = wide ? 2 : 3;
+        c.fillStyle = "#05070d";
+        c.fillRect(Math.round(x - h / 2) - 1, Math.round(y - h / 2) - 1, h + 2, h + 2);
+        c.fillStyle = col;
+        c.fillRect(Math.round(x - h / 2), Math.round(y - h / 2), h, h);
+        if (k > 0.85) {
+          c.fillStyle = "#ffffff";
+          c.fillRect(Math.round(this.sx(tg.x)) - 1, Math.round(this.sy(tg.y)) - 1, 3, 3);
+        }
+      } else {
+        // a step in and a swing
+        const reach = Math.min(d * 0.45, wide ? 220 : 150) * Math.sin(k * Math.PI);
+        this.lunge[u.i] = { x: (dx / d) * reach, y: (dy / d) * reach };
+        if (k > 0.35 && k < 0.8) {
+          const r = this.iconSize() * 0.75;
+          const ax = this.sx(from.x + (dx / d) * reach), ay = this.sy(from.y + (dy / d) * reach);
+          const ang = Math.atan2(-(dy / d), dx / d);
+          c.strokeStyle = "#f2f4fa";
+          c.lineWidth = wide ? 1 : 2;
+          c.beginPath();
+          c.arc(ax, ay, r, ang - 0.7 + (k - 0.35) * 2, ang + 0.2 + (k - 0.35) * 2);
+          c.stroke();
+        }
+      }
+    }
+  }
+  /** melee champions step toward what they are hitting (drawWork) */
+  private lunge: Vec[] = [];
+
+  /**
+   * Marks over the map: where the fights are while the whole map is shown, the spot the camera is about to go in on,
+   * and the one it just left.
+   */
+  private drawMarks(now: number) {
+    const c = this.ctx;
+    const box = (cam: Cam, alpha: number, grow = 0) => {
+      const x = this.sx(cam.x - cam.size / 2) - grow, y = this.sy(cam.y + cam.size / 2) - grow, w = this.len(cam.size) + grow * 2;
+      const corner = Math.max(6, w * 0.22);
+      c.globalAlpha = alpha;
+      c.strokeStyle = "#ffd36b";
+      c.lineWidth = 2;
+      c.beginPath();
+      for (const [px, py, hx, hy] of [[x, y, 1, 1], [x + w, y, -1, 1], [x, y + w, 1, -1], [x + w, y + w, -1, -1]] as const) {
+        c.moveTo(px + hx * corner, py);
+        c.lineTo(px, py);
+        c.lineTo(px, py + hy * corner);
+      }
+      c.stroke();
+      c.globalAlpha = 1;
+    };
+    if (this.cam.size >= 12000) {
+      // every fight, small ones too: the camera does not go to them any more, so the map has to point at them
+      for (const [id, f] of this.e.fights) {
+        let n = 0, sides = 0;
+        for (const u of this.e.units) if (u.alive && u.fightId === id) { n++; sides |= 1 << u.side; }
+        if (sides !== 3) continue;
+        const r = Math.max(11, this.len(520 + n * 130)) + Math.sin(now / 140) * 1.5;
+        c.strokeStyle = n >= 4 ? "#ffd36b" : "#f2f4fa";
+        c.lineWidth = n >= 4 ? 2 : 1;
+        c.globalAlpha = 0.85;
+        c.beginPath();
+        c.arc(this.sx(f.x), this.sy(f.y), r, 0, Math.PI * 2);
+        c.stroke();
+        c.globalAlpha = 1;
+      }
+      if (this.cue) box(this.cue, 0.6 + Math.sin(now / 45) * 0.4);
+      if (this.left) {
+        const age = (now - this.left.at) / 600;
+        if (age >= 1) this.left = null;
+        else box(this.left.cam, 0.8 * (1 - age), age * 6);
+      }
+    }
+  }
+
+  /** Broadcast-style minimap in the corner while the camera is zoomed in, with what is going on elsewhere. */
+  private drawInset(now: number) {
+    const c = this.ctx;
+    const S = 128, X = RES - S - 6, Y = 6;
     const W = MAP.maxX - MAP.minX, H = MAP.maxY - MAP.minY;
     const mx = (x: number) => X + ((x - MAP.minX) / W) * S;
     const my = (y: number) => Y + (1 - (y - MAP.minY) / H) * S;
@@ -579,6 +951,26 @@ export class MatchRenderer {
       c.fillRect(Math.round(mx(u.x)) - 2, Math.round(my(u.y)) - 2, 5, 5);
       c.fillStyle = u.side ? RED : BLUE;
       c.fillRect(Math.round(mx(u.x)) - 1, Math.round(my(u.y)) - 1, 3, 3);
+    }
+    // fights and deaths anywhere on the map, so what happens off screen is not missed
+    for (const [id, f] of this.e.fights) {
+      let sides = 0;
+      for (const u of this.e.units) if (u.alive && u.fightId === id) sides |= 1 << u.side;
+      if (sides !== 3) continue;
+      c.strokeStyle = "#ffd36b";
+      c.lineWidth = 1;
+      c.beginPath();
+      c.arc(mx(f.x), my(f.y), 5 + Math.sin(now / 140), 0, Math.PI * 2);
+      c.stroke();
+    }
+    for (const d of this.deaths) {
+      const x = Math.round(mx(d.x)), y = Math.round(my(d.y));
+      c.strokeStyle = d.side ? BLUE : RED;
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(x - 3, y - 3); c.lineTo(x + 3, y + 3);
+      c.moveTo(x + 3, y - 3); c.lineTo(x - 3, y + 3);
+      c.stroke();
     }
     // the current view
     const x0 = mx(this.cam.x - this.cam.size / 2), y0 = my(this.cam.y + this.cam.size / 2);
@@ -806,16 +1198,11 @@ export class MatchRenderer {
 
   /** Where to draw a unit: between engine steps (see lerp), plus the knock-up bob unless `bob` is off. */
   unitPos(u: Unit, now: number, bob = true): Vec {
-    let x = u.x, y = u.y;
-    const p = this.stepFrom[u.i];
-    if (p && this.lerp < 1) {
-      const dx = u.x - p.x, dy = u.y - p.y;
-      // a dash, flash or respawn jumps: draw it where it landed rather than sliding across
-      if (dx * dx + dy * dy < 400 * 400) {
-        x = p.x + dx * this.lerp;
-        y = p.y + dy * this.lerp;
-      }
-    }
+    let { x, y } = this.rawPos(u);
+    // icons moved apart (layout) and the step of a melee attack on the wave or a turret (drawWork)
+    const sp = this.spread[u.i], lg = this.lunge[u.i];
+    if (sp) { x += sp.x; y += sp.y; }
+    if (lg) { x += lg.x; y += lg.y; }
     let up = 0;
     if (bob) {
       for (const f of this.live) {
@@ -841,13 +1228,16 @@ export class MatchRenderer {
       for (const f of this.live) if (f.kind === "stealth" && f.from === u.i) alpha = 0.35;
       c.globalAlpha = alpha;
       const ring = u.side ? RED : BLUE;
-      // team ring
+      // team ring (dark edge first, so two icons side by side stay two icons)
+      const rw = zoomed ? 2 : 1;
+      c.fillStyle = "#05070d";
+      c.fillRect(x - size / 2 - rw - 1, y - size / 2 - rw - 1, size + rw * 2 + 2, size + rw * 2 + 2);
       c.fillStyle = ring;
-      c.fillRect(x - size / 2 - 1, y - size / 2 - 1, size + 2, size + 2);
+      c.fillRect(x - size / 2 - rw, y - size / 2 - rw, size + rw * 2, size + rw * 2);
       if (this.highlightSide === u.side) {
         c.strokeStyle = "#ffd36b";
         c.lineWidth = 1;
-        c.strokeRect(x - size / 2 - 2.5, y - size / 2 - 2.5, size + 5, size + 5);
+        c.strokeRect(x - size / 2 - rw - 1.5, y - size / 2 - rw - 1.5, size + rw * 2 + 3, size + rw * 2 + 3);
       }
       const img = imgCache.get(u.champ.id);
       if (img?.complete && img.naturalWidth) c.drawImage(img, x - size / 2, y - size / 2, size, size);
@@ -859,7 +1249,7 @@ export class MatchRenderer {
       if (u.shield > 5) {
         c.strokeStyle = "rgba(255,255,255,0.9)";
         c.lineWidth = 1;
-        c.strokeRect(x - size / 2 - 3.5, y - size / 2 - 3.5, size + 7, size + 7);
+        c.strokeRect(x - size / 2 - rw - 2.5, y - size / 2 - rw - 2.5, size + rw * 2 + 5, size + rw * 2 + 5);
       }
       // stun
       if (this.e.t < u.stunUntil) {
@@ -878,6 +1268,15 @@ export class MatchRenderer {
       if (u.baronUntil > this.e.t) {
         c.fillStyle = "#b06cff";
         c.fillRect(x + size / 2 - 2, y + size / 2 - 2, 4, 4);
+      }
+      // carrying the Rift Herald's eye: the charge comes when this team reaches an enemy turret (engine heraldTick)
+      if (this.e.heraldHeld?.taker === u.i) {
+        c.fillStyle = "#05070d";
+        c.fillRect(x + size / 2 - 3, y - size / 2 - 3, 7, 7);
+        c.fillStyle = "#9a7bff";
+        c.fillRect(x + size / 2 - 2, y - size / 2 - 2, 5, 5);
+        c.fillStyle = "#ffffff";
+        c.fillRect(x + size / 2, y - size / 2, 1, 1);
       }
       if (zoomed) {
         c.font = "8px Galmuri9, monospace";
