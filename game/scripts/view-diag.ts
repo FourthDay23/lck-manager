@@ -18,6 +18,7 @@ import { ROLES } from "../src/data/types";
 import { FOUNTAIN } from "../src/match/map";
 import * as Fight from "../src/match/fight";
 import { Pacer } from "../src/match/pacing";
+import * as Summoners from "../src/match/summoners";
 
 const noop = () => undefined;
 const ctx = new Proxy({}, { get: (_t, k) => (k === "measureText" ? () => ({ width: 10 }) : k === "createLinearGradient" || k === "createRadialGradient" ? () => ({ addColorStop: noop }) : noop), set: () => true });
@@ -99,6 +100,7 @@ for (let g = 0; g < N; g++) {
   const r = new MatchRenderer(canvas, e, data.ddVersion, null);
   const nm = (u: Unit) => `${u.side ? "R" : "B"}:${u.name}(${u.champ.name})`;
   const ctxOf = (u: Unit): string => {
+    if (Summoners.channel(e, u)) return "teleport-channel";
     if (u.task === "recall") return u.recallEnd !== undefined ? "recall-channel" : "recall-walk";
     if (u.fightId) return "fight";
     if (d2(u, FOUNTAIN[u.side]) < 1300) return "fountain";
@@ -107,7 +109,7 @@ for (let g = 0; g < N; g++) {
     if (e.turrets.some((t) => t.alive && t.side !== u.side && d2(u, t.pos) < 800)) return "at-enemy-turret";
     return u.task;
   };
-  const prev = e.units.map((u) => ({ x: u.x, y: u.y, alive: u.alive, dx: 0, dy: 0, d: 0, fid: u.fightId }));
+  const prev = e.units.map((u) => ({ x: u.x, y: u.y, alive: u.alive, dx: 0, dy: 0, d: 0, fid: u.fightId, tp: false }));
   const idle = e.units.map(() => ({ len: 0, ctx: "", at: 0 }));
   const wnd = e.units.map((u) => ({ n: 0, L: 0, x: u.x, y: u.y, ok: true }));
   const pair = new Map<string, { len: number; at: number; tasks: string }>();
@@ -144,7 +146,8 @@ for (let g = 0; g < N; g++) {
         const c = ctxOf(u);
         add(aliveT, c, DT);
         const vmax = e.speed(u) * DT;
-        const home = d2(u, FOUNTAIN[u.side]) < 200 && dd > 800; // recall landing (each unit has its own spot near the fountain)
+        // recall landing (each unit has its own spot near the fountain), or a Teleport that was being channelled
+        const home = (d2(u, FOUNTAIN[u.side]) < 200 && dd > 800) || p.tp;
         if (dd > vmax * 1.5 + 40 && !home) {
           const k = p.fid || u.fightId ? "in a fight (dash/blink/flash/hook)" : "outside any fight";
           add(jumps, k);
@@ -178,7 +181,7 @@ for (let g = 0; g < N; g++) {
       }
       if (p.fid && !u.fightId && u.alive) liveFights.get(p.fid)?.left.add(i);
       if (u.fightId && u.fightId !== p.fid && liveFights.get(u.fightId)?.left.has(i)) rejoin++;
-      p.x = u.x; p.y = u.y; p.alive = u.alive; p.fid = u.fightId;
+      p.x = u.x; p.y = u.y; p.alive = u.alive; p.fid = u.fightId; p.tp = !!Summoners.channel(e, u);
     });
     // enemies next to each other with no fight
     const free = e.units.filter((u) => u.alive && u.task !== "recall" && u.recallEnd === undefined);

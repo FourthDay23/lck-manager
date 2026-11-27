@@ -1224,6 +1224,9 @@ function positionAct(e: Engine, M: Mod, u: Unit, info: FInfo, foes: Unit[], alli
   if (target && dist(u, target) <= us.range + 30) basicAttack(e, M, u, target, info, 1);
 }
 
+/** how far outside its engage spell's reach an engager may be to flash in (Flash covers 420) */
+const FLASH_ENGAGE_GAP = 380;
+
 function engagerAct(e: Engine, M: Mod, u: Unit, info: FInfo, foes: Unit[], allies: Unit[], geo: Geo, plan: EngagePlan) {
   const us = M.u[u.i];
   const aim = e.units[plan.aim];
@@ -1231,8 +1234,17 @@ function engagerAct(e: Engine, M: Mod, u: Unit, info: FInfo, foes: Unit[], allie
   if (!aim.alive || !sk || e.t < u.cds[plan.k]) return brawlAct(e, M, u, info, foes, allies, geo, aim);
   const reach = reachOf(us, sk);
   if (dist(u, aim) > reach) {
-    moveTo(e, M, u, aim);
-    return;
+    // a Flash away from an engage that catches two or more: flash in and cast (one target is not worth the spell;
+    // Flash was only ever used to run away)
+    const gap = dist(u, aim) - reach;
+    // (not while grounded: no blinks then)
+    if (!(plan.count >= 2 && gap <= FLASH_ENGAGE_GAP && hpF(u) > 0.45 && e.t >= us.groundUntil && e.flashToward(u, aim, "engage", Math.max(0, reach - 40)))) {
+      moveTo(e, M, u, aim);
+      return;
+    }
+    M.stats.flashes++;
+    us.pathTo = null;
+    log(e, M, `  ⚡ ${nm(u)} flashes in to engage on ${nm(aim)}`);
   }
   const c: Choice = { k: plan.k, aim, ally: null, score: 9, why: "engage" };
   if (!cast(e, M, u, info, c, foes, allies, geo)) {

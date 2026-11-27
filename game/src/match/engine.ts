@@ -22,6 +22,8 @@ import * as Fight from "./fight";
 import * as Items from "./items";
 import type { SideLoadout } from "./items";
 import * as Stats from "./stats";
+import * as Summoners from "./summoners";
+import type { SummonerName } from "./summoners.gen";
 import type { Strategy } from "./strategy";
 import { defaultStrategy } from "./strategy";
 
@@ -222,7 +224,7 @@ export interface LaneState { id: LaneId; front: number }
 export interface Fx {
   t: number;
   id: number;
-  kind: VfxKind | "aa" | "kill" | "tower" | "recall" | "smite" | "objhit" | "level" | "hit";
+  kind: VfxKind | "aa" | "kill" | "tower" | "recall" | "smite" | "objhit" | "level" | "hit" | "sum";
   side: SideN;
   /** skills: caster position (dash/blink: landing point); hit: victim position */
   x: number; y: number;
@@ -244,6 +246,9 @@ export interface Fx {
   miss?: boolean;
   /** lingering zones/walls: engine time t when it ends */
   until?: number;
+  /** a summoner spell was used (summoners.ts spend): kind "sum" is its own effect, from the caster to tx,ty / `to`;
+   *  on other kinds (the Flash blink, the objective smite) it only names the spell for the icon over the caster */
+  sum?: SummonerName;
 }
 
 export type EvType =
@@ -546,7 +551,7 @@ export class Engine {
   }
   speed(u: Unit) {
     const base = u.champ.moveSpeed || 340;
-    return (base + 30 + Math.min(60, u.gold / 300)) * (u.baronUntil > this.t ? 1.05 : 1);
+    return (base + 30 + Math.min(60, u.gold / 300)) * (u.baronUntil > this.t ? 1.05 : 1) * Summoners.speedMul(this, u);
   }
   moveStep(u: Unit, dt: number) {
     if (this.t < u.stunUntil) return;
@@ -790,6 +795,8 @@ export class Engine {
 
   unitTick(u: Unit) {
     if (!u.alive) return;
+    // Teleport: channelling, landing, or walking from the landing spot to the fight it came for (summoners.ts)
+    if (Summoners.teleportTick(this, u)) return;
     // recall channel
     if (u.task === "recall") {
       if (u.recallEnd !== undefined) {
@@ -1203,24 +1210,32 @@ export class Engine {
 
   /** Flash out of a lost fight once every 5 minutes. */
   tryFlash(u: Unit): boolean {
-    const ext = u as Unit & { flashAt?: number };
-    if ((ext.flashAt ?? 0) > this.t) return false;
-    ext.flashAt = this.t + 300;
-    const home = this.nearestOwnTurret(u)!;
-    const ang = Math.atan2(home.y - u.y, home.x - u.x);
+    return this.flashToward(u, this.nearestOwnTurret(u)!, "escape");
+  }
+  /**
+   * Flash: up to 420 u toward `p`, stopping `stop` short of it (an engage lands just inside its spell's reach).
+   * False when the champion has no Flash or it is on cooldown (summoners.ts keeps the 300 s; it was a private timer
+   * here, and every champion had the spell whether it took it or not).
+   */
+  flashToward(u: Unit, p: Vec, why: "escape" | "engage", stop = 0): boolean {
+    if (!Summoners.isReady(this, u, "flash")) return false;
+    const len = Math.min(420, dist(u, p) - stop);
+    if (len < 60) return false;
+    Summoners.spend(this, u, "flash", { why, quiet: true });
+    const ang = Math.atan2(p.y - u.y, p.x - u.x);
     const from = { x: u.x, y: u.y };
     if (ENGINE_FLAGS.nav) {
-      const p = Nav.blinkLanding(from, { x: from.x + Math.cos(ang) * 420, y: from.y + Math.sin(ang) * 420 }, 420, true);
-      u.x = p.x;
-      u.y = p.y;
+      const q = Nav.blinkLanding(from, { x: from.x + Math.cos(ang) * len, y: from.y + Math.sin(ang) * len }, len, true);
+      u.x = q.x;
+      u.y = q.y;
       u.path = [];
       u.goal = null;
     } else {
-      u.x += Math.cos(ang) * 420;
-      u.y += Math.sin(ang) * 420;
+      u.x += Math.cos(ang) * len;
+      u.y += Math.sin(ang) * len;
     }
     // blink: x,y = landing point, tx,ty = start (vfx.ts contract)
-    this.fx_({ kind: "blink", side: u.side, x: u.x, y: u.y, tx: from.x, ty: from.y, color: "#fff3a0", r: 120, w: 0, from: u.i, text: "점멸" });
+    this.fx_({ kind: "blink", side: u.side, x: u.x, y: u.y, tx: from.x, ty: from.y, color: "#fff3a0", r: 120, w: 0, from: u.i, text: "점멸", sum: "flash" });
     return true;
   }
 
@@ -1715,7 +1730,10 @@ export class Engine {
           }
         }
         const taker = jg[side] ?? at.find((u) => u.side === side) ?? at[0];
-        this.fx_({ kind: "smite", side, x: o.pos.x, y: o.pos.y, tx: o.pos.x, ty: o.pos.y, color: "#ffe28a", r: 320, w: 0, from: taker.i });
+        // the jungler's Smite takes the last hit (anyone else's is just the last hit: no spell to show)
+        const smote = Summoners.has(taker, "smite");
+        if (smote) Summoners.spend(this, taker, "smite", { quiet: true });
+        this.fx_({ kind: "smite", side, x: o.pos.x, y: o.pos.y, tx: o.pos.x, ty: o.pos.y, color: "#ffe28a", r: 320, w: 0, from: taker.i, sum: smote ? "smite" : undefined });
         this.secure(k, side, taker, steal);
       }
     }

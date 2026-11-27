@@ -2,9 +2,11 @@
 import type { Engine, Fx, GameEvent, Unit } from "./engine";
 import { MAP, NEXUS, LANES, BARON_PIT, DRAGON_PIT, MIRROR_C, lanePoint, laneU } from "./map";
 import type { Vec } from "./map";
-import { champImg } from "../data/load";
+import { champImg, spellImg } from "../data/load";
 import { SkillFx } from "./vfx";
 import * as Macro from "./macro";
+import * as Summoners from "./summoners";
+import type { SummonerName } from "./summoners.gen";
 import type { LiveFx } from "./vfx";
 
 export const RES = 512;
@@ -20,6 +22,8 @@ export const CAPTION_MIN = 3000;
 export const CAPTION_MS = 4200;
 /** ms the whole map shows where the camera is about to go in */
 const CUE_MS = 350;
+/** ms a summoner spell's icon and mark stay on the map */
+const SUM_MS = 1500;
 /** ms a death marker stays on the map */
 const DEATH_MS = 2800;
 const LANE_KO: Record<string, string> = { top: "탑", mid: "미드", bot: "바텀" };
@@ -113,6 +117,8 @@ export class MatchRenderer {
   private sceneT = -1;
   /** champions that just died: a grey marker stays where they fell */
   private deaths: { x: number; y: number; side: 0 | 1; champ: string; born: number }[] = [];
+  /** summoner spells just used (Fx.sum): the icon over the caster and the spell's mark, see drawSums */
+  private sums: { name: SummonerName; from: number; to: number; x: number; y: number; tx: number; ty: number; born: number; arrive: boolean }[] = [];
   /** how far each icon is drawn from its unit so that icons do not cover each other (world units) */
   private spread: Vec[] = [];
   cam: Cam = { ...PRESETS.all };
@@ -158,6 +164,7 @@ export class MatchRenderer {
     this.sceneSeen.clear();
     this.sceneT = -1;
     this.deaths = [];
+    this.sums = [];
     this.spread = [];
     this.prevPos = null;
     this.upCache = null;
@@ -519,6 +526,175 @@ export class MatchRenderer {
     this.say(`${this.placeOf(frame.x, frame.y)}에서 ${this.headcount(m)} ${josa(this.focusSize >= 8 ? "대규모 한타" : "한타", "이가")} 열렸습니다`, 5, now, frame);
   }
 
+  // ---------- summoner spells ----------
+  private sumIcons = new Map<string, HTMLImageElement>();
+  private sumIcon(name: SummonerName): HTMLImageElement {
+    let img = this.sumIcons.get(name);
+    if (!img) {
+      img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = spellImg(this.version, Summoners.SUMMONER_ICON[name]);
+      this.sumIcons.set(name, img);
+    }
+    return img;
+  }
+
+  /** A summoner spell was used (Fx.sum): remember it for the icon over the caster and the spell's mark on the map. */
+  private sumUsed(f: Fx, now: number) {
+    if (!f.sum || f.from === undefined) return;
+    const arrive = f.kind === "sum" && f.sum === "teleport" && f.to === f.from;
+    // the start of a teleport needs no icon: the channel ring and the landing beacon are drawn from the engine
+    if (f.sum === "teleport" && !arrive) return;
+    // one icon per champion and spell at a time
+    this.sums = this.sums.filter((s) => s.from !== f.from || s.name !== f.sum);
+    this.sums.push({ name: f.sum, from: f.from, to: f.to ?? -1, x: f.x, y: f.y, tx: f.tx, ty: f.ty, born: now, arrive });
+    if (f.kind !== "sum") return; // the Flash blink and the objective smite already have their own effect
+    if (f.sum === "heal") {
+      this.burst(f.x, f.y, "#7dff8a", 8, now, -1);
+      if (f.to !== undefined && f.to !== f.from) this.burst(f.tx, f.ty, "#7dff8a", 8, now, -1);
+    } else if (f.sum === "ignite") this.burst(f.tx, f.ty, "#ff7a3c", 12, now);
+    else if (f.sum === "exhaust") this.burst(f.tx, f.ty, "#c9b27a", 8, now);
+    else if (f.sum === "barrier") this.burst(f.x, f.y, "#ffd36b", 10, now);
+    else if (f.sum === "cleanse") this.burst(f.x, f.y, "#bfefff", 10, now);
+    else if (f.sum === "ghost") this.burst(f.x, f.y, "#8fd0ff", 8, now);
+    else if (arrive) {
+      this.burst(f.x, f.y, "#b48cff", 16, now);
+      this.shake = Math.max(this.shake, 2);
+    }
+  }
+
+  /**
+   * Summoner spells on the map. A Teleport shows for its whole channel at both ends (read from the engine, so it is
+   * right at any playback speed): a ring on the champion and a beacon where it will land, which is what tells a
+   * viewer of the whole map that someone is coming. The other spells show their icon at the caster's corner for a
+   * moment and a mark on whoever they hit.
+   */
+  private drawSums(now: number) {
+    const c = this.ctx, e = this.e;
+    const size = this.iconSize();
+    const wide = this.cam.size >= 9000;
+    for (const u of e.units) {
+      if (!u.alive) continue;
+      const ch = Summoners.channel(e, u);
+      if (ch) {
+        const p = this.unitPos(u, now, false);
+        const x = Math.round(this.sx(p.x)), y = Math.round(this.sy(p.y));
+        // on the champion: a turning dashed ring and a column of light
+        c.strokeStyle = "#b48cff";
+        c.lineWidth = 2;
+        c.setLineDash([3, 3]);
+        c.lineDashOffset = -now / 60;
+        c.beginPath();
+        c.arc(x, y, size / 2 + 5, 0, Math.PI * 2);
+        c.stroke();
+        c.setLineDash([]);
+        c.globalAlpha = 0.45 + Math.sin(now / 90) * 0.25;
+        c.fillStyle = "#d9c4ff";
+        c.fillRect(x - 1, y - size / 2 - 16, 3, 12);
+        c.globalAlpha = 1;
+        // where it lands: a beacon that fills as the channel runs
+        const bx = Math.round(this.sx(ch.to.x)), by = Math.round(this.sy(ch.to.y));
+        const r = Math.max(wide ? 7 : 10, this.len(260)) + Math.sin(now / 120) * 1.5;
+        c.fillStyle = "rgba(180,140,255,0.22)";
+        c.beginPath();
+        c.arc(bx, by, r, 0, Math.PI * 2);
+        c.fill();
+        c.strokeStyle = "#05070d";
+        c.lineWidth = 4;
+        c.beginPath();
+        c.arc(bx, by, r, 0, Math.PI * 2);
+        c.stroke();
+        c.strokeStyle = "#b48cff";
+        c.lineWidth = 2;
+        c.beginPath();
+        c.arc(bx, by, r, 0, Math.PI * 2);
+        c.stroke();
+        c.strokeStyle = "#ffffff";
+        c.beginPath();
+        c.arc(bx, by, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ch.k);
+        c.stroke();
+        c.fillStyle = u.side ? RED : BLUE;
+        c.fillRect(bx - 2, by - 2, 5, 5);
+        const img = this.sumIcon("teleport");
+        const s = wide ? 9 : 12;
+        if (img.complete && img.naturalWidth) {
+          c.fillStyle = "#05070d";
+          c.fillRect(bx - s / 2 - 1, by - r - s - 3, s + 2, s + 2);
+          c.drawImage(img, bx - s / 2, by - r - s - 2, s, s);
+        }
+      }
+      if (Summoners.ghosting(e, u)) {
+        // Ghost: speed lines trailing behind
+        const p = this.unitPos(u, now, false);
+        const x = Math.round(this.sx(p.x)), y = Math.round(this.sy(p.y));
+        c.strokeStyle = "rgba(143,208,255,0.85)";
+        c.lineWidth = 1;
+        c.strokeRect(x - size / 2 - 3.5, y - size / 2 - 3.5, size + 7, size + 7);
+      }
+    }
+    this.sums = this.sums.filter((s) => now - s.born < SUM_MS);
+    const stack: Record<number, number> = {};
+    for (const s of this.sums) {
+      const k = (now - s.born) / SUM_MS;
+      const u = e.units[s.from];
+      const v = s.to >= 0 ? e.units[s.to] : undefined;
+      c.globalAlpha = k > 0.75 ? (1 - k) / 0.25 : 1;
+      // the mark on the target
+      if (v && v.alive && (s.name === "ignite" || s.name === "exhaust" || (s.name === "heal" && v !== u))) {
+        const p = this.unitPos(v, now, false);
+        const x = Math.round(this.sx(p.x)), y = Math.round(this.sy(p.y));
+        if (s.name === "ignite") {
+          // a flame licking over the icon
+          for (let i = 0; i < 4; i++) {
+            const fx = x - size / 2 + 2 + ((i * 7 + Math.floor(now / 90)) % Math.max(4, size - 2));
+            const fh = 3 + ((i * 5 + Math.floor(now / 70)) % 4);
+            c.fillStyle = i % 2 ? "#ffd36b" : "#ff7a3c";
+            c.fillRect(fx, y - size / 2 - fh, 2, fh);
+          }
+        } else if (s.name === "exhaust") {
+          c.strokeStyle = "#c9b27a";
+          c.lineWidth = 2;
+          c.beginPath();
+          c.arc(x, y, size / 2 + 6 - k * 4, 0, Math.PI * 2);
+          c.stroke();
+        } else {
+          c.fillStyle = "#7dff8a";
+          c.fillRect(x - 1, y - size / 2 - 9 - k * 6, 3, 7);
+          c.fillRect(x - 3, y - size / 2 - 7 - k * 6, 7, 3);
+        }
+      }
+      if (!u || !u.alive) continue;
+      const p = this.unitPos(u, now, false);
+      const x = Math.round(this.sx(p.x)), y = Math.round(this.sy(p.y));
+      if (s.name === "barrier" || s.name === "cleanse" || s.name === "ghost" || s.arrive || (s.name === "heal")) {
+        // a ring around the caster: golden shield, a cleansing burst, the landing
+        c.strokeStyle = s.name === "barrier" ? "#ffd36b" : s.name === "cleanse" ? "#bfefff" : s.name === "ghost" ? "#8fd0ff" : s.name === "heal" ? "#7dff8a" : "#b48cff";
+        c.lineWidth = 2;
+        c.beginPath();
+        c.arc(x, y, s.arrive ? size / 2 + 14 - k * 10 : size / 2 + 3 + k * 8, 0, Math.PI * 2);
+        c.stroke();
+      }
+      // the spell's icon at the caster's upper right corner (skill chips sit centred above, so the two do not cover
+      // each other)
+      const img = this.sumIcon(s.name);
+      const is = wide ? 10 : 13;
+      // two spells at once (Flash and Heal in the same breath): the second icon goes above the first
+      const nth = stack[s.from] ?? 0;
+      stack[s.from] = nth + 1;
+      const ix = x + Math.round(size / 2) - 3, iy = y - Math.round(size / 2) - is + 3 - Math.round(Math.min(1, k * 8) * 2) - nth * (is + 3);
+      c.fillStyle = "#05070d";
+      c.fillRect(ix - 2, iy - 2, is + 4, is + 4);
+      c.fillStyle = "#ffd36b";
+      c.fillRect(ix - 1, iy - 1, is + 2, is + 2);
+      if (img.complete && img.naturalWidth) c.drawImage(img, ix, iy, is, is);
+      else {
+        c.fillStyle = "#3a4366";
+        c.fillRect(ix, iy, is, is);
+      }
+    }
+    c.globalAlpha = 1;
+  }
+
   /** Keep a view inside the map so no black edges show. */
   private fit(c: Cam): Cam {
     const half = c.size / 2;
@@ -623,6 +799,9 @@ export class MatchRenderer {
     for (let i = 0; i < fx.length; i++) {
       const f = fx[i];
       if (f.id <= this.fxSeen) continue;
+      // summoner spells: the icon over the caster, and for kind "sum" the spell's own mark instead of a skill shape
+      if (f.sum) this.sumUsed(f, now);
+      if (f.kind === "sum") continue;
       const made = this.skills.ingest(f, now, this.live, this.e);
       this.live.push(...made);
       // ultimates: gold sparks off the caster and a small jolt
@@ -705,6 +884,7 @@ export class MatchRenderer {
     this.skills.over(this.e, this.live, now);
     this.drawParticles(now);
     this.skills.drawTags(this.e, now);
+    this.drawSums(now);
     this.drawMarks(now);
     c.restore();
     if (this.cam.size < 12000) this.drawInset(now);
@@ -970,6 +1150,16 @@ export class MatchRenderer {
       c.beginPath();
       c.moveTo(x - 3, y - 3); c.lineTo(x + 3, y + 3);
       c.moveTo(x + 3, y - 3); c.lineTo(x - 3, y + 3);
+      c.stroke();
+    }
+    // teleports on the way: where each will land
+    for (const u of this.e.units) {
+      const ch = u.alive ? Summoners.channel(this.e, u) : null;
+      if (!ch) continue;
+      c.strokeStyle = "#b48cff";
+      c.lineWidth = 1;
+      c.beginPath();
+      c.arc(mx(ch.to.x), my(ch.to.y), 4 + Math.sin(now / 120), 0, Math.PI * 2);
       c.stroke();
     }
     // the current view

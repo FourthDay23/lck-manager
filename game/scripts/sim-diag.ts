@@ -8,6 +8,7 @@ import { assembleData } from "../src/data/load";
 import { newGame } from "../src/core/game";
 import { joinTeam, autoLineup } from "../src/core/market";
 import { Engine, applySimTune } from "../src/match/engine";
+import * as Summoners from "../src/match/summoners";
 import type { Unit } from "../src/match/engine";
 import { newDraft, autoDraft } from "../src/match/draft";
 import { Rng } from "../src/core/rng";
@@ -19,6 +20,8 @@ const data = assembleData("data", j("champions.json"), j("players.json"), j("sta
 const N = Number(process.argv[3] ?? 20);
 // SIM_TUNE=towerGrace:1,gankCd:10 overrides the behaviour knobs (engine.ts SIM_TUNE) for this run
 applySimTune(process.env.SIM_TUNE);
+// SUM_TUNE=tpLane:0,tpJoin:0 overrides how Teleport is used (summoners.ts SUM_TUNE)
+Summoners.applySumTune(process.env.SUM_TUNE);
 const TRACE = process.env.TRACE ? process.env.TRACE.split(",") : null;
 const s = newGame(data, { team: data.teams[0].id, difficulty: "normal", manager: "test", seed: 7 });
 s.user = "__nobody__";
@@ -68,6 +71,10 @@ let heraldsTaken = 0, heraldCharges = 0;
 const fightDur: number[] = [], fightSize: number[] = [];
 let fightsAll = 0, fightsShort = 0, refights = 0, rejoin = 0;
 let killsAll = 0, turretKills = 0, soloKills = 0, gameMin = 0;
+/** summoner spell uses, by spell and reason (summoners.ts usage) */
+const sumUsed: Record<string, number> = {};
+/** how many of the ten players take each spell, summed over the games */
+const sumHeld: Record<string, number> = {};
 let turretDeathsOut = 0; // died to a turret while not in a fight
 const firstKill: number[] = [], firstTurret: number[] = [];
 let towers = 0;
@@ -80,6 +87,7 @@ for (let g = 0; g < N; g++) {
   const e = new Engine({ s, data, blue: a, red: b, picks: d.picks, seed: 1000 + g });
   const nm = (u: Unit) => `${u.side ? "R" : "B"}:${u.name}(${u.champ.name})`;
   const ctxOf = (u: Unit): string => {
+    if (Summoners.channel(e, u)) return "teleport-channel";
     if (u.task === "recall") return u.recallEnd !== undefined ? "recall-channel" : "recall-walk";
     if (u.fightId) return "fight";
     if (d2(u, FOUNTAIN[u.side]) < 1300) return "fountain";
@@ -100,6 +108,8 @@ for (let g = 0; g < N; g++) {
   const shotAt = e.units.map(() => -99);
   const taskBefore = e.units.map((u) => u.task as string);
   const fightEndAt = e.units.map(() => -99);
+  /** step in which each unit's Teleport landed (not a position bug) */
+  const tpLanded = e.units.map(() => -99);
 
   while (!e.over && e.t < 3600) {
     e.step();
@@ -108,6 +118,7 @@ for (let g = 0; g < N; g++) {
     for (const f of e.fx) {
       if (f.id <= fxSeen) continue;
       if (f.kind === "tower" && f.to !== undefined) shotAt[f.to] = t;
+      if (f.kind === "sum" && f.sum === "teleport" && f.from !== undefined && f.to === f.from) tpLanded[f.from] = t;
       if (f.kind === "dash" && f.text === "전령 돌진") {
         heraldCharges++;
         heraldFromPit.push(d2({ x: f.tx, y: f.ty }, BARON_PIT));
@@ -122,7 +133,7 @@ for (let g = 0; g < N; g++) {
         const c = ctxOf(u);
         add(aliveT, c, DT);
         const vmax = e.speed(u) * DT;
-        const home = d2(u, FOUNTAIN[u.side]) < 260 && dd > 800;
+        const home = (d2(u, FOUNTAIN[u.side]) < 260 && dd > 800) || tpLanded[i] === t;
         if (dd > vmax * 1.5 + 40 && !home) {
           add(jumps, p.fid || u.fightId ? "in a fight" : `outside a fight (${u.task})`);
           wnd[i].ok = false;
@@ -278,6 +289,8 @@ for (let g = 0; g < N; g++) {
     }
   }
   gameMin += e.t / 60;
+  for (const [k, v] of Object.entries(Summoners.usage(e))) add(sumUsed, k, v);
+  for (const u of e.units) for (const sp of Summoners.summonersOf(u)) add(sumHeld, sp);
   towers += e.towers[0] + e.towers[1];
 }
 
@@ -304,3 +317,11 @@ for (const [k, v] of Object.entries(aliveT).sort((p, o) => o[1] - p[1])) {
 const odd = idleSamples.filter((x) => !["recall-channel", "fountain", "camp", "pit"].includes(x.ctx)).sort((p, o) => o.len - p.len);
 for (const x of odd.slice(0, 6)) console.log(`    g${x.g} ${clock(x.t)} ${x.who} stood still ${x.len.toFixed(1)}s (${x.ctx})`);
 console.log(`\n[FIGHTS] per game ${perGame(fightsAll)}; shorter than 1.5s ${perGame(fightsShort)}; restarted at the same spot within 5s ${perGame(refights)}; left and re-joined the same fight ${perGame(rejoin)}; length median ${q(fightDur, 0.5).toFixed(1)}s; size 2: ${perGame(fightSize.filter((x) => x <= 2).length)}, 3: ${perGame(fightSize.filter((x) => x === 3).length)}, 4-5: ${perGame(fightSize.filter((x) => x >= 4 && x <= 5).length)}, 6+: ${perGame(fightSize.filter((x) => x >= 6).length)}`);
+
+// summoner spells: uses per game, and per player who takes the spell
+{
+  const bySpell: Record<string, number> = {};
+  for (const [k, v] of Object.entries(sumUsed)) add(bySpell, k.split(":")[0], v);
+  console.log(`\n[SUMMONERS] uses per game (per holder): ${Object.entries(bySpell).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${perGame(v)} (${(v / Math.max(1, sumHeld[k] ?? 0)).toFixed(1)})`).join(", ")}`);
+  console.log(`    by reason: ${Object.entries(sumUsed).filter(([k]) => k.includes(":")).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${perGame(v)}`).join(", ")}`);
+}

@@ -23,6 +23,7 @@ import { DEFAULT_SPEED, Pacer, SPEEDS } from "../../match/pacing";
 import "../caption.css";
 import "../draft.css";
 import { ItemStrip, LoadoutPicker, RuneBadge } from "../Loadout";
+import { SummonerSpells } from "../Summoners";
 import { LivePlayerStats, RecordStats } from "../PlayerStats";
 import { Scorebar } from "../Scorebar";
 import type { SeriesInfo } from "../Scorebar";
@@ -590,7 +591,9 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
       {e.units.filter((u) => u.side === side).map((u) => (
         <div class={`pl ${u.alive ? "" : "dead"}`} style={{ cursor: "pointer" }} onClick={() => { if (rend.current) { rend.current.followIdx = u.i; setCam("follow"); } }}>
           <div class="pl-face"><ChampIcon id={u.champ.id} size={38} /><RuneBadge e={e} u={u} /></div>
-          <div>
+          {/* name, score and health on the left, the two summoner spells with their cooldowns on the right */}
+          <div class="pl-mid">
+            <SummonerSpells e={e} u={u} />
             <div class="nm"><b style={{ fontSize: 12 }}>{u.name}</b><span class="muted" style={{ fontSize: 11 }}>Lv{u.level}</span></div>
             <div style={{ fontSize: 11 }}>{u.k}/{u.d}/{u.a} · CS {Math.round(u.cs)}{!u.alive && <span class="neg"> · {Math.ceil(u.respawnAt - e.t)}초</span>}</div>
             <div class="hp"><i style={{ width: `${(u.hp / u.maxHp) * 100}%`, background: side ? "#ff6b6b" : "#5ad07a" }} /></div>

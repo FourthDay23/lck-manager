@@ -1,0 +1,12 @@
+/* Match player list (Series.tsx MatchView): the two summoner spells at the right of the name block, stacked like on a
+   broadcast overlay. .pl sizes every img to the 38px portrait, so these rules name their own sizes. */
+.pl .pl-mid { position: relative; min-width: 0; padding-right: 22px; }
+.pl .sum-pair { position: absolute; right: 0; top: 0; display: grid; gap: 2px; }
+.pl .sum { position: relative; display: block; width: 18px; height: 18px; background: #0b0d14; box-shadow: 0 0 0 1px #05070d; }
+.pl .sum img { display: block; width: 18px; height: 18px; }
+/* on cooldown: the icon goes dark and the seconds left sit on top */
+.pl .sum.cd img { filter: grayscale(1) brightness(0.42); }
+.pl .sum b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: normal; letter-spacing: -0.5px; color: #fff; text-shadow: 1px 1px 0 #000; }
+/* a Teleport being channelled right now */
+.pl .sum.busy { box-shadow: 0 0 0 1px #b48cff, 0 0 0 2px #05070d; }
+.pl .sum.busy img { filter: none; }
