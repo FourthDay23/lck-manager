@@ -689,15 +689,20 @@ export function resolveBids(s: GameState, rng: Rng) {
     }
     const offers = s.bids.filter((b) => b.player === pid && b.team !== s.user);
     if (!offers.length) continue;
-    const best = offers
+    const ranked = offers
       .map((b) => ({ b, v: b.salary * (0.7 + teamAppeal(s.teams[b.team], s) * 0.6) * rng.range(0.9, 1.1) }))
-      .sort((x, y) => y.v - x.v)[0].b;
+      .sort((x, y) => y.v - x.v).map((x) => x.b);
+    // a full roster, or a payroll that grew since the bid (emergency signings, call-ups): that offer lapses and the
+    // player takes the next one the same day
+    const fits = (b: Bid) => {
+      const tm = s.teams[b.team];
+      return tm.roster.length < ROSTER_MAX && payroll(s, tm) + b.salary <= aiPayrollCap(tm);
+    };
+    const best = ranked.find(fits);
+    const lapsed = new Set(ranked.slice(0, best ? ranked.indexOf(best) : ranked.length));
+    if (lapsed.size) s.bids = s.bids.filter((b) => !lapsed.has(b));
+    if (!best) continue;
     const t = s.teams[best.team];
-    // a full roster, or a payroll that grew since the bid (emergency signings, call-ups): the offer lapses
-    if (t.roster.length >= ROSTER_MAX || payroll(s, t) + best.salary > aiPayrollCap(t)) {
-      s.bids = s.bids.filter((b) => b !== best);
-      continue;
-    }
     joinTeam(s, p, t.id, best.salary, best.years);
     p.morale = 70;
     addNews(s, { kind: "sign", title: `[오피셜] ${t.name}, '${p.name}' 영입`, body: `${p.origin === "gen" ? "신인 " : ""}${p.role} · ${best.years}년 계약 · 연봉 ${money(best.salary)}`, teams: [t.id], players: [p.id] });

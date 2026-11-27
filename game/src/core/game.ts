@@ -192,8 +192,8 @@ function aiGrowth(s: GameState, rng: Rng) {
  * Series results move morale +3 / -4 and nothing else moved it for AI players, so a club winning more than 57 % of
  * its series climbed to 100 and the rest sank toward 0: about 10 power points between them by autumn, a snowball
  * that made 27-0 seasons and grand slams common. The user's club keeps its own morale system (daily +0.15 for
- * starters, events, rest). With 0.05 a club winning 85 % of its series settles near 81 (+2 power), one winning
- * 25 % near 58 (-0.4).
+ * starters, events, rest). Measured with scripts/dynasty-check.ts (120 seasons): the clubs' spread in morale power
+ * fell from 2-4.4 to 0.1-0.2, 27-0 seasons from 12 % to 0 and grand slams from 11 % to 3 %.
  */
 export const AI_MORALE = { base: 70, pull: 0.05 };
 

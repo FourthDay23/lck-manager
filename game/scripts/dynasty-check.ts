@@ -135,7 +135,7 @@ for (let run = 0; run < RUNS; run++) {
     } catch (e) {
       // events.ts P14 reads the name of a bracket opponent not decided yet (a game bug outside this check). It throws
       // at the very end of the day, after everything this check measures, so the day stands
-      if (!String(e).includes("reading 'name'")) throw e;
+      if (!String(e).includes("reading 'name'") || !String((e as Error).stack).includes("events.ts")) throw e;
       crashes++;
     }
     if (FLAT.size) flatten(s);
