@@ -187,7 +187,24 @@ function aiGrowth(s: GameState, rng: Rng) {
   }
 }
 
+/**
+ * AI clubs' morale drifts back toward `base` by `pull` of the gap each day (a staff keeps the dressing room level).
+ * Series results move morale +3 / -4 and nothing else moved it for AI players, so a club winning more than 57 % of
+ * its series climbed to 100 and the rest sank toward 0: about 10 power points between them by autumn, a snowball
+ * that made 27-0 seasons and grand slams common. The user's club keeps its own morale system (daily +0.15 for
+ * starters, events, rest). With 0.05 a club winning 85 % of its series settles near 81 (+2 power), one winning
+ * 25 % near 58 (-0.4).
+ */
+export const AI_MORALE = { base: 70, pull: 0.05 };
+
 function moraleDay(s: GameState, rng: Rng) {
+  for (const tid of [...s.lck, ...s.intl]) {
+    if (tid === s.user) continue;
+    for (const id of s.teams[tid]?.roster ?? []) {
+      const p = s.players[id];
+      if (p) p.morale += (AI_MORALE.base - p.morale) * AI_MORALE.pull;
+    }
+  }
   const t = s.teams[s.user];
   const starters = new Set(Object.values(t.lineup));
   for (const id of t.roster) {
