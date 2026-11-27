@@ -37,7 +37,7 @@ const show = () => {
   const lckOrigin = act.filter((p) => p.origin !== "intl");
   console.log(`${s.season}: ` + bands.map((b) => `>=${b}: ${line((o) => o >= b)}`).join(" | ")
     + ` | non-intl top50 avg OVR ${(top.reduce((a, p) => a + ovr(p), 0) / 50).toFixed(1)} age ${(top.reduce((a, p) => a + age(p, s.season), 0) / 50).toFixed(1)}`
-    + ` | non-intl active ${lckOrigin.length}, <=21y ${lckOrigin.filter((p) => age(p, s.season) <= 21).length}, best <=21y ${Math.max(...lckOrigin.filter((p) => age(p, s.season) <= 21).map(ovr))}`);
+    + ` | non-intl active ${lckOrigin.length}, <=21y ${lckOrigin.filter((p) => age(p, s.season) <= 21).length}, best <=21y ${Math.max(0, ...lckOrigin.filter((p) => age(p, s.season) <= 21).map(ovr))}`);
 };
 show();
 let guard = 0;

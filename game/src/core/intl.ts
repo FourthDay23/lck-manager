@@ -28,7 +28,7 @@ function level(t: Team): number {
 }
 
 /** A young local prospect for a foreign club, a few points under its level with room to grow. */
-export function intlProspect(s: GameState, rng: Rng, t: Team, role: Role, season: number): Player {
+export function intlProspect(s: GameState, rng: Rng, t: Team, role: Role, season: number, floor = 0): Player {
   s.genCount += 1;
   const taken = new Set(Object.values(s.players).map((p) => p.name));
   let name = rng.pick(HANDLES);
@@ -36,7 +36,7 @@ export function intlProspect(s: GameState, rng: Rng, t: Team, role: Role, season
   if (taken.has(name)) name = `${name}${s.genCount}`;
   const id = `intl:${t.id}:new${s.genCount}`;
   const a = rng.int(18, 21);
-  const target = clamp(Math.round(level(t) - rng.range(2, 6)), 50, 92);
+  const target = clamp(Math.max(Math.round(level(t) - rng.range(2, 6)), floor), 50, 92);
   const attrs = {} as Attrs;
   for (const k of ATTR_KEYS) attrs[k] = clamp(Math.round(target + rng.normal(0, 3)), 30, 95);
   const p: Player = {
@@ -53,15 +53,14 @@ export function intlProspect(s: GameState, rng: Rng, t: Team, role: Role, season
 }
 
 /** A foreign-club player leaves the game (retirement, military service, dropped) and a prospect takes his role. */
-export function replaceIntl(s: GameState, rng: Rng, p: Player, why: string, season: number) {
+export function replaceIntl(s: GameState, rng: Rng, p: Player, why: string, season: number, floor = 0) {
   const t = p.team ? s.teams[p.team] : null;
   if (!t) return;
-  const np = intlProspect(s, rng, t, p.role, season + 1);
+  const np = intlProspect(s, rng, t, p.role, season + 1, floor);
   s.players[np.id] = np;
   t.roster.push(np.id); // before the release, so market.ts does not sign its own stand-in for the empty role
-  releasePlayer(s, p, why);
+  releasePlayer(s, p, why); // also writes the history line
   p.retired = true;
-  p.history.push(`${season}: ${why}`);
   if (ovr(p) >= 80) addNews(s, { kind: "info", title: `${t.name} '${p.name}' ${why}, 신인 '${np.name}' 합류`, teams: [], players: [p.id] });
 }
 
@@ -72,7 +71,10 @@ export function renewIntlRosters(s: GameState, rng: Rng, season: number) {
     for (const pid of [...t.roster]) {
       const p = s.players[pid];
       if (!p || p.retired || p.origin !== "intl") continue;
-      if (age(p, season + 1) >= 24 && ovr(p) < level(t) - DROP_GAP && rng.chance(0.6)) replaceIntl(s, rng, p, "세대교체로 방출", season);
+      if (age(p, season + 1) >= 24 && ovr(p) < level(t) - DROP_GAP && rng.chance(0.6)) {
+        // the newcomer is at least as good as the man he replaces
+        replaceIntl(s, rng, p, "세대교체로 방출", season, ovr(p) + 1);
+      }
     }
   }
 }
