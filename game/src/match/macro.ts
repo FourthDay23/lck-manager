@@ -106,7 +106,7 @@ export const OBJ_TUNE = {
   backOff: 1.5,
   tradeObj: 0.35, tradeSiege: 0.3,
   baronFrom: 24,
-  stealFrom: 3600, stealHover: 0.85, stealLoose: 0.45, stealBig: 0.15,
+  stealFrom: 3600, stealHover: 0.65, stealLoose: 0.3, stealBig: 0.2,
 };
 export function applyObjTune(spec: string | undefined) {
   applyTune(OBJ_TUNE, "OBJ_TUNE", spec);
@@ -1217,7 +1217,7 @@ function stealJob(e: Engine, b: Brain, u: Unit, m: UMem) {
   const flash = Summoners.isReady(e, u, "flash");
   // it waits on its way in, this far short of that spot: with Flash up as far out as the Flash still reaches from
   // (objsmite.ts flashes it in), without it a short walk away
-  const out = flash ? STEAL_TUNE.flashIn - 100 : STEAL_TUNE.walkIn;
+  const out = flash ? STEAL_TUNE.flashIn + 40 : STEAL_TUNE.walkIn;
   const left = secondsTo(e, k, Summoners.smiteDamage(e, u));
   const dive = dist(u, pit) < STEAL_TUNE.range - 40 || (!flash && left <= toSpot / e.speed(u) + 0.5);
   if (dive || toSpot > out + 40) go(e, u, m.spot, 40);

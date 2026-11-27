@@ -39,10 +39,10 @@ import { josa } from "../core/format";
  */
 export const STEAL_TUNE = {
   range: 750,
-  react: 0.6, reactSkill: 0.012, thief: 0.7, busy: 0.7,
+  react: 0.6, reactSkill: 0.012, thief: 0.8, busy: 0.7,
   tie: 0.3, tieSkill: 0.0125,
   stolenShare: 0.4,
-  flashIn: 400, flashAt: 0.3, walkIn: 380,
+  flashIn: 400, flashAt: 0.3, walkIn: 450,
 };
 export function applyStealTune(spec: string | undefined) {
   applyTune(STEAL_TUNE, "STEAL_TUNE", spec);
