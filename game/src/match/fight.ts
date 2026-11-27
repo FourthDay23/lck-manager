@@ -43,6 +43,16 @@ export const FIGHT_TUNE = {
   maxLen: 30,
   /** a losing side in a fight of 8+ champions calls it this much earlier (power ratio), so 5v5s do not end 0-5 every time */
   bigRetreat: 0.05,
+  /** fights next to a pit with a monster in play (macro.purpose). stopRate: chance per second that a champion whose
+   *  side has to stop a take opens the fight once it is within stopReach of an enemy, whatever the odds (it came to
+   *  fight; from further out the usual rates apply); objHold: extra seconds
+   *  the two teams face each other before either may engage; stopEdge / takeEdge: engage threshold shift for the side
+   *  that has to stop the take / that is on the monster; stopWait / holdWait: seconds in formation after which the
+   *  side that must stop it goes in at stopGo odds / a standoff over a monster nobody started is called off */
+  stopRate: 0.6, stopReach: 850, objHold: 1.5, stopEdge: -0.14, takeEdge: 0.05, stopWait: 5, stopGo: 0.75, holdWait: 14,
+  /** two teams facing each other over a monster nobody has started open a fight on contact this much less often
+   *  (they stand off: the fight comes when one side starts the monster or finds an engage) */
+  holdRate: 0.6,
 };
 
 type Phase = "position" | "engage" | "brawl" | "retreat";
@@ -127,6 +137,8 @@ interface FInfo {
   logged: boolean;
   /** seconds each side holds its formation before it may engage */
   hold: [number, number];
+  /** the epic monster this fight is about (it started next to its pit while it was in play), see macro.purpose */
+  obj: string | null;
 }
 
 export interface FightStats {
@@ -609,6 +621,11 @@ function startFights(e: Engine, M: Mod) {
       const underTurret = e.turrets.some((t) => t.alive && t.side === foe.side && dist(t.pos, foe) < 800);
       let rate = e.engageRate(u, foe, ratio, underTurret, myGroup.length + theirGroup.length) * FIGHT_TUNE.startMul;
       rate *= startMod(e, M, u, st, foe, myGroup, ratio);
+      // the enemy is on the monster and this side came to stop it: on contact the fight is on (at poor odds the base
+      // rate left the two teams standing in the pit together, both hitting the monster)
+      const aim = st !== "avoid" && rate > 0 && ENGINE_FLAGS.macro ? Macro.purpose(e, u.side, foe)?.want : undefined;
+      if (aim === "stop" && d < FIGHT_TUNE.stopReach) rate = Math.max(rate, FIGHT_TUNE.stopRate);
+      else if (aim === "hold" && u.task !== "gank") rate *= FIGHT_TUNE.holdRate;
       if (rate > 0 && e.rng.chance(clamp(rate * DT, 0, 0.9))) {
         begin(e, M, u, foe, myGroup, theirGroup, ratio);
         break;
@@ -654,6 +671,7 @@ function newInfo(e: Engine, id: number, origin: string, kind: FightKind, initiat
     maxLen: kind === "trade" ? 3.5 + e.rng.next() * 2 : kind === "allin" ? (e.minute() > 24 ? 20 : 12) : FIGHT_TUNE.maxLen,
     extended: false, next: e.t + 0.5, nextCall: e.t + 1, nextSample: e.t + 1, plan: [null, null], opened: null, firstDmg: -1,
     brawlAt: -1, members: new Set(), initiator, logged: false, hold: [1.5 + e.rng.next() * 1.5, 1.5 + e.rng.next() * 1.5],
+    obj: null,
   };
 }
 
@@ -661,9 +679,16 @@ function begin(e: Engine, M: Mod, u: Unit, foe: Unit, mine: Unit[], theirs: Unit
   const id = ++e.fightSeq;
   const laning = e.laningPhase();
   const trade = laning && mine.length + theirs.length <= 3 && u.task !== "gank";
-  const origin = u.task === "gank" ? "gank" : u.task === "siege" ? "siege" : u.task === "obj" ? "obj" : laning ? "early" : "mid";
+  // a fight next to a pit whose monster is in play is about that monster, whoever started it and on whatever errand
+  const about = !trade && u.task !== "gank" && ENGINE_FLAGS.macro ? Macro.purpose(e, u.side, { x: (u.x + foe.x) / 2, y: (u.y + foe.y) / 2 }) : null;
+  const origin = u.task === "gank" ? "gank" : u.task === "siege" ? "siege" : u.task === "obj" || about ? "obj" : laning ? "early" : "mid";
   e.fights.set(id, { x: (u.x + foe.x) / 2, y: (u.y + foe.y) / 2, start: e.t, last: e.t, trade, origin });
   const info = newInfo(e, id, origin, trade ? "trade" : "skirmish", u.side);
+  if (about) {
+    info.obj = about.k;
+    // the teams face each other a little longer over a monster before either goes in
+    info.hold = [info.hold[0] + FIGHT_TUNE.objHold, info.hold[1] + FIGHT_TUNE.objHold];
+  }
   M.f.set(id, info);
   M.cur = id;
   M.stats.fights++;
@@ -993,12 +1018,16 @@ function think(e: Engine, M: Mod, info: FInfo, f: Vec, side: [Unit[], Unit[]], g
     if (ph === "position") {
       const g = gathered[s] / n[s];
       const plan = bestEngage(e, M, s, side[s], side[o]);
-      const want = engageThreshold(e, info, s, side[s]);
+      // what this side wants from a fight over a monster: the side that has to stop a take cannot wait it out
+      const aim = info.obj && ENGINE_FLAGS.macro ? Macro.purpose(e, s, f)?.want ?? null : null;
+      const want = engageThreshold(e, info, s, side[s]) + (aim === "stop" ? FIGHT_TUNE.stopEdge : aim === "take" ? FIGHT_TUNE.takeEdge : 0);
       if (ratio < 0.62 && tp > 1) { sideRetreat(e, M, info, s, `outmatched ${ratio.toFixed(2)}`); continue; }
       // hold the formation a moment (poke, wait for the rest) unless the enemy is already beaten
-      const ready = (g >= 0.75 && tp >= info.hold[s]) || tp > 5 || (ratio > 1.6 && tp >= 1);
+      const ready = (g >= 0.75 && tp >= info.hold[s]) || tp > 5 + (aim ? FIGHT_TUNE.objHold : 0) || (ratio > 1.6 && tp >= 1);
       const need = want - (plan ? 0.08 : 0) - Math.min(0.15, tp * 0.015);
-      if ((ready && ratio >= need) || (tp > 10 && ratio >= 0.85)) {
+      // how long a side stands in formation before it goes in anyway / calls the standoff off
+      const wait = aim === "stop" ? FIGHT_TUNE.stopWait : aim === "hold" ? FIGHT_TUNE.holdWait : 10;
+      if ((ready && ratio >= need) || (tp > wait && ratio >= (aim === "stop" ? FIGHT_TUNE.stopGo : 0.85))) {
         info.plan[s] = plan;
         if (plan) {
           setPhase(e, M, info, s, "engage");
@@ -1009,7 +1038,7 @@ function think(e: Engine, M: Mod, info: FInfo, f: Vec, side: [Unit[], Unit[]], g
           log(e, M, `  #${info.id} ${s ? "RED" : "BLUE"} walks in (no engage tool), ratio ${ratio.toFixed(2)}`);
           if (info.phase[o] !== "retreat") toBrawl(e, M, info, "walk-in");
         }
-      } else if (tp > 10) sideRetreat(e, M, info, s, "standoff");
+      } else if (tp > wait) sideRetreat(e, M, info, s, "standoff");
     } else if (ph === "engage") {
       const plan = info.plan[s];
       const pu = plan ? e.units[plan.u] : null;

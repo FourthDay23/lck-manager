@@ -76,7 +76,7 @@ export const EARLY_TUNE = {
 export function applyEarlyTune(spec: string | undefined) {
   applyTune(EARLY_TUNE, "EARLY_TUNE", spec);
 }
-function applyTune(target: Record<string, number>, name: string, spec: string | undefined) {
+export function applyTune(target: Record<string, number>, name: string, spec: string | undefined) {
   for (const kv of (spec ?? "").split(",").filter(Boolean)) {
     const [k, v] = kv.split(":");
     const n = Number(v);
@@ -216,6 +216,8 @@ export interface Unit {
 export type ObjKey = "dragon" | "grubs" | "herald" | "baron" | "elder";
 export const OBJ_KO: Record<ObjKey, string> = { dragon: "드래곤", grubs: "공허 유충", herald: "협곡의 전령", baron: "내셔 남작", elder: "장로 드래곤" };
 
+/** an epic monster starts to heal once no live champion is within this distance of it (objectivesTick) */
+const OBJ_LEASH = 1300;
 export interface ObjState { key: ObjKey; alive: boolean; spawnAt: number | null; hp: number; maxHp: number; pos: Vec; takenBy?: SideN; type?: string; left?: number }
 export interface CampState { id: number; side: SideN; kind: CampKind | "scuttle"; pos: Vec; alive: boolean; spawnAt: number; hp: number; maxHp: number }
 export interface TurretState { side: SideN; lane: LaneId | "nexus"; tier: number; pos: Vec; hp: number; maxHp: number; alive: boolean; u: number; plates: number }
@@ -1711,7 +1713,10 @@ export class Engine {
       if (!o.alive) continue;
       const at = this.units.filter((u) => u.alive && !u.fightId && dist(u, o.pos) < 650 && (!ENGINE_FLAGS.macro || Macro.hitsObjective(this, u, k)));
       if (!at.length) {
-        o.hp = Math.min(o.maxHp, o.hp + o.maxHp * 0.02 * DT);
+        // it heals only once everybody has left: while champions stand at the pit (a fight over it: nobody in a fight
+        // can hit it) it keeps the damage it has taken, so the side that wins the fight finishes it. Before, it
+        // healed 2 % a second through the fight (30 % over a 15 s fight) and the take started over.
+        if (!this.units.some((u) => u.alive && dist(u, o.pos) < OBJ_LEASH)) o.hp = Math.min(o.maxHp, o.hp + o.maxHp * 0.02 * DT);
         continue;
       }
       const bySide = [0, 0];
