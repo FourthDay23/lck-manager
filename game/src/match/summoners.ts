@@ -235,14 +235,23 @@ export function smite(e: Engine, u: Unit, target: { camp: CampState } | { obj: O
 
 /**
  * Cast Unleashed / Primal Smite on an enemy champion from a fight effect (c: the caster's Ctx, so the damage goes
- * through fight.ts hurt: shields, kill credit). 40 true damage and the slow. Returns the damage, 0 = not cast.
+ * through fight.ts hurt: shields, kill credit). 40 true damage and the slow. Returns the damage, 0 = not cast or
+ * blocked by a spell shield (the charge is used all the same).
  * Used by the simple fight rule in FX.smite below.
  */
 export function smiteChampion(c: Ctx, v: Unit, o: { why?: string } = {}): number {
   if (!v.alive || v.side === c.u.side || !canSmite(c.e, c.u, true)) return 0;
   const dmg = smiteDamage(c.e, c.u, true);
   spend(c.e, c.u, "smite", { to: v, why: o.why ?? "champ" });
-  c.deal(c.u, v, dmg, "proc");
+  // a spell shield (Banshee's Veil, Edge of Night) blocks it and is used up (as procs.ts spellShield, which this file
+  // cannot import: procs.ts imports it)
+  const vp = state(c.e, v);
+  if (vp.effects.some((f) => f.id === "spellshield") && (vp.cd.spellshield ?? -1) <= c.e.t) {
+    vp.cd.spellshield = c.e.t + 40;
+    return 0;
+  }
+  // summoner true damage: no on-hit riders (life steal, keystones) as a "proc" would trigger
+  c.deal(c.u, v, dmg, "raw");
   applyCC(c, v, "slow", (SMITE.champSlowTime * SMITE.champSlow) / FIGHT_SLOW);
   return dmg;
 }
