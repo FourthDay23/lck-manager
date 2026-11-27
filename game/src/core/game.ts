@@ -2,7 +2,7 @@
 import type { GameData } from "../data/load";
 import type { Role } from "../data/types";
 import { ROLES } from "../data/types";
-import { dayOfMonth, money, weekday } from "./format";
+import { dayOfMonth, fmtDate, money, weekday } from "./format";
 import { addNews, inbox, teamName } from "./news";
 import { addXp, age, makeRookie, ovr, playerFromData, potentialFor, salaryAsk } from "./player";
 import { clamp, hash32, hashUnit, Rng } from "./rng";
@@ -18,7 +18,7 @@ import { economyDay, earn, spend, seriesRewards, sponsorFor } from "./economy";
 import type { CompId, Difficulty, GameState, ModalEvent, Player, Series, Staff, Team } from "./types";
 import { COMP_NAME } from "./types";
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export interface NewGameOpts { team: string; difficulty: Difficulty; manager: string; seed?: number }
 
@@ -70,7 +70,7 @@ export function newGame(data: GameData, o: NewGameOpts): GameState {
     version: SAVE_VERSION, seed, rng: rng.state, day: 0, season, difficulty: o.difficulty, user: o.team,
     managerName: o.manager || "단장", players: {}, staff: {}, teams: {}, lck: [], intl: [], comps: [], series: [],
     bids: [], tradeOffers: [], saleOffers: [], news: [], trophies: [], ledger: [], events: [], cutscenes: [], inbox: [],
-    genCount: 0, stats: { seasonsPlayed: 0, seriesW: 0, seriesL: 0 },
+    genCount: 0, stats: { seasonsPlayed: 0, seriesW: 0, seriesL: 0 }, tut: [],
   };
   for (const td of data.teams.filter((t) => t.tier === 1)) {
     const t = teamFromData(td, o.team, o.difficulty);
@@ -673,10 +673,11 @@ function contractReminders(s: GameState) {
 }
 
 // ---------- the day ----------
-export type AdvanceStop = "match" | "event" | "cutscene" | "offer" | null;
+export type AdvanceStop = "match" | "event" | "cutscene" | "offer" | "over" | null;
 
 /** Advance one day. Returns why it stopped, or null when the day passed normally. */
 export function advanceDay(s: GameState, data: GameData): AdvanceStop {
+  if (s.over) return "over";
   if (s.events.length) return "event";
   const userSr = userSeriesToday(s);
   if (userSr) return "match";
@@ -709,6 +710,12 @@ export function advanceDay(s: GameState, data: GameData): AdvanceStop {
     for (const tid of [sr.a, sr.b]) if (tid && tid !== s.user && s.lck.includes(tid)) ensureAiLineupFor(s, tid, rng);
   }
   s.rng = rng.state;
+  // a day that ends in the red ends the game (old saves already in the red get until debtGrace)
+  const cash = s.teams[s.user].cash;
+  if (cash < 0 && !(s.debtGrace !== undefined && s.day <= s.debtGrace)) {
+    s.over = { day: s.day - 1, cash };
+    return "over";
+  }
   if (s.cutscenes.length > cutBefore) return "cutscene";
   if (s.events.length) return "event";
   return null;
@@ -798,6 +805,17 @@ export function migrateSave(s: GameState, data: GameData): string[] {
     notes.push("구단마다 2군 로스터가 생겼습니다. 선수단 화면에서 콜업할 수 있습니다.");
   }
   notes.push(...oneStaffRecordPerPerson(s, data));
+  if (!(s.version >= 4)) {
+    // v4: game over below zero cash. A save already in the red gets 30 days to get out of it.
+    const cash = s.teams[s.user].cash;
+    if (cash < 0 && !s.over) {
+      s.debtGrace = s.day + 30;
+      notes.push(`이제 자금이 마이너스인 채로 하루가 지나면 게임 오버입니다. 지금 자금이 ${money(cash)}이라 ${fmtDate(s.debtGrace, false)}까지 기다려 줍니다. 그 전에 플러스로 만드세요.`);
+    }
+    // v4: tutorial progress lives in the save. A career started before keeps going without the intro;
+    // the match-day guides still show once.
+    s.tut ??= ["intro", "go"];
+  }
   s.version = SAVE_VERSION;
   return notes;
 }

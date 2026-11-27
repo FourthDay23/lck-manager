@@ -19,6 +19,11 @@ export function HomeScreen() {
   const exp = Object.values(monthlyExpensePreview(s)).reduce((a, b) => a + b, 0);
   const hc = me.staff.map((id) => s.staff[id]).find((x) => x?.role === "Head Coach");
   const todo: string[] = [];
+  if (me.cash < 0) {
+    todo.push(s.debtGrace !== undefined && s.day <= s.debtGrace
+      ? `자금이 마이너스입니다. ${fmtDate(s.debtGrace, false)}까지 플러스로 만들지 못하면 게임 오버입니다`
+      : "자금이 마이너스입니다. 오늘 안에 플러스로 만들지 못하면 하루가 지날 때 게임 오버입니다");
+  }
   for (const r of ROLES) if (!me.lineup[r]) todo.push(`${ROLE_KO[r]} 주전이 없습니다`);
   if (!hc) todo.push("감독이 없습니다 (밴픽 추천과 경기력에 불리)");
   if (me.roster.length < 6) todo.push("후보 선수가 없습니다");

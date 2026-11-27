@@ -180,7 +180,13 @@ export function AlertLayer() {
           </div>
         )}
         {sale && <div class="row" style={{ justifyContent: "center" }}>{side([sale.player], "팔 선수")}</div>}
-        <div class="row" style={{ justifyContent: "center", marginTop: 14 }}>
+        {a.kind === "info" ? (
+          // a plain notice (e.g. payday will put cash below zero)
+          <div class="row" style={{ justifyContent: "center", marginTop: 14 }}>
+            <button class="btn primary" onClick={drop}>확인</button>
+            <button class="btn" onClick={() => { drop(); store.go("finance"); }}>재정 화면</button>
+          </div>
+        ) : <div class="row" style={{ justifyContent: "center", marginTop: 14 }}>
           {trade && <button class="btn primary" onClick={() => { const ok = acceptTradeOffer(s, trade); store.say(ok ? "트레이드 성사" : "조건이 바뀌어 무산됐습니다"); drop(); }}>수락</button>}
           {sale && <button class="btn primary" onClick={() => { acceptSale(s, sale.id); store.say("판매 완료"); drop(); }}>판매</button>}
           <button class="btn danger" onClick={() => {
@@ -189,7 +195,7 @@ export function AlertLayer() {
             drop();
           }}>거절</button>
           <button class="btn" onClick={() => { drop(); store.go("market", "offers"); }}>나중에 (이적시장에서 보기)</button>
-        </div>
+        </div>}
         {alerts.length > 1 && <div class="dim" style={{ fontSize: 11, marginTop: 8 }}>다음 알림 {alerts.length - 1}건</div>}
       </div>
     </div>

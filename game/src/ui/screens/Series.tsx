@@ -32,6 +32,7 @@ import { ChampIcon, TeamLogo, Bar } from "../components";
 import { autosave } from "../App";
 import { seriesWinProb } from "../../core/quick";
 import { META_LABEL, metaTier } from "../../core/meta";
+import { tutSpot } from "../Tutorial";
 
 interface Live {
   srId: string;
@@ -95,6 +96,9 @@ export function SeriesScreen() {
   const sr = userSeriesToday(s) ?? (live ? s.series.find((x) => x.id === live!.srId) : undefined);
   const [, setV] = useState(0);
   const bump = () => setV((v) => v + 1);
+  // tutorial: the set-up screen before a game (the first time, how a match day goes)
+  const prePhase = !!sr && (!live || live.srId !== sr.id || live.phase === "pre");
+  useEffect(() => { if (prePhase) tutSpot("series"); }, [prePhase]);
   if (!sr) {
     return (
       <div class="frame pad">
@@ -198,7 +202,7 @@ export function SeriesScreen() {
         </div>
       ) : (
         <div class="grid2">
-          <div class="frame pad">
+          <div class="frame pad" data-tut="series-prep">
             <h2>{sr.games.length + 1}세트 준비</h2>
             <div class="row">
               <span>진영:</span>
@@ -218,7 +222,7 @@ export function SeriesScreen() {
             <div class="muted" style={{ fontSize: 11 }}>공격적: 교전·오브젝트 싸움을 자주 겁니다. 안정적: 불리한 싸움을 피합니다. 경기 중에도 바꿀 수 있습니다.</div>
             <StrategyPicker value={L.strategy} onPick={(st) => { L.strategy = st; lastStrategy = st; bump(); }} />
             <div class="row" style={{ marginTop: 10 }}>
-              <button class="btn primary" onClick={startDraft}>밴픽 시작</button>
+              <button class="btn primary" data-tut="series-draft" onClick={startDraft}>밴픽 시작</button>
               <button class="btn" onClick={quickGame}>이 세트 결과만 보기</button>
               <button class="btn" onClick={() => { L.skipAll = true; quickGame(); }}>시리즈 끝까지 결과만</button>
             </div>
@@ -288,6 +292,15 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
     const id = setTimeout(() => { aiStep(s, data, d, rng); bump(); }, 550);
     return () => clearTimeout(id);
   });
+  // tutorial: the draft screen, our first ban and pick turns, then runes and builds (not in watched AI drafts)
+  const stepKind = !st ? "done" : myTurn ? st[1] : "wait";
+  useEffect(() => {
+    if (auto) return;
+    tutSpot("draft");
+    if (stepKind === "ban") tutSpot("ban");
+    else if (stepKind === "pick") tutSpot("pick");
+    else if (stepKind === "done") tutSpot("loadout");
+  }, [stepKind]);
   const blocked = unavailable(d);
   const myTeam = userSide === "blue" ? d.blue : d.red;
   const lu = lineupOf(s, myTeam);
@@ -319,7 +332,7 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
     const lup = lineupOf(s, team);
     const active = st && st[0] === sd;
     return (
-      <div class="frame pad" style={{ boxShadow: active ? `0 0 0 2px ${sd === "blue" ? "var(--blue)" : "var(--red)"}` : undefined }}>
+      <div class="frame pad" data-tut={sd === userSide ? "draft-mine" : undefined} style={{ boxShadow: active ? `0 0 0 2px ${sd === "blue" ? "var(--blue)" : "var(--red)"}` : undefined }}>
         <div class="row" style={{ justifyContent: "space-between" }}>
           <div class="row"><TeamLogo id={team} size={26} /><b style={{ color: sd === "blue" ? "var(--blue)" : "var(--red)" }}>{s.teams[team].short}</b></div>
           <span class="muted" style={{ fontSize: 11 }}>{sd === "blue" ? "블루" : "레드"}</span>
@@ -355,20 +368,20 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
       <div class="frame pad">
         {!done ? (
           <>
-            <div class="row" style={{ justifyContent: "space-between" }}>
+            <div class="row" data-tut="draft-head" style={{ justifyContent: "space-between" }}>
               <h2 style={{ margin: 0 }}>
                 <span style={{ color: st![0] === "blue" ? "var(--blue)" : "var(--red)" }}>{st![0] === "blue" ? "블루" : "레드"}</span>{" "}
                 {st![1] === "ban" ? "밴" : "픽"} <span class="muted" style={{ fontSize: 12 }}>({d.step + 1}/{DRAFT_ORDER.length})</span>
               </h2>
               <span class={myTurn ? "gold" : "muted"}>{myTurn ? (st![1] === "pick" ? `우리 차례: ${ROLE_KO[role]} 픽` : "우리 차례: 밴") : "상대가 고르는 중..."}</span>
             </div>
-            <div class="row" style={{ margin: "6px 0" }}>
+            <div class="row" data-tut="draft-filter" style={{ margin: "6px 0" }}>
               <button class={`btn small ${roleF === "" ? "on" : ""}`} onClick={() => setRoleF("")}>전체</button>
               {ROLES.map((r) => <button class={`btn small ${roleF === r ? "on" : ""}`} onClick={() => setRoleF(r)}>{ROLE_KO[r]}</button>)}
               <input type="text" placeholder="챔피언 검색" value={q} onInput={(e) => setQ((e.target as HTMLInputElement).value)} style={{ width: 120 }} />
               {myTurn && <button class="btn small" onClick={() => { aiStep(s, data, d, rng); bump(); }}>추천대로</button>}
             </div>
-            <div class="cgrid">
+            <div class="cgrid" data-tut="draft-grid">
               {shown.map((c) => {
                 const off = blocked.has(c.id);
                 const fear = d.fearless.has(c.id);
@@ -385,7 +398,7 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
               })}
             </div>
             {/* always the same height and one line, so the board does not jump between turns */}
-            <div class="frame dark pad sug-panel">
+            <div class="frame dark pad sug-panel" data-tut="draft-sug">
               <h3>{!myTurn ? "감독 추천" : sug.coach ? `감독 ${sug.coach}의 추천` : "감독이 없어 추천이 거의 없습니다"}{myTurn ? ` (${sug.items.length}개)` : ""}</h3>
               <div class="sug-row">
                 {myTurn ? sug.items.map((x) => (
@@ -400,14 +413,16 @@ export function DraftView({ d, userSide, onDone, auto }: { d: DraftState; userSi
         ) : (
           <>
             <h2>밴픽 완료</h2>
-            <CompCompare d={d} />
+            <div data-tut="draft-comp"><CompCompare d={d} /></div>
             {!auto && <LoadoutPicker d={d} side={userSide} onChange={bump} />}
-            <div class="center" style={{ margin: "10px 0" }}>
-              우리 예상 승률 <b class="gold" style={{ fontSize: 20 }}>{Math.round(userProb * 100)}%</b> <span class="muted">({oddsWord(userProb)})</span>
-            </div>
-            <div class="row" style={{ justifyContent: "center" }}>
-              <button class="btn primary" onClick={() => onDone("watch")}>경기 시작</button>
-              <button class="btn" onClick={() => onDone("skip")}>결과만 보기</button>
+            <div data-tut="draft-go">
+              <div class="center" style={{ margin: "10px 0" }}>
+                우리 예상 승률 <b class="gold" style={{ fontSize: 20 }}>{Math.round(userProb * 100)}%</b> <span class="muted">({oddsWord(userProb)})</span>
+              </div>
+              <div class="row" style={{ justifyContent: "center" }}>
+                <button class="btn primary" onClick={() => onDone("watch")}>경기 시작</button>
+                <button class="btn" onClick={() => onDone("skip")}>결과만 보기</button>
+              </div>
             </div>
           </>
         )}
@@ -478,7 +493,8 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
       // (the first rAF timestamp can be a hair earlier than the performance.now() read above)
       const dt = Math.max(0, Math.min(100, now - last));
       last = now;
-      const running = !st.current.paused && !e.over;
+      // the game also waits while the tutorial explains the match screen
+      const running = !st.current.paused && !e.over && !store.tut;
       if (running) {
         const gps = pacer.update(dt, st.current.speed, st.current.slowmo);
         acc += (dt / 1000) * gps;
@@ -541,6 +557,7 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
     return () => clearTimeout(id);
   }, [banners]);
   useEffect(() => { if (rend.current) rend.current.mode = cam; }, [cam]);
+  useEffect(() => tutSpot("match"), []);
   const skipToEnd = () => {
     e.runToEnd();
     rend.current?.syncFx();
@@ -548,7 +565,7 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
     setTick((x) => x + 1);
   };
   const team = (side: 0 | 1) => (
-    <div class="frame pad" style={{ padding: 6 }}>
+    <div class="frame pad" data-tut={side === userSide ? "match-team" : undefined} style={{ padding: 6 }}>
       <div class="row" style={{ justifyContent: "space-between" }}>
         <span class="row" style={{ gap: 4 }}><TeamLogo id={e.teamIds[side]} size={20} /><b style={{ color: side ? "var(--red)" : "var(--blue)" }}>{s.teams[e.teamIds[side]].short}</b></span>
         <span class="muted" style={{ fontSize: 11 }}>{(e.gold(side) / 1000).toFixed(1)}k</span>
@@ -577,7 +594,7 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
             {/* one tag: what the camera shows and how fast the clock runs right now */}
             <div class="live-tag">
               <i />{cam === "auto" ? `LIVE · ${rend.current?.shotLabel ?? "전체 맵"}` : "LIVE"}
-              {/* not while the clock stands still (pause, the end) */}
+              {/* not while the clock stands still (pause, the tutorial explaining the screen, the end) */}
               {pace.current.running && <span class={`pace ${pace.current.target <= 1 ? "real" : pace.current.target < speed ? "slow" : ""}`}>{pace.current.target <= 1 ? "실시간" : `${pace.current.target}배속`}</span>}
             </div>
             {(() => {
@@ -626,7 +643,7 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
               </div>
             )}
           </div>
-          <div class="row" style={{ justifyContent: "center", marginTop: 6 }}>
+          <div class="row" data-tut="match-ctrl" style={{ justifyContent: "center", marginTop: 6 }}>
             {([["auto", "중계"], ["all", "전체"], ["top", "탑"], ["jungle", "정글"], ["mid", "미드"], ["bot", "바텀"]] as [CamMode, string][]).map(([k, l]) => (
               <button class={`btn small ${cam === k ? "on" : ""}`} onClick={() => { if (k === "jungle" && rend.current) rend.current.followIdx = e.units.find((u) => u.side === userSide && u.role === "Jungle")!.i; setCam(k); }}>{l}</button>
             ))}
@@ -636,7 +653,7 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
             <button class={`btn small ${slowmo ? "on" : ""}`} onClick={() => setSlowmo(!slowmo)} title="6명 이상이 붙는 한타는 고른 배속과 상관없이 실제 속도로 보여 주고, 중계 카메라가 그때만 확대합니다. 4~5명 교전은 최대 4배속으로 늦춥니다. 끄면 항상 고른 배속과 전체 맵입니다.">한타 실시간</button>
             <button class="btn small" onClick={skipToEnd}>끝까지</button>
           </div>
-          <div class="row" style={{ justifyContent: "center" }}>
+          <div class="row" data-tut="match-tactic" style={{ justifyContent: "center" }}>
             <span class="muted">작전</span>
             {(["aggressive", "standard", "safe"] as Tactic[]).map((t) => <button class={`btn small ${tac === t ? "on" : ""}`} onClick={() => { setTac(t); setTactic(t); }}>{t === "aggressive" ? "공격적" : t === "standard" ? "표준" : "안정적"}</button>)}
           </div>

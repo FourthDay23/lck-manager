@@ -17,8 +17,8 @@ class Store {
   /** While the code-match screen is open, screens read this throwaway state instead of the career save. */
   override: GameState | null = null;
   exState: GameState | null = null;
-  /** Tutorial step being shown (ui/Tutorial.tsx), null when off. */
-  tut: number | null = null;
+  /** Tutorial part and step being shown (ui/Tutorial.tsx), null when off. */
+  tut: { part: string; i: number } | null = null;
   /** One-time tip being shown (ui/Tutorial.tsx tipOnce), null when off. */
   tip: { key: string; sel?: string; text?: string; title: string; body: string } | null = null;
   open(kind: string, arg?: string, arg2?: string) {

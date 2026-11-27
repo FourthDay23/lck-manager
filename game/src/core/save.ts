@@ -16,7 +16,7 @@ export async function saveGame(s: GameState, slot: number) {
   await set(KEY(slot), packed);
   const meta: SlotMeta = {
     slot, team: s.user, teamName: s.teams[s.user]?.name ?? s.user, day: s.day, season: s.season, savedAt: Date.now(),
-    label: `${s.teams[s.user]?.name} · ${fmtDate(s.day)}`,
+    label: `${s.teams[s.user]?.name} · ${fmtDate(s.day)}${s.over ? " · 게임 오버" : ""}`,
   };
   localStorage.setItem(META(slot), JSON.stringify(meta));
 }

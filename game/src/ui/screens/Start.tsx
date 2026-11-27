@@ -31,7 +31,7 @@ export function StartScreen() {
     store.screen = { name: "home" };
     autosave();
     store.bump();
-    startTutorial(); // first new game on this browser only
+    startTutorial(); // every new game: the save's tutorial record starts empty
   };
   const load = async (n: number) => {
     const s = await loadGame(n);
@@ -41,6 +41,7 @@ export function StartScreen() {
     store.s = s;
     store.screen = { name: "home" };
     store.bump();
+    startTutorial(); // a save that has not finished the intro picks it up again
   };
   const openFile = async (e: Event) => {
     const f = (e.target as HTMLInputElement).files?.[0];
@@ -53,6 +54,7 @@ export function StartScreen() {
     await saveGame(r.s, slot);
     store.screen = { name: "home" };
     store.bump();
+    startTutorial();
   };
   return (
     <div class="start">

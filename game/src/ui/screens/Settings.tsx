@@ -21,6 +21,7 @@ export function SettingsScreen() {
     store.s = g;
     store.slot = n;
     store.go("home");
+    startTutorial(); // a save that has not finished the intro picks it up again
   };
   return (
     <div style={{ maxWidth: 760 }}>
@@ -66,6 +67,7 @@ export function SettingsScreen() {
               await saveGame(r.s, store.slot);
               store.s = r.s;
               store.go("home");
+              startTutorial();
             }} />
           </label>
         </div>
@@ -73,13 +75,13 @@ export function SettingsScreen() {
       <div class="frame pad">
         <h2>튜토리얼</h2>
         <div class="row">
-          <span class="muted">게임 화면과 할 일을 차례로 안내합니다.</span>
+          <span class="muted">게임 화면과 할 일, 경기 날 밴픽까지 차례로 안내합니다. 새 게임마다 처음부터 나옵니다.</span>
           <button class="btn" onClick={() => startTutorial(true)}>튜토리얼 다시 보기</button>
         </div>
       </div>
       <div class="frame pad">
         <h2>새 게임</h2>
-        <button class="btn danger" onClick={() => { store.s = null; store.bump(); }}>시작 화면으로</button>
+        <button class="btn danger" onClick={() => { store.s = null; store.tut = null; store.tip = null; store.bump(); }}>시작 화면으로</button>
         <span class="muted"> 현재 진행은 자동 저장된 상태로 남습니다.</span>
       </div>
       <div class="frame pad dim" style={{ fontSize: 11 }}>

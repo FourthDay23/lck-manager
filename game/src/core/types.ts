@@ -303,6 +303,12 @@ export interface GameState {
   meta?: MetaState;
   /** Big pop-up notices the player must see (trade offers, transfer bids). Shown one at a time, newest last. */
   alerts?: { id: string; day: number; kind: "trade" | "sale" | "info"; title: string; body: string; ref?: string }[];
+  /** Game over: a day ended with the user's cash below zero (core/game.ts advanceDay). The save stays like this. */
+  over?: { day: number; cash: number };
+  /** Cash may stay below zero until this day: saves that were already in the red when game over came in (v4). */
+  debtGrace?: number;
+  /** Tutorial parts and one-time tips seen in this save, and "off" once skipped (ui/Tutorial.tsx). */
+  tut?: string[];
 }
 
 export type { Role, Attrs };

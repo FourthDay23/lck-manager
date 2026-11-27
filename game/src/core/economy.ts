@@ -3,7 +3,7 @@ import { dayOfMonth, money, monthKey } from "./format";
 import { addNews, inbox } from "./news";
 import { ovr } from "./player";
 import { clamp, Rng } from "./rng";
-import { releasePlayer, autoLineup } from "./market";
+import { releasePlayer, autoLineup, pushAlert } from "./market";
 import type { GameState, GoodsKind, GoodsRun, Player, Team } from "./types";
 import { earn, spend } from "./ledger";
 export { earn, spend, ledger, monthlyWages } from "./ledger";
@@ -49,11 +49,28 @@ export function economyDay(s: GameState, rng: Rng) {
     for (const [k, v] of Object.entries(monthlyIncomePreview(s))) earn(s, k, v);
     spend(s, "시설 유지비", facilityUpkeep(s.teams[s.user]));
   }
+  if (dom === 18) paydayWarning(s);
   if (dom === 25 && s.lastPayMonth !== monthKey(s.day)) {
     s.lastPayMonth = monthKey(s.day);
     payday(s, rng);
   }
   goodsDay(s, rng);
+}
+
+/**
+ * A week before payday: staff are always paid (players can go unpaid), so cash below the staff bill means the
+ * day ends in the red on the 25th, and that is game over. Stops the clock with a notice.
+ */
+function paydayWarning(s: GameState) {
+  const t = s.teams[s.user];
+  const staffPay = t.staff.reduce((a, id) => a + Math.round((s.staff[id]?.contract?.salary ?? 0) / 12), 0);
+  if (t.cash - staffPay >= 0) return;
+  pushAlert(s, {
+    kind: "info",
+    title: "급여일에 자금이 마이너스가 됩니다",
+    body: `25일에 스태프 연봉 ${money(staffPay)}이 나가면 자금(지금 ${money(t.cash)})이 마이너스가 됩니다. 자금이 마이너스인 채로 하루가 지나면 게임 오버입니다. 선수를 팔거나 계약을 정리해 그 전에 메우세요.`,
+    ref: "payday-warning",
+  });
 }
 
 /** Salaries. Players who go unpaid three months in a row either walk out or take a pay cut. */
