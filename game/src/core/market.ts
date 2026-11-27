@@ -13,9 +13,8 @@ import { eventAskMul, outLabel } from "./evmemo";
 export const ROSTER_MAX = 10;
 
 // ---------- windows ----------
-export function windowOpen(s: GameState): boolean {
-  const d = seasonDates(s.season);
-  const dn = s.day;
+function openOn(season: number, dn: number): boolean {
+  const d = seasonDates(season);
   if (dn < d.cup) return true; // stove league
   if (dn >= d.cup + 47 && dn <= d.break1End) return true; // after the cup
   if (dn >= d.msi && dn < d.reg2) return true; // mid-season
@@ -23,8 +22,28 @@ export function windowOpen(s: GameState): boolean {
   return false;
 }
 
+export function windowOpen(s: GameState): boolean {
+  return openOn(s.season, s.day);
+}
+
 export function windowLabel(s: GameState): string {
   return windowOpen(s) ? "이적시장 열림" : "이적시장 닫힘";
+}
+
+/**
+ * When the window next opens (if closed today) or closes (if open today): `day` is the first day in the other state,
+ * `days` how many days away it is. Walks the same rule as windowOpen day by day, rolling to the next season after
+ * its last day (seasonEnd runs on seasonDates().end, so the day after belongs to the next season).
+ */
+export function windowCountdown(s: GameState): { open: boolean; days: number; day: number } {
+  const open = windowOpen(s);
+  let season = s.season;
+  for (let k = 1; k <= 400; k++) {
+    const dn = s.day + k;
+    while (dn > seasonDates(season).end) season++;
+    if (openOn(season, dn) !== open) return { open, days: k, day: dn };
+  }
+  return { open, days: 0, day: s.day };
 }
 
 // ---------- lineup helpers ----------
