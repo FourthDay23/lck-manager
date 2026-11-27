@@ -132,7 +132,11 @@ export class MatchRenderer {
   /** Skill effects, cast chips and hit feedback (see vfx.ts). */
   readonly skills = new SkillFx(this);
 
-  constructor(private canvas: HTMLCanvasElement, private e: Engine, version: string, highlightSide: 0 | 1 | null) {
+  /** team id -> the short name the captions use (HLE, not Hanwha Life Esports), as big on the scoreboard */
+  private shortOf: (teamId: string) => string | undefined;
+
+  constructor(private canvas: HTMLCanvasElement, private e: Engine, version: string, highlightSide: 0 | 1 | null, shortOf?: (teamId: string) => string | undefined) {
+    this.shortOf = shortOf ?? (() => undefined);
     canvas.width = RES;
     canvas.height = RES;
     this.ctx = canvas.getContext("2d")!;
@@ -176,14 +180,32 @@ export class MatchRenderer {
     return `${u.name}(${u.champ.name})`;
   }
 
+  /** The two teams as the captions name them, blue first: short names, the full name when there is none. */
+  private get names(): [string, string] {
+    const e = this.e;
+    return [this.shortOf(e.teamIds[0]) || e.names[0], this.shortOf(e.teamIds[1]) || e.names[1]];
+  }
+
+  /** An engine line with the full team names in it ("Hanwha Life Esports 탑 1차 포탑 파괴") put in short names. */
+  private shorten(text: string): string {
+    const full = this.e.names, short = this.names;
+    // two teams of the same name (codes of one team): the text cannot tell which side it means, keep it
+    if (full[0] === full[1]) return text;
+    // the longer name first, so "Gen.G" does not eat the start of "Gen.G Global Academy"
+    const order = [0, 1].filter((i) => full[i] && full[i] !== short[i]).sort((a, b) => full[b].length - full[a].length);
+    if (!order.length) return text;
+    const re = new RegExp(order.map((i) => full[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g");
+    return text.replace(re, (m) => short[full.indexOf(m)] ?? m);
+  }
+
   /** Where on the map a point is, in words a caster would use. */
   private placeOf(x: number, y: number): string {
     const e = this.e;
     const p = { x, y };
     if (Math.hypot(x - DRAGON_PIT.x, y - DRAGON_PIT.y) < 1500) return "드래곤 둥지";
     if (Math.hypot(x - BARON_PIT.x, y - BARON_PIT.y) < 1500) return "바론 둥지";
-    if (Math.hypot(x - NEXUS[0].x, y - NEXUS[0].y) < 3400) return `${e.names[0]} 본진`;
-    if (Math.hypot(x - NEXUS[1].x, y - NEXUS[1].y) < 3400) return `${e.names[1]} 본진`;
+    if (Math.hypot(x - NEXUS[0].x, y - NEXUS[0].y) < 3400) return `${this.names[0]} 본진`;
+    if (Math.hypot(x - NEXUS[1].x, y - NEXUS[1].y) < 3400) return `${this.names[1]} 본진`;
     let lane = "", best = Infinity;
     for (const l of LANES) {
       const q = lanePoint(l, laneU(l, p));
@@ -193,13 +215,13 @@ export class MatchRenderer {
     if (best < 1200) return `${LANE_KO[lane]}`;
     const diag = x + y - MIRROR_C;
     if (Math.abs(diag) < 1700) return x < y ? "위쪽 강가" : "아래쪽 강가";
-    return `${e.names[diag < 0 ? 0 : 1]} 정글`;
+    return `${this.names[diag < 0 ? 0 : 1]} 정글`;
   }
 
-  /** "T1 3 대 Gen.G 2" head count, blue side first. */
+  /** "T1 3 대 GEN 2" head count, blue side first. */
   private headcount(units: Unit[]): string {
     const b = units.filter((u) => u.side === 0).length, r = units.length - b;
-    return `${this.e.names[0]} ${b} 대 ${this.e.names[1]} ${r}`;
+    return `${this.names[0]} ${b} 대 ${this.names[1]} ${r}`;
   }
 
   /** Caption text for a recent event. */
@@ -211,9 +233,9 @@ export class MatchRenderer {
     // engine lines look like "첫 포탑! T1가 ..." or "T1, 내셔 남작 처치!": drop a short shout-out prefix and a trailing "!"
     const plain = (t: string) => {
       const m = t.match(/^([^!,]{1,10})!\s*(.+)$/);
-      return (m ? m[2] : t).replace(/!$/, "");
+      return this.shorten(m ? m[2] : t).replace(/!$/, "");
     };
-    const team = e.names[ev.side];
+    const team = this.names[ev.side];
     switch (ev.type) {
       case "kill": return a && v ? `${place}에서 ${josa(this.tag(a), "이가")} ${josa(this.tag(v), "을를")} 잡았습니다` : plain(ev.text);
       case "first_blood": return a && v ? `퍼스트 블러드: ${place}에서 ${josa(this.tag(a), "이가")} ${josa(this.tag(v), "을를")} 잡았습니다` : plain(ev.text);
@@ -271,10 +293,10 @@ export class MatchRenderer {
       const reason = contested
         ? `${josa(noun, "을를")} 두고 양 팀 ${near.length}명이 모였습니다`
         : hitting
-          ? `${josa(e.names[side], "이가")} ${josa(noun, "을를")} 치기 시작했습니다`
+          ? `${josa(this.names[side], "이가")} ${josa(noun, "을를")} 치기 시작했습니다`
           : near.length === 1
             ? `${josa(this.tag(near[0]), "이가")} ${noun} 쪽으로 왔습니다`
-            : `${e.names[side]} ${near.length}명이 ${noun} 앞에 모였습니다`;
+            : `${this.names[side]} ${near.length}명이 ${noun} 앞에 모였습니다`;
       out.push({ id: `o${k}`, x: o.pos.x, y: o.pos.y, size: 4800, score: base + near.length * 2 + (contested ? 12 : 0), label: contested ? `${label} 대치` : label, reason });
     }
     // sieges: two or more attackers at a standing structure
@@ -283,7 +305,7 @@ export class MatchRenderer {
       const att = e.units.filter((u) => u.alive && u.side !== t.side && Math.hypot(u.x - t.pos.x, u.y - t.pos.y) < 1100);
       if (att.length < 2) continue;
       const where = t.lane === "nexus" ? "쌍둥이 포탑" : `${t.lane === "top" ? "탑" : t.lane === "mid" ? "미드" : "바텀"} ${t.tier}차 포탑`;
-      const reason = `${e.names[att[0].side]} ${att.length}명이 ${e.names[t.side]}의 ${josa(where, "을를")} 두드립니다`;
+      const reason = `${this.names[att[0].side]} ${att.length}명이 ${this.names[t.side]}의 ${josa(where, "을를")} 두드립니다`;
       out.push({ id: `t${t.lane}${t.tier}${t.side}${t.pos.x}`, x: t.pos.x, y: t.pos.y, size: 5200, score: 9 + att.length * 3 + (t.tier >= 3 ? 6 : 0), label: `${where} 공략`, reason });
     }
     // what is about to happen: the camera should already be there when it starts
@@ -332,7 +354,7 @@ export class MatchRenderer {
           const where = `${LANE_KO[p.lane]} ${t.tier}차 포탑`;
           out.push({
             id: `t${t.lane}${t.tier}${t.side}${t.pos.x}`, x: t.pos.x, y: t.pos.y, size: 5200, score: 12 + p.members.length * 2,
-            label: `${where} 공략`, reason: `${josa(e.names[side], "이가")} ${where} 공성을 준비합니다`,
+            label: `${where} 공략`, reason: `${josa(this.names[side], "이가")} ${where} 공성을 준비합니다`,
           });
         }
       }
@@ -344,7 +366,7 @@ export class MatchRenderer {
         const w = Math.max(...list.map((x) => (x.phase === "commit" ? 1 : x.phase === "gather" ? 0.85 : 0.6)));
         const both = list.length > 1;
         const a = list[0];
-        const team = e.names[a.side];
+        const team = this.names[a.side];
         const reason = both
           ? `양 팀이 ${noun} 앞으로 모이고 있습니다`
           : a.contest
@@ -747,7 +769,7 @@ export class MatchRenderer {
 
   /** The result of the teamfight the camera just left (pacing.ts FightResult). */
   sayResult(r: { kills: [number, number]; taken: { side: 0 | 1; text: string }[]; x: number; y: number }, now: number) {
-    const n = this.e.names;
+    const n = this.names;
     const took = r.taken.map((t) => `${n[t.side]} ${t.text}`).join(", ");
     const text = r.kills[0] + r.kills[1] === 0
       // (the place as the tag named this fight, so "바론 둥지 한타" does not end as "위쪽 강가 한타")

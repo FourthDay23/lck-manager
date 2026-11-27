@@ -721,7 +721,8 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
   /** the pace the match loop is running at right now (pacing.ts): the speed it is heading for, 1 = real time */
   const pace = useRef({ target: DEFAULT_SPEED, running: false });
   useEffect(() => {
-    const r = new MatchRenderer(canvas.current!, e, data.ddVersion, userSide);
+    // captions name the teams by their short names (HLE), like the scoreboard and the banners
+    const r = new MatchRenderer(canvas.current!, e, data.ddVersion, userSide, (id) => (store.override ?? store.s)?.teams[id]?.short);
     rend.current = r;
     // the clock and the auto camera go together: fast-forward on the whole map, real time and a close-up only for a
     // teamfight of six or more, smaller fights at 4x at most (pacing.ts)
