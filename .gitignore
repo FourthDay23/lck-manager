@@ -5,6 +5,9 @@ __pycache__/
 *.pyc
 .vite/
 
-# 이 컴퓨터에서만 쓰는 것: 수집 로그, 도구 설정
+# 이 컴퓨터에서만 쓰는 것: 수집 로그, 도구 설정, 작업 워크트리·현황 레지스트리, 컨펌용 데모
+# (.claude/skills/는 작업 워크트리에서도 보이도록 저장소에 둔다. CLAUDE.md 참고)
 logs/
-.claude/
+.claude/*
+!.claude/skills/
+demos/
