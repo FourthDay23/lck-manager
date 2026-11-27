@@ -8,6 +8,7 @@ import { money } from "./format";
 import type { Bid, GameState, Player, Staff, Team, TradeOffer } from "./types";
 import { seasonDates } from "./schedule";
 import { earn, spend, teamCash } from "./ledger";
+import { eventAskMul, outLabel } from "./evmemo";
 
 export const ROSTER_MAX = 10;
 
@@ -240,6 +241,7 @@ export function currentAsk(s: GameState, p: Player, mode: NegMode, years: number
   ask *= star ? [1, 1, 1.03, 1.08][years] ?? 1 : [1, 1.06, 1, 0.97][years] ?? 1;
   if (mode === "renew") ask *= p.morale >= 75 ? 0.93 : p.morale < 40 ? 1.2 : 1;
   ask *= p.interview?.salaryMul ?? 1;
+  if (mode === "renew") ask *= eventAskMul(s, p); // broken promises, early or promised raises (core/events.ts)
   ask *= s.difficulty === "hard" ? 1.08 : s.difficulty === "easy" ? 0.92 : 1;
   return Math.max(6000, Math.round(ask / 100) * 100);
 }
@@ -454,7 +456,7 @@ export function offerFee(s: GameState, p: Player, fee: number): { ok: boolean; c
 export function willTalk(s: GameState, p: Player): { ok: boolean; msg?: string } {
   if (p.retired) return { ok: false, msg: "은퇴한 선수입니다." };
   if (p.lockUntil && p.lockUntil > s.day) return { ok: false, msg: `협상 거부 중 (${p.lockUntil - s.day}일 남음)` };
-  if (p.scandal) return { ok: false, msg: "징계 중이라 협상할 수 없습니다." };
+  if (p.scandal) return { ok: false, msg: `${outLabel(p)} 중이라 협상할 수 없습니다.` };
   if (p.team && p.team !== s.user) {
     const t = s.teams[p.team];
     const mine = s.teams[s.user];

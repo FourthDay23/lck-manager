@@ -206,7 +206,7 @@ export function RosterScreen() {
               if (!p.trainChamp && pool.length) p.trainChamp = pool[0];
               return (
                 <tr>
-                  <td><div class="row" style={{ gap: 6 }}><Avatar pid={p.id} size={24} /><PName pid={p.id} />{p.listed && <span class="tag gold">이적 목록</span>}{p.scandal && <span class="tag red">징계 {p.scandal}일</span>}{p.unpaid > 0 && <span class="tag red">체불 {p.unpaid}개월</span>}</div></td>
+                  <td><div class="row" style={{ gap: 6 }}><Avatar pid={p.id} size={24} /><PName pid={p.id} />{p.listed && <span class="tag gold">이적 목록</span>}{p.scandal && <span class={`tag ${!p.outWhy || p.outWhy === "징계" || p.outWhy === "부상" ? "red" : ""}`}>{p.outWhy ?? "징계"} {p.scandal}일</span>}{(p.restDays ?? 0) > 0 && <span class="tag">휴식 {p.restDays}일</span>}{p.retireAfter && <span class="tag">시즌 뒤 은퇴</span>}{p.unpaid > 0 && <span class="tag red">체불 {p.unpaid}개월</span>}</div></td>
                   <td><RoleTag r={p.role} /></td>
                   <td class="num"><Ovr v={ovr(p)} /></td>
                   <td class="muted">{potWord(p.pot - ovr(p), analysis, p.id)}</td>

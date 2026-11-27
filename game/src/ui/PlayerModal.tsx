@@ -1,12 +1,26 @@
 import { S, D, store } from "../store";
 import { ATTR_KEYS, ATTR_KO, ROLE_KO } from "../data/types";
 import { age, marketValue, ovr, salaryAsk, traitWord } from "../core/player";
-import { money } from "../core/format";
+import { fmtShort, money } from "../core/format";
+import { memoOf } from "../core/evmemo";
 import { terminatePenalty, terminateUser, willTalk, windowOpen } from "../core/market";
 import { Avatar, Bar, ChampIcon, Modal, Ovr, TeamLogo } from "./components";
 import { potWord } from "./screens/Roster";
 import { autosave } from "./App";
 import { callUp, canCallUp } from "../core/academy";
+
+/** The player's event memory (core/events.ts): choices made about him, promises, grudges. Newest first. */
+function EventLog({ pid }: { pid: string }) {
+  const list = [...memoOf(S(), pid)].reverse().slice(0, 8);
+  return (
+    <div style={{ marginTop: 6 }}>
+      <h3 style={{ margin: "4px 0" }}>이벤트 기록</h3>
+      {list.length ? list.map((m) => (
+        <div class={`ev-log ${m.tag === "배신" || m.tag === "앙금" ? "neg" : m.tag === "약속지킴" ? "gold" : "muted"}`}>{fmtShort(m.day)} {m.text}</div>
+      )) : <div class="muted ev-log">아직 없습니다</div>}
+    </div>
+  );
+}
 
 export function PlayerModal({ pid }: { pid: string }) {
   const s = S();
@@ -72,6 +86,7 @@ export function PlayerModal({ pid }: { pid: string }) {
               <div style={{ fontSize: 12 }}>통산(게임 속): {p.career.g}세트 · 우승 {p.career.titles.length}회</div>
               {p.career.titles.slice(-5).map((t) => <div class="gold" style={{ fontSize: 11 }}>🏆 {t}</div>)}
               <div class="dim" style={{ fontSize: 11, marginTop: 4 }}>{p.history.slice(-4).join(" / ")}</div>
+              {mine && <EventLog pid={p.id} />}
             </div>
             <div class="frame dark pad">
               <h3>계약 · 가치</h3>

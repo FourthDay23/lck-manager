@@ -239,6 +239,12 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
 
 .speech { padding: 8px 12px; background: #111420; box-shadow: 0 0 0 2px var(--line); margin: 6px 0; }
 .qbtn { display: block; width: 100%; text-align: left; margin: 3px 0; }
+/* choice events (core/events.ts): what may happen, in words */
+.ev-opt { padding: 6px 10px; }
+.ev-opt .ev-hint { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.ev-opt:disabled { opacity: 0.45; }
+.ev-line { font-size: 13px; margin: 2px 0; }
+.ev-log { font-size: 11px; margin: 1px 0; }
 
 .title-logo { font-family: "Galmuri14"; font-size: 46px; letter-spacing: 3px; color: var(--gold); text-shadow: 4px 4px 0 #3a2a08, 8px 8px 0 #000; }
 

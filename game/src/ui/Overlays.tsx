@@ -6,6 +6,7 @@ import { ovr } from "../core/player";
 import { Avatar, Modal, Ovr, TeamLogo, TrophyArt } from "./components";
 import { autosave } from "./App";
 import { ROLE_KO } from "../data/types";
+import { money } from "../core/format";
 import "./alerts.css";
 
 export function EventModal() {
@@ -13,19 +14,50 @@ export function EventModal() {
   const ev = s.events[0];
   if (!ev) return null;
   const p = ev.player ? s.players[ev.player] : null;
+  const q = ev.other ? s.players[ev.other] : null;
+  const who = (x: typeof p) => x && <div class="col center"><Avatar pid={x.id} size={72} /><b>{x.name}</b><Ovr v={ovr(x)} /><span class="muted">사기 {Math.round(x.morale)}</span></div>;
   return (
     <Modal onClose={() => {}}>
       <h2>{ev.title}</h2>
       <div class="row" style={{ alignItems: "flex-start", gap: 14 }}>
-        {p && <div class="col center"><Avatar pid={p.id} size={72} /><b>{p.name}</b><Ovr v={ovr(p)} /><span class="muted">사기 {Math.round(p.morale)}</span></div>}
+        {(p || q) && <div class="col" style={{ gap: 10 }}>{who(p)}{who(q)}</div>}
         <div style={{ flex: 1 }}>
           <div class="speech">{ev.body}</div>
           {ev.options.map((o, i) => (
-            <button class="btn qbtn" onClick={() => { resolveEvent(s, ev.id, i); autosave(); store.bump(); }}>
-              <b>{o.label}</b> <span class="muted">— {o.desc}</span>
+            <button class="btn qbtn ev-opt" disabled={o.disabled} onClick={() => { resolveEvent(s, ev.id, i); autosave(); store.bump(); }}>
+              <div class="row" style={{ justifyContent: "space-between", gap: 8 }}>
+                <b>{o.label}</b>
+                {o.cost ? <span class={o.cost > s.teams[s.user].cash ? "neg" : "gold"} style={{ fontSize: 12 }}>-{money(o.cost)}</span> : null}
+              </div>
+              {ev.def ? (o.hints ?? []).map((h) => <div class="ev-hint">{h}</div>) : <span class="muted">— {o.desc}</span>}
+              {o.cost !== undefined && o.cost > s.teams[s.user].cash && <div class="neg" style={{ fontSize: 11 }}>자금이 모자랍니다</div>}
             </button>
           ))}
         </div>
+      </div>
+    </Modal>
+  );
+}
+
+/** What the last choice did. Shown until confirmed; may open a follow-up screen (renewal talk). */
+export function EventResultModal() {
+  const s = S();
+  const r = s.ev?.result;
+  if (!r || !r.title) return null;
+  const done = () => {
+    s.ev!.result = undefined;
+    autosave();
+    store.bump();
+    if (r.open) store.open("nego", r.open.pid, r.open.mode);
+  };
+  return (
+    <Modal onClose={done}>
+      <h2>{r.title}</h2>
+      <div class="frame dark pad" style={{ marginBottom: 10 }}>
+        {r.lines.map((l) => <div class="ev-line">· {l}</div>)}
+      </div>
+      <div class="row" style={{ justifyContent: "flex-end" }}>
+        <button class="btn primary" onClick={done}>{r.open ? "확인 (재계약 협상으로)" : "확인"}</button>
       </div>
     </Modal>
   );

@@ -33,6 +33,7 @@ import { autosave } from "../App";
 import { seriesWinProb } from "../../core/quick";
 import { META_LABEL, metaTier } from "../../core/meta";
 import { tutSpot } from "../Tutorial";
+import { chooseSetBreak, setBreakDue, setBreakOptions } from "../../core/events";
 
 interface Live {
   srId: string;
@@ -191,11 +192,27 @@ export function SeriesScreen() {
   }
 
   const pWin = seriesWinProb(0.5, sr.bo);
+  // set-break talk after a lost game (core/events.ts N15): once a series, before the next game is set up
+  const breakNow = L.phase === "post" && setBreakDue(s, sr);
+  const breakDone = s.ev?.setBreak?.sr === sr.id ? s.ev.setBreak.lines : null;
   return (
     <div>
       {header}
       {(L.phase === "post" || L.phase === "done") && L.last && <GameResult g={L.last} />}
-      {L.phase === "done" ? (
+      {breakNow && (
+        <div class="frame pad" style={{ marginBottom: 8 }}>
+          <h2>세트 사이 대기실</h2>
+          <div class="speech">세트를 내줬습니다. 대기실 분위기가 무겁습니다. 다음 세트 전에 한마디 해야 합니다.</div>
+          {setBreakOptions().map((o, i) => (
+            <button class="btn qbtn ev-opt" onClick={() => { chooseSetBreak(s, sr, i); autosave(); bump(); }}>
+              <b>{o.label}</b>
+              {o.hints.map((h) => <div class="ev-hint">{h}</div>)}
+            </button>
+          ))}
+        </div>
+      )}
+      {!breakNow && L.phase === "post" && breakDone && <div class="frame pad muted" style={{ marginBottom: 8 }}>대기실: {breakDone.join(", ")}</div>}
+      {breakNow ? null : L.phase === "done" ? (
         <div class="frame pad center">
           <h1 class={sr.wa > sr.wb === (sr.a === s.user) ? "gold" : "neg"}>{(sr.wa > sr.wb) === (sr.a === s.user) ? "시리즈 승리" : "시리즈 패배"}</h1>
           <button class="btn primary" onClick={finishSeries}>마치고 돌아가기</button>

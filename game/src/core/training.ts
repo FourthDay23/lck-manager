@@ -41,7 +41,10 @@ export function training(s: GameState, rng: Rng, matchToday: boolean) {
     if (!p) continue;
     // auto rest: a tired player sits out today without changing his training setting
     const autoRest = plan.autoRestAt !== null && p.fatigue >= plan.autoRestAt;
-    if (sunday || p.train === "rest" || autoRest) {
+    // rest days given in an event (core/events.ts)
+    const evRest = (p.restDays ?? 0) > 0;
+    if (evRest) p.restDays = p.restDays! - 1 || undefined;
+    if (sunday || p.train === "rest" || autoRest || evRest) {
       p.fatigue = clamp(p.fatigue - restRecovery(t), 0, 100);
       p.morale = clamp(p.morale + 0.6, 0, 100);
       continue;

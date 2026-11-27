@@ -28,7 +28,7 @@ import { GameOverScreen } from "./screens/GameOver";
 import { PlayerModal } from "./PlayerModal";
 import { NegotiationModal } from "./Negotiation";
 import { StaffNegotiationModal } from "./StaffNegotiation";
-import { AlertLayer, EventModal, CutsceneLayer } from "./Overlays";
+import { AlertLayer, EventModal, EventResultModal, CutsceneLayer } from "./Overlays";
 import { TutorialLayer } from "./Tutorial";
 import { TeamModal } from "./screens/Teams";
 
@@ -158,8 +158,9 @@ export function App() {
       {st.modal?.kind === "nego" && <NegotiationModal key={`${st.modal.arg}:${st.modal.arg2}`} pid={st.modal.arg!} mode={(st.modal.arg2 as "sign" | "renew" | "transfer") ?? "sign"} />}
       {st.modal?.kind === "staffnego" && <StaffNegotiationModal key={st.modal.arg} sid={st.modal.arg!} />}
       {st.modal?.kind === "team" && <TeamModal id={st.modal.arg!} />}
-      {s.events.length > 0 && scr !== "series" && scr !== "exhibition" && <EventModal />}
-      {(s.alerts?.length ?? 0) > 0 && !s.events.length && scr !== "series" && scr !== "exhibition" && <AlertLayer />}
+      {s.events.length > 0 && !s.ev?.result?.title && scr !== "series" && scr !== "exhibition" && <EventModal />}
+      {!!s.ev?.result?.title && scr !== "series" && scr !== "exhibition" && <EventResultModal />}
+      {(s.alerts?.length ?? 0) > 0 && !s.events.length && !s.ev?.result?.title && scr !== "series" && scr !== "exhibition" && <AlertLayer />}
       <CutsceneLayer />
       <TutorialLayer />
       {st.toast && <div class="toast frame">{st.toast.text}</div>}

@@ -15,10 +15,12 @@ import { patchDue, rollPatch } from "./meta";
 import { training } from "./training";
 import { aiDailyMarket, autoLineup, joinTeam, releasePlayer, releaseStaff, staffAsk, windowOpen } from "./market";
 import { economyDay, earn, spend, seriesRewards, sponsorFor } from "./economy";
-import type { CompId, Difficulty, GameState, ModalEvent, Player, Series, Staff, Team } from "./types";
+import type { CompId, Difficulty, GameState, Player, Series, Staff, Team } from "./types";
 import { COMP_NAME } from "./types";
+import { afterUserSeries, endSetBreak, eventsDay, FICTION, MILD_SCANDALS, resolveChoice, SERIOUS_SCANDALS, sponsorEventMul } from "./events";
+import { newEvState } from "./evmemo";
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export interface NewGameOpts { team: string; difficulty: Difficulty; manager: string; seed?: number }
 
@@ -70,7 +72,7 @@ export function newGame(data: GameData, o: NewGameOpts): GameState {
     version: SAVE_VERSION, seed, rng: rng.state, day: 0, season, difficulty: o.difficulty, user: o.team,
     managerName: o.manager || "단장", players: {}, staff: {}, teams: {}, lck: [], intl: [], comps: [], series: [],
     bids: [], tradeOffers: [], saleOffers: [], news: [], trophies: [], ledger: [], events: [], cutscenes: [], inbox: [],
-    genCount: 0, stats: { seasonsPlayed: 0, seriesW: 0, seriesL: 0 }, tut: [],
+    genCount: 0, stats: { seasonsPlayed: 0, seriesW: 0, seriesL: 0 }, tut: [], ev: newEvState(0),
   };
   for (const td of data.teams.filter((t) => t.tier === 1)) {
     const t = teamFromData(td, o.team, o.difficulty);
@@ -195,55 +197,15 @@ function moraleDay(s: GameState, rng: Rng) {
     else p.morale = clamp(p.morale - 0.15 - p.persona.ambition * 0.35 - (p.contract?.starterPromise ? 0.6 : 0), 0, 100);
     p.form *= 0.995;
   }
-  if (s.events.length) return;
-  const low = t.roster.map((id) => s.players[id]).filter((p) => p && p.morale < 40).sort((a, b) => a.morale - b.morale)[0];
-  if (low && rng.chance(((40 - low.morale) / 40) * 0.2)) s.events.push(moraleEvent(s, low, rng));
+  // low morale no longer raises events by itself here: core/events.ts (M1-M4) does, and the old five
+  // (bench, pay, burnout, slump, late) come only as aftermaths of earlier choices
 }
 
-function moraleEvent(s: GameState, p: Player, rng: Rng): ModalEvent {
-  const starters = new Set(Object.values(s.teams[s.user].lineup));
-  const kinds = ["slump", "pay", "burnout"];
-  if (!starters.has(p.id)) kinds.push("bench");
-  if (p.origin === "gen") kinds.push("late");
-  const k = rng.pick(kinds);
-  const id = `ev${s.day}-${p.id}`;
-  switch (k) {
-    case "bench":
-      return { id, kind: k, player: p.id, title: "출전 불만", body: `${p.name}: "저도 경기에 나가고 싶습니다. 계속 벤치에 있을 거면 차라리 이적을 시켜 주세요."`, options: [
-        { label: "다음 경기 주전 약속", desc: "사기 +15, 다음 경기에 안 쓰면 사기 -20", effect: "promise" },
-        { label: "이적 시장에 올려 줍니다", desc: "사기 +8, 이적 목록에 올라감", effect: "list" },
-        { label: "지금은 참아 주세요", desc: "사기 -8", effect: "deny" },
-      ] };
-    case "pay":
-      return { id, kind: k, player: p.id, title: "연봉 불만", body: `${p.name}: "제 활약에 비해 대우가 너무 적다고 생각합니다."`, options: [
-        { label: "보너스 지급", desc: `현금 -${money(Math.round(salaryAsk(p, s.season) * 0.08))}, 사기 +14`, effect: "bonus" },
-        { label: "재계약 때 반영 약속", desc: "사기 +6, 다음 재계약 요구액 +5%", effect: "later" },
-        { label: "계약은 계약입니다", desc: "사기 -10", effect: "deny" },
-      ] };
-    case "burnout":
-      return { id, kind: k, player: p.id, title: "번아웃", body: `${p.name}: "요즘 게임이 재미가 없어요. 머리가 하얘집니다."`, options: [
-        { label: "3일 완전 휴식", desc: "피로 -35, 사기 +10, 팀 합 -1", effect: "rest" },
-        { label: "심리 상담 지원", desc: `현금 -${money(500)}, 사기 +7, 안정감 +1`, effect: "care" },
-        { label: "버텨야 합니다", desc: "사기 -6, 피지컬 +1", effect: "push" },
-      ] };
-    case "late":
-      return { id, kind: k, player: p.id, title: "연습 지각", body: `신인 ${p.name}가 이번 주에만 세 번째 연습에 늦었습니다. (가상 선수)`, options: [
-        { label: "벌금", desc: "사기 -5, 팀 합 +1", effect: "fine" },
-        { label: "1:1 면담", desc: "사기 +5", effect: "talk" },
-        { label: "2주 출전 정지", desc: "사기 -12, 팀 합 +2, 14일 출전 불가", effect: "ban" },
-      ] };
-    default:
-      return { id, kind: "slump", player: p.id, title: "슬럼프", body: `${p.name}가 최근 솔로랭크에서도 연패 중입니다. 표정이 어둡습니다.`, options: [
-        { label: "강도 높은 개인 훈련", desc: "피지컬 +1, 피로 +15, 사기 +4", effect: "grind" },
-        { label: "VOD로 차분히 복기", desc: "운영 +1, 사기 +4", effect: "vod" },
-        { label: "쉬게 합니다", desc: "피로 -25, 사기 +9", effect: "rest2" },
-      ] };
-  }
-}
-
+/** Choice events go to core/events.ts; events saved before v5 (no `def`) still resolve the old way below. */
 export function resolveEvent(s: GameState, evId: string, opt: number) {
   const ev = s.events.find((e) => e.id === evId);
   if (!ev) return;
+  if (ev.def) return resolveChoice(s, evId, opt);
   s.events = s.events.filter((e) => e.id !== evId);
   const p = ev.player ? s.players[ev.player] : null;
   const t = s.teams[s.user];
@@ -279,39 +241,44 @@ function autoLineupIfUserMissing(s: GameState) {
   }
 }
 
-const SCANDALS = [
-  { t: "솔로랭크 대리 게임 의혹", days: 60, body: "다른 사람 계정을 대신 올려 준 정황이 드러났습니다." },
-  { t: "방송 중 비하 발언 논란", days: 14, body: "개인 방송에서 부적절한 발언을 해 사과문을 올렸습니다." },
-  { t: "솔로랭크 고의 트롤 의혹", days: 21, body: "랭크 게임에서 고의로 패배를 유도했다는 신고가 이어졌습니다." },
-  { t: "불법 프로그램 사용 의혹", days: 90, body: "연습 계정에서 금지 프로그램 사용 흔적이 나왔습니다." },
-];
-
-/** Only fictional prospects ever get scandals; real players never do. */
+/**
+ * Days out (suspension, injury, leave) run down here. Scandals now reach every player, real ones too, always
+ * marked as fiction. The user's club gets them as choice events (core/events.ts N20); LCK clubs here, as news:
+ * 70% a mild incident with no ban, 30% a serious one with a ban.
+ */
 function scandalDay(s: GameState, rng: Rng) {
+  const me = s.teams[s.user];
   for (const p of Object.values(s.players)) {
     if (p.scandal) {
       p.scandal -= 1;
-      if (p.scandal <= 0) p.scandal = undefined;
+      if (p.scandal <= 0) {
+        p.scandal = undefined;
+        p.outWhy = undefined;
+        // a starter who sat out for rest or treatment takes his place back from a weaker stand-in
+        const slot = p.outSlot;
+        if (slot && p.team === s.user && !p.academy && !Object.values(me.lineup).includes(p.id)) {
+          const holder = me.lineup[slot] ? s.players[me.lineup[slot]!] : null;
+          if (!holder || ovr(holder) < ovr(p)) me.lineup[slot] = p.id;
+        }
+        p.outSlot = undefined;
+      }
     }
   }
   if (weekday(s.day) !== 3) return;
-  const gens = Object.values(s.players).filter((p) => p.origin === "gen" && p.team && !p.scandal && !p.retired);
-  for (const p of gens) {
+  const pool = Object.values(s.players).filter((p) => p.team && p.team !== s.user && s.lck.includes(p.team) && !p.academy && !p.scandal && !p.retired);
+  for (const p of pool) {
     if (!rng.chance(0.002 + p.persona.temper * 0.004)) continue;
-    const sc = rng.pick(SCANDALS);
     const team = s.teams[p.team!];
-    if (p.team === s.user) {
-      if (s.events.length) continue;
-      s.events.push({ id: `sc${s.day}-${p.id}`, kind: "scandal", player: p.id, title: sc.t, body: `신인 ${p.name}: ${sc.body} (게임 속 가상 사건)`, options: [
-        { label: "출전 정지와 벌금", desc: "21일 출전 불가, 사기 -20, 명성 +1", effect: "sus" },
-        { label: "감싸 줍니다", desc: "명성 -5, 팬 -3%, 사기 +5", effect: "cover" },
-        { label: "계약 해지", desc: "즉시 방출, 명성 +2", effect: "cut" },
-      ] });
-    } else {
-      p.scandal = sc.days;
-      addNews(s, { kind: "scandal", title: `[논란] ${team.name} 신인 '${p.name}', ${sc.t}`, body: `${sc.body} 구단은 ${sc.days}일 출전 정지를 발표했습니다. (게임 속 가상 사건)`, teams: [team.id], players: [p.id] });
-      autoLineup(s, team);
+    if (rng.chance(0.7)) {
+      const sc = rng.pick(MILD_SCANDALS);
+      addNews(s, { kind: "scandal", title: `[해프닝] ${team.name} '${p.name}', ${sc.t}`, body: `${sc.body} 구단이 사과했습니다.${FICTION}`, teams: [team.id], players: [p.id] });
+      continue;
     }
+    const sc = rng.pick(SERIOUS_SCANDALS);
+    p.scandal = sc.days;
+    p.outWhy = "징계";
+    addNews(s, { kind: "scandal", title: `[논란] ${team.name} '${p.name}', ${sc.t}`, body: `${sc.body} 구단은 ${sc.days}일 출전 정지를 발표했습니다.${FICTION}`, teams: [team.id], players: [p.id] });
+    autoLineup(s, team);
   }
 }
 
@@ -609,8 +576,10 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
     }
     p.pot = Math.max(ovr(p), Math.min(p.pot, potentialFor(p.id, ovr(p), a)));
     const military = p.nat === "KR" && !p.exempt && a >= 28 && rng.chance(a >= 29 ? 0.8 : 0.45);
-    const retire = military || (a >= 31 && rng.chance(0.25 + (a - 31) * 0.15)) || (!p.team && ovr(p) < 50 && a >= 24 && rng.chance(0.3));
-    if (retire && !(p.name === "Faker" && a < 35)) {
+    const chose = !!p.retireAfter; // decided in an event this season (core/events.ts N18)
+    p.retireAfter = undefined;
+    const retire = chose || military || (a >= 31 && rng.chance(0.25 + (a - 31) * 0.15)) || (!p.team && ovr(p) < 50 && a >= 24 && rng.chance(0.3));
+    if (retire && (chose || !(p.name === "Faker" && a < 35))) {
       const team = p.team;
       if (team) releasePlayer(s, p, military ? "입대" : "은퇴");
       p.retired = true;
@@ -658,6 +627,7 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
   for (const id of s.lck) {
     const t = s.teams[id];
     t.sponsor = sponsorFor(t);
+    if (id === s.user) t.sponsor = Math.round(t.sponsor * sponsorEventMul(s));
     t.synergy = clamp(t.synergy - 10, 30, 100);
   }
   buildSeason(s, s.season, rng);
@@ -709,6 +679,8 @@ export function advanceDay(s: GameState, data: GameData): AdvanceStop {
   for (const sr of s.series.filter((x) => x.day === s.day && !x.done)) {
     for (const tid of [sr.a, sr.b]) if (tid && tid !== s.user && s.lck.includes(tid)) ensureAiLineupFor(s, tid, rng);
   }
+  // choice events for the new day (aftermaths, low morale, random): on a match day they come before the match
+  eventsDay(s, data, rng);
   s.rng = rng.state;
   // a day that ends in the red ends the game (old saves already in the red get until debtGrace)
   const cash = s.teams[s.user].cash;
@@ -757,7 +729,9 @@ export function autoAdvance(s: GameState, data: GameData, mode: AutoMode): Advan
 /** Called by the UI after the user's whole series is played. */
 export function closeUserSeries(s: GameState, data: GameData, sr: Series) {
   const rng = new Rng(s.rng);
+  endSetBreak(s, sr);
   finishSeries(s, data, sr, rng);
+  afterUserSeries(s, sr, rng);
   stageProgress(s, data, rng);
   s.rng = rng.state;
 }
@@ -815,6 +789,11 @@ export function migrateSave(s: GameState, data: GameData): string[] {
     // v4: tutorial progress lives in the save. A career started before keeps going without the intro;
     // the match-day guides still show once.
     s.tut ??= ["intro", "go"];
+  }
+  if (!s.ev) {
+    // v5: choice events. Old events still on screen resolve the old way (game.ts resolveEvent).
+    s.ev = newEvState(s.day);
+    if (s.version !== undefined && s.version < 5) notes.push("이제 경기 사이사이 선택지 이벤트가 생깁니다. 선수 사기가 많이 떨어지면 따로 이벤트가 뜨고, 선택에 따라 며칠 뒤 후폭풍이 올 수 있습니다.");
   }
   s.version = SAVE_VERSION;
   return notes;

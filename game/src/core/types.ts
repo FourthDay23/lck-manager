@@ -55,7 +55,15 @@ export interface Player {
   askTerms?: { years: number; starter: boolean }; // the terms askSalary was given for (market.ts askFor)
   /** The user's transfer-fee talks with the club that holds his contract (see market.ts feeTalk). */
   feeTalk?: { team: string; season: number; start: number; rounds: number; counter?: number; agreed?: number };
-  scandal?: number; // days of suspension
+  scandal?: number; // days he cannot play (suspension, injury or leave: see outWhy)
+  /** Why `scandal` keeps him out. Missing means a suspension (older saves). */
+  outWhy?: "징계" | "부상" | "휴가" | "휴식";
+  /** The starting role he held when an event sent him to rest or treatment; given back when he returns. */
+  outSlot?: Role;
+  /** Days of rest given by an event: he does not train and recovers like on a rest day (core/training.ts). */
+  restDays?: number;
+  /** He retires when this season ends (an event choice, core/events.ts). */
+  retireAfter?: boolean;
   stats?: { wr?: number; kda?: number; kp?: number; dpm?: number; cspm?: number };
 }
 
@@ -245,7 +253,52 @@ export interface ModalEvent {
   title: string;
   body: string;
   player?: string;
-  options: { label: string; desc: string; effect: string }[];
+  /** Choice events (core/events.ts): `def` is the event, `effect` the option index. Older events have no `def`. */
+  options: {
+    label: string;
+    desc: string;
+    effect: string;
+    /** what may happen, worded by chance ("~할 거예요" / "~할 수도 있어요") */
+    hints?: string[];
+    /** cash it costs, shown as is */
+    cost?: number;
+    disabled?: boolean;
+    /** chances fixed when the event was made, one list per roll */
+    probs?: number[][];
+  }[];
+  def?: string;
+  other?: string;
+  depth?: number;
+  data?: Record<string, number | string>;
+}
+
+/** One line of a player's (or the club's) event memory. */
+export interface EvMemo { tag: string; day: number; ev: string; text: string; other?: string }
+
+/** An aftermath waiting for its day. */
+export interface EvQueued { def: string; due: number; until: number; pid?: string; other?: string; depth: number; data?: Record<string, number | string> }
+
+/** A promise made in an event, checked when it falls due. */
+export interface EvPromise { kind: "starter" | "pay" | "fanmeet" | "rebound" | "raise"; pid?: string; due: number; base: number; ev: string; depth: number }
+
+/** State of the choice-event system (core/events.ts). */
+export interface EvState {
+  /** random events this week (Monday to Sunday) */
+  week: { start: number; n: number };
+  /** polarity of the last 10 events, oldest first */
+  recent: ("neg" | "pos")[];
+  /** cooldown key -> day it was last used */
+  cd: Record<string, number>;
+  lastMorale: number;
+  queue: EvQueued[];
+  promises: EvPromise[];
+  /** player id, or "team" for the club */
+  memo: Record<string, EvMemo[]>;
+  goodsBoost?: { pid: string; until: number };
+  /** the set-break talk of the series being played: morale and synergy given back when it ends */
+  setBreak?: { sr: string; morale: Record<string, number>; synergy: number; lines: string[] };
+  /** what happened after the last choice, shown until confirmed */
+  result?: { title: string; lines: string[]; open?: { pid: string; mode: "renew" } };
 }
 
 export interface Cutscene {
@@ -309,6 +362,8 @@ export interface GameState {
   debtGrace?: number;
   /** Tutorial parts and one-time tips seen in this save, and "off" once skipped (ui/Tutorial.tsx). */
   tut?: string[];
+  /** Choice events: weekly count, cooldowns, aftermaths, promises, memory (v5, core/events.ts). */
+  ev?: EvState;
 }
 
 export type { Role, Attrs };

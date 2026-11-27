@@ -66,7 +66,7 @@ export function canCallUp(s: GameState, p: Player): { ok: boolean; msg?: string 
   if (!p.team || !p.academy) return { ok: false, msg: "2군 선수가 아닙니다." };
   const t = s.teams[p.team];
   if (t.roster.length >= MAIN_ROSTER_MAX) return { ok: false, msg: "1군 로스터가 10명으로 가득 찼습니다." };
-  if (p.scandal) return { ok: false, msg: "징계 중입니다." };
+  if (p.scandal) return { ok: false, msg: `${p.outWhy ?? "징계"} 중입니다.` };
   return { ok: true };
 }
 

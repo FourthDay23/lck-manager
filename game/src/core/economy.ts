@@ -6,6 +6,7 @@ import { clamp, Rng } from "./rng";
 import { releasePlayer, autoLineup, pushAlert } from "./market";
 import type { GameState, GoodsKind, GoodsRun, Player, Team } from "./types";
 import { earn, spend } from "./ledger";
+import { goodsEventMul } from "./events";
 export { earn, spend, ledger, monthlyWages } from "./ledger";
 
 const DIFF_INCOME = { easy: 1.25, normal: 1, hard: 0.8 } as const;
@@ -146,7 +147,7 @@ export function goodsDemand(s: GameState, run: GoodsRun): number {
   const wins = recent.filter((x) => x.winner === t.id).length;
   const formMul = 0.75 + (recent.length ? wins / recent.length : 0.5) * 0.6;
   const fade = [1.4, 1.15, 1, 0.85, 0.7, 0.55][6 - run.weeksLeft] ?? 0.5;
-  return t.fans * g.appeal * starMul * formMul * (1 + t.facilities.marketing * 0.08) * (0.6 + t.fame / 120) * fade;
+  return t.fans * g.appeal * starMul * formMul * (1 + t.facilities.marketing * 0.08) * (0.6 + t.fame / 120) * fade * goodsEventMul(s, run.featured);
 }
 
 function goodsDay(s: GameState, rng: Rng) {
