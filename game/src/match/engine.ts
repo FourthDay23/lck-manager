@@ -47,6 +47,11 @@ export const ENGINE_FLAGS = { nav: true, macro: true, fight: true };
  * played like a scale of ~6.2 (calibrate slope 1.53 vs 9.5 over 6 roster seeds), 0.7 brings it to ~1.05.
  */
 export const RATING_SPREAD = 0.7;
+/**
+ * Runs without a screen (measurement scripts) set `DRAW.fx = false`: the engine then does not keep the draw-only
+ * effects list (Engine.fx, read only by render.ts). Nothing the game decides reads it, so results stay the same.
+ */
+export const DRAW = { fx: true };
 const RATING_REF = 75;
 /** cds[3] (the ultimate) until level 6: every "t >= cds[k]" readiness check fails without a separate level test.
  *  Before this, ults were cast from level 1 (e.g. Galio R in a 2:20 lane all-in). */
@@ -471,14 +476,15 @@ export class Engine {
     if (this.realStats()) {
       // damage over ~6 s (attacks + each spell at most twice, the ultimate once) x durability (armor / magic resist);
       // that part only changes between steps, so it is worked out once per step (it is read very often)
-      const base = Stats.perStep(this, `pw${u.i}`, () => {
+      // (and kept across steps while the unit's stats, level and multipliers stay the same: Stats.byStats)
+      const base = Stats.perStep(this, `pw${u.i}`, () => Stats.byStats(this, u, this.realMul(u, "sp"), this.realMul(u, "aa"), () => {
         let spells = 0;
         u.champ.spells.forEach((sp, k) => {
           const d = this.spellDmg(u, sp);
           if (d > 0) spells += d * Math.min(k === 3 ? 1 : 2, 6 / Math.max(2, this.cdOf(u, sp, k)));
         });
         return (this.aaDps(u) * 6 + spells) * Math.sqrt(Stats.effectiveHp(this, u) / 1900);
-      });
+      }));
       return base * (u.hp / u.maxHp + 0.35);
     }
     return (this.aaDps(u) * 6 + this.spellDmg(u, u.champ.spells[0] ?? ({ power: 1 } as SpellData)) * 2) * (u.hp / u.maxHp + 0.35) * Math.sqrt(this.maxHp(u) / 1200);
@@ -495,6 +501,8 @@ export class Engine {
   /** Queue a visual effect; returns it so a caller can still set `miss` after rolling the hit in the same step. */
   fx_(f: Omit<Fx, "t" | "id">): Fx {
     const fx: Fx = { t: this.t, id: ++this.fxSeq, ...f };
+    // only render.ts reads the list: headless runs (DRAW.fx = false) skip keeping it
+    if (!DRAW.fx) return fx;
     this.fx.push(fx);
     if (this.fx.length > 400) this.fx.splice(0, this.fx.length - 400);
     return fx;

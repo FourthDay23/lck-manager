@@ -49,6 +49,20 @@
 2. 메인 폴더의 파일은 고치지 않는다. 자기 워크트리 안에서만 고친다.
 3. **워크트리 안에 junction이나 symlink를 만들지 않는다.** Windows에서 `git worktree remove --force`(세션 아카이브 때 앱이 하는 정리 포함)는 연결을 따라 들어가 원본까지 지운다(2026-11-27 실측). `node_modules` 공유는 워크트리들의 부모 폴더에 둔 연결 하나로 하고, `game/vite.config.ts`가 이 경우를 알아서 처리한다.
 
+## 3-1. 측정 규약 (엔진 보정·검증 스크립트)
+
+여러 세션이 한 PC(16스레드)에서 200~300판 측정을 동시에 돌리면 하나에 20~30분씩 걸리고 서로 느려진다(2026-11-28 사용자 결정). 측정은 아래처럼 한다. 도구 설명은 `game/scripts/par.mjs`, `ab.mjs`, `lib/par.ts` 머리 주석에 있다.
+
+- **작업 세션은 자기 변경 확인만 짧게 한다.** 짝 비교 모드로 main과 비교하고, 원하는 정밀도에 닿으면 멈춘다.
+  `node scripts/ab.mjs calibrate.ts 200 3 --base main --until kills:1,length:0.5`
+  같은 시드로 짝지어 돌리므로 따로 두 번 돌릴 때보다 훨씬 적은 판으로 같은 결론이 나온다. 결과 표의 `games 2 runs need` 열이 따로 돌렸으면 필요했을 판 수다.
+  `--base`는 비교할 커밋의 코드를 `<메인 폴더>/.claude/worktrees/_ab-cache/<sha>`에 풀어 두고 다음에 다시 쓴다. 워크트리 밖에 쓰는 유일한 예외이고, 언제 지워도 된다.
+- **큰 보정(200판 이상, 여러 로스터 시드, 목표치 맞추기)은 병합 뒤 통합 보정 때 한 번만** 한다. 작업 세션은 필요한 보정 명령과 이유를 `orch set … --summary`에 적고 넘긴다.
+- **2분 넘게 걸릴 측정은 병렬 실행기로** 돌린다: `node scripts/par.mjs calibrate.ts 200 3`. 결과는 단일 실행과 같다(같은 시드 = 같은 판). 동시 작업 수는 지금 남는 코어만 쓰도록 자동으로 정한다. 셸 도구에서는 `run_in_background`로 띄운다.
+- **새 측정 스크립트**는 `scripts/lib/par.ts`의 `par.game`·`par.end`를 써서 만든다. 그래야 `par.mjs`·`ab.mjs`로 돌릴 수 있다.
+- **프로세스는 자기가 띄운 PID만 끊는다.** `taskkill /IM node.exe`, `pkill -f run-ts`, `Get-Process node | Stop-Process`처럼 이름이나 패턴으로 끊지 않는다. 다른 세션의 측정을 끊은 사고가 있었다. `par.mjs`·`ab.mjs`는 자기 워커만 PID로 정리하고, 그 PID를 scratch 폴더의 `pids.txt`에 남긴다.
+- **엔진 속도 개선이나 리팩터** 뒤에는 `scripts/engine-same.ts`로 같은 시드의 경기 상태 해시가 전과 똑같은지 확인한다. 시간 비교는 PC 부하에 따라 흔들리므로 이 스크립트가 찍는 CPU 시간으로 한다.
+
 ## 4. 완료 절차 (작업 세션, `/lolsim-finish`)
 
 - **a. 코드 리뷰**: 복잡하거나 큰 작업이면 `code-review` 스킬(high)을 돌리고, 확인된 지적은 고친다. 다음 중 하나라도 해당하면 큰 작업으로 본다.
