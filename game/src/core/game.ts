@@ -15,6 +15,7 @@ import { patchDue, rollPatch } from "./meta";
 import { training } from "./training";
 import { aiDailyMarket, autoLineup, joinTeam, releasePlayer, releaseStaff, staffAsk, windowOpen } from "./market";
 import { economyDay, earn, spend, seriesRewards, sponsorFor } from "./economy";
+import { renewIntlRosters, replaceIntl } from "./intl";
 import type { CompId, Difficulty, GameState, Player, Series, Staff, Team } from "./types";
 import { COMP_NAME } from "./types";
 import { afterUserSeries, endSetBreak, eventsDay, FICTION, MILD_SCANDALS, resolveChoice, SERIOUS_SCANDALS, sponsorEventMul } from "./events";
@@ -559,9 +560,9 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
     for (const k of ["g", "w", "k", "d", "a", "cs", "mvp"] as const) p.career[k] += p.season[k];
     p.season = { g: 0, w: 0, k: 0, d: 0, a: 0, cs: 0, mvp: 0 };
   }
-  // aging, military service, retirement
+  // aging, military service, retirement. Foreign-club players too (core/intl.ts replaces those who leave)
   for (const p of Object.values(s.players)) {
-    if (p.retired || p.origin === "intl") continue;
+    if (p.retired) continue;
     const a = age(p, season + 1);
     if (a >= 26) {
       const speed = hashUnit(p.id + ":age");
@@ -579,7 +580,9 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
     const chose = !!p.retireAfter; // decided in an event this season (core/events.ts N18)
     p.retireAfter = undefined;
     const retire = chose || military || (a >= 31 && rng.chance(0.25 + (a - 31) * 0.15)) || (!p.team && ovr(p) < 50 && a >= 24 && rng.chance(0.3));
-    if (retire && (chose || !(p.name === "Faker" && a < 35))) {
+    if (retire && p.origin === "intl") {
+      replaceIntl(s, rng, p, military ? "군 입대" : "은퇴", season);
+    } else if (retire && (chose || !(p.name === "Faker" && a < 35))) {
       const team = p.team;
       if (team) releasePlayer(s, p, military ? "입대" : "은퇴");
       p.retired = true;
@@ -587,6 +590,7 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
       if (ovr(p) >= 70 || p.fame >= 40) addNews(s, { kind: "info", title: `'${p.name}', ${military ? "군 입대로 휴식기" : "현역 은퇴"}`, teams: team ? [team] : [], players: [p.id] });
     }
   }
+  renewIntlRosters(s, rng, season);
   // contracts expire. AI clubs keep some players first.
   for (const p of Object.values(s.players)) {
     if (!p.team || !p.contract || p.academy || p.origin === "intl" || p.contract.until > season) continue;
