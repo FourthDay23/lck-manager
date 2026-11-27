@@ -71,12 +71,14 @@ export interface Loadout { build: number; keystone: number }
 export type SideLoadout = Partial<Record<Role, Loadout>>;
 
 /**
- * The engine's economy runs below real LCK gold (scripts/items-check.ts, 2026-11-26, 20-25 min): Top 1.09x, Jungle
- * 1.30x, Mid 1.13x, Bot 1.35x, Support 1.30x real/engine. Its fight numbers are calibrated on its own gold, so the
- * gold is left alone and only item purchases are read on the real scale (items finish at real LCK minutes);
- * itemPower converts back. Re-measure with items-check.ts if the engine's gold income changes.
+ * The engine's economy runs a little below real LCK gold (scripts/items-check.ts, 2026-11-27, 20-25 min, after the
+ * CS / XP income was fitted to LCK in engine.ts GROWTH): Top 1.04x, Jungle 1.15x, Mid 1.08x, Bot 1.16x, Support 1.07x
+ * real/engine (before that fit: 1.09 / 1.30 / 1.13 / 1.35 / 1.30). Its fight numbers are calibrated on its own gold,
+ * so the gold is left alone and only item purchases are read on the real scale (2nd / 3rd legendaries finish within
+ * about a minute of LCK; the 1st comes 1-2 min early, real players also buy wards, potions and parts of the next item);
+ * itemPower converts back. Re-measure with items-check.ts (ROLE_SCALE=Top:1.04,...) if the engine's gold income changes.
  */
-export const ROLE_GOLD_SCALE: Record<Role, number> = { Top: 1.09, Jungle: 1.3, Mid: 1.13, Bot: 1.35, Support: 1.3 };
+export const ROLE_GOLD_SCALE: Record<Role, number> = { Top: 1.04, Jungle: 1.15, Mid: 1.08, Bot: 1.16, Support: 1.07 };
 /**
  * Gold weights in itemPower and the objective-bounty switch; scripts/calibrate.ts can override them (ITEM_TUNE).
  * Chosen on 150-game runs (2026-11-26 21h; real LCK 32.2 min / 29.5 kills, engine without items 33.1 / 28.8):

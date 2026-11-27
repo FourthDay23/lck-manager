@@ -1011,8 +1011,19 @@ function assign(e: Engine, M: MacroState, b: Brain, V: View) {
   const groupers: number[] = [];
   const used = new Set<LaneId>();
   const laners: Unit[] = [];
+  // a jungler outside the team's plan farms camps that are up rather than walking with the group (LCK junglers keep
+  // farming between objectives: 6.2 jungle CS a minute from 20 to 30 min, the engine's grouped jungler had 1.9)
+  // (not when an objective spawns within 45 s: the jungler sets up for it with the team; a spawn time already past
+  // without a spawn is the herald held back while baron is up, not an upcoming one)
+  const soon = OBJS.some((k) => {
+    const at = e.obj[k].spawnAt;
+    return !e.obj[k].alive && at !== null && at >= e.t && at - e.t < 45;
+  });
+  const farmJg = f !== "spread" && !soon &&
+    e.camps.some((c) => c.alive && c.side === b.side && c.kind !== "scuttle");
   for (const u of free) {
     const m = M.units[u.i];
+    if (farmJg && u.role === "Jungle") { setJob(m, u, "jungle"); continue; }
     if (f === "spread") {
       if (u.role === "Jungle") setJob(m, u, "jungle");
       else if (u.role === "Support") {
@@ -1350,18 +1361,7 @@ function jungleJob(e: Engine, M: MacroState, b: Brain, u: Unit, m: UMem, laning:
 }
 
 function clearCamp(e: Engine, u: Unit, id: number) {
-  const c = e.camps[id];
-  c.hp -= (e.aaDps(u) * 1.6 + 40) * DT;
-  u.hp = Math.max(u.maxHp * 0.25, u.hp - c.maxHp * 0.004 * DT * 4);
-  if (c.hp <= 0) {
-    c.alive = false;
-    const timing = c.kind === "scuttle" ? e.meta.camps.scuttle : e.meta.camps[c.kind];
-    c.spawnAt = e.t + (timing?.respawn ?? 135);
-    const big = c.kind === "blue" || c.kind === "red";
-    u.gold += big ? 100 : 75;
-    u.xp += big ? 220 : 150;
-    u.cs += 4;
-  }
+  e.hitCamp(u, e.camps[id]);
 }
 
 function escortJob(e: Engine, b: Brain, u: Unit, m: UMem) {

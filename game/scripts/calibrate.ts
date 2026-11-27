@@ -5,7 +5,7 @@ import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { newGame } from "../src/core/game";
 import { joinTeam, autoLineup } from "../src/core/market";
-import { Engine, ENGINE_FLAGS, applyEarlyTune } from "../src/match/engine";
+import { Engine, ENGINE_FLAGS, applyEarlyTune, applyGrowthTune, applyPaceTune, applySimTune } from "../src/match/engine";
 import { newDraft, autoDraft } from "../src/match/draft";
 import { Rng } from "../src/core/rng";
 import { gameWinProb, teamPower } from "../src/core/quick";
@@ -27,6 +27,12 @@ for (const kv of (process.env.ITEM_TUNE ?? "").split(",").filter(Boolean)) {
 const N = Number(process.argv[3] ?? 60);
 // EARLY_TUNE=gankRate:0.004,allinBot:0.0008 overrides the laning fight rates (engine.ts EARLY_TUNE) for this run
 applyEarlyTune(process.env.EARLY_TUNE);
+// GROWTH_TUNE=laneCs:12,sideCs:7 overrides the CS / XP / gold income (engine.ts GROWTH) for this run
+applyGrowthTune(process.env.GROWTH_TUNE);
+// SIM_TUNE=siegePush:2.2 overrides the turret / side-lane / gank / herald behaviour values (engine.ts SIM_TUNE) for this run
+applySimTune(process.env.SIM_TUNE);
+// PACE_TUNE=towerDmg:1.3 overrides the structure damage after laning (engine.ts PACE_TUNE) for this run
+applyPaceTune(process.env.PACE_TUNE);
 // FLAGS=nav,macro,fight turns engine modules on (default: the engine's own defaults)
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x && !x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl] = true;
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl.slice(1)] = false;

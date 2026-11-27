@@ -59,25 +59,79 @@ const R_LOCKED = 1e9;
  */
 export const EARLY_TUNE = {
   // was 0.0018 / 0.35 / bot 0.0004 / 0.003 / 0.012 before real-stat damage and real recalls (first kill 9.0 min,
-  // 0.9 kills by 10 min); these give 5.5 min and 3.9 (60 games, roster seed 3)
-  gankRate: 0.008,
+  // 0.9 kills by 10 min); 0.008 and all-ins 0.0008 / 0.00055 / 0.0008 gave 5.5 min and 3.9 (60 games, roster seed 3).
+  // 2026-11-27: after the gank give-up rule (SIM_TUNE.gankWait / gankCd) and turret shots outside fights, those gave
+  // 6.5 min and 2.8 kills by 10 min; these give 5.5 and 3.8 (200 games, seed 3)
+  gankRate: 0.012,
   gankMin: 0.15,
-  allinTop: 0.0008,
-  allinMid: 0.00055,
-  allinBot: 0.0008,
+  allinTop: 0.0013,
+  allinMid: 0.0009,
+  allinBot: 0.0013,
   meet: 0.006,
   meetEdge: 0.02,
 };
 export function applyEarlyTune(spec: string | undefined) {
+  applyTune(EARLY_TUNE, "EARLY_TUNE", spec);
+}
+function applyTune(target: Record<string, number>, name: string, spec: string | undefined) {
   for (const kv of (spec ?? "").split(",").filter(Boolean)) {
     const [k, v] = kv.split(":");
     const n = Number(v);
     // a typo or a missing value would silently turn ganks / all-ins off (rng.chance(NaN) is false): refuse it
-    if (!Object.prototype.hasOwnProperty.call(EARLY_TUNE, k) || v === undefined || v === "" || !Number.isFinite(n)) {
-      throw new Error(`EARLY_TUNE: bad entry "${kv}" (keys: ${Object.keys(EARLY_TUNE).join(", ")})`);
+    if (!Object.prototype.hasOwnProperty.call(target, k) || v === undefined || v === "" || !Number.isFinite(n)) {
+      throw new Error(`${name}: bad entry "${kv}" (keys: ${Object.keys(target).join(", ")})`);
     }
-    (EARLY_TUNE as Record<string, number>)[k] = n;
+    target[k] = n;
   }
+}
+
+/**
+ * CS, XP and gold income, calibrated with scripts/growth-check.ts against LCK 2026 (scripts/lck_growth.py, 502 games:
+ * CS, level, XP and gold by role at 2 / 3 / 5 / 8 / 10 / 15 / 20 / 25 / 30 min). Before this (2026-11-27) the engine's
+ * junglers had half the real camp CS (46 vs 77 at 10 min), every role ended about 2 levels low and supports had no CS.
+ * laneCs: CS per minute near a wave; laneXpSolo / laneXpDuo: XP per second near a wave (duo: the shared bot lane),
+ * rising by laneXpGrow per game minute; sideCs: CS per minute for a laner away from the fronts after 14:00 (side
+ * waves, camps), sideBot: the ADC's multiplier on it (LCK ADCs farm 10.2 a minute); sideXp: XP per second for a laner
+ * on a side-lane job after laning but away from its front; awayXp*: XP per second away from waves (during laning /
+ * after; the jungler's own pair); supCs / supGold: the support's CS per minute and gold per second near a wave.
+ * Camps pay 4 CS each as in the real timelines (12 CS at 2:00, 24 at 3:00 for a full clear): campDpsMul / campDpsAdd
+ * set the jungler's damage to camps (x basic attack dps, + flat), campHp / campHpGrow the camps' health and its rise
+ * per game minute (tougher early camps and a slower rise: a flat damage bonus on light camps finished the first clear
+ * at 1:57, 20 CS at 2:00 against LCK's 11.3, while lowering the damage alone slowed every later clear), campHurt the damage it
+ * takes back (the pet's healing covers much of it; at full damage junglers went home at 25 % hp before finishing the
+ * first clear), campXpBig / campXpSmall the XP per buff / other camp, campGold the gold multiplier (buff 100, small
+ * 75, scuttle 120). epicCs / grubCs: CS for the last hit on a dragon, herald, baron or elder / on each voidgrub (in
+ * LCK timelines 22 % of a jungler's monster CS is neither its own jungle nor the enemy's).
+ * Scripts can override any of them with GROWTH_TUNE=key:value,...
+ */
+export const GROWTH = {
+  laneCs: 12.6, laneXpSolo: 10, laneXpDuo: 8.8, laneXpGrow: 0.025,
+  sideCs: 8, sideBot: 1.6, sideXp: 9.5, awayXpLaning: 1.2, awayXp: 4.5, jgAwayXpLaning: 1.5, jgAwayXp: 3.2,
+  supCs: 2.5, supGold: 2.2,
+  campDpsMul: 3.6, campDpsAdd: 0, campHurt: 0.5, campXpBig: 250, campXpSmall: 175, campGold: 1.2,
+  epicCs: 4, grubCs: 1,
+  /** camp health multiplier (buff 1600, other camps 1100) and its rise per game minute at each spawn */
+  campHp: 1.6, campHpGrow: 1 / 60,
+  /** the jungler's own gank roll after the laning phase, as a share of EARLY_TUNE.gankRate. Late ganks only go for a
+   *  target alone at its lane (Engine.gankable), so few of them start; 1 with the pace calibration (PACE_TUNE) */
+  lateGank: 1,
+};
+export function applyGrowthTune(spec: string | undefined) {
+  applyTune(GROWTH, "GROWTH_TUNE", spec);
+}
+
+/**
+ * Game pace after laning (scripts/calibrate.ts against LCK 2026: 32.2 min, first tower 15.7 min). towerDmg: champion
+ * damage to turrets / inhibitors (x basic attack dps); minionDmg: the wave's damage to a structure it sits on;
+ * engage: the chance that two groups meeting outside a siege, an objective or a gank start a fight (engageRate).
+ * Set 2026-11-27 after turret shots outside fights and sieges that wait for the wave (SIM_TUNE) made games 34.6-37.2
+ * min with first towers at 16.7-17.2 and too few kills from 10 to 30 min (2.8 / 6.4 / 9.7 per 10-min block); with
+ * these, EARLY_TUNE and SIM_TUNE.siegePush 3.2: 31.9 min, 28.8 kills, first tower 15.9 (200 games, roster seed 3).
+ * Scripts can override them with PACE_TUNE=key:value,...
+ */
+export const PACE_TUNE = { towerDmg: 1.6, minionDmg: 1.3, engage: 3.8 };
+export function applyPaceTune(spec: string | undefined) {
+  applyTune(PACE_TUNE, "PACE_TUNE", spec);
 }
 
 /**
@@ -106,21 +160,14 @@ export function applyEarlyTune(spec: string | undefined) {
  * Scripts can override any of them with SIM_TUNE=key:value,...
  */
 export const SIM_TUNE = {
-  towerGrace: 0.75, waveNear: 850, siegePush: 2,
+  // siegePush 3.2 (was 2): set in the 2026-11-27 pace calibration together with PACE_TUNE
+  towerGrace: 0.75, waveNear: 850, siegePush: 3.2,
   sidePoke: 0.04, sidePokeLo: 0.03, sidePokeHi: 0.07, laneGap: 520,
   gankArrive: 800, gankWait: 3.5, gankCd: 20, gankPoor: 0.35, gankReach: 1500,
   heraldDelay: 8, heraldNear: 3000, heraldForce: 90,
 };
 export function applySimTune(spec: string | undefined) {
-  // (same checks as applyEarlyTune: a typo or a missing value must not pass silently)
-  for (const kv of (spec ?? "").split(",").filter(Boolean)) {
-    const [k, v] = kv.split(":");
-    const n = Number(v);
-    if (!Object.prototype.hasOwnProperty.call(SIM_TUNE, k) || v === undefined || v === "" || !Number.isFinite(n)) {
-      throw new Error(`SIM_TUNE: bad entry "${kv}" (keys: ${Object.keys(SIM_TUNE).join(", ")})`);
-    }
-    (SIM_TUNE as Record<string, number>)[k] = n;
-  }
+  applyTune(SIM_TUNE, "SIM_TUNE", spec);
 }
 
 export interface Unit {
@@ -317,7 +364,7 @@ export class Engine {
       for (const c of CAMPS_BLUE) {
         const pos = side === 0 ? c.pos : CAMP_POS_RED[c.kind] ?? mirror(c.pos);
         const timing = camps[c.kind] ?? { firstSpawn: 90, respawn: 135 };
-        const hp = c.kind === "blue" || c.kind === "red" ? 1600 : 1100;
+        const hp = (c.kind === "blue" || c.kind === "red" ? 1600 : 1100) * GROWTH.campHp;
         this.camps.push({ id: id++, side, kind: c.kind, pos, alive: false, spawnAt: timing.firstSpawn, hp, maxHp: hp });
       }
     }
@@ -597,7 +644,7 @@ export class Engine {
     for (const c of this.camps) {
       if (!c.alive && this.t >= c.spawnAt) {
         c.alive = true;
-        c.hp = c.maxHp * (1 + this.minute() / 30);
+        c.hp = c.maxHp * (1 + this.minute() * GROWTH.campHpGrow);
       }
     }
     for (const k of Object.keys(this.obj) as ObjKey[]) {
@@ -925,7 +972,8 @@ export class Engine {
       }
       // arrived and no fight started (combat() would have taken the unit): the gank is not on, back to the camps
       const stale = ext.gankThere !== undefined && this.t - ext.gankThere >= SIM_TUNE.gankWait;
-      if (!foe || this.t > u.taskUntil || stale || this.gankGone(foe, lane)) {
+      // after laning the target may walk into its team on the way: give up rather than follow it in
+      if (!foe || this.t > u.taskUntil || stale || !this.gankable(foe, lane) || this.gankGone(foe, lane)) {
         u.task = "jungle";
         ext.gankLane = undefined;
         ext.gankThere = ext.gankOut = undefined;
@@ -942,7 +990,10 @@ export class Engine {
         return;
       }
     }
-    if (this.t > 195 && u.task !== "gank" && this.gankReady(u) && this.rng.chance(EARLY_TUNE.gankRate)) {
+    // after laning the jungler's own gank roll runs at GROWTH.lateGank of its laning rate (at the full rate a jungler
+    // sent to farm after 14:00 spent its time walking to lanes: 2.5 camp CS a minute, LCK 6.2)
+    const gankRate = EARLY_TUNE.gankRate * (this.laningPhase() ? 1 : GROWTH.lateGank);
+    if (this.t > 195 && u.task !== "gank" && gankRate > 0 && this.gankReady(u) && this.rng.chance(gankRate)) {
       const lane = this.pickGankLane(u);
       if (lane) {
         u.task = "gank";
@@ -962,8 +1013,17 @@ export class Engine {
       if (sx.scutRoll.go) target = scut;
     }
     if (!target) {
-      const alive = ext.route.map((id) => this.camps[id]).filter((c) => c.alive);
-      target = alive.sort((a, b) => dist(u, a.pos) - dist(u, b.pos))[0];
+      // the camp that can be cleared soonest: walk there, or wait at it if it respawns before we would reach another
+      // (junglers track their timers; walking to the nearest one that is up sent the engine's jungler across the map
+      // while the camp next to it came back seconds later). 370: about a jungler's move speed.
+      let bestT = Infinity;
+      for (const id of ext.route) {
+        const c = this.camps[id];
+        const ready = c.alive ? 0 : c.spawnAt - this.t;
+        if (ready > 25) continue;
+        const tt = Math.max(dist(u, c.pos) / 370, ready);
+        if (tt < bestT) { bestT = tt; target = c; }
+      }
     }
     if (!target) {
       // nothing up: shadow a lane
@@ -979,20 +1039,41 @@ export class Engine {
       this.moveStep(u, DT);
       return;
     }
+    if (!target.alive) return; // waiting for it to respawn
     // clear the camp
-    const dps = this.aaDps(u) * 1.6 + 40;
-    target.hp -= dps * DT;
     if (this.rng.chance(0.08)) this.castRandom(u, null, target.pos);
-    u.hp = Math.max(u.maxHp * 0.25, u.hp - target.maxHp * 0.004 * DT * 4);
-    if (target.hp <= 0) {
-      target.alive = false;
-      const timing = target.kind === "scuttle" ? this.meta.camps.scuttle : this.meta.camps[target.kind];
-      target.spawnAt = this.t + (timing?.respawn ?? 135);
-      const big = target.kind === "blue" || target.kind === "red";
-      u.gold += big ? 100 : target.kind === "scuttle" ? 120 : 75;
-      u.xp += big ? 220 : 150;
-      u.cs += 4;
-    }
+    this.hitCamp(u, target);
+  }
+
+  /** One step of a champion clearing a camp (also macro.ts); the kill pays out like the real camp (4 CS each). */
+  hitCamp(u: Unit, c: CampState) {
+    c.hp -= (this.aaDps(u) * GROWTH.campDpsMul + GROWTH.campDpsAdd) * DT;
+    // damage taken per camp kept apart from campHp: the rate follows the camp's health / campHp^2, so a camp that takes
+    // campHp times as long to clear costs the same health in all (scaled by the camp's own health alone, campHp 1.6
+    // cost 2.6x as much per camp and junglers went home at 28 % hp after 2-4 camps)
+    const hurt = (c.maxHp / (GROWTH.campHp * GROWTH.campHp)) * 0.004 * DT * 4 * GROWTH.campHurt;
+    u.hp = Math.max(u.maxHp * 0.25, u.hp - hurt);
+    if (c.hp > 0) return;
+    c.alive = false;
+    const timing = c.kind === "scuttle" ? this.meta.camps.scuttle : this.meta.camps[c.kind];
+    c.spawnAt = this.t + (timing?.respawn ?? 135);
+    const big = c.kind === "blue" || c.kind === "red";
+    u.gold += (big ? 100 : c.kind === "scuttle" ? 120 : 75) * GROWTH.campGold;
+    u.xp += big ? GROWTH.campXpBig : GROWTH.campXpSmall;
+    u.cs += 4;
+  }
+
+  /**
+   * After laning, a gank target has to be alone at its lane: within 2000 of the wave and with at most one teammate
+   * within 1500. Lanes stop being role-bound then (a top laner grouped mid is not "in top"), and ganks picked by role
+   * walked into grouped teams: a third ended in the jungler's death, 8.5 % in a takedown. Laning ganks are unchanged.
+   */
+  gankable(foe: Unit, lane: LaneId): boolean {
+    if (this.laningPhase()) return true;
+    if (dist(foe, this.laneFrontPos(lane)) > 2000) return false;
+    let mates = 0;
+    for (const o of this.units) if (o !== foe && o.alive && o.side === foe.side && dist(o, foe) < 1500) mates++;
+    return mates <= 1;
   }
 
   /** After a gank that was called off: no new gank for SIM_TUNE.gankCd seconds (also read by macro.ts). */
@@ -1014,7 +1095,7 @@ export class Engine {
     for (const lane of LANES) {
       const ally = this.units.find((e) => e.side === u.side && e.alive && ROLE_LANE[e.role] === lane && e.role !== "Support");
       const foe = this.units.find((e) => e.side !== u.side && e.alive && ROLE_LANE[e.role] === lane && e.role !== "Support");
-      if (!foe || !ally || this.gankGone(foe, lane)) continue;
+      if (!foe || !ally || !this.gankable(foe, lane) || this.gankGone(foe, lane)) continue;
       const front = this.lanes[lane].front;
       const pushedOnUs = u.side === 0 ? 1 - front : front; // high when the wave sits near our tower
       const v = pushedOnUs * 0.8 + (1 - foe.hp / foe.maxHp) * 0.6 + (lane === "bot" ? 0.1 : 0) + (u.rating - foe.rating) / 100 - dist(u, foe) / 20000;
@@ -1038,7 +1119,7 @@ export class Engine {
       if (lu && lu === le && u.role !== "Jungle" && e.role !== "Jungle") return 0;
       r = ratio > 1.3 ? EARLY_TUNE.meetEdge : EARLY_TUNE.meet;
     } else {
-      r = ratio > 1.35 ? 0.025 : ratio > 1.05 ? 0.008 : ratio > 0.9 ? 0.003 : 0.0008;
+      r = (ratio > 1.35 ? 0.025 : ratio > 1.05 ? 0.008 : ratio > 0.9 ? 0.003 : 0.0008) * PACE_TUNE.engage;
       if (this.minute() > 28) r *= 1.5;
       if (sizes <= 2) r *= 0.3; // lone pick-offs are rarer than group fights
     }
@@ -1536,12 +1617,12 @@ export class Engine {
         if (!t.alive || t.side === u.side || dist(t.pos, u) > 750) continue;
         const defenders = this.units.some((e) => e.alive && e.side === t.side && dist(e, t.pos) < 1300);
         if (defenders && this.laningPhase()) continue;
-        this.damageTurret(t, this.aaDps(u) * (this.minute() > 20 ? 0.75 : 0.55) * DT, u);
+        this.damageTurret(t, this.aaDps(u) * (this.minute() > 20 ? 0.75 : 0.55) * PACE_TUNE.towerDmg * DT, u);
       }
       for (const ih of this.inhibs) {
         if (!ih.alive || ih.side === u.side || dist(ih.pos, u) > 700) continue;
         if (this.turrets.some((t) => t.alive && t.side === ih.side && t.lane === ih.lane)) continue;
-        ih.hp -= this.aaDps(u) * DT;
+        ih.hp -= this.aaDps(u) * PACE_TUNE.towerDmg * DT;
         if (ih.hp <= 0) this.destroyInhib(ih, u.side);
       }
       if (dist(NEXUS[1 - u.side], u) < 900) {
@@ -1559,7 +1640,7 @@ export class Engine {
     const enemy = (1 - attacker) as SideN;
     const t = this.frontierTurret(enemy, lane);
     const champs = this.units.filter((u) => u.alive && u.side === attacker && !u.fightId && t && dist(u, t.pos) < 900);
-    const minionDps = (14 + push * 4) * (this.laningPhase() ? 0.55 : 1) * (1 + Math.max(0, this.minute() - 20) / 15);
+    const minionDps = (14 + push * 4) * (this.laningPhase() ? 0.55 : 1) * (1 + Math.max(0, this.minute() - 20) / 15) * PACE_TUNE.minionDmg;
     if (t) {
       this.damageTurret(t, minionDps * DT, champs[0] ?? null);
       return;
@@ -1645,6 +1726,8 @@ export class Engine {
     const team = this.names[side];
     const respawn = this.meta.objectives[k]?.respawn ?? null;
     const mates = this.units.filter((u) => u.side === side);
+    // epic monsters count as CS for whoever lands the last hit, like the camps (the grubs camp is three monsters)
+    taker.cs += k === "grubs" ? GROWTH.grubCs * 3 : GROWTH.epicCs;
     if (steal) this.event("steal", side, `스틸! ${josa(`${taker.name}(${taker.champ.name})`, "이가")} ${josa(OBJ_KO[k], "을를")} 빼앗았습니다`, true, taker.i, undefined, o.pos);
     if (k === "dragon") {
       this.dragons[side].push(o.type!);
@@ -1753,20 +1836,27 @@ export class Engine {
       const solo = u.role === "Top" || u.role === "Mid";
       if (nearWave && this.t > 55) {
         const share = u.role === "Support" ? 0.6 : u.role === "Bot" ? 0.8 : 1;
-        u.xp += (solo ? 8.2 : 6.6) * share * DT * (1 + m / 60);
+        u.xp += (solo ? GROWTH.laneXpSolo : GROWTH.laneXpDuo) * share * DT * (1 + m * GROWTH.laneXpGrow);
         if (u.role !== "Support") {
-          const rate = (10.5 / 60) * (0.85 + u.rating / 500) * (lane ? 1 : 0.9);
+          const rate = (GROWTH.laneCs / 60) * (0.85 + u.rating / 500) * (lane ? 1 : 0.9);
           const gained = rate * DT * (this.rng.next() < 0.5 ? 1.6 : 0.4);
           u.cs += gained;
           u.gold += gained * 21;
-        } else u.gold += 0.25 * DT * 4;
+        } else {
+          // the support item's gold, and the odd minion the ADC is not there for
+          const g = (GROWTH.supCs / 60) * DT;
+          u.cs += g;
+          u.gold += GROWTH.supGold * DT + g * 21;
+        }
       } else if (u.role === "Jungle") {
-        u.xp += (this.laningPhase() ? 1.5 : 4) * DT;
+        u.xp += (this.laningPhase() ? GROWTH.jgAwayXpLaning : GROWTH.jgAwayXp) * DT;
       } else {
-        u.xp += (this.laningPhase() ? 1.2 : 3.5) * DT;
+        // after laning, a laner holding a side lane (lane / split job) farms it from where it stands
+        const side = !this.laningPhase() && u.task === "lane";
+        u.xp += (this.laningPhase() ? GROWTH.awayXpLaning : side ? GROWTH.sideXp : GROWTH.awayXp) * DT;
         // side waves and jungle camps away from the main fronts
         if (u.role !== "Support" && !u.fightId && this.t > 840) {
-          const g = (6 / 60) * DT;
+          const g = ((GROWTH.sideCs * (u.role === "Bot" ? GROWTH.sideBot : 1)) / 60) * DT;
           u.cs += g;
           u.gold += g * 21;
         }

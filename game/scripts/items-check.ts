@@ -22,6 +22,16 @@ for (const kv of (process.env.ITEM_TUNE ?? "").split(",").filter(Boolean)) {
   const [k, v] = kv.split(":");
   (ITEM_TUNE as Record<string, number | boolean>)[k] = k === "objectiveBounty" ? v !== "0" : Number(v);
 }
+// ROLE_SCALE=Top:1.04,Bot:1.16 overrides items.ts ROLE_GOLD_SCALE for this run
+for (const kv of (process.env.ROLE_SCALE ?? "").split(",").filter(Boolean)) {
+  const [k, v] = kv.split(":");
+  // an empty value would read as 0 (Number("") is finite) and zero that role's item budget; refuse it, and keys that
+  // only exist on the prototype
+  if (!Object.prototype.hasOwnProperty.call(ROLE_GOLD_SCALE, k) || v === undefined || v === "" || !(Number(v) > 0)) {
+    throw new Error(`ROLE_SCALE: bad entry "${kv}" (keys: ${Object.keys(ROLE_GOLD_SCALE).join(", ")}, values > 0)`);
+  }
+  ROLE_GOLD_SCALE[k as Role] = Number(v);
+}
 let fbSum = 0;
 const kpb = [0, 0, 0, 0, 0];
 const s = newGame(data, { team: data.teams[0].id, difficulty: "normal", manager: "test", seed: 7 });
