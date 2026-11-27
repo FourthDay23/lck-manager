@@ -263,7 +263,9 @@ export interface Fx {
 
 export type EvType =
   | "kill" | "first_blood" | "solo" | "double" | "triple" | "quadra" | "penta" | "ace" | "shutdown"
-  | "dragon" | "soul" | "elder" | "grubs" | "herald" | "baron" | "steal" | "turret" | "first_turret" | "inhib" | "nexus" | "info";
+  | "dragon" | "soul" | "elder" | "grubs" | "herald" | "baron" | "steal" | "turret" | "first_turret" | "inhib" | "nexus" | "info"
+  /** a jungler stood in Smite's reach of an epic monster the other team was taking and did not get it (objsmite.ts) */
+  | "steal_fail";
 
 export interface GameEvent { t: number; type: EvType; side: SideN; text: string; actor?: number; victim?: number; big: boolean; x?: number; y?: number }
 

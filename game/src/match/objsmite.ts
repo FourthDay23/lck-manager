@@ -188,9 +188,10 @@ export function finish(e: Engine, k: ObjKey, at: Unit[], bySide: number[]): Fini
   if (jo && jt) bump(S.stats.both, k);
   if (steal) bump(S.stats.steals, k);
   else if (jt && side === own) {
-    // a jungler stood in reach with a Smite and did not get it: a failed steal
+    // a jungler stood in reach with a Smite and did not get it: a failed steal (a banner like the steal's, for the
+    // jungler that missed)
     bump(S.stats.failed, k);
-    e.event("info", own, `${josa(nm(taker), "이가")} ${josa(OBJ_KO[k], "을를")} 지켰습니다 · ${nm(jt)} 스틸 실패`, false);
+    e.event("steal_fail", thiefSide, `스틸 실패! ${josa(nm(taker), "이가")} ${josa(OBJ_KO[k], "을를")} 지켰습니다 (${nm(jt)})`, true, jt.i, undefined, o.pos);
   }
   S.dmg[k] = [0, 0];
   return { side, taker, steal, smote };

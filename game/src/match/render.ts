@@ -226,6 +226,7 @@ export class MatchRenderer {
         return a && v ? `${josa(this.tag(a), "이가")} ${this.tag(v)}의 연속 킬을 끊었습니다${gold ? ` (${gold})` : ""}` : plain(ev.text);
       }
       case "steal": return a ? `${josa(this.tag(a), "이가")} 오브젝트를 빼앗았습니다` : plain(ev.text);
+      case "steal_fail": return a ? `${this.tag(a)}의 강타 스틸이 실패했습니다` : plain(ev.text);
       case "nexus": return `${josa(team, "이가")} 넥서스를 파괴했습니다`;
       default: return plain(ev.text);
     }

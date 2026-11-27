@@ -6,6 +6,7 @@
 // LCK cannot show a steal directly: "the other team hit it too" (21 % of dragon / baron / herald takes) is the
 // nearest thing to "both junglers were on it", and a take by the team credited with fewer champions than the other
 // (4.4 % of dragons, 5.0 % of barons, 4.6 % of heralds; 0.32 a game) the nearest thing to a steal.
+// "failed steals" are the engine's steal_fail events: a jungler in Smite's reach of a monster the other team took.
 import { readFileSync, existsSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { newGame } from "../src/core/game";
