@@ -69,7 +69,9 @@ export interface CounterRow {
  *   final check at 13 / 24 / 28 / 5 / 34: Top 60.5 %, Jungle 60.3 %, Mid 61.8 %, Bot 58.0 %, Support 58.8 % (+-2.0).
  */
 export const MATCHUP_TUNE = {
-  gain: 1,
+  /** 4x the LCK size (LO 2026-11-27: the measured matchups, at most +1.8%p, were too small to feel; now up to
+   *  about +7%p). The engine factors are per logit and were fitted at m = 0.4, above the largest pair at this gain. */
+  gain: 4,
   /** damage between lane opponents: x exp(dmg x m) */
   dmg: 0.15,
   /** chance to be the one who pokes, and that the poke lands: + init x m */
