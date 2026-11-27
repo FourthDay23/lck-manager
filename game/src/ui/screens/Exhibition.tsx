@@ -60,8 +60,15 @@ export function ExhibitionScreen() {
   const [codeA, setCodeA] = useState("");
   const [codeB, setCodeB] = useState("");
   const [bo, setBo] = useState<1 | 3 | 5>(3);
-  // two people on this device is what a code match is mostly for; one side against the AI and watching stay
-  const [control, setControl] = useState<ExControl>("both");
+  // Who drafts, by default: our career team against a code is a match against the AI (only A, ours, is played);
+  // two codes are two people who each brought their team (both take turns). Switching A's source sets it again; it
+  // can always be changed by hand.
+  const defaultControl = (mine: boolean): ExControl => (mine ? 0 : "both");
+  const [control, setControl] = useState<ExControl>(defaultControl(!!career));
+  const pickSource = (mine: boolean) => {
+    setUseMine(mine);
+    setControl(defaultControl(mine));
+  };
   const parsedA = useMine ? null : codeA.trim() ? parseTeamCode(codeA) : null;
   const parsedB = codeB.trim() ? parseTeamCode(codeB) : null;
   const leave = () => {
@@ -106,8 +113,8 @@ export function ExhibitionScreen() {
             <div class="col">
               {career && (
                 <div class="row">
-                  <button class={`btn small ${useMine ? "on" : ""}`} onClick={() => setUseMine(true)}>A팀 = 내 팀 ({career.teams[career.user].short})</button>
-                  <button class={`btn small ${!useMine ? "on" : ""}`} onClick={() => setUseMine(false)}>A팀 = 코드</button>
+                  <button class={`btn small ${useMine ? "on" : ""}`} onClick={() => pickSource(true)}>A팀 = 내 팀 ({career.teams[career.user].short})</button>
+                  <button class={`btn small ${!useMine ? "on" : ""}`} onClick={() => pickSource(false)}>A팀 = 코드</button>
                 </div>
               )}
               {useMine && career ? <div class="pos">A팀: {career.teams[career.user].name} (지금 커리어 로스터)</div> : <CodeBox label="A팀 코드" value={codeA} onChange={setCodeA} parsed={parsedA} />}
@@ -128,6 +135,7 @@ export function ExhibitionScreen() {
             {control === "both" ? "블루 차례에는 블루 팀이, 레드 차례에는 레드 팀이 고릅니다. 한 기기를 번갈아 쓰면 됩니다. 룬·빌드와 작전도 양쪽이 각자 정합니다."
               : control === null ? "양쪽 밴픽과 작전을 AI가 정하고 지켜봅니다."
               : `${control === 0 ? "A" : "B"}팀만 직접 고르고, 상대 팀은 AI가 고릅니다.`}
+            {career && " 기본값은 A팀이 내 팀이면 AI 상대(A팀만), 두 팀 모두 코드면 2인(양쪽 번갈아)입니다."}
           </div>
           <div class="muted" style={{ fontSize: 11 }}>메타는 {career?.meta ? `이 기기 커리어의 현재 패치(${career.meta.patch})` : "대전마다 새로 정해지는 패치"}를 씁니다. 난이도 보정 없이 양쪽을 똑같이 계산합니다. 하드 피어리스가 적용됩니다.</div>
           <button class="btn primary" style={{ marginTop: 8 }} disabled={!aCode || !bCode} onClick={start}>대전 시작</button>

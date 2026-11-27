@@ -387,7 +387,9 @@ export function DraftView({ d, userSide, onDone, auto, hotseat }: { d: DraftStat
   const sugIds = new Set(sug.items.map((x) => x.champ.id));
   // LCK matchups (matchup.ts): our coach's draft rating decides whether we see numbers or only the direction
   const enemySide: Side = actSide === "blue" ? "red" : "blue";
-  const exact = Matchup.coachExact(headCoach(s, s.teams[myTeam])?.attrs.draft ?? 35, s.teams[myTeam].facilities.analysis);
+  // (in a hot-seat draft the side whose turn it is: blue's coach on blue's steps, red's on red's, like the ▲▼ marks)
+  const coachExactOf = (team: string) => Matchup.coachExact(headCoach(s, s.teams[team])?.attrs.draft ?? 35, s.teams[team].facilities.analysis);
+  const exact = coachExactOf(myTeam);
   const picking = myTurn && st![1] === "pick";
   const foe = picking ? d.picks[enemySide][role] : undefined;
   const foeName = foe ? data.champ.get(foe)?.name ?? foe : "";
@@ -628,7 +630,10 @@ export function DraftView({ d, userSide, onDone, auto, hotseat }: { d: DraftStat
           <>
             <h2>밴픽 완료</h2>
             <div data-tut="draft-comp"><CompCompare d={d} /></div>
-            <MatchupCompare d={d} userSide={userSide} exact={exact} who={hotseat ? sideKo(userSide) : undefined} />
+            <MatchupCompare d={d} userSide={userSide} exact={exact} both={hotseat ? {
+              blue: `블루 ${s.teams[d.blue].short}`, red: `레드 ${s.teams[d.red].short}`,
+              exact: { blue: coachExactOf(d.blue), red: coachExactOf(d.red) },
+            } : undefined} />
             {hotseat ? (
               // both sides set their own runes and builds, each under its side's name and colour
               (["blue", "red"] as Side[]).map((sd) => (
@@ -681,17 +686,22 @@ function CompCompare({ d }: { d: DraftState }) {
   );
 }
 
-/** Lane-by-lane LCK matchups after the draft, from our side, plus the composition counters and the total. */
-function MatchupCompare({ d, userSide, exact, who }: { d: DraftState; userSide: Side; exact: boolean; /** whose side the values are seen from, when not "ours" (hot seat) */ who?: string }) {
+/** for a draft with people on both sides: each side's short name and whether its coach gives numbers */
+interface BothSides { blue: string; red: string; exact: Record<Side, boolean> }
+
+/** Lane-by-lane LCK matchups after the draft, from our side, plus the composition counters and the total.
+ *  `both` (hot seat): one value column per side, each from that side and at its own coach's precision. */
+function MatchupCompare({ d, userSide, exact, both }: { d: DraftState; userSide: Side; exact: boolean; both?: BothSides }) {
   const data = D();
   if (!data.matchups) return null;
   const mine = d.picks[userSide], theirs = d.picks[userSide === "blue" ? "red" : "blue"];
   const comp = Matchup.compEdge(data, mine, theirs);
   const total = Matchup.draftEdge(data, mine, theirs);
   const nm = (id?: string) => (id ? data.champ.get(id)?.name ?? id : "-");
+  if (both) return <MatchupBoth d={d} both={both} />;
   return (
     <div class="mu-table">
-      <h3>라인 상성 <span class="muted" style={{ fontSize: 11 }}>(LCK {data.matchups.games}경기 기준, {who ?? "우리"} 쪽에서 본 값)</span></h3>
+      <h3>라인 상성 <span class="muted" style={{ fontSize: 11 }}>(LCK {data.matchups.games}경기 기준, 우리 쪽에서 본 값)</span></h3>
       {ROLES.map((r) => {
         const pr = Matchup.pair(data, r, mine[r], theirs[r]);
         const e = pr ? pr.m * Matchup.MATCHUP_TUNE.gain : 0;
@@ -717,6 +727,62 @@ function MatchupCompare({ d, userSide, exact, who }: { d: DraftState; userSide: 
         <span class={`mu-val ${!Matchup.notable(total) ? "muted" : total > 0 ? "pos" : "neg"}`}>{Matchup.edgeWord(total, exact)}</span>
         <span class="mu-rec muted" />
       </div>
+    </div>
+  );
+}
+
+/** The matchup table with people on both sides: the lane pairs once, then blue's value (from blue, at blue's coach's
+ *  precision) and red's (from red, at red's), so neither player reads the other's view as theirs. */
+function MatchupBoth({ d, both }: { d: DraftState; both: BothSides }) {
+  const data = D();
+  if (!data.matchups) return null;
+  const blue = d.picks.blue, red = d.picks.red;
+  const nm = (id?: string) => (id ? data.champ.get(id)?.name ?? id : "-");
+  const val = (e: number, has: boolean, exact: boolean) => (
+    <span class={`mu-val ${!Matchup.notable(e) ? "muted" : e > 0 ? "pos" : "neg"}`}>{has ? Matchup.edgeWord(e, exact) : "비슷"}</span>
+  );
+  const edgeOf = (r: Role, a?: string, b?: string) => {
+    const pr = Matchup.pair(data, r, a, b);
+    return { pr, e: pr ? pr.m * Matchup.MATCHUP_TUNE.gain : 0 };
+  };
+  type Picks = Partial<Record<Role, string>>;
+  const sums: [string, string, (a: Picks, b: Picks) => number][] = [
+    ["조합", "돌진·포킹·받아치기 상성", (a, b) => Matchup.compEdge(data, a, b)],
+    ["합계", "예상 승률에 들어간 상성", (a, b) => Matchup.draftEdge(data, a, b)],
+  ];
+  return (
+    <div class="mu-table both">
+      <h3>라인 상성 <span class="muted" style={{ fontSize: 11 }}>(LCK {data.matchups.games}경기 기준, 양쪽에서 각자 본 값 · 전적은 블루 챔피언 기준)</span></h3>
+      <div class="mu-row mu-head">
+        <span />
+        <span class="muted"><span style={{ color: "var(--blue)" }}>블루</span> vs <span style={{ color: "var(--red)" }}>레드</span></span>
+        <span class="mu-val" style={{ color: "var(--blue)" }}>{both.blue}</span>
+        <span class="mu-val" style={{ color: "var(--red)" }}>{both.red}</span>
+        <span />
+      </div>
+      {ROLES.map((r) => {
+        const b = edgeOf(r, blue[r], red[r]), rd = edgeOf(r, red[r], blue[r]);
+        const pr = b.pr;
+        const rec = pr ? `LCK ${pr.n}판 · ${nm(blue[r])} ${pr.wins}승 ${pr.n - pr.wins}패${pr.gold !== null ? ` · 14분 골드 ${pr.gold >= 0 ? "+" : ""}${pr.gold}` : ""}` : "LCK 맞대결 없음";
+        return (
+          <div class="mu-row" title={rec}>
+            <span class="mu-role">{ROLE_KO[r]}</span>
+            <span class="mu-pair">{nm(blue[r])} <span class="muted">vs</span> {nm(red[r])}</span>
+            {val(b.e, !!b.pr, both.exact.blue)}
+            {val(rd.e, !!rd.pr, both.exact.red)}
+            <span class="mu-rec muted">{pr ? `${pr.n}판 ${pr.wins}승 ${pr.n - pr.wins}패` : "맞대결 없음"}</span>
+          </div>
+        );
+      })}
+      {sums.map(([label, note, f], i) => (
+        <div class={`mu-row ${i ? "mu-sum" : ""}`}>
+          <span class="mu-role">{label}</span>
+          <span class="mu-pair muted">{note}</span>
+          {val(f(blue, red), true, both.exact.blue)}
+          {val(f(red, blue), true, both.exact.red)}
+          <span class="mu-rec muted" />
+        </div>
+      ))}
     </div>
   );
 }

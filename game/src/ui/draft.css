@@ -20,3 +20,6 @@
 .mu-val { text-align: right; font-variant-numeric: tabular-nums; }
 .mu-rec { font-size: 10px; }
 .mu-sum { border-top: 1px solid #2b3149; }
+/* hot seat: a value column for each side (MatchupBoth) */
+.mu-table.both .mu-row { grid-template-columns: 32px minmax(0, 1.3fr) 64px 64px minmax(0, 1fr); }
+.mu-table.both .mu-head { border-top: 0; font-size: 10px; }
