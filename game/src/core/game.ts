@@ -13,7 +13,7 @@ import { playQuickSeries } from "./quick";
 import { academySeasonEnd, autoCallUp, setupAcademies } from "./academy";
 import { patchDue, rollPatch } from "./meta";
 import { training } from "./training";
-import { aiDailyMarket, autoLineup, joinTeam, releasePlayer, releaseStaff, staffAsk, windowOpen } from "./market";
+import { aiDailyMarket, aiPayrollCap, autoLineup, joinTeam, payroll, releasePlayer, releaseStaff, staffAsk, windowOpen } from "./market";
 import { economyDay, earn, spend, seriesRewards, sponsorFor } from "./economy";
 import type { CompId, Difficulty, GameState, Player, Series, Staff, Team } from "./types";
 import { COMP_NAME } from "./types";
@@ -334,12 +334,32 @@ function ensureAiLineups(s: GameState, rng: Rng) {
         autoLineup(s, t);
         continue;
       }
-      const fa = Object.values(s.players).filter((p) => !p.team && !p.retired && p.role === r && p.origin !== "intl" && !p.scandal)
-        .sort((a, b) => ovr(b) - ovr(a))[0] ?? makeRookieInto(s, rng, r);
-      joinTeam(s, fa, t.id, Math.max(6000, Math.round(salaryAsk(fa, s.season) / 100) * 100), 1);
+      aiEmergencySign(s, t, r, rng);
       autoLineup(s, t);
     }
   }
+}
+
+/** The league minimum: a one-year deal any club can always sign, over its payroll cap or not. */
+const MIN_SALARY = 6000;
+
+/**
+ * Fill an AI club's empty role when nobody can be called up from the 2군: the best free agent at that role whose
+ * asking salary fits under the payroll cap, else the best one asking only the minimum, else a new rookie. The last
+ * two sign on the minimum even over the cap, so the slot is never left empty. (T20: this used to sign the best free
+ * agent left at his full ask, cap or not, so a club the cap had kept out of the stove league could still buy a star
+ * the day before the cup.)
+ */
+function aiEmergencySign(s: GameState, t: Team, r: Role, rng: Rng): Player {
+  const room = aiPayrollCap(t) - payroll(s, t);
+  const fits = Math.max(room, MIN_SALARY);
+  const fa = Object.values(s.players)
+    .filter((p) => !p.team && !p.retired && p.role === r && p.origin !== "intl" && !p.scandal)
+    .sort((a, b) => ovr(b) - ovr(a))
+    .find((p) => salaryAsk(p, s.season) <= fits) ?? makeRookieInto(s, rng, r);
+  const ask = salaryAsk(fa, s.season);
+  joinTeam(s, fa, t.id, ask <= fits ? ask : MIN_SALARY, 1);
+  return fa;
 }
 
 function makeRookieInto(s: GameState, rng: Rng, r: Role): Player {
@@ -720,9 +740,7 @@ function ensureAiLineupFor(s: GameState, tid: string, rng: Rng) {
   for (const r of ROLES) {
     if (t.lineup[r]) continue;
     if (autoCallUp(s, t, r)) continue;
-    const fa = Object.values(s.players).filter((p) => !p.team && !p.retired && p.role === r && p.origin !== "intl" && !p.scandal)
-      .sort((a, b) => ovr(b) - ovr(a))[0] ?? makeRookieInto(s, rng, r);
-    joinTeam(s, fa, t.id, Math.max(6000, salaryAsk(fa, s.season)), 1);
+    const fa = aiEmergencySign(s, t, r, rng);
     addNews(s, { kind: "sign", title: `[오피셜] ${t.name}, '${fa.name}' 영입`, teams: [t.id], players: [fa.id] });
   }
   autoLineup(s, t);

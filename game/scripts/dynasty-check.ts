@@ -2,6 +2,8 @@
 // regular-season record (1·2R double round robin + 3R single = 27 series), titles, unbeaten seasons and grand slams
 // (LCK 컵 + LCK 플레이오프 + MSI + 월즈 in one season). Also snapshots the parts of teamPower at fixed dates so the
 // spread between clubs can be traced to its source (player OVR, synergy, coaching staff, morale, form, fatigue).
+// Also counts AI clubs over their payroll cap at the cup and at Worlds, and in user mode how far the user's club is
+// ahead of the AI mean in each part (the user-only synergy edge, T18).
 //
 // Run: node scripts/run-ts.mjs scripts/dynasty-check.ts [runs=20] [seasons=3] [user=none|<team id>]
 //   user=none: every LCK club is AI-run (the user is a placeholder club outside the league)
