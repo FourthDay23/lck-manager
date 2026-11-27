@@ -204,13 +204,6 @@ export function seriesWinBonus(sr: Pick<Series, "comp" | "stage">): number {
   return winBonus(sr.stage, INTL_COMPS.includes(sr.comp));
 }
 
-/** Why a series pays what it does, e.g. "정규 라운드", or "토너먼트 1,200만 · 국제 대회 ×2" where it doubles. */
-export function winBonusRule(sr: Pick<Series, "comp" | "stage">): string {
-  const big = bigStage(sr.stage);
-  const kind = big ? "토너먼트" : sr.stage === "RR" ? "정규 라운드" : "스위스 라운드";
-  return INTL_COMPS.includes(sr.comp) ? `${kind} ${money(big ? 1200 : 400)} · 국제 대회 ×2` : kind;
-}
-
 /** The user's series wins of a season with the 승리 수당 each one paid, newest first. */
 export function winBonusLog(s: GameState, season = s.season): { sr: Series; amount: number }[] {
   return s.series

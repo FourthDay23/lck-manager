@@ -4,7 +4,7 @@ import { S, store } from "../store";
 import { fmtDate, money, monthKey } from "../core/format";
 import { comp } from "../core/schedule";
 import { stageName } from "../core/game";
-import { seriesWinBonus, winBonusLog, winBonusRule } from "../core/economy";
+import { seriesWinBonus, winBonusLog } from "../core/economy";
 import type { GameState, Series } from "../core/types";
 import { COMP_NAME } from "../core/types";
 import type { Engine } from "../match/engine";
@@ -18,7 +18,7 @@ export interface PayLine { label: string; amount: number; note?: string }
 export function seriesPayout(s: GameState, sr: Series): PayLine[] {
   const won = (sr.wa > sr.wb ? sr.a : sr.b) === s.user;
   const out: PayLine[] = [];
-  if (won) out.push({ label: "승리 수당", amount: seriesWinBonus(sr), note: `${winBonusRule(sr)} · 시리즈를 이길 때 한 번` });
+  if (won) out.push({ label: "승리 수당", amount: seriesWinBonus(sr) });
   if (sr.stage === "F") {
     const c = comp(s, sr.comp, sr.season);
     const prize = c && !c.done ? c.prize[won ? 0 : 1] ?? 0 : 0;
@@ -58,26 +58,25 @@ export function moneyExact(v: number): string {
   return `${v < 0 ? "-" : ""}${body}`;
 }
 
-/** One line for the set-up panel: what winning this series pays, and that single games pay nothing. */
+/** One line for the set-up panel: what winning this series pays. */
 export function WinStake({ sr }: { sr: Series }) {
   return (
     <div class="win-stake">
       이 시리즈를 이기면 승리 수당 <b class="gold">{money(seriesWinBonus(sr))}</b>
-      <span class="dim"> · {winBonusRule(sr)} · 세트 승리에는 따로 나오지 않습니다</span>
     </div>
   );
 }
 
-/** End-of-game screen: a won game that takes the series shows the bonus; one that does not says what is left. */
-export function MatchStake({ e, userSide, series, bonus }: { e: Engine; userSide: 0 | 1; series?: SeriesInfo; bonus?: number }) {
+/** End-of-game screen after a won game: "시리즈 승리" when it takes the series, else how many games are left. */
+export function MatchStake({ e, userSide, series }: { e: Engine; userSide: 0 | 1; series?: SeriesInfo }) {
   const s = S();
-  if (!bonus || !series || e.winner !== userSide) return null;
+  if (!series || e.winner !== userSide) return null;
   const i = series.teams.indexOf(s.user);
   if (i < 0) return null;
   // series.wins is the score before this game (the game is recorded on 결과 확인)
   const left = Math.ceil(series.bo / 2) - (series.wins[i] + 1);
-  if (left <= 0) return <div class="match-stake won">시리즈 승리 · 승리 수당 <b>+{money(bonus)}</b></div>;
-  return <div class="match-stake">시리즈 승리까지 {left}세트 · 이기면 승리 수당 <b class="gold" style={{ fontSize: 16 }}>{money(bonus)}</b></div>;
+  if (left <= 0) return <div class="match-stake won">시리즈 승리</div>;
+  return <div class="match-stake">시리즈 승리까지 {left}세트</div>;
 }
 
 // ---------- the "+n" chip under the top bar's cash ----------
