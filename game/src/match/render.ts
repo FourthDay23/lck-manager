@@ -95,46 +95,21 @@ const TOWER = [
   ".bbbbb.",
   "bbbbbbb",
 ];
-/** the two buffs: a horned head, 7 x 7 */
-const BUFF = [
-  ".x...x.",
-  "xxx.xxx",
-  "xxxxxxx",
-  "xexxxex",
-  "xxxxxxx",
-  ".xxxxx.",
-  "..x.x..",
-];
-/** Jungle camps: body (x) and eyes (e). The small camps are 5 x 5, each with its own outline. */
-const CAMP_SPRITE: Record<CampKind | "scuttle", string[]> = {
-  blue: BUFF,
-  red: BUFF,
-  gromp: ["x...x", "xxxxx", "xexex", "xxxxx", ".x.x."],
-  wolves: ["x...x", "xx.xx", "xxxxx", "xexex", ".xxx."],
-  raptors: ["..x..", ".xxx.", "xexxx", ".xxxx", ".x.x."],
-  krugs: [".xxx.", "xxxxx", "xexex", "xxxxx", "xx.xx"],
-  scuttle: ["x.....x", "xxexexx", ".xxxxx.", "x.x.x.x"],
+/**
+ * Jungle camps and epic monsters are all drawn as the same mark, a disc with a dark outline (MatchRenderer.disc):
+ * no shape of its own per monster (the owner's call, 11-28). Colour tells them apart, and size the camps from the
+ * epic monsters. Radius in buffer px on the whole map and in a close-up; a disc is 2r + 1 across.
+ */
+const CAMP_R = [3, 5];
+const EPIC_R = [5, 9];
+const GRUB_R = [2, 3];
+/** A camp that is up: a bright colour inside the dark outline, so it stands out from the olive ground. */
+const CAMP_COL: Record<CampKind | "scuttle", string> = {
+  blue: "#5fb0ff", red: "#ff6b4a", gromp: "#ffe9a8", wolves: "#ffe9a8", raptors: "#ffe9a8", krugs: "#ffe9a8", scuttle: "#7ff0d0",
 };
-/** A camp that is up: a bright body with a dark outline, so it stands out from the olive ground. */
-const CAMP_PAL: Record<CampKind | "scuttle", Record<string, string>> = {
-  blue: { x: "#5fb0ff", e: "#ffffff" },
-  red: { x: "#ff6b4a", e: "#ffffff" },
-  gromp: { x: "#ffe9a8", e: "#3a2c12" },
-  wolves: { x: "#ffe9a8", e: "#3a2c12" },
-  raptors: { x: "#ffe9a8", e: "#3a2c12" },
-  krugs: { x: "#ffe9a8", e: "#3a2c12" },
-  scuttle: { x: "#7ff0d0", e: "#0f3a30" },
-};
-/** A camp or monster that is not up: the same outline as a dim shadow, with the time left under it. */
-const GONE_PAL: Record<string, string> = { x: "#5a6274", e: "#5a6274" };
+/** A camp or monster that is not up: the same disc, dim, with the time left under it. */
+const GONE_COL = "#5a6274";
 const GONE_ALPHA = 0.8;
-/** Epic monsters. The Voidgrubs are drawn one by one (GRUB) at their three spots. */
-const OBJ_SPRITE: Record<Exclude<ObjKey, "grubs" | "elder">, string[]> = {
-  dragon: ["x.......x", "xx.....xx", "xxx...xxx", ".xxxxxxx.", "..xexex..", "..xxxxx..", "...xxx...", "....x...."],
-  baron: ["..x.x.x..", ".xxxxxxx.", "xxexxxexx", "xxxxexxxx", "xxxxxxxxx", ".xxxxxxx.", "..xxxxx..", "..x.x.x..", ".x..x..x."],
-  herald: [".xx.xx.", "xxxxxxx", "xxeeexx", "xxeeexx", "xxxxxxx", ".xxxxx.", ".x...x."],
-};
-const GRUB = [".x.", "xxx", "x.x"];
 const OBJ_COL: Record<ObjKey, string> = { dragon: "#ff9a3c", elder: "#c9f0ff", baron: "#b06cff", herald: "#9a7bff", grubs: "#d7a4ff" };
 /** What stands in each pit, most important first: only one waits there at a time. */
 const PITS: ObjKey[][] = [["elder", "dragon"], ["baron", "herald", "grubs"]];
@@ -891,6 +866,26 @@ export class MatchRenderer {
     return { x: ox, y: oy, w, h };
   }
 
+  /**
+   * A filled pixel disc with a dark outline, its middle on the buffer pixel a world point falls in and `r` px from
+   * there to its edge. Returns the box it covers (without the outline).
+   */
+  private disc(p: Vec, r: number, col: string, alpha = 1): Box {
+    const c = this.ctx;
+    const cx = Math.floor(this.sx(p.x)), cy = Math.floor(this.sy(p.y));
+    c.globalAlpha = alpha;
+    for (const [rad, fill] of [[r + 1, "#05070d"], [r, col]] as const) {
+      c.fillStyle = fill;
+      for (let d = -rad; d <= rad; d++) {
+        // (the half pixel makes the small sizes round: r 3 gives rows of 3 5 7 7 7 5 3)
+        const half = Math.floor(Math.sqrt((rad + 0.5) ** 2 - d * d));
+        c.fillRect(cx - half, cy + d, half * 2 + 1, 1);
+      }
+    }
+    c.globalAlpha = 1;
+    return { x: cx - r, y: cy - r, w: 2 * r + 1, h: 2 * r + 1 };
+  }
+
   /** A filled pixel diamond with its middle on buffer pixel (cx, cy), `r` px from there to each tip. */
   private diamond(cx: number, cy: number, r: number, col: string) {
     const c = this.ctx;
@@ -1411,14 +1406,13 @@ export class MatchRenderer {
   }
 
   /**
-   * Jungle camps, readable on the whole map: a camp that is up is a bright sprite with a dark outline (the small tan
-   * dot it used to be was the colour of the ground), one that was cleared is the same shape as a dim shadow with the
-   * time until it is back under it. A camp that just came up is ringed for a moment; one being cleared shows its
-   * health.
+   * Jungle camps, readable on the whole map: a camp that is up is a bright disc with a dark outline (the small tan
+   * dot it used to be was the colour of the ground), one that was cleared is the same disc dimmed, with the time
+   * until it is back under it. A camp that just came up is ringed for a moment; one being cleared shows its health.
    */
   private drawCamps(now: number) {
     const c = this.ctx;
-    const u = this.cam.size < 9000 ? 2 : 1;
+    const r = CAMP_R[this.cam.size < 9000 ? 1 : 0];
     for (const camp of this.e.camps) {
       // what is known of a camp that is up (also for camps outside the view, so nothing is left over from an earlier
       // life): when it came up, and the health it came up with. A camp spawns above its maxHp after the first
@@ -1432,45 +1426,55 @@ export class MatchRenderer {
       } else if (camp.hp > up.full) up.full = camp.hp;
       const x = this.sx(camp.pos.x), y = this.sy(camp.pos.y);
       if (x < -20 || y < -20 || x > RES + 20 || y > RES + 20) continue;
-      const rows = CAMP_SPRITE[camp.kind];
       if (!camp.alive || !up) {
-        const b = this.sprite(rows, camp.pos, u, GONE_PAL, GONE_ALPHA);
+        const b = this.disc(camp.pos, r, GONE_COL, GONE_ALPHA);
         const left = Math.ceil(camp.spawnAt - this.e.t);
         if (left > 0) this.timer(b, left, "#cfd5e2");
         continue;
       }
-      const b = this.sprite(rows, camp.pos, u, CAMP_PAL[camp.kind]);
+      const b = this.disc(camp.pos, r, CAMP_COL[camp.kind]);
       if (camp.hp < up.full) this.bar(b, camp.hp / up.full, "#ffe28a");
       const k = (now - up.at) / CAMP_UP_MS;
       if (k >= 0 && k < 1) {
-        const g = Math.round(2 + (1 - k) * 6);
+        // a white ring closing in on the camp
         c.globalAlpha = 1 - k;
         c.strokeStyle = "#ffffff";
         c.lineWidth = 1;
-        c.strokeRect(b.x - g + 0.5, b.y - g + 0.5, b.w + g * 2 - 1, b.h + g * 2 - 1);
+        c.beginPath();
+        c.arc(b.x + b.w / 2, b.y + b.h / 2, r + 3 + (1 - k) * 6, 0, Math.PI * 2);
+        c.stroke();
         c.globalAlpha = 1;
       }
     }
   }
 
   /**
-   * Epic monsters as sprites on their own spots (the Voidgrubs one by one). A monster that is up has a slow ring
-   * around it and shows its health while it is hit; an empty pit shows what comes there next as a dim shadow with
-   * the time left, the same way as a cleared camp.
+   * Epic monsters, each on its own spot (the Voidgrubs one by one): the same disc as a camp, larger. A monster that
+   * is up has a slow ring around it and shows its health while it is hit; an empty pit shows what comes there next
+   * as a dim disc with the time left, the same way as a cleared camp.
    */
   private drawObjectives(now: number) {
     const c = this.ctx, e = this.e;
-    const u = this.cam.size < 9000 ? 2 : 1;
+    const zoom = this.cam.size < 9000 ? 1 : 0;
     const draw = (k: ObjKey, up: boolean): Box => {
       const o = e.obj[k];
-      const pal = up ? { x: OBJ_COL[k], e: "#0a0d16" } : GONE_PAL;
+      const col = up ? OBJ_COL[k] : GONE_COL;
       const alpha = up ? 1 : GONE_ALPHA;
-      if (k !== "grubs") return this.sprite(OBJ_SPRITE[k === "elder" ? "dragon" : k], o.pos, u, pal, alpha);
+      if (k !== "grubs") {
+        const b = this.disc(o.pos, EPIC_R[zoom], col, alpha);
+        if (up) {
+          // a dark core, as the epic monsters always had: with their size it sets them apart from a camp
+          const s = zoom ? 3 : 1;
+          c.fillStyle = "#0a0d16";
+          c.fillRect(b.x + (b.w - s) / 2, b.y + (b.h - s) / 2, s, s);
+        }
+        return b;
+      }
       // as many grubs as are left, each on its own spot; the box around them carries the ring, the bar and the time
       const n = up ? Math.max(1, Math.min(GRUB_SPOTS.length, o.left ?? GRUB_SPOTS.length)) : GRUB_SPOTS.length;
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       for (let i = 0; i < n; i++) {
-        const b = this.sprite(GRUB, GRUB_SPOTS[i], u, pal, alpha);
+        const b = this.disc(GRUB_SPOTS[i], GRUB_R[zoom], col, alpha);
         x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.w); y1 = Math.max(y1, b.y + b.h);
       }
       return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
