@@ -1,0 +1,47 @@
+/* 승리 수당 (ui/WinBonus.tsx): series payout box, set-up stake line, top bar "+n" chip, finance list */
+
+/* series result: what this series pays */
+.payout { display: inline-flex; flex-direction: column; gap: 6px; min-width: 340px; margin: 4px auto 10px; padding: 10px 14px; text-align: left; background: var(--bg2); }
+.payout.win { box-shadow: 0 -2px 0 0 var(--gold), 0 2px 0 0 var(--gold), -2px 0 0 0 var(--gold), 2px 0 0 0 var(--gold); }
+.payout.lose { box-shadow: 0 -2px 0 0 var(--line2), 0 2px 0 0 var(--line2), -2px 0 0 0 var(--line2), 2px 0 0 0 var(--line2); }
+.payout-line { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.payout-label { font-family: "Galmuri14", "Galmuri11"; font-size: 15px; }
+.payout-label small { display: block; font-family: "Galmuri11"; font-size: 11px; color: var(--muted); }
+.payout-amt { font-family: "Galmuri14", "Galmuri11"; font-size: 24px; color: var(--green); white-space: nowrap; }
+.payout-line.none .payout-label { color: var(--muted); }
+.payout-foot { border-top: 1px solid var(--line); padding-top: 6px; font-size: 12px; color: var(--muted); }
+
+/* set-up panel: what is at stake */
+.win-stake { margin-top: 8px; padding: 5px 8px; background: #1f1b10; box-shadow: inset 3px 0 0 0 var(--gold); font-size: 12px; }
+
+/* match end overlay */
+.match-stake { margin: 4px 0 12px; padding: 5px 14px; font-size: 14px; text-align: center; background: rgba(8, 10, 18, 0.88); box-shadow: 0 -2px 0 0 var(--line2), 0 2px 0 0 var(--line2), -2px 0 0 0 var(--line2), 2px 0 0 0 var(--line2); }
+.match-stake.won { color: var(--text); box-shadow: 0 -2px 0 0 var(--gold), 0 2px 0 0 var(--gold), -2px 0 0 0 var(--gold), 2px 0 0 0 var(--gold); }
+.match-stake b { font-family: "Galmuri14", "Galmuri11"; font-size: 22px; color: var(--green); }
+
+/* top bar: the cash just paid in, under the cash number */
+.topbar .stat.cash { position: relative; }
+.topbar .stat.cash.gained > b { animation: cash-glow 1.2s ease-out 3; }
+.cash-gain {
+  position: absolute; left: -10px; top: calc(100% + 10px); z-index: 60; min-width: 150px; padding: 7px 10px;
+  background: #19210f; cursor: pointer; white-space: nowrap;
+  box-shadow: 0 -2px 0 0 var(--green), 0 2px 0 0 var(--green), -2px 0 0 0 var(--green), 2px 0 0 0 var(--green), 0 6px 14px rgba(0, 0, 0, 0.5);
+  animation: cash-gain-in 0.35s ease-out, cash-gain-out 0.6s ease-in 5.9s forwards;
+}
+.cash-gain::before {
+  content: ""; position: absolute; left: 18px; top: -8px; width: 8px; height: 6px; background: var(--green);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.cash-gain-total { display: block; font-family: "Galmuri14", "Galmuri11"; font-size: 20px; color: var(--green); }
+.cash-gain-line { font-size: 11px; color: var(--text); }
+.cash-gain-line i { font-style: normal; color: var(--muted); }
+.cash-gain-now { margin-top: 3px; padding-top: 3px; border-top: 1px solid #2c3a22; color: var(--gold); }
+@keyframes cash-gain-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes cash-gain-out { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes cash-glow { 0% { color: #b6ffc8; text-shadow: 0 0 8px rgba(90, 208, 122, 0.9); } 100% { text-shadow: none; } }
+
+/* finance screen */
+.winbonus-panel { margin-bottom: 8px; }
+.wb-rules { margin: 2px 0 8px; gap: 6px; }
+.wb-rules .tag { font-size: 12px; padding: 1px 7px; }
+.wb-list { max-height: 230px; overflow-y: auto; }

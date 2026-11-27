@@ -4,7 +4,7 @@ import { addNews, inbox } from "./news";
 import { ovr } from "./player";
 import { clamp, Rng } from "./rng";
 import { releasePlayer, autoLineup, pushAlert } from "./market";
-import type { GameState, GoodsKind, GoodsRun, Player, Team } from "./types";
+import type { CompId, GameState, GoodsKind, GoodsRun, Player, Series, Team } from "./types";
 import { earn, spend } from "./ledger";
 import { goodsEventMul } from "./events";
 export { earn, spend, ledger, monthlyWages } from "./ledger";
@@ -187,12 +187,47 @@ export const FACILITY_INFO: Record<keyof Team["facilities"], { name: string; des
   marketing: { name: "마케팅팀", desc: "팬 증가, 굿즈 수요 +8%/레벨" },
 };
 
-/** Results move fans, fame and win bonuses. */
-export function seriesRewards(s: GameState, teamId: string, won: boolean, stage: string, intl: boolean) {
+/** International events: fans, fame and the win bonus count double. */
+export const INTL_COMPS: readonly CompId[] = ["MSI", "WORLDS", "EWC"];
+
+/** A bracket stage (playoffs, finals) rather than round robin or Swiss. */
+function bigStage(stage: string): boolean {
+  return stage !== "RR" && !stage.startsWith("SW");
+}
+
+/** 승리 수당 for winning one series (games won inside it pay nothing): 400만 round robin/Swiss, 1,200만 bracket, x2 abroad. */
+export function winBonus(stage: string, intl: boolean): number {
+  return (bigStage(stage) ? 1200 : 400) * (intl ? 2 : 1);
+}
+
+export function seriesWinBonus(sr: Pick<Series, "comp" | "stage">): number {
+  return winBonus(sr.stage, INTL_COMPS.includes(sr.comp));
+}
+
+/** Why a series pays what it does, e.g. "정규 라운드", or "토너먼트 1,200만 · 국제 대회 ×2" where it doubles. */
+export function winBonusRule(sr: Pick<Series, "comp" | "stage">): string {
+  const big = bigStage(sr.stage);
+  const kind = big ? "토너먼트" : sr.stage === "RR" ? "정규 라운드" : "스위스 라운드";
+  return INTL_COMPS.includes(sr.comp) ? `${kind} ${money(big ? 1200 : 400)} · 국제 대회 ×2` : kind;
+}
+
+/** The user's series wins of a season with the 승리 수당 each one paid, newest first. */
+export function winBonusLog(s: GameState, season = s.season): { sr: Series; amount: number }[] {
+  return s.series
+    .filter((x) => x.done && x.season === season && x.winner === s.user)
+    .map((sr) => ({ sr, amount: sr.bonus ?? seriesWinBonus(sr) }))
+    .sort((a, b) => b.sr.day - a.sr.day);
+}
+
+/** Results move fans, fame and win bonuses. Returns the 승리 수당 paid to the user's club (0 for anyone else). */
+export function seriesRewards(s: GameState, teamId: string, won: boolean, stage: string, intl: boolean): number {
   const t = s.teams[teamId];
-  const big = stage !== "RR" && !stage.startsWith("SW");
+  const big = bigStage(stage);
   const fansGain = won ? (big ? 30000 : 9000) * (intl ? 2 : 1) : 2000;
   t.fans = Math.round(t.fans + fansGain * (1 + t.facilities.marketing * 0.08) * (teamId === s.user ? 1 : 0.8));
   t.fame = clamp(t.fame + (won ? (big ? 3 : 1) * (intl ? 2 : 1) : big ? -1 : 0) * 0.8, 0, 100);
-  if (teamId === s.user && won) earn(s, "승리 수당", (big ? 1200 : 400) * (intl ? 2 : 1));
+  if (teamId !== s.user || !won) return 0;
+  const bonus = winBonus(stage, intl);
+  earn(s, "승리 수당", bonus);
+  return bonus;
 }
