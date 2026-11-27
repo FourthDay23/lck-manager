@@ -8,14 +8,14 @@ import { newGame } from "../src/core/game";
 import { joinTeam, autoLineup } from "../src/core/market";
 import { Engine, ENGINE_FLAGS, applyEarlyTune, applyGrowthTune, applyPaceTune, applySimTune } from "../src/match/engine";
 import { newDraft, autoDraft } from "../src/match/draft";
-import { Rng } from "../src/core/rng";
-import { gameWinProb, teamPower } from "../src/core/quick";
-import { ROLES } from "../src/data/types";
-import { ITEM_TUNE } from "../src/match/items";
 import { par, engineSnap } from "./lib/par";
 import { DRAW } from "../src/match/engine";
 // no screen: skip the draw-only effects list (results stay the same; HEADLESS=0 keeps it)
 if (process.env.HEADLESS !== "0" && DRAW) DRAW.fx = false; // (DRAW is missing in code from before it, scripts/ab.mjs --base)
+import { Rng } from "../src/core/rng";
+import { gameWinProb, teamPower } from "../src/core/quick";
+import { ROLES } from "../src/data/types";
+import { ITEM_TUNE } from "../src/match/items";
 
 const dir = existsSync("public/data/champions.json") && existsSync("public/data/players.json") ? "data" : "data-sample";
 const j = (f: string) => {
