@@ -244,8 +244,9 @@ export function TutorialLayer() {
   const steps = t ? PARTS[t.part] : null;
   const step: Step | null = t ? steps![t.i] : st.tip;
   const key = t ? `${t.part}${t.i}` : st.tip ? `p${st.tip.key}` : "";
-  // the match screens' events and alerts wait while a match is on (App), so they do not hold the tour there
-  const busy = !!st.s && (st.s.cutscenes.length > 0 || (st.screen.name !== "series" && (st.s.events.length > 0 || (st.s.alerts?.length ?? 0) > 0)));
+  // alerts wait while a match is on (App), so they do not hold the tour on the match screens; a choice event is
+  // on screen everywhere, the match screens too (it is answered before the first game, Series.tsx)
+  const busy = !!st.s && (st.s.cutscenes.length > 0 || st.s.events.length > 0 || (st.screen.name !== "series" && (st.s.alerts?.length ?? 0) > 0));
   // "go" starts by itself once the team is ready to play (outside the match screens, with nothing else open)
   useEffect(() => {
     const s = st.s;
