@@ -4,6 +4,7 @@ import { fireStaffUser, staffAsk, staffSlots } from "../../core/market";
 import { money } from "../../core/format";
 import type { Staff } from "../../core/types";
 import { TeamLogo } from "../components";
+import { StaffAvatar } from "../StaffAvatar";
 import { autosave } from "../App";
 import { tutLock } from "../Tutorial";
 
@@ -42,7 +43,7 @@ export function StaffScreen() {
             {mine.map((st) => (
               <tr>
                 <td><span class="tag gold">{ROLE_NAME[st.role]}</span></td>
-                <td><b>{st.name}</b> <span class="dim">{st.realName}</span></td>
+                <td><div class="row" style={{ gap: 6 }}><StaffAvatar sid={st.id} size={24} /><b>{st.name}</b><span class="dim">{st.realName}</span></div></td>
                 <td><Attrs st={st} /></td>
                 <td class="num">{money(st.contract?.salary ?? 0)}/년 · {st.contract?.until}년까지</td>
                 <td class="right"><button class="btn small danger" onClick={() => { if (confirm(`${st.name}와 결별합니다. 위약금은 연봉의 30%입니다.`)) { fireStaffUser(s, st); autosave(); store.bump(); } }}>계약 해지</button></td>
@@ -65,7 +66,7 @@ export function StaffScreen() {
             {pool.map((st) => (
                 <tr>
                   <td><span class="tag">{ROLE_NAME[st.role]}</span></td>
-                  <td><b>{st.name}</b> <span class="dim">{st.realName}</span></td>
+                  <td><div class="row" style={{ gap: 6 }}><StaffAvatar sid={st.id} size={22} /><b>{st.name}</b><span class="dim">{st.realName}</span></div></td>
                   <td>{st.team ? <><TeamLogo id={st.team} size={16} /> {s.teams[st.team]?.short}</> : <span class="muted">FA · 전 {st.lastTeamName ?? "-"}</span>}</td>
                   <td><Attrs st={st} /></td>
                   <td class="num">{st.fame}</td>

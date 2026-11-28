@@ -306,10 +306,12 @@ export interface EvState {
 }
 
 export interface Cutscene {
-  kind: "sign" | "renew" | "title" | "trade" | "qualify";
+  kind: "sign" | "renew" | "title" | "trade" | "qualify" | "staff";
   title: string;
   sub?: string;
   player?: string;
+  /** kind "staff": the head coach or coach just hired (ui/StaffCutscene.tsx) */
+  staff?: string;
   team?: string;
   lines?: string[];
   trophy?: CompId;

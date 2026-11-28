@@ -10,6 +10,7 @@ import {
 } from "../core/staffNeg";
 import type { StaffOffer } from "../core/staffNeg";
 import { Bar, Modal, TeamLogo } from "./components";
+import { StaffAvatar } from "./StaffAvatar";
 import { autosave } from "./App";
 import { monthlyWages } from "../core/ledger";
 import { monthlyIncomePreview } from "../core/economy";
@@ -86,7 +87,7 @@ export function StaffNegotiationModal({ sid }: { sid: string }) {
       <h2>{role} 선임 협상</h2>
       <div class="row" style={{ alignItems: "flex-start", gap: 14 }}>
         <div class="col center" style={{ width: 130 }}>
-          <div class="frame dark center" style={{ width: 90, height: 90, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30 }}>{st.name.slice(0, 1)}</div>
+          <StaffAvatar sid={st.id} size={90} />
           <b>{st.name}</b>
           <div class="dim" style={{ fontSize: 11 }}>{st.realName}</div>
           <div><span class="tag gold">{role}</span></div>

@@ -1,0 +1,8 @@
+/* staff hire cutscene (StaffCutscene.tsx): the role ribbon under WELCOME, gold for a head coach, silver for a coach */
+.cut .staff-cut-role {
+  display: inline-block; margin-top: 4px; padding: 3px 14px;
+  font-family: "Galmuri14"; font-size: 18px; letter-spacing: 3px;
+  background: #c9d1e0; color: #11141f; box-shadow: 0 0 0 2px #000, 4px 4px 0 2px #000;
+}
+.cut .staff-cut-role.head { background: #f2c14e; color: #1a1406; }
+.cut .staff-cut-attrs { font-size: 11px; margin-top: 4px; }

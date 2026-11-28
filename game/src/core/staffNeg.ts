@@ -214,7 +214,7 @@ export function submitStaffOffer(s: GameState, st: Staff, o: StaffOffer): StaffR
   return { kind: "counter", msg: `${money(talk.ask)} 정도면 생각해 보겠습니다. (인내심 ${talk.patience})` };
 }
 
-/** After an accepted offer: pay the bonus, sign him, and clear the talks (affinity stays). */
+/** After an accepted offer: pay the bonus, sign him, clear the talks (affinity stays) and queue the WELCOME cutscene. */
 export function completeStaffHire(s: GameState, st: Staff, o: StaffOffer): { ok: boolean; msg: string } {
   const me = s.teams[s.user];
   if (o.bonus > me.cash) return { ok: false, msg: `계약금을 낼 자금이 부족합니다 (${money(me.cash)}).` };
@@ -222,5 +222,9 @@ export function completeStaffHire(s: GameState, st: Staff, o: StaffOffer): { ok:
   if (!r.ok) return r;
   if (o.bonus > 0) spend(s, "계약금", o.bonus);
   if (st.talk) st.talk = { season: st.talk.season, affinity: st.talk.affinity, patience: 4 };
+  s.cutscenes.push({
+    kind: "staff", title: `${STAFF_ROLE_KO[st.role]} ${st.name} 선임`,
+    sub: `${o.years}년 · 연봉 ${money(o.salary)}${o.bonus > 0 ? " · 계약금 " + money(o.bonus) : ""}`, staff: st.id, team: me.id,
+  });
   return r;
 }

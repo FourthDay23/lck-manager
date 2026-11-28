@@ -42,7 +42,7 @@ export function TeamLogo({ id, size = 28 }: { id: string | null | undefined; siz
   return <LogoBox logo={t.logo} colors={t.colors} short={t.short} size={size} />;
 }
 
-const SKIN = ["#f1c9a5", "#e8b991", "#d9a47a", "#c68b5e", "#f5d6b8"];
+export const SKIN = ["#f1c9a5", "#e8b991", "#d9a47a", "#c68b5e", "#f5d6b8"];
 const HAIR = ["#1b1b1f", "#2b1d14", "#3b2a1d", "#5a3a20", "#14141a", "#6b4b2a", "#a0a0a8", "#c25b2f"];
 
 /** Deterministic 12x12 pixel portrait in team colors. `bare`: no background square, for a figure standing on a scene (the event dialog's stage). */

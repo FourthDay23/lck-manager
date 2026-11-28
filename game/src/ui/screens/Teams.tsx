@@ -5,6 +5,7 @@ import { ovr, age, teamDifficulty } from "../../core/player";
 import { teamPower } from "../../core/quick";
 import { money } from "../../core/format";
 import { Avatar, ChampIcon, Modal, Ovr, PName, RoleTag, TeamLogo } from "../components";
+import { StaffAvatar } from "../StaffAvatar";
 
 export function TeamsScreen() {
   const s = S();
@@ -24,7 +25,7 @@ export function TeamsScreen() {
           return (
             <div class="frame pad" style={{ cursor: "pointer" }} onClick={() => store.open("team", id)}>
               <div class="row" style={{ justifyContent: "space-between" }}>
-                <div class="row"><TeamLogo id={id} size={36} /><div><b>{t.name}</b><div class="muted" style={{ fontSize: 11 }}>{t.region} · 감독 {hc?.name ?? "없음"} · 전력 {teamPower(s, id).toFixed(1)}{t.region === "LCK" && <> · 난이도 {teamDifficulty(t).label}</>}</div></div></div>
+                <div class="row"><TeamLogo id={id} size={36} /><div><b>{t.name}</b><div class="muted" style={{ fontSize: 11 }}>{t.region} · 감독{hc ? <StaffAvatar sid={hc.id} size={16} inline /> : " "}{hc?.name ?? "없음"} · 전력 {teamPower(s, id).toFixed(1)}{t.region === "LCK" && <> · 난이도 {teamDifficulty(t).label}</>}</div></div></div>
                 <div class="muted" style={{ fontSize: 11, textAlign: "right" }}>LCK {t.titles.lck} · MSI {t.titles.msi} · 월즈 {t.titles.worlds}</div>
               </div>
               <div class="row" style={{ gap: 4, marginTop: 6 }}>
@@ -84,8 +85,15 @@ export function TeamModal({ id }: { id: string }) {
         </>
       )}
       <h3 style={{ marginTop: 10 }}>코칭스태프</h3>
-      {t.staff.map((x) => s.staff[x]).filter(Boolean).map((st) => <span class="tag">{st.role === "Head Coach" ? "감독" : "코치"} {st.name}</span>)}
-      {!t.staff.length && <span class="muted">없음</span>}
+      <div class="row" style={{ gap: 14, flexWrap: "wrap" }}>
+        {t.staff.map((x) => s.staff[x]).filter(Boolean).map((st) => (
+          <div class="row" style={{ gap: 6 }}>
+            <StaffAvatar sid={st.id} size={28} />
+            <div><b>{st.name}</b><div class="dim" style={{ fontSize: 11 }}>{st.role === "Head Coach" ? "감독" : "코치"} · {st.realName}</div></div>
+          </div>
+        ))}
+        {!t.staff.length && <span class="muted">없음</span>}
+      </div>
     </Modal>
   );
 }

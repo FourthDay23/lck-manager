@@ -32,6 +32,7 @@ import type { SeriesInfo } from "../Scorebar";
 import { standings } from "../../core/schedule";
 import type { CamMode } from "../../match/render";
 import { ChampIcon, TeamLogo, Bar } from "../components";
+import { StaffAvatar } from "../StaffAvatar";
 import { autosave } from "../App";
 import { headCoach, seriesWinProb } from "../../core/quick";
 import * as Matchup from "../../match/matchup";
@@ -420,6 +421,8 @@ export function DraftView({ d, userSide, onDone, auto, hotseat }: { d: DraftStat
   const role = selRole && open.includes(selRole) ? selRole : open[0];
   const sug = useMemo(() => (st && myTurn ? coachSuggestions(s, data, d, actSide, rng) : { coach: null, items: [] }), [d.step, myTurn]);
   const sugIds = new Set(sug.items.map((x) => x.champ.id));
+  // the coach giving the suggestions (coachSuggestions asks the same team's head coach), for his portrait
+  const sugHc = headCoach(s, s.teams[myTeam]);
   // LCK matchups (matchup.ts): our coach's draft rating decides whether we see numbers or only the direction
   const enemySide: Side = actSide === "blue" ? "red" : "blue";
   // (in a hot-seat draft the side whose turn it is: blue's coach on blue's steps, red's on red's, like the ▲▼ marks)
@@ -665,7 +668,7 @@ export function DraftView({ d, userSide, onDone, auto, hotseat }: { d: DraftStat
             )}
             {/* always the same height and one line, so the board does not jump between turns */}
             <div class="frame dark pad sug-panel" data-tut="draft-sug">
-              <h3>{hotseat && myTurn ? `${turnTeam} ` : ""}{!myTurn ? "감독 추천" : sug.coach ? `감독 ${sug.coach}의 추천` : "감독이 없어 추천이 거의 없습니다"}{myTurn ? ` (${sug.items.length}개)` : ""}</h3>
+              <h3>{hotseat && myTurn ? `${turnTeam} ` : ""}{!myTurn ? "감독 추천" : sug.coach ? <>감독{sugHc && <StaffAvatar sid={sugHc.id} size={14} inline />}{sug.coach}의 추천</> : "감독이 없어 추천이 거의 없습니다"}{myTurn ? ` (${sug.items.length}개)` : ""}</h3>
               <div class="sug-row">
                 {myTurn ? sug.items.map((x) => (
                   <div class="sug-item" title={`${x.champ.name} · ${x.role ? ROLE_KO[x.role] + " · " : ""}${x.why}`} onClick={() => choose(x.champ, x.role)}>

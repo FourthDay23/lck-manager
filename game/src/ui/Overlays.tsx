@@ -9,6 +9,7 @@ import { autosave } from "./App";
 import { appW } from "./scale";
 import { ROLE_KO } from "../data/types";
 import { money } from "../core/format";
+import { StaffCutsceneBody } from "./StaffCutscene";
 import "./alerts.css";
 import "./event.css";
 
@@ -330,7 +331,7 @@ export function CutsceneLayer() {
       <div class="bg" />
       <Sparks colors={[c1, "#ffffff", "#f2c14e", t.colors[1]]} fireworks={c.kind === "title" || c.kind === "qualify"} />
       <div class="inner">
-        {c.kind === "qualify" ? (
+        {c.kind === "staff" ? <StaffCutsceneBody c={c} c1={c1} /> : c.kind === "qualify" ? (
           <>
             <div style={{ marginBottom: 8 }}><TrophyArt comp={c.trophy ?? "CUP"} scale={10} /></div>
             <div class="sub" style={{ letterSpacing: 4 }}>LCK REPRESENTATIVE</div>

@@ -7,6 +7,7 @@ import { COMP_NAME } from "../../core/types";
 import { ROLES, ROLE_KO } from "../../data/types";
 import { monthlyExpensePreview, monthlyIncomePreview, seriesWinBonus, winBonusLog } from "../../core/economy";
 import { Avatar, ChampIcon, Ovr, PName, TeamLogo } from "../components";
+import { StaffAvatar } from "../StaffAvatar";
 import { ovr } from "../../core/player";
 import { oddsWord } from "../../core/format";
 
@@ -101,7 +102,7 @@ export function HomeScreen() {
               </div>
             );
           })}
-          <div class="muted" style={{ marginTop: 6 }}>감독: {hc ? hc.name : "없음"} · 팀 합 {Math.round(me.synergy)}</div>
+          <div class="muted row" style={{ marginTop: 6, gap: 6 }}>감독: {hc && <StaffAvatar sid={hc.id} size={24} />}{hc ? hc.name : "없음"} · 팀 합 {Math.round(me.synergy)}</div>
         </div>
       </div>
       <div class="grid3">
