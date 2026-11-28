@@ -103,8 +103,13 @@ const OBJ_COL: Record<ObjKey, string> = { dragon: "#ff9a3c", elder: "#c9f0ff", b
 const PITS: ObjKey[][] = [["elder", "dragon"], ["baron", "herald", "grubs"]];
 /** ms a camp that just came up is ringed */
 const CAMP_UP_MS = 900;
-/** an inhibitor's full health (Engine builds them with it and puts it back when one comes up again) */
+/**
+ * The health an inhibitor and a nexus are built with in the engine (it keeps no maximum for them). Their bars are
+ * measured against this or the most health seen, whichever is more, so a renderer made in the middle of a game
+ * still has a full mark, and a change to these numbers in the engine shows up as a bar that is never full.
+ */
 const INHIB_HP = 3000;
+const NEXUS_HP = 4000;
 interface Box { x: number; y: number; w: number; h: number }
 
 export class MatchRenderer {
@@ -148,6 +153,12 @@ export class MatchRenderer {
   private spread: Vec[] = [];
   /** camps that are up, by id: the real time each came up (it is ringed for a moment) and the health it came up with */
   private campUp = new Map<number, { at: number; full: number }>();
+  /**
+   * The most health each inhibitor and nexus has had while standing, for their bars: the engine keeps no maximum for
+   * them (an inhibitor is built with 3,000, a nexus with 4,000), and copying those numbers here would go wrong as
+   * soon as the engine changes them.
+   */
+  private structFull = new Map<string, number>();
   cam: Cam = { ...PRESETS.all };
   fxSeen = 0;
   live: LiveFx[] = [];
@@ -195,6 +206,7 @@ export class MatchRenderer {
     this.sums = [];
     this.spread = [];
     this.campUp.clear();
+    this.structFull.clear();
     this.prevPos = null;
     this.upCache = null;
     this.snap = true;
@@ -898,6 +910,17 @@ export class MatchRenderer {
     }
   }
 
+  /** The most health structure `key` has had since it last stood up (see structFull); forgotten while it is down. */
+  private fullHp(key: string, hp: number, standing: boolean): number {
+    if (!standing) {
+      this.structFull.delete(key);
+      return 0;
+    }
+    const full = Math.max(this.structFull.get(key) ?? 0, hp);
+    this.structFull.set(key, full);
+    return full;
+  }
+
   /** The colour of an epic monster's health: gold, orange under half, red under a quarter (smite range). */
   private static monsterHp(f: number): string {
     return f > 0.5 ? "#ffd36b" : f > 0.25 ? "#ff9a3c" : "#ff5a5a";
@@ -1384,15 +1407,16 @@ export class MatchRenderer {
     for (const ih of this.e.inhibs) {
       const side = ih.side ? "red" : "blue";
       const b = this.mark(ih.alive ? `inhibitor_${side}` : `inhibitor_${side}_destroyed`, ih.pos, false, r + 1, ih.alive ? (ih.side ? "#ff9a9a" : "#9ad0ff") : GONE_COL);
-      // (an inhibitor's health is 3,000: Engine sets it there when it is built and when it comes back)
-      if (ih.alive && ih.hp < INHIB_HP) this.bar(b, ih.hp / INHIB_HP, ih.side ? "#ff6b6b" : "#5aa9ff", [12, 20]);
+      const full = Math.max(INHIB_HP, this.fullHp(`i${ih.side}${ih.lane}`, ih.hp, ih.alive));
+      if (ih.alive && ih.hp < full) this.bar(b, ih.hp / full, ih.side ? "#ff6b6b" : "#5aa9ff", [12, 20]);
       if (!ih.alive && zoom && ih.respawnAt > this.e.t) this.timer(b, Math.ceil(ih.respawnAt - this.e.t));
     }
     NEXUS.forEach((p, side) => {
       const name = side ? "red" : "blue";
-      const hp = this.e.nexus[side] / 4000;
-      const b = this.mark(hp > 0 ? `nexus_${name}` : `nexus_${name}_destroyed`, p, false, r + 3, hp > 0 ? (side ? RED : BLUE) : GONE_COL);
-      if (hp > 0 && hp < 1) this.bar(b, hp, side ? "#ff6b6b" : "#5aa9ff", [18, 30]);
+      const now = this.e.nexus[side];
+      const full = Math.max(NEXUS_HP, this.fullHp(`n${side}`, now, now > 0));
+      const b = this.mark(now > 0 ? `nexus_${name}` : `nexus_${name}_destroyed`, p, false, r + 3, now > 0 ? (side ? RED : BLUE) : GONE_COL);
+      if (now > 0 && now < full) this.bar(b, now / full, side ? "#ff6b6b" : "#5aa9ff", [18, 30]);
     });
   }
 
