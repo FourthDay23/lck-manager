@@ -9,6 +9,7 @@ import { MarketNav, MarketStat } from "./MarketTip";
 import { saveGame } from "../core/save";
 import { monthlyWages } from "../core/ledger";
 import { TeamLogo } from "./components";
+import { CashGain, cashGainOn, moneyExact } from "./WinBonus";
 import { StartScreen } from "./screens/Start";
 import { HomeScreen } from "./screens/Home";
 import { ScheduleScreen } from "./screens/Schedule";
@@ -103,7 +104,7 @@ export function App() {
         </div>
         <div class="stat"><span>날짜</span>{fmtDate(s.day)}</div>
         <div class="stat"><span>시즌</span>{s.season} · {phaseLabel(s)}</div>
-        <div class="stat" title={me.cash < 0 ? "자금이 마이너스인 채로 하루가 지나면 게임 오버입니다." : undefined}><span>자금{me.cash < 0 && " · 게임 오버 위험"}</span><b class={me.cash < 0 ? "neg" : "gold"}>{money(me.cash)}</b></div>
+        <div class={`stat cash ${cashGainOn() ? "gained" : ""}`} title={`${moneyExact(me.cash)}${me.cash < 0 ? "\n자금이 마이너스인 채로 하루가 지나면 게임 오버입니다." : ""}`}><span>자금{me.cash < 0 && " · 게임 오버 위험"}</span><b class={me.cash < 0 ? "neg" : "gold"}>{money(me.cash)}</b><CashGain /></div>
         <div class="stat" title="선수·스태프 연봉 합계 ÷ 12. 매달 25일에 나갑니다."><span>월 급여 (25일)</span><span class="neg">-{money(monthlyWages(s))}</span></div>
         <div class="stat"><span>명성 · 팬</span>{Math.round(me.fame)} · {(me.fans / 10000).toFixed(1)}만</div>
         <MarketStat s={s} />

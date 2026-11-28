@@ -39,6 +39,7 @@ import { META_LABEL, metaTier } from "../../core/meta";
 import { tutSpot } from "../Tutorial";
 import { appH, localRect, onScale, toLocal } from "../scale";
 import { chooseSetBreak, setBreakDue, setBreakOptions } from "../../core/events";
+import { MatchStake, SeriesPayout, WinStake, incomeNow, showIncomeSince } from "../WinBonus";
 
 interface Live {
   srId: string;
@@ -158,7 +159,10 @@ export function SeriesScreen() {
     bump();
   };
   const finishSeries = () => {
+    // the win bonus and prize money are paid here: show what came in under the top bar's cash
+    const before = incomeNow(s);
     closeUserSeries(s, D(), sr);
+    showIncomeSince(s, before);
     live = null;
     autosave();
     store.go("home");
@@ -193,7 +197,7 @@ export function SeriesScreen() {
       game: `${sr.games.length + 1}세트 · Bo${sr.bo}`,
       note: fl ? `피어리스: 챔피언 ${fl}개 사용 불가` : "하드 피어리스 드래프트",
     };
-    return <div><MatchView e={L.engine} userSide={userSide} series={series} tactic={L.tactic} setTactic={(t) => { L.tactic = t; L.engine!.tactic[userSide] = t; }} onEnd={() => finishGame(L.engine!, L.draft!)} /></div>;
+    return <div><MatchView e={L.engine} userSide={userSide} series={series} seriesNote tactic={L.tactic} setTactic={(t) => { L.tactic = t; L.engine!.tactic[userSide] = t; }} onEnd={() => finishGame(L.engine!, L.draft!)} /></div>;
   }
 
   const pWin = seriesWinProb(0.5, sr.bo);
@@ -220,7 +224,8 @@ export function SeriesScreen() {
       {breakNow ? null : L.phase === "done" ? (
         <div class="frame pad center">
           <h1 class={sr.wa > sr.wb === (sr.a === s.user) ? "gold" : "neg"}>{(sr.wa > sr.wb) === (sr.a === s.user) ? "시리즈 승리" : "시리즈 패배"}</h1>
-          <button class="btn primary" onClick={finishSeries}>마치고 돌아가기</button>
+          <SeriesPayout sr={sr} />
+          <div><button class="btn primary" onClick={finishSeries}>마치고 돌아가기</button></div>
         </div>
       ) : (
         <div class="grid2">
@@ -243,6 +248,7 @@ export function SeriesScreen() {
             </div>
             <div class="muted" style={{ fontSize: 11 }}>공격적: 교전·오브젝트 싸움을 자주 겁니다. 안정적: 불리한 싸움을 피합니다. 경기 중에도 바꿀 수 있습니다.</div>
             <StrategyPicker value={L.strategy} onPick={(st) => { L.strategy = st; lastStrategy = st; bump(); }} />
+            <WinStake sr={sr} />
             <div class="row" style={{ marginTop: 10 }}>
               <button class="btn primary" data-tut="series-draft" onClick={startDraft}>밴픽 시작</button>
               <button class="btn" onClick={quickGame}>이 세트 결과만 보기</button>
@@ -700,7 +706,8 @@ const BIG_ICON: Partial<Record<GameEvent["type"], string>> = {
 // a jungler in Smite's reach that did not get the monster (engine event "steal_fail", match/objsmite.ts)
 BIG_ICON.steal_fail = "스틸 실패";
 
-export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e: Engine; userSide: 0 | 1; series?: SeriesInfo; tactic: Tactic; setTactic: (t: Tactic) => void; onEnd: () => void }) {
+/** `seriesNote` (career games): a won game's end screen says "시리즈 승리" or how many games are left. */
+export function MatchView({ e, userSide, series, seriesNote, tactic, setTactic, onEnd }: { e: Engine; userSide: 0 | 1; series?: SeriesInfo; seriesNote?: boolean; tactic: Tactic; setTactic: (t: Tactic) => void; onEnd: () => void }) {
   const s = S();
   const data = D();
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -935,6 +942,7 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
             {e.over && (
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", background: "rgba(5,6,12,0.6)" }}>
                 <div class="title-logo" style={{ fontSize: 40, color: e.winner === userSide ? "#f2c14e" : "#ff6b6b" }}>{e.winner === userSide ? "VICTORY" : "DEFEAT"}</div>
+                {seriesNote && <MatchStake e={e} userSide={userSide} series={series} />}
                 <button class="btn primary" onClick={onEnd}>결과 확인</button>
               </div>
             )}

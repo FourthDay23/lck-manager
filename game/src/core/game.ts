@@ -14,7 +14,7 @@ import { academySeasonEnd, autoCallUp, setupAcademies } from "./academy";
 import { patchDue, rollPatch } from "./meta";
 import { training } from "./training";
 import { aiDailyMarket, autoLineup, joinTeam, releasePlayer, releaseStaff, staffAsk, windowOpen } from "./market";
-import { economyDay, earn, spend, seriesRewards, sponsorFor } from "./economy";
+import { INTL_COMPS, economyDay, earn, spend, seriesRewards, sponsorFor } from "./economy";
 import type { CompId, Difficulty, GameState, Player, Series, Staff, Team } from "./types";
 import { COMP_NAME } from "./types";
 import { afterUserSeries, endSetBreak, eventsDay, FICTION, MILD_SCANDALS, resolveChoice, SERIOUS_SCANDALS, sponsorEventMul } from "./events";
@@ -336,8 +336,9 @@ export function finishSeries(s: GameState, data: GameData, sr: Series, rng: Rng)
   sr.done = true;
   sr.winner = sr.wa > sr.wb ? sr.a! : sr.b!;
   const loser = sr.winner === sr.a ? sr.b! : sr.a!;
-  const intl = sr.comp === "MSI" || sr.comp === "WORLDS" || sr.comp === "EWC";
-  seriesRewards(s, sr.winner, true, sr.stage, intl);
+  const intl = INTL_COMPS.includes(sr.comp);
+  const bonus = seriesRewards(s, sr.winner, true, sr.stage, intl);
+  if (bonus) sr.bonus = bonus;
   seriesRewards(s, loser, false, sr.stage, intl);
   for (const tid of [sr.a!, sr.b!]) {
     const t = s.teams[tid];
