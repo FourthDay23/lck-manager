@@ -1,12 +1,17 @@
 // Headless engine runs: game length, kills, objectives, and whether the watched engine agrees with
 // the one-line AI-vs-AI formula (gameWinProb) on who wins.
 // Run: node scripts/run-ts.mjs scripts/calibrate.ts [games] [rosterSeed]
+//  in parallel: node scripts/par.mjs calibrate.ts [games] [rosterSeed]  (same report; A/B: scripts/ab.mjs)
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { newGame } from "../src/core/game";
 import { joinTeam, autoLineup } from "../src/core/market";
 import { Engine, ENGINE_FLAGS, applyEarlyTune, applyGrowthTune, applyPaceTune, applySimTune } from "../src/match/engine";
 import { newDraft, autoDraft } from "../src/match/draft";
+import { par, engineSnap } from "./lib/par";
+import { DRAW } from "../src/match/engine";
+// no screen: skip the draw-only effects list (results stay the same; HEADLESS=0 keeps it)
+if (process.env.HEADLESS !== "0" && DRAW) DRAW.fx = false; // (DRAW is missing in code from before it, scripts/ab.mjs --base)
 import { Rng } from "../src/core/rng";
 import { gameWinProb, teamPower } from "../src/core/quick";
 import { ROLES } from "../src/data/types";
@@ -72,8 +77,9 @@ for (let g = 0; g < N; g++) {
   autoDraft(s, data, d, rng);
   // STRAT=balanced,balanced forces both sides' game plans (default: each AI coach picks its own)
   const strategy = process.env.STRAT ? (process.env.STRAT.split(",").map((x) => x || null) as [never, never]) : undefined;
-  const e = new Engine({ s, data, blue: a, red: b, picks: { blue: d.picks.blue, red: d.picks.red }, seed: 1000 + g, strategy });
-  e.runToEnd();
+  // par.game: plays the game here, or leaves it to another piece of a parallel run (scripts/par.mjs)
+  const e = par.game(g, () => { const e = new Engine({ s, data, blue: a, red: b, picks: { blue: d.picks.blue, red: d.picks.red }, seed: 1000 + g, strategy }); e.runToEnd(); return engineSnap(e); });
+  if (!e) continue;
   len += e.t;
   kills += e.kills[0] + e.kills[1];
   drag += e.dragons[0].length + e.dragons[1].length;
@@ -104,6 +110,7 @@ for (let g = 0; g < N; g++) {
   pairs.push([p, win]);
   rows.push({ p, win, len: e.t, kills: e.kills[0] + e.kills[1], drag: e.dragons[0].length + e.dragons[1].length, barons: e.barons[0] + e.barons[1] });
 }
+par.end();
 // logistic fit win ~ sigmoid(slope * logit(p) + bias): slope 1 / bias 0 = the engine agrees with the formula;
 // slope < 1 = ratings matter less in the engine than in the AI-vs-AI formula; bias > 0 = blue-side edge
 function fitLogit(xy: [number, number][]) {
