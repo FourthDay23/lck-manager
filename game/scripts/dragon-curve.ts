@@ -23,7 +23,9 @@ const j = (f: string) => {
   const p = `public/${dir}/${f}`;
   return existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : null;
 };
-const data = assembleData(dir, j("champions.json"), j("players.json"), j("staff.json"), j("teams.json"), j("intl.json"), j("meta.json"), j("heatmap.json"));
+// items and champion matchups on, as in calibrate.ts (before, this script ran without them: 27.7 min games)
+const data = assembleData(dir, j("champions.json"), j("players.json"), j("staff.json"), j("teams.json"), j("intl.json"), j("meta.json"), j("heatmap.json"), process.env.ITEMS === "0" ? null : j("items.json"), process.env.MATCHUPS === "0" ? null : j("matchups.json"));
+Macro.applyObjTune(process.env.OBJ_TUNE);
 const N = Number(process.argv[3] ?? 60);
 const rosterSeed = Number(process.argv[4] ?? 3);
 const PLANS = !!process.env.PLANS;

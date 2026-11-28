@@ -5,7 +5,7 @@ import { standings, comp } from "../../core/schedule";
 import { teamPower, seriesWinProb, gameWinProb, fatigueLoss, starterFatigue } from "../../core/quick";
 import { COMP_NAME } from "../../core/types";
 import { ROLES, ROLE_KO } from "../../data/types";
-import { monthlyExpensePreview, monthlyIncomePreview } from "../../core/economy";
+import { monthlyExpensePreview, monthlyIncomePreview, seriesWinBonus, winBonusLog } from "../../core/economy";
 import { Avatar, ChampIcon, Ovr, PName, TeamLogo } from "../components";
 import { ovr } from "../../core/player";
 import { oddsWord } from "../../core/format";
@@ -18,6 +18,7 @@ export function HomeScreen() {
   const inc = Object.values(monthlyIncomePreview(s)).reduce((a, b) => a + b, 0);
   const exp = Object.values(monthlyExpensePreview(s)).reduce((a, b) => a + b, 0);
   const hc = me.staff.map((id) => s.staff[id]).find((x) => x?.role === "Head Coach");
+  const bonusLog = winBonusLog(s);
   const todo: string[] = [];
   if (me.cash < 0) {
     todo.push(s.debtGrace !== undefined && s.day <= s.debtGrace
@@ -73,6 +74,7 @@ export function HomeScreen() {
                 <div style={{ fontFamily: "Galmuri14", fontSize: 22 }}>VS</div>
                 <div class="muted">{fmtDate(next.day, false)} · Bo{next.bo}</div>
                 <div>예상 승률 {Math.round(seriesWinProb(pGame, next.bo) * 100)}% <span class="muted">({oddsWord(seriesWinProb(pGame, next.bo))})</span></div>
+                <div class="muted" style={{ fontSize: 12 }}>이기면 승리 수당 <b class="gold">{money(seriesWinBonus(next))}</b></div>
               </div>
               <div class="col center"><TeamLogo id={opp} size={56} /><b>{s.teams[opp].name}</b><span class="muted">전력 {teamPower(s, opp).toFixed(1)}</span></div>
             </div>
@@ -92,7 +94,7 @@ export function HomeScreen() {
                     <Avatar pid={p.id} size={24} />
                     <span style={{ width: 110 }}><PName pid={p.id} /></span>
                     <Ovr v={ovr(p)} />
-                    {top.map(([c]) => <ChampIcon id={c} size={20} />)}
+                    {top.map(([c, m]) => <ChampIcon id={c} size={20} mastery={m} />)}
                     <span class="muted" style={{ fontSize: 11 }}>사기 {Math.round(p.morale)} · 피로 {Math.round(p.fatigue)}</span>
                   </>
                 ) : <span class="neg">비어 있음</span>}
@@ -108,6 +110,11 @@ export function HomeScreen() {
           <div>자금 <b class="gold">{money(me.cash)}</b></div>
           <div class="muted">월 수입 예상 {money(inc)} · 월 지출 예상 {money(exp)}</div>
           <div class={inc - exp >= 0 ? "pos" : "neg"}>월 수지 {money(inc - exp)}</div>
+          {bonusLog.length > 0 && (
+            <div style={{ marginTop: 4 }}>
+              {s.season} 승리 수당 <b class="pos">+{money(bonusLog.reduce((a, x) => a + x.amount, 0))}</b> <span class="muted">(시리즈 {bonusLog.length}승 · 최근 {fmtDate(bonusLog[0].sr.day, false)} +{money(bonusLog[0].amount)})</span>
+            </div>
+          )}
           <div class="muted" style={{ fontSize: 11, marginTop: 4 }}>승리 수당, 상금, 굿즈 판매는 별도입니다. 25일에 급여가 나갑니다.</div>
         </div>
         <div class="frame pad">

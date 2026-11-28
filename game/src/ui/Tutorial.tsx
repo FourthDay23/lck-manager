@@ -181,17 +181,17 @@ const PARTS: Record<string, Step[]> = {
   // the first event window after that (over the window)
   event: [
     {
-      over: true, full: true, sel: ".modal", title: "3부 · 이벤트 [2]",
+      over: true, full: true, sel: ".evd", title: "3부 · 이벤트 [2]",
       body: "구단에 이벤트가 생겼습니다. 시간을 보내다 보면 선수, 팬, 스폰서, 다른 구단과 얽힌 일이 생기고, 그때마다 어떻게 대응할지 골라야 합니다. 선택지 아래에는 일어날 수 있는 일이 적혀 있고, 돈이 드는 선택지는 금액이 함께 나옵니다.",
       first: "이번에는 좋은 소식이네요!",
     },
     {
-      over: true, full: true, sel: ".modal", until: "chosen", done: (s) => !!s.ev?.result?.title || !s.events.length,
+      over: true, full: true, sel: ".evd-opts", until: "chosen", done: (s) => !!s.ev?.result?.title || !s.events.length,
       title: "3부 · 이벤트 [2]",
       body: "하지만 늘 좋은 일만 생기지는 않습니다. 선수의 부상이나 불만, 구설수 같은 부정적인 이벤트도 생기고, 무엇을 고르느냐에 따라 결과가 달라집니다. 이제 선택지를 하나 골라 보세요.",
     },
     {
-      over: true, full: true, sel: ".modal", skip: (s) => !s.ev?.result?.title, until: "result", done: (s) => !s.ev?.result?.title,
+      over: true, full: true, sel: ".evd-res", skip: (s) => !s.ev?.result?.title, until: "result", done: (s) => !s.ev?.result?.title,
       title: "3부 · 이벤트 결과",
       body: "고른 선택지의 결과입니다. 선수 사기, 팬 수, 자금 같은 것이 바뀌고, 어떤 선택은 선수의 이벤트 기록에 남아 나중에 다른 이벤트로 이어지기도 합니다. 확인했으면 '확인'을 눌러 주세요.",
     },
@@ -212,6 +212,14 @@ const PARTS: Record<string, Step[]> = {
       body: "이제 직접 만들어 볼까요? 종류와 수량을 정하고 '제작'을 눌러 보세요. 제작비는 누르는 순간 자금에서 빠집니다. 자금이 모자라면 '다음'을 눌러 넘어가도 됩니다.",
     },
     { screen: "finance", sel: tut("goods"), title: "4부 · 판매 현황", body: "만든 굿즈는 1주마다 팔리고, 판매 수익은 그때그때 자금에 들어옵니다. 아래 판매 현황에서 팔린 개수와 매출을 확인할 수 있습니다. 성적이 좋고 팬이 많을수록 잘 팔리고, 동시에 세 종류까지 팔 수 있습니다." },
+    {
+      sel: ".topbar .auto-ctl", title: "4부 · 자동 진행",
+      body: "날마다 직접 넘기기 번거로우면 상단 바의 '자동 진행'을 쓰세요. 하루씩 저절로 넘기다가 이벤트와 경기, 새 제안에서 기다리고, 처리하면 이어서 갑니다. 옆의 ▾에서 다음 경기, 이적시장 개장 · 마감 같은 목표를 골라 거기까지만 갈 수도 있습니다.",
+    },
+    {
+      sel: ".topbar .stat", text: "날짜", title: "4부 · 도움말 말풍선",
+      body: "상단 바의 날짜, 자금, 월 급여 같은 항목이나 화면 곳곳의 표시에 마우스를 올리면(휴대폰은 누르면) 자세한 설명이 말풍선으로 나옵니다. 날짜에는 가장 가까운 일정까지 남은 날과 그다음 일정이 나옵니다.",
+    },
     { title: "기초 완료", body: "이제 구단 운영의 기초는 모두 익히셨습니다! 선수단과 감독, 경기, 이벤트, 재정까지 잘 챙겨서 LCK 정상에 올라 보세요. 튜토리얼은 저장 · 설정 화면에서 언제든 다시 볼 수 있습니다.\n행운을 빕니다, 단장님." },
   ],
   // the window open again after the LCK Cup
@@ -385,6 +393,18 @@ export function tutBreakDue(s: GameState, sr: Series): boolean {
   return true;
 }
 
+/**
+ * A tip or a tour step to read is on screen (auto-advance, AutoPlay.tsx, waits for it). A step the player does
+ * (hands-on, "until") does not count: the run gets there.
+ */
+export function tutorialHolds(): boolean {
+  if (store.tip) return true;
+  const t = store.tut;
+  const st = t ? PARTS[t.part]?.[t.i] : undefined;
+  // in a replay a hands-on step is read with Next, so it holds too
+  return !!st && !acts(st, isFirst());
+}
+
 /** A head coach and five starters: time to play. Only in a career that has not played a game yet. */
 function readyForMatch(s: GameState): boolean {
   const me = s.teams[s.user];
@@ -486,7 +506,9 @@ export function TutorialLayer() {
   const key = t ? `${t.part}${t.i}` : st.tip ? `p${st.tip.key}` : "";
   const first = isFirst();
   // cutscenes, and outside the match screens event windows and alerts, go first (a step may be shown over events)
-  const events = !!s && st.screen.name !== "series" && (s.events.length > 0 || !!s.ev?.result?.title);
+  // event windows are on screen everywhere, the match screens too (answered before the first game, Series.tsx);
+  // alerts wait while a match is on (App)
+  const events = !!s && st.screen.name !== "exhibition" && (s.events.length > 0 || !!s.ev?.result?.title);
   const alerts = !!s && st.screen.name !== "series" && (s.alerts?.length ?? 0) > 0;
   const scene = !!s && s.cutscenes.length > 0;
   const busy = scene || ((events || alerts) && !step?.over);
@@ -588,7 +610,7 @@ export function TutorialLayer() {
         <p>{text}</p>
         {n > 1 && <div class="tut-bar"><i style={{ width: `${(at / n) * 100}%` }} /></div>}
         <div class="row" style={{ gap: 6 }}>
-          <button class="btn small" title="남은 튜토리얼을 모두 끕니다. 저장 · 설정에서 다시 볼 수 있습니다." onClick={() => endPart(true)}>건너뛰기</button>
+          <button class="btn small" data-tip="남은 튜토리얼을 모두 끕니다. 저장 · 설정에서 다시 볼 수 있습니다." onClick={() => endPart(true)}>건너뛰기</button>
           <span class="grow" style={{ flex: 1 }} />
           {prev && <button class="btn small" onClick={() => go(i - 1, true)}>이전</button>}
           {act ? (

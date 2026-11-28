@@ -69,6 +69,11 @@ const RANDOM_WEEK_MAX = 2;
 const MORALE_GAP = 3;
 const MORALE_CD = 21;
 const MAX_DEPTH = 2;
+/**
+ * Days before a player can be named by another random event. Each event has its own 60-day cooldown, but a star
+ * meets the conditions of many (most famous, best, oldest), so without this he got one every two weeks or so.
+ */
+const RANDOM_PLAYER_GAP = 21;
 const INTL: CompId[] = ["MSI", "EWC", "WORLDS"];
 
 // ---------- small helpers ----------
@@ -86,6 +91,26 @@ const trust = (c: Ctx, p: Player | null) => (p && hasMemo(c.s, p.id, "배신", 3
 const cdOk = (c: Ctx, key: string, days: number) => c.s.day - (evState(c.s).cd[key] ?? -9999) >= days;
 const lowestAttr = (p: Player): AttrKey => [...ATTR_KEYS].sort((a, b) => p.attrs[a] - p.attrs[b])[0];
 const pickOne = <T,>(c: Ctx, xs: T[], w: (x: T) => number = () => 1): T | undefined => (xs.length ? c.rng.weighted(xs, w) : undefined);
+/**
+ * The one with the highest key. A tie is drawn at random: sorting and taking [0] hands every tie to the first in
+ * roster order, and ties are common (signed rookies all start at fame 1, morale bottoms out at 0).
+ */
+const topBy = <T,>(c: Ctx, xs: T[], key: (x: T) => number): T | undefined => {
+  if (!xs.length) return undefined;
+  const best = Math.max(...xs.map(key));
+  return pickOne(c, xs.filter((x) => key(x) === best));
+};
+/**
+ * One of the team's top two by key, the leader twice as likely (ties at the cut drawn at random). For the
+ * star events (most famous, oldest, best mechanics): a star still gets them more often, but no longer every one;
+ * with one star on the team (Faker) he took 42-46% of all player events when each of these was his alone.
+ */
+const leaderPick = <T,>(c: Ctx, xs: T[], key: (x: T) => number, ok: (x: T) => boolean = () => true): T | undefined => {
+  const top = c.rng.shuffle([...xs]).sort((a, b) => key(b) - key(a)).slice(0, 2);
+  if (!top.length) return undefined;
+  const best = key(top[0]);
+  return pickOne(c, top.filter(ok), (x) => (key(x) === best ? 2 : 1));
+};
 const weightStar = (c: Ctx) => (p: Player) => (isStarter(c, p) ? 2 : 1);
 
 function userSeriesOn(s: GameState, day: number): Series | undefined {
@@ -100,7 +125,11 @@ function lastSeries(s: GameState): Series | undefined {
 function bigSeries(sr: Series | undefined): boolean {
   return !!sr && (sr.comp === "PO" || INTL.includes(sr.comp) || sr.stage === "F" || sr.stage === "SF");
 }
-const oppOf = (s: GameState, sr: Series) => (sr.a === s.user ? sr.b! : sr.a!);
+/**
+ * The user's opponent in a series, or null while it is not decided: a bracket series (playoffs, international)
+ * is in the schedule before the series that feeds it is played. nextSeries() can return one of those.
+ */
+const oppOf = (s: GameState, sr: Series): string | null => (sr.a === s.user ? sr.b : sr.a) ?? null;
 
 // ---------- effects (each one adds a line to the result) ----------
 function mo(c: Ctx, p: Player, v: number) {
@@ -264,7 +293,7 @@ def({
     if (!sr || sr.winner === c.s.user || c.s.day - sr.day > 2) return 0;
     const deaths = new Map<string, number>();
     for (const g of sr.games) for (const [pid, b] of Object.entries(g.box ?? {})) if (c.s.players[pid]?.team === c.s.user) deaths.set(pid, (deaths.get(pid) ?? 0) + b.d);
-    const worst = [...deaths.entries()].sort((a, b) => b[1] - a[1])[0];
+    const worst = topBy(c, [...deaths.entries()], (x) => x[1]);
     const p = worst ? c.s.players[worst[0]] : null;
     if (!p || p.fame < 40 || !cdOk(c, `N1:${p.id}`, 60)) return 0;
     c.p = p;
@@ -456,13 +485,15 @@ def({
   id: "N9", pol: "neg", cls: "random",
   find: (c) => {
     if (!windowOpen(c.s) || !c.s.intl.length) return 0;
-    const top = roster(c).sort((a, b) => ovr(b) - ovr(a)).slice(0, 2).filter((p) => p.fame >= 60 && p.contract && cdOk(c, `N9:${p.id}`, 60));
+    // the team's two best by ability, famous or not (was: fame 60+ too, which on most teams left one star alone);
+    // a famous target keeps the special-event weight
+    const top = c.rng.shuffle(roster(c)).sort((a, b) => ovr(b) - ovr(a)).slice(0, 2).filter((p) => p.contract && cdOk(c, `N9:${p.id}`, 60));
     const p = pickOne(c, top);
     if (!p) return 0;
     c.p = p;
     c.d.fee = Math.round((marketValue(p, c.s.season) * 1.3) / 100) * 100;
     c.d.club = c.rng.pick(c.s.intl);
-    return 3;
+    return p.fame >= 60 ? 3 : 1;
   },
   title: () => "해외 구단의 거액 제안",
   body: (c) => `${teamName(c.s, c.d.club as string)}(${c.s.teams[c.d.club as string].region})가 ${nm(c.p!)} 영입에 이적료 ${money(c.d.fee as number)}을 제시했습니다.`,
@@ -491,7 +522,9 @@ def({
   find: (c) => {
     const owed = owedOf(c);
     if (owed.length < 2 || !cdOk(c, "N10", 30)) return 0;
-    c.p = owed.sort((a, b) => b.p.unpaid - a.p.unpaid)[0].p;
+    const most = topBy(c, owed, (x) => x.p.unpaid);
+    if (!most) return 0;
+    c.p = most.p;
     return 3;
   },
   title: () => "연봉 체불 항의",
@@ -556,8 +589,10 @@ def({
   find: (c) => {
     const sr = userSeriesOn(c.s, c.s.day);
     if (!sr || !bigSeries(sr) || !cdOk(c, "N13", 30)) return 0;
+    const opp = oppOf(c.s, sr);
+    if (!opp) return 0;
     c.d.sr = sr.id;
-    c.d.opp = oppOf(c.s, sr);
+    c.d.opp = opp;
     return 3;
   },
   title: () => "상대의 도발 인터뷰",
@@ -831,8 +866,9 @@ def({
   id: "P1", pol: "pos", cls: "random",
   find: (c) => {
     const st = starters(c);
-    const topMech = [...st].sort((a, b) => b.attrs.mechanics - a.attrs.mechanics)[0];
-    const xs = st.filter((p) => (p.form >= 3 || p === topMech) && cdOk(c, `P1:${p.id}`, 60));
+    // in form, or among the team's two best mechanics (was: the single best, every time); ties at the cut all count
+    const cut = [...st].map((p) => p.attrs.mechanics).sort((a, b) => b - a)[1] ?? -Infinity;
+    const xs = st.filter((p) => (p.form >= 3 || p.attrs.mechanics >= cut) && cdOk(c, `P1:${p.id}`, 60));
     const p = pickOne(c, xs);
     if (!p) return 0;
     c.p = p;
@@ -882,7 +918,8 @@ def({
 def({
   id: "P3", pol: "pos", cls: "random",
   find: (c) => {
-    const p = pickOne(c, roster(c).filter((x) => x.fame >= 50 && cdOk(c, `P3:${x.id}`, 60)), (x) => x.fame * weightStar(c)(x));
+    // the team's two most famous (was: fame 50+, which on most teams meant one star or nobody)
+    const p = leaderPick(c, roster(c), (x) => x.fame, (x) => cdOk(c, `P3:${x.id}`, 60));
     if (!p) return 0;
     c.p = p;
     return 1;
@@ -930,9 +967,9 @@ def({
 def({
   id: "P5", pol: "pos", cls: "random",
   find: (c) => {
-    const vets = starters(c).filter((p) => age(p, c.s.season) >= 26 && cdOk(c, `P5:${p.id}`, 60));
+    // the mentor: one of the two oldest starters aged 24+ (was: 26+, often only one man on a team)
     const kids = roster(c).filter((p) => age(p, c.s.season) <= 20);
-    const v = pickOne(c, vets);
+    const v = leaderPick(c, starters(c).filter((p) => age(p, c.s.season) >= 24), (p) => age(p, c.s.season), (p) => cdOk(c, `P5:${p.id}`, 60));
     const k = pickOne(c, kids.filter((x) => x !== v));
     if (!v || !k) return 0;
     c.p = v;
@@ -1001,8 +1038,9 @@ def({
 def({
   id: "P8", pol: "pos", cls: "random",
   find: (c) => {
-    const p = roster(c).sort((a, b) => b.fame - a.fame)[0];
-    if (!p || !cdOk(c, `P8:${p.id}`, 60)) return 0;
+    // one of the team's two most famous, the most famous twice as likely (was: always the most famous)
+    const p = leaderPick(c, roster(c), (x) => x.fame, (x) => cdOk(c, `P8:${x.id}`, 60));
+    if (!p) return 0;
     c.p = p;
     return 1;
   },
@@ -1095,7 +1133,10 @@ def({
     const sr = nextSeries(c.s);
     if (!sr || sr.day - c.s.day > 3 || sr.day === c.s.day || !cdOk(c, "P13", 30)) return 0;
     if (c.t.facilities.analysis < 1 && !staffOf(c).some((x) => x.role === "Analyst")) return 0;
-    c.d.opp = oppOf(c.s, sr);
+    // nothing to analyse until the bracket names the opponent (the text read "FA의 밴픽 버릇")
+    const opp = oppOf(c.s, sr);
+    if (!opp) return 0;
+    c.d.opp = opp;
     return 1;
   },
   title: () => "분석관의 상대 약점 발견",
@@ -1112,7 +1153,9 @@ def({
   find: (c) => {
     const sr = nextSeries(c.s);
     if (!sr || sr.day - c.s.day > 2 || sr.day === c.s.day) return 0;
+    // a bracket series whose opponent is not decided yet: no derby until it is (this threw on teams[null].name)
     const opp = oppOf(c.s, sr);
+    if (!opp || !c.s.teams[opp]) return 0;
     const oppName = c.s.teams[opp].name;
     const xs = starters(c).filter((p) => (p.lastTeamName === oppName || p.history.some((h) => h.includes(`${oppName} 입단`))) && cdOk(c, `P14:${p.id}`, 60));
     const p = pickOne(c, xs);
@@ -1196,20 +1239,21 @@ def({
   id: "M1", pol: "neg", cls: "morale",
   find: (c) => {
     const st = starters(c);
-    let best: { a: Player; b: Player; pr: number } | null = null;
+    // 21 days for each player, not each pair (design 6-2): keyed by pair, a hot-tempered starter is in every
+    // pair and came straight back with the next teammate, a quarrel every few days for the same player
+    const pairs: { a: Player; b: Player; pr: number }[] = [];
     for (let i = 0; i < st.length; i++) for (let j = i + 1; j < st.length; j++) {
       const a = st[i], b = st[j];
       if (a.persona.temper < 0.6 && b.persona.temper < 0.6) continue;
-      const key = [a.id, b.id].sort().join(":");
-      if (!cdOk(c, `m:M1:${key}`, MORALE_CD)) continue;
+      if (!cdOk(c, `m:M1:${a.id}`, MORALE_CD) || !cdOk(c, `m:M1:${b.id}`, MORALE_CD)) continue;
       let pr = moraleChance(50, (a.morale + b.morale) / 2);
       if (hasMemo(c.s, a.id, "앙금", 9999, b.id) || hasMemo(c.s, b.id, "앙금", 9999, a.id)) pr *= 2;
-      if (pr > 0 && (!best || pr > best.pr)) best = { a, b, pr };
+      if (pr > 0) pairs.push({ a, b, pr });
     }
+    const best = topBy(c, pairs, (x) => x.pr);
     if (!best) return 0;
     c.p = best.a;
     c.q = best.b;
-    c.d.cdKey = `m:M1:${[best.a.id, best.b.id].sort().join(":")}`;
     return Math.min(1, best.pr);
   },
   title: () => "팀 내 언쟁",
@@ -1241,8 +1285,7 @@ def({
   find: (c) => {
     const st = headCoachOf(c);
     if (!st) return 0;
-    const xs = roster(c).filter((p) => p.morale < 45 && cdOk(c, `m:M2:${p.id}`, MORALE_CD)).sort((a, b) => a.morale - b.morale);
-    const p = xs[0];
+    const p = topBy(c, roster(c).filter((x) => x.morale < 45 && cdOk(c, `m:M2:${x.id}`, MORALE_CD)), (x) => -x.morale);
     if (!p) return 0;
     c.p = p;
     c.d.staff = st.id;
@@ -1266,7 +1309,7 @@ def({
 def({
   id: "M3", pol: "neg", cls: "morale",
   find: (c) => {
-    const p = roster(c).filter((x) => x.morale < 30 && cdOk(c, `m:M3:${x.id}`, MORALE_CD)).sort((a, b) => a.morale - b.morale)[0];
+    const p = topBy(c, roster(c).filter((x) => x.morale < 30 && cdOk(c, `m:M3:${x.id}`, MORALE_CD)), (x) => -x.morale);
     if (!p) return 0;
     c.p = p;
     return moraleChance(30, p.morale);
@@ -1477,6 +1520,12 @@ def({
 
 const BY_ID = new Map(DEFS.map((d) => [d.id, d]));
 
+/** What the event dialog shows about an event (ui/Overlays.tsx): good or bad news, random / low morale / aftermath, club-wide, match-day morning. */
+export function eventInfo(defId: string | undefined): { pol: Pol; cls: Cls; team: boolean; matchDay: boolean } | undefined {
+  const d = defId ? BY_ID.get(defId) : undefined;
+  return d && { pol: d.pol, cls: d.cls, team: !!d.team, matchDay: !!d.matchDay };
+}
+
 // ---------- making and resolving events ----------
 function ctxFor(s: GameState, rng: Rng, data: GameData | null, defId: string, depth = 0): Ctx {
   return { s, rng, data, t: s.teams[s.user], p: null, q: null, d: {}, depth, def: defId, lines: [] };
@@ -1589,6 +1638,13 @@ function cdKey(c: Ctx, d: Def): string {
   return d.team || !c.p ? d.id : `${d.id}:${c.p.id}`;
 }
 
+/** Cooldowns a low-morale event starts: one per player it names (a quarrel, M1, names two). */
+function moraleCdKeys(c: Ctx, d: Def): string[] {
+  const keys = [cdKey(c, d)];
+  if (c.q && !c.d.cdKey) keys.push(`m:${d.id}:${c.q.id}`);
+  return keys;
+}
+
 function checkPromises(s: GameState, rng: Rng) {
   const ev = evState(s);
   const keep: typeof ev.promises = [];
@@ -1667,6 +1723,15 @@ function preMatch(s: GameState) {
 }
 
 /** Once a day, after the day has moved on (advanceDay). */
+/**
+ * Has the user's team finished a series in this career? stats.seriesW/L count every finished user series of every
+ * competition and are never reset, so this turns true the day after the first official match (that match day's
+ * morning events are skipped too) and stays true across seasons.
+ */
+export function firstMatchPlayed(s: GameState): boolean {
+  return (s.stats?.seriesW ?? 0) + (s.stats?.seriesL ?? 0) > 0;
+}
+
 export function eventsDay(s: GameState, data: GameData, rng: Rng) {
   if (s.over) return;
   const ev = evState(s);
@@ -1675,6 +1740,9 @@ export function eventsDay(s: GameState, data: GameData, rng: Rng) {
   checkPromises(s, rng);
   preMatch(s);
   if (s.events.length) return;
+  // no choice events until the career's first official match is played (user request, 2026-11-28): the days
+  // before it are spent signing a roster and skipping ahead. Inbox notes, alerts and the tutorial are not events.
+  if (!firstMatchPlayed(s)) return;
   if (ev.goodsBoost && s.day > ev.goodsBoost.until) ev.goodsBoost = undefined;
   // 0) the first-run tutorial shows how events work with a good one, before anything else can come up
   if (ev.tutPos) {
@@ -1702,9 +1770,9 @@ export function eventsDay(s: GameState, data: GameData, rng: Rng) {
       const c = ctxFor(s, rng, data, d.id);
       const pr = Number(d.find?.(c) ?? 0);
       if (pr > 0 && rng.chance(pr)) {
-        ev.cd[cdKey(c, d)] = s.day;
+        for (const k of moraleCdKeys(c, d)) ev.cd[k] = s.day;
         ev.lastMorale = s.day;
-        if (c.p) addMemo(s, c.p.id, { tag: d.id === "M3" ? "말수" : "사기저하", day: s.day, ev: d.id, text: `사기 저하: ${d.title(c)}` });
+        for (const p of [c.p, c.q]) if (p) addMemo(s, p.id, { tag: d.id === "M3" ? "말수" : "사기저하", day: s.day, ev: d.id, text: `사기 저하: ${d.title(c)}` });
         fire(s, c, d);
         return;
       }
@@ -1722,11 +1790,15 @@ export function eventsDay(s: GameState, data: GameData, rng: Rng) {
       const w = Number(d.find?.(c) ?? 0);
       if (w <= 0) continue;
       if (!cdOk(c, cdKey(c, d), d.team || !c.p ? 30 : 60)) continue;
+      // one random event per player at a time (RANDOM_PLAYER_GAP): another player's event goes instead.
+      // Team events (N10 names the most-owed player) are about everyone and do not count.
+      if (!d.team && [c.p, c.q].some((x) => x && !cdOk(c, `rnd:${x.id}`, RANDOM_PLAYER_GAP))) continue;
       cands.push({ d, c, w });
     }
     const pick = rng.weighted(cands, (x) => x.w);
     if (!pick) continue;
     ev.cd[cdKey(pick.c, pick.d)] = s.day;
+    if (!pick.d.team) for (const x of [pick.c.p, pick.c.q]) if (x) ev.cd[`rnd:${x.id}`] = s.day;
     ev.week.n++;
     fire(s, pick.c, pick.d);
     return;

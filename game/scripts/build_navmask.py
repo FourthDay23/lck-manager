@@ -72,16 +72,13 @@ def components(grid, n, val):
 
 
 def key_points():
-    """Every coordinate literal in map.ts (fountains, nexus, turrets, inhibs, lane paths, camps, scuttle, pits)
-    plus the mirrored blue camps (red side jungle)."""
+    """Every coordinate literal in map.ts (fountains, nexus, turrets, inhibs, lane paths, scuttle, pits and the
+    camps of both sides: map.ts lists the red team's camps itself, CAMPS_RED)."""
     src = open("src/match/map.ts", encoding="utf8").read()
     pts = []
     for m in re.finditer(r"\{\s*(?:kind:\s*\"(\w+)\",\s*pos:\s*)?\{?\s*x:\s*(-?\d+(?:\.\d+)?),\s*y:\s*(-?\d+(?:\.\d+)?)\s*\}", src):
         kind, x, y = m.group(1), float(m.group(2)), float(m.group(3))
         pts.append((f"{kind or 'pt'}", x, y))
-    camps = [p for p in pts if p[0] in ("blue", "gromp", "wolves", "raptors", "red", "krugs")]
-    for name, x, y in camps:
-        pts.append((f"red-side {name}", MIRROR_C - y, MIRROR_C - x))
     return pts
 
 

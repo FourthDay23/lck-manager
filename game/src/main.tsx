@@ -1,6 +1,7 @@
 import { options, render } from "preact";
 import "./styles.css";
 import { App } from "./ui/App";
+import { TipLayer } from "./ui/Tip";
 import { store } from "./store";
 import { initScale } from "./ui/scale";
 
@@ -25,4 +26,4 @@ if (import.meta.env.DEV) (window as unknown as { __store: typeof store }).__stor
 // the screen scale (ui/scale.ts) is set before the first paint, so the app does not jump in size
 initScale();
 
-render(<App />, document.getElementById("app")!);
+render(<><App /><TipLayer /></>, document.getElementById("app")!);

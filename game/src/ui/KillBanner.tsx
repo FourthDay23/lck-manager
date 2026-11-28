@@ -19,7 +19,7 @@ const MULTI = new Set<KillTag>(["double", "triple", "quadra", "penta"]);
 export const KILL_EV = new Set<GameEvent["type"]>(["kill", "first_blood", "solo", "shutdown", "double", "triple", "quadra", "penta", "ace"]);
 
 /** one kill: killer unit (-1 = a turret or minions, "처형"), victim, and what was special about it */
-interface Pair { k: number; v: number; tags: KillTag[] }
+interface Pair { k: number; v: number; tags: KillTag[]; /** no killer, and it was lane minions rather than a turret */ minion?: boolean }
 export interface KillBan {
   id: number;
   side: 0 | 1;
@@ -66,7 +66,7 @@ export class KillQueue {
   private kill(ev: GameEvent, now: number) {
     if (ev.victim === undefined) return;
     const k = ev.actor ?? -1;
-    const pair: Pair = { k, v: ev.victim, tags: ev.type === "kill" ? [] : [ev.type as KillTag] };
+    const pair: Pair = { k, v: ev.victim, tags: ev.type === "kill" ? [] : [ev.type as KillTag], minion: (k < 0 && ev.text.includes("미니언 →")) || undefined };
     const mine = this.recent().filter((b) => b.side === ev.side);
     // the same killer going on (a multikill: 10 s, 30 s after a quadra), the same fight (4 game seconds, or 0.6 s on
     // screen: at 64x that is half a minute of game), or with two banners already waiting, the newest waiting one of
@@ -189,7 +189,7 @@ export function KillBanner({ e, q, now }: { e: Engine; q: KillQueue; now: number
         {label && <div class={`kb-label t-${main ?? "multi"}`}>{label}</div>}
         <div class="kb-body">
           <div class="kb-who killer">
-            {ku ? <ChampIcon id={ku.champ.id} size={mega ? 52 : 44} /> : <span class="kb-tower">포탑</span>}
+            {ku ? <ChampIcon id={ku.champ.id} size={mega ? 52 : 44} /> : <span class="kb-tower">{b.pairs[0].minion ? "미니언" : "포탑"}</span>}
             <div class="kb-name">
               <small><TeamLogo id={teamId} size={14} />{team.short}{ku ? ` · ${ROLE_KO[ku.role]}` : ""}</small>
               <b>{ku ? ku.name : "처형"}</b>

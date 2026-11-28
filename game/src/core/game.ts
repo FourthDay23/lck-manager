@@ -13,8 +13,9 @@ import { playQuickSeries } from "./quick";
 import { academySeasonEnd, autoCallUp, setupAcademies } from "./academy";
 import { patchDue, rollPatch } from "./meta";
 import { training } from "./training";
-import { aiDailyMarket, autoLineup, joinTeam, releasePlayer, releaseStaff, staffAsk, windowOpen } from "./market";
-import { economyDay, earn, spend, seriesRewards, sponsorFor } from "./economy";
+import { aiDailyMarket, aiPayrollCap, autoLineup, joinTeam, payroll, releasePlayer, releaseStaff, staffAsk, windowOpen } from "./market";
+import { INTL_COMPS, economyDay, earn, spend, seriesRewards, sponsorFor } from "./economy";
+import { renewIntlRosters, replaceIntl } from "./intl";
 import type { CompId, Difficulty, GameState, Player, Series, Staff, Team } from "./types";
 import { COMP_NAME } from "./types";
 import { afterUserSeries, endSetBreak, eventsDay, FICTION, MILD_SCANDALS, resolveChoice, SERIOUS_SCANDALS, sponsorEventMul } from "./events";
@@ -187,7 +188,24 @@ function aiGrowth(s: GameState, rng: Rng) {
   }
 }
 
+/**
+ * AI clubs' morale drifts back toward `base` by `pull` of the gap each day (a staff keeps the dressing room level).
+ * Series results move morale +3 / -4 and nothing else moved it for AI players, so a club winning more than 57 % of
+ * its series climbed to 100 and the rest sank toward 0: about 10 power points between them by autumn, a snowball
+ * that made 27-0 seasons and grand slams common. The user's club keeps its own morale system (daily +0.15 for
+ * starters, events, rest). Measured with scripts/dynasty-check.ts (120 seasons): the clubs' spread in morale power
+ * fell from 2-4.4 to 0.1-0.2, 27-0 seasons from 12 % to 0 and grand slams from 11 % to 3 %.
+ */
+export const AI_MORALE = { base: 70, pull: 0.05 };
+
 function moraleDay(s: GameState, rng: Rng) {
+  for (const tid of [...s.lck, ...s.intl]) {
+    if (tid === s.user) continue;
+    for (const id of s.teams[tid]?.roster ?? []) {
+      const p = s.players[id];
+      if (p) p.morale += (AI_MORALE.base - p.morale) * AI_MORALE.pull;
+    }
+  }
   const t = s.teams[s.user];
   const starters = new Set(Object.values(t.lineup));
   for (const id of t.roster) {
@@ -317,12 +335,32 @@ function ensureAiLineups(s: GameState, rng: Rng) {
         autoLineup(s, t);
         continue;
       }
-      const fa = Object.values(s.players).filter((p) => !p.team && !p.retired && p.role === r && p.origin !== "intl" && !p.scandal)
-        .sort((a, b) => ovr(b) - ovr(a))[0] ?? makeRookieInto(s, rng, r);
-      joinTeam(s, fa, t.id, Math.max(6000, Math.round(salaryAsk(fa, s.season) / 100) * 100), 1);
+      aiEmergencySign(s, t, r, rng);
       autoLineup(s, t);
     }
   }
+}
+
+/** The league minimum: a one-year deal any club can always sign, over its payroll cap or not. */
+const MIN_SALARY = 6000;
+
+/**
+ * Fill an AI club's empty role when nobody can be called up from the 2군: the best free agent at that role whose
+ * asking salary fits under the payroll cap, else the best one asking only the minimum, else a new rookie. The last
+ * two sign on the minimum even over the cap, so the slot is never left empty. (T20: this used to sign the best free
+ * agent left at his full ask, cap or not, so a club the cap had kept out of the stove league could still buy a star
+ * the day before the cup.)
+ */
+function aiEmergencySign(s: GameState, t: Team, r: Role, rng: Rng): Player {
+  const room = aiPayrollCap(t) - payroll(s, t);
+  const fits = Math.max(room, MIN_SALARY);
+  const fa = Object.values(s.players)
+    .filter((p) => !p.team && !p.retired && p.role === r && p.origin !== "intl" && !p.scandal)
+    .sort((a, b) => ovr(b) - ovr(a))
+    .find((p) => salaryAsk(p, s.season) <= fits) ?? makeRookieInto(s, rng, r);
+  const ask = salaryAsk(fa, s.season);
+  joinTeam(s, fa, t.id, ask <= fits ? ask : MIN_SALARY, 1);
+  return fa;
 }
 
 function makeRookieInto(s: GameState, rng: Rng, r: Role): Player {
@@ -336,8 +374,9 @@ export function finishSeries(s: GameState, data: GameData, sr: Series, rng: Rng)
   sr.done = true;
   sr.winner = sr.wa > sr.wb ? sr.a! : sr.b!;
   const loser = sr.winner === sr.a ? sr.b! : sr.a!;
-  const intl = sr.comp === "MSI" || sr.comp === "WORLDS" || sr.comp === "EWC";
-  seriesRewards(s, sr.winner, true, sr.stage, intl);
+  const intl = INTL_COMPS.includes(sr.comp);
+  const bonus = seriesRewards(s, sr.winner, true, sr.stage, intl);
+  if (bonus) sr.bonus = bonus;
   seriesRewards(s, loser, false, sr.stage, intl);
   for (const tid of [sr.a!, sr.b!]) {
     const t = s.teams[tid];
@@ -559,9 +598,9 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
     for (const k of ["g", "w", "k", "d", "a", "cs", "mvp"] as const) p.career[k] += p.season[k];
     p.season = { g: 0, w: 0, k: 0, d: 0, a: 0, cs: 0, mvp: 0 };
   }
-  // aging, military service, retirement
+  // aging, military service, retirement. Foreign-club players too (core/intl.ts replaces those who leave)
   for (const p of Object.values(s.players)) {
-    if (p.retired || p.origin === "intl") continue;
+    if (p.retired) continue;
     const a = age(p, season + 1);
     if (a >= 26) {
       const speed = hashUnit(p.id + ":age");
@@ -579,7 +618,9 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
     const chose = !!p.retireAfter; // decided in an event this season (core/events.ts N18)
     p.retireAfter = undefined;
     const retire = chose || military || (a >= 31 && rng.chance(0.25 + (a - 31) * 0.15)) || (!p.team && ovr(p) < 50 && a >= 24 && rng.chance(0.3));
-    if (retire && (chose || !(p.name === "Faker" && a < 35))) {
+    if (retire && p.origin === "intl") {
+      replaceIntl(s, rng, p, military ? "군 입대" : "은퇴", season);
+    } else if (retire && (chose || !(p.name === "Faker" && a < 35))) {
       const team = p.team;
       if (team) releasePlayer(s, p, military ? "입대" : "은퇴");
       p.retired = true;
@@ -587,6 +628,7 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
       if (ovr(p) >= 70 || p.fame >= 40) addNews(s, { kind: "info", title: `'${p.name}', ${military ? "군 입대로 휴식기" : "현역 은퇴"}`, teams: team ? [team] : [], players: [p.id] });
     }
   }
+  renewIntlRosters(s, rng, season);
   // contracts expire. AI clubs keep some players first.
   for (const p of Object.values(s.players)) {
     if (!p.team || !p.contract || p.academy || p.origin === "intl" || p.contract.until > season) continue;
@@ -621,6 +663,9 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
   for (const id of s.intl) {
     const t = s.teams[id];
     t.intlStrength = clamp((t.intlStrength ?? 75) + rng.normal(0, 2), 60, 95);
+    // AI scrims grow synergy all year (core/training.ts SCRIM_SYNERGY), so overseas clubs lose some in the
+    // off-season like LCK clubs do below; without it they would sit at 100 for good
+    t.synergy = clamp(t.synergy - 10, 30, 100);
   }
   s.season = season + 1;
   s.stats.seasonsPlayed++;
@@ -700,9 +745,7 @@ function ensureAiLineupFor(s: GameState, tid: string, rng: Rng) {
   for (const r of ROLES) {
     if (t.lineup[r]) continue;
     if (autoCallUp(s, t, r)) continue;
-    const fa = Object.values(s.players).filter((p) => !p.team && !p.retired && p.role === r && p.origin !== "intl" && !p.scandal)
-      .sort((a, b) => ovr(b) - ovr(a))[0] ?? makeRookieInto(s, rng, r);
-    joinTeam(s, fa, t.id, Math.max(6000, salaryAsk(fa, s.season)), 1);
+    const fa = aiEmergencySign(s, t, r, rng);
     addNews(s, { kind: "sign", title: `[오피셜] ${t.name}, '${fa.name}' 영입`, teams: [t.id], players: [fa.id] });
   }
   autoLineup(s, t);
@@ -724,6 +767,92 @@ export function autoAdvance(s: GameState, data: GameData, mode: AutoMode): Advan
     if (mode === "event" && (s.tradeOffers.length || s.saleOffers.length)) return null;
   }
   return null;
+}
+
+// ---------- auto-advance (ui/AutoPlay.tsx): a day at a time, on a timer ----------
+/** Where a running auto-advance ends by itself. "free" goes on until the player stops it. */
+export type AutoTarget = "free" | "match" | "window" | "phase";
+
+/** The calendar before an auto-advance step or run, to tell what it changed. */
+export interface AutoMark { day: number; season: number; phase: string; window: boolean; cash: number }
+
+/** A notice that ends an auto-advance (not just a wait): the player must not walk past it. */
+export interface AutoHalt { kind: "over" | "payday" | "debt" | "contract" | "season" | "offer" | "bid"; text: string }
+
+export function autoMark(s: GameState): AutoMark {
+  return { day: s.day, season: s.season, phase: phaseLabel(s), window: windowOpen(s), cash: s.teams[s.user].cash };
+}
+
+/**
+ * One day of auto-advance. Call it only when nothing is waiting for the player (no event, alert, cutscene or
+ * match today). `stop` is autoAdvance's reason; `halt` a notice that must end the run.
+ */
+export function autoStep(s: GameState, data: GameData): { stop: AdvanceStop; halt: AutoHalt | null } {
+  const m = autoMark(s);
+  const stop = autoAdvance(s, data, "day");
+  return { stop, halt: autoHalt(s, m) };
+}
+
+/** What a step from `m` to today brought that the player must see before more days go by. */
+export function autoHalt(s: GameState, m: AutoMark): AutoHalt | null {
+  if (s.over) return { kind: "over", text: "게임 오버" };
+  const t = s.teams[s.user];
+  if (s.alerts?.some((a) => a.ref === "payday-warning" && a.day >= m.day)) {
+    return { kind: "payday", text: "급여일(25일)에 자금이 마이너스가 됩니다" };
+  }
+  if (t.cash < 0 && m.cash >= 0) return { kind: "debt", text: "자금이 마이너스가 됐습니다" };
+  if (t.cash < 0 && s.debtGrace === s.day) return { kind: "debt", text: "오늘 안에 자금을 플러스로 만들지 못하면 게임 오버입니다" };
+  if (s.season !== m.season) return { kind: "season", text: `${m.season} 시즌이 끝났습니다. 계약 만료와 스폰서 갱신을 확인하세요` };
+  // same day as the inbox reminder (contractReminders)
+  if (m.day === seasonDates(m.season).worlds - 20) {
+    const exp = t.roster.map((id) => s.players[id]).filter((p) => p?.contract && p.contract.until <= s.season);
+    if (exp.length) return { kind: "contract", text: `시즌 뒤 계약 만료: ${exp.map((p) => p.name).join(", ")}` };
+  }
+  // offers answered "later": today is the last day (market.ts drops them on the next day)
+  const trade = s.tradeOffers.find((o) => o.expires === s.day);
+  if (trade) return { kind: "offer", text: `${teamName(s, trade.from)}의 트레이드 제안은 오늘까지 답해야 합니다` };
+  const sale = s.saleOffers.find((o) => o.expires === s.day);
+  if (sale) return { kind: "offer", text: `${teamName(s, sale.team)}의 ${s.players[sale.player]?.name ?? ""} 이적료 제안은 오늘까지 답해야 합니다` };
+  // a free agent the player is talking to picks a club when today ends (market.ts resolveBids)
+  for (const b of s.bids) {
+    if (b.team === s.user || b.due !== s.day) continue;
+    const p = s.players[b.player];
+    if (p && !p.team && (p.interview?.done || p.askSalary !== undefined)) {
+      return { kind: "bid", text: `협상 중인 ${p.name}가 오늘이 지나면 다른 구단 제안 중에서 팀을 고릅니다` };
+    }
+  }
+  return null;
+}
+
+/** The run's target is reached (the run started at `from`): the line to show, or null to go on. */
+export function autoDone(s: GameState, target: AutoTarget, from: AutoMark): string | null {
+  if (target === "match") return userSeriesToday(s) ? "경기 날입니다" : null;
+  if (target === "window") {
+    const open = windowOpen(s);
+    if (open !== from.window) return open ? "이적시장이 열렸습니다" : "이적시장이 닫혔습니다";
+    // an open window: stop on its last day, while signings can still be made
+    return open && !windowOpen({ ...s, day: s.day + 1 }) ? "오늘이 이적시장 마지막 날입니다" : null;
+  }
+  if (target === "phase") return phaseLabel(s) !== from.phase ? `${phaseLabel(s)} 일정이 시작됐습니다` : null;
+  return null;
+}
+
+/** The target as a label, and the day it falls on (null when there is none, e.g. no match left). */
+export function autoTargetInfo(s: GameState, target: AutoTarget): { label: string; day: number | null } {
+  if (target === "free") return { label: "멈출 때까지", day: null };
+  if (target === "match") {
+    const n = nextUserSeries(s);
+    return { label: "다음 경기", day: n ? n.day : null };
+  }
+  // scan the season's calendar (window and phase only depend on the day)
+  const open = windowOpen(s), phase = phaseLabel(s), end = seasonDates(s.season).end;
+  for (let day = s.day + 1; day <= s.day + 400; day++) {
+    // the season rolls over on its last day (seasonEnd), after which the next season's calendar applies
+    const at = { ...s, day, season: day > end ? s.season + 1 : s.season };
+    if (target === "window" && windowOpen(at) !== open) return { label: open ? "이적시장 마감" : "이적시장 개장", day: open ? day - 1 : day };
+    if (target === "phase" && phaseLabel(at) !== phase) return { label: `다음 일정 (${phaseLabel(at)})`, day };
+  }
+  return { label: target === "window" ? (open ? "이적시장 마감" : "이적시장 개장") : "다음 일정", day: null };
 }
 
 /** Called by the UI after the user's whole series is played. */

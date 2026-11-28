@@ -6,6 +6,7 @@ import { money } from "../../core/format";
 import { ovr } from "../../core/player";
 import { autosave } from "../App";
 import { tutSpot } from "../Tutorial";
+import { WinBonusPanel } from "../WinBonus";
 
 export function FinanceScreen() {
   const s = S();
@@ -34,7 +35,7 @@ export function FinanceScreen() {
         <div class="frame pad">
           <h2>월 수입 (매월 1일)</h2>
           {Object.entries(inc).map(([k, v]) => <div class="row" style={{ justifyContent: "space-between" }}><span>{k}</span><span class="pos">{money(v)}</span></div>)}
-          <div class="muted" style={{ fontSize: 11 }}>스폰서 금액은 시즌마다 명성과 우승 횟수로 다시 정해집니다. 승리 수당과 상금, 굿즈는 따로 들어옵니다.</div>
+          <div class="muted" style={{ fontSize: 11 }}>스폰서 금액은 시즌마다 명성과 우승 횟수로 다시 정해집니다. 승리 수당(아래 내역)과 상금, 굿즈는 따로 들어옵니다.</div>
         </div>
         <div class="frame pad">
           <h2>월 지출</h2>
@@ -42,6 +43,7 @@ export function FinanceScreen() {
           <div class="muted" style={{ fontSize: 11 }}>급여는 매월 25일, 시설 유지비는 1일에 나갑니다.</div>
         </div>
       </div>
+      <WinBonusPanel />
       <div class="grid2">
         <div class="frame pad" data-tut="goods">
           <h2>굿즈 제작</h2>
@@ -92,14 +94,14 @@ export function FinanceScreen() {
           ))}
           <h3 style={{ marginTop: 10 }}>월별 장부</h3>
           <table class="t">
-            <thead><tr><th>월</th><th class="num">수입</th><th class="num">지출</th><th class="num">합계</th></tr></thead>
+            <thead><tr><th>월</th><th class="num">수입</th><th class="num" title="수입 가운데 승리 수당">승리 수당</th><th class="num">지출</th><th class="num">합계</th></tr></thead>
             <tbody>
               {s.ledger.slice(0, 12).map((l) => {
                 const i = Object.values(l.income).reduce((a, b) => a + b, 0);
                 const e = Object.values(l.expense).reduce((a, b) => a + b, 0);
                 return (
-                  <tr title={[...Object.entries(l.income).map(([k, v]) => `+${k} ${money(v)}`), ...Object.entries(l.expense).map(([k, v]) => `-${k} ${money(v)}`)].join("\n")}>
-                    <td>{l.month}</td><td class="num pos">{money(i)}</td><td class="num neg">{money(e)}</td><td class={`num ${i - e >= 0 ? "pos" : "neg"}`}>{money(i - e)}</td>
+                  <tr data-tip={[`${l.month} 내역`, ...Object.entries(l.income).map(([k, v]) => `+${k} ${money(v)}`), ...Object.entries(l.expense).map(([k, v]) => `-${k} ${money(v)}`)].join("\n")}>
+                    <td>{l.month}</td><td class="num pos">{money(i)}</td><td class="num">{l.income["승리 수당"] ? <span class="pos">{money(l.income["승리 수당"])}</span> : <span class="dim">-</span>}</td><td class="num neg">{money(e)}</td><td class={`num ${i - e >= 0 ? "pos" : "neg"}`}>{money(i - e)}</td>
                   </tr>
                 );
               })}

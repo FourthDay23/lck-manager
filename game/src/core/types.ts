@@ -179,6 +179,8 @@ export interface Series {
   wa: number;
   wb: number;
   winner?: string;
+  /** 승리 수당 paid to the user's club for winning this series (만원), set when it is paid. Older saves lack it. */
+  bonus?: number;
   games: GameRecord[];
   feedA?: string; // bracket feed: "W:<seriesId>" / "L:<seriesId>" / "S:<seed>"
   feedB?: string;

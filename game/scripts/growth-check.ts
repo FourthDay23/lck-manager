@@ -6,10 +6,15 @@ import { readFileSync, existsSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { newGame } from "../src/core/game";
 import { joinTeam, autoLineup } from "../src/core/market";
-import { Engine, applyEarlyTune, applyGrowthTune } from "../src/match/engine";
+import { Engine, ENGINE_FLAGS, applyEarlyTune, applyGrowthTune } from "../src/match/engine";
+import { applyWaveTune } from "../src/match/minions";
 import { newDraft, autoDraft } from "../src/match/draft";
 import { Rng } from "../src/core/rng";
 import { ROLES } from "../src/data/types";
+import { par } from "./lib/par";
+import { DRAW } from "../src/match/engine";
+// no screen: skip the draw-only effects list (results stay the same; HEADLESS=0 keeps it)
+if (process.env.HEADLESS !== "0" && DRAW) DRAW.fx = false; // (DRAW is missing in code from before it, scripts/ab.mjs --base)
 
 const dir = "data";
 const j = (f: string) => (existsSync(`public/${dir}/${f}`) ? JSON.parse(readFileSync(`public/${dir}/${f}`, "utf8")) : null);
@@ -19,6 +24,9 @@ const rosterSeed = Number(process.argv[4] ?? 3);
 applyEarlyTune(process.env.EARLY_TUNE);
 // GROWTH_TUNE=laneCs:12,sideCs:7 overrides the CS / XP / gold income (engine.ts GROWTH) for this run
 applyGrowthTune(process.env.GROWTH_TUNE);
+// WAVE_TUNE=lastHit:0.9 overrides the wave knobs (minions.ts); FLAGS=-minions runs the engine without real minions
+applyWaveTune(process.env.WAVE_TUNE);
+for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter(Boolean)) (ENGINE_FLAGS as Record<string, boolean>)[fl.replace(/^-/, "")] = !fl.startsWith("-");
 const s = newGame(data, { team: data.teams[0].id, difficulty: "normal", manager: "test", seed: 7 });
 s.user = "__nobody__";
 const rr = new Rng(rosterSeed);
@@ -42,16 +50,22 @@ Engine.prototype.economy = function (this: Engine) {
   econ.call(this);
   this.units.forEach((u, i) => (laneCs[i] += u.cs - before[i]));
 };
+// with real minions (ENGINE_FLAGS.minions) the last hits are paid in lanesTick (minions.ts)
+const lanes = Engine.prototype.lanesTick;
+Engine.prototype.lanesTick = function (this: Engine) {
+  const before = this.units.map((u) => u.cs);
+  lanes.call(this);
+  this.units.forEach((u, i) => (laneCs[i] += u.cs - before[i]));
+};
 
 const MINUTES = [2, 3, 5, 8, 10, 15, 20, 25, 30];
 // where the time goes (seconds per game) by role and phase: dead, at a wave front, clearing a camp, or the unit's task
 const PHASES = [[0, 600], [600, 1200], [1200, 99999]] as const;
 const timeUse = new Map<string, Map<string, number>>();
-const use = (role: string, ph: number, what: string, dt: number) => {
-  const k = `${role}:${ph}`;
-  const m = timeUse.get(k) ?? new Map<string, number>();
+const use = (into: Map<string, Map<string, number>>, k: string, what: string, dt: number) => {
+  const m = into.get(k) ?? new Map<string, number>();
   m.set(what, (m.get(what) ?? 0) + dt);
-  timeUse.set(k, m);
+  into.set(k, m);
 };
 const phaseLen = [0, 0, 0];
 type Acc = { cs: number; jg: number; lvl: number; xp: number; gold: number; n: number };
@@ -64,44 +78,58 @@ for (let g = 0; g < N; g++) {
   while (b === a) b = s.lck[rng.int(0, s.lck.length - 1)];
   const d = newDraft(a, b, []);
   autoDraft(s, data, d, rng);
-  const e = new Engine({ s, data, blue: a, red: b, picks: { blue: d.picks.blue, red: d.picks.red }, seed: 1000 + g });
-  laneCs = e.units.map(() => 0);
-  let mi = 0;
-  while (!e.over && e.t < 70 * 60) {
-    const t0 = e.t;
-    e.step();
-    const dt = e.t - t0;
-    const ph = PHASES.findIndex(([a, b]) => t0 >= a && t0 < b);
-    phaseLen[ph] += dt;
-    const fronts = (["top", "mid", "bot"] as const).map((l) => e.laneFrontPos(l));
-    for (const u of e.units) {
-      let what: string;
-      if (!u.alive) what = "dead";
-      else if (u.campTarget !== undefined && e.camps[u.campTarget]?.alive && Math.hypot(u.x - e.camps[u.campTarget].pos.x, u.y - e.camps[u.campTarget].pos.y) <= 250) what = "camp";
-      else if (fronts.some((f) => Math.hypot(u.x - f.x, u.y - f.y) < 1100)) what = `wave/${u.task}`;
-      // a jungler on its jungle task: walking to a camp that is up, or waiting with none of its own up
-      else if (u.task === "jungle") what = e.camps.some((c) => c.alive && c.side === u.side && c.kind !== "scuttle") ? "jungle-walk" : "jungle-wait";
-      else what = u.task;
-      use(u.role, ph, what, dt);
-    }
-    while (mi < MINUTES.length && e.t >= MINUTES[mi] * 60) {
+  // par.game: plays the game here, or leaves it to another piece of a parallel run (scripts/par.mjs). The game only
+  // logs what it adds (time use summed per game: multiples of DT, so the totals come out the same) and the totals
+  // are added below in game order
+  const r = par.game(g, () => {
+    const e = new Engine({ s, data, blue: a, red: b, picks: { blue: d.picks.blue, red: d.picks.red }, seed: 1000 + g });
+    laneCs = e.units.map(() => 0);
+    const useG = new Map<string, Map<string, number>>();
+    const phaseG = [0, 0, 0];
+    const accOps: [string, number, number, number, number, number][] = [];
+    let mi = 0;
+    while (!e.over && e.t < 70 * 60) {
+      const t0 = e.t;
+      e.step();
+      const dt = e.t - t0;
+      const ph = PHASES.findIndex(([a, b]) => t0 >= a && t0 < b);
+      phaseG[ph] += dt;
+      const fronts = (["top", "mid", "bot"] as const).map((l) => e.laneFrontPos(l));
       for (const u of e.units) {
-        const k = `${MINUTES[mi]}:${u.role}`;
-        const x = acc.get(k) ?? { cs: 0, jg: 0, lvl: 0, xp: 0, gold: 0, n: 0 };
-        x.cs += u.cs; x.jg += u.cs - laneCs[u.i]; x.lvl += u.level; x.xp += u.xp; x.gold += u.gold; x.n++;
-        acc.set(k, x);
+        let what: string;
+        if (!u.alive) what = "dead";
+        else if (u.campTarget !== undefined && e.camps[u.campTarget]?.alive && Math.hypot(u.x - e.camps[u.campTarget].pos.x, u.y - e.camps[u.campTarget].pos.y) <= 250) what = "camp";
+        else if (fronts.some((f) => Math.hypot(u.x - f.x, u.y - f.y) < 1100)) what = `wave/${u.task}`;
+        // a jungler on its jungle task: walking to a camp that is up, or waiting with none of its own up
+        else if (u.task === "jungle") what = e.camps.some((c) => c.alive && c.side === u.side && c.kind !== "scuttle") ? "jungle-walk" : "jungle-wait";
+        else what = u.task;
+        use(useG, `${u.role}:${ph}`, what, dt);
       }
-      mi++;
+      while (mi < MINUTES.length && e.t >= MINUTES[mi] * 60) {
+        for (const u of e.units) accOps.push([`${MINUTES[mi]}:${u.role}`, u.cs, u.cs - laneCs[u.i], u.level, u.xp, u.gold]);
+        mi++;
+      }
     }
+    const mins = e.t / 60;
+    const endOps = e.units.map((u) => [u.role, u.cs / mins, (u.cs - laneCs[u.i]) / mins, u.level] as [string, number, number, number]);
+    return { useG, phaseG, accOps, mins, endOps };
+  });
+  if (!r) continue;
+  for (const [k, m] of r.useG) for (const [what, dt] of m) use(timeUse, k, what, dt);
+  r.phaseG.forEach((v, i) => (phaseLen[i] += v));
+  for (const [k, cs, jg, lvl, xp, gold] of r.accOps) {
+    const x = acc.get(k) ?? { cs: 0, jg: 0, lvl: 0, xp: 0, gold: 0, n: 0 };
+    x.cs += cs; x.jg += jg; x.lvl += lvl; x.xp += xp; x.gold += gold; x.n++;
+    acc.set(k, x);
   }
-  const mins = e.t / 60;
-  dur += mins;
-  for (const u of e.units) {
-    const x = end.get(u.role) ?? { cspm: 0, jgpm: 0, lvl: 0, n: 0 };
-    x.cspm += u.cs / mins; x.jgpm += (u.cs - laneCs[u.i]) / mins; x.lvl += u.level; x.n++;
-    end.set(u.role, x);
+  dur += r.mins;
+  for (const [role, cspm, jgpm, lvl] of r.endOps) {
+    const x = end.get(role) ?? { cspm: 0, jgpm: 0, lvl: 0, n: 0 };
+    x.cspm += cspm; x.jgpm += jgpm; x.lvl += lvl; x.n++;
+    end.set(role, x);
   }
 }
+par.end();
 console.log(`${N} games, roster seed ${rosterSeed}, mean length ${(dur / N).toFixed(1)} min`);
 console.log("minute  role      games   CS  (jungle)   level   xp    gold");
 for (const m of MINUTES) {

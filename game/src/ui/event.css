@@ -1,0 +1,224 @@
+/* Choice-event dialog and its result card (ui/Overlays.tsx EventModal / EventResultModal).
+   A pixel stage lit in the event's colour, a dialogue box, options with a ▶ cursor; the result lists each change
+   as a good (green) or bad (red) chip. Colours: --tone is the event's (red trouble, gold good news, blue old saves). */
+
+/* left / top / width / height follow the visual viewport (useOnScreen in Overlays.tsx) */
+.evd-bg {
+  position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 50; container-type: inline-size;
+  display: flex; align-items: center; justify-content: center; padding: 12px;
+  background: rgba(5, 6, 12, 0.8);
+}
+
+.evd { --tone: #8ad0ff; --tone-ink: #0b1a26; --g1: rgba(138, 208, 255, 0.2); --g2: rgba(138, 208, 255, 0.1); --g3: rgba(138, 208, 255, 0.045); }
+.evd.neg { --tone: #ff5a5a; --tone-ink: #2a0b10; --g1: rgba(255, 90, 90, 0.22); --g2: rgba(255, 90, 90, 0.11); --g3: rgba(255, 90, 90, 0.05); }
+.evd.pos { --tone: #f2c14e; --tone-ink: #1a1406; --g1: rgba(242, 193, 78, 0.22); --g2: rgba(242, 193, 78, 0.11); --g3: rgba(242, 193, 78, 0.05); }
+
+/* two stepped rings (line, then black) and a hard pixel drop shadow */
+.evd.frame {
+  position: relative;
+  width: min(620px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  margin: 0; padding: 0;
+  background: #12151f;
+  box-shadow:
+    0 -2px 0 0 var(--line2), 0 2px 0 0 var(--line2), -2px 0 0 0 var(--line2), 2px 0 0 0 var(--line2),
+    0 -4px 0 0 #05060b, 0 4px 0 0 #05060b, -4px 0 0 0 #05060b, 4px 0 0 0 #05060b,
+    8px 10px 0 0 rgba(0, 0, 0, 0.45);
+  animation: evdIn 0.24s steps(4) backwards;
+}
+
+/* ---------- stage ---------- */
+.evd-stage {
+  position: relative; overflow: hidden;
+  display: flex; align-items: flex-end; gap: 12px;
+  min-height: 172px; padding: 12px 16px 0;
+  background: linear-gradient(180deg, #090b13 0%, #0f1326 70%, #141932 100%);
+}
+/* dithered floor the cast stands on */
+.evd-floor {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 34px;
+  background: repeating-conic-gradient(#1a1e30 0 25%, #11141e 0 50%) 0 0 / 4px 4px;
+  box-shadow: inset 0 2px 0 0 #262d4a;
+}
+
+.evd-caption {
+  position: relative; z-index: 1;
+  flex: 1; min-width: 0; align-self: stretch;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+  padding-bottom: 46px;
+}
+.evd-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.evd-kicker {
+  font-family: "Galmuri9", "Galmuri11"; font-size: 11px; letter-spacing: 2px;
+  color: var(--tone-ink); background: var(--tone);
+  padding: 2px 8px 1px; box-shadow: 0 0 0 2px #05060b;
+}
+.evd-tag {
+  font-family: "Galmuri9", "Galmuri11"; font-size: 11px; letter-spacing: 1px;
+  color: var(--tone); padding: 1px 6px; box-shadow: inset 0 0 0 2px var(--tone);
+}
+.evd-wait { font-family: "Galmuri9", "Galmuri11"; font-size: 11px; color: var(--dim); }
+.evd-title {
+  margin: 0; color: #fff;
+  font-family: "Galmuri14", "Galmuri11"; font-size: 26px; line-height: 1.2;
+  text-shadow: 2px 2px 0 #05060b; word-break: keep-all;
+}
+
+.evd-cast { position: relative; z-index: 1; display: flex; align-items: flex-end; gap: 10px; padding-bottom: 8px; }
+/* banded light behind the cast, like a pixel-art spotlight */
+.evd-cast::before {
+  content: ""; position: absolute; z-index: -1; left: -60px; right: -60px; bottom: -8px; height: 170px; pointer-events: none;
+  background: radial-gradient(ellipse 50% 100% at 50% 100%, var(--g1) 0 36%, var(--g2) 36% 62%, var(--g3) 62% 86%, transparent 86%);
+}
+.evd-fig { display: flex; flex-direction: column; align-items: center; animation: evdRise 0.3s steps(3) 0.1s backwards; }
+.evd-fig + .evd-fig { animation-delay: 0.18s; }
+.evd-fig-art { line-height: 0; }
+.evd-fig .avatar { display: block; width: 84px; height: 84px; }
+.evd-fig-art.team { padding: 6px 6px 8px; }
+.evd-plate {
+  position: relative; min-width: 104px; margin-top: -2px; padding: 4px 8px 5px; text-align: center;
+  background: #0b0d15;
+  box-shadow: 0 -2px 0 0 var(--line2), 0 2px 0 0 var(--line2), -2px 0 0 0 var(--line2), 2px 0 0 0 var(--line2);
+}
+.evd-plate-top { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.evd-plate-top b { font-family: "Galmuri14", "Galmuri11"; font-weight: normal; font-size: 13px; color: #fff; }
+.evd-plate .ovr { min-width: 24px; padding: 0 3px; font-size: 11px; }
+.evd-plate-sub { display: flex; justify-content: center; gap: 8px; margin-top: 1px; font-family: "Galmuri9", "Galmuri11"; font-size: 11px; color: var(--muted); }
+.evd-mor.lo { color: var(--red); }
+.evd-mor.mid { color: var(--warn); }
+.evd-mor.hi { color: var(--green); }
+
+/* ---------- dialogue box ---------- */
+.evd-say {
+  position: relative; margin: 14px 16px 0; padding: 12px 34px 12px 14px; min-height: 52px;
+  background: #0b0d15; color: #eef0f7; font-size: 14px; line-height: 1.65; word-break: keep-all;
+  box-shadow: 0 -2px 0 0 var(--line2), 0 2px 0 0 var(--line2), -2px 0 0 0 var(--line2), 2px 0 0 0 var(--line2), inset 0 2px 0 0 rgba(255, 255, 255, 0.03);
+}
+.evd-say::after { content: "▼"; position: absolute; right: 12px; bottom: 8px; font-size: 10px; line-height: 1; color: var(--tone); visibility: hidden; }
+.evd-say.done::after { visibility: visible; animation: evdBlink 1s steps(1) infinite; }
+.evd-rest { visibility: hidden; }
+.evd-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- options ---------- */
+.evd-ask { margin: 16px 18px 4px; font-family: "Galmuri9", "Galmuri11"; font-size: 11px; letter-spacing: 2px; color: var(--dim); }
+.evd-opts { padding: 0 10px 12px; }
+.evd-opt {
+  position: relative; display: grid; grid-template-columns: 18px 1fr auto; align-items: start; gap: 0 8px;
+  width: 100%; margin: 0; padding: 10px 8px 10px 6px; border: 0;
+  background: transparent; color: var(--text); text-align: left; cursor: pointer;
+  animation: evdFade 0.2s steps(2) backwards; animation-delay: calc(0.28s + var(--i, 0) * 70ms);
+}
+/* pixel dashes between options */
+.evd-opt + .evd-opt::before {
+  content: ""; position: absolute; left: 30px; right: 8px; top: 0; height: 2px;
+  background: repeating-linear-gradient(90deg, #262b40 0 4px, transparent 4px 8px);
+}
+.evd-cur { display: inline-block; font-size: 12px; line-height: 20px; color: var(--tone); visibility: hidden; }
+.evd-opt:hover:not(:disabled), .evd-opt:focus-visible { background: #171b2b; }
+.evd-opt:hover:not(:disabled) .evd-cur, .evd-opt:focus-visible .evd-cur { visibility: visible; animation: evdNudge 0.8s steps(1) infinite; }
+.evd-opt:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--tone); }
+.evd-opt:active:not(:disabled) { transform: translateY(1px); }
+.evd-opt-main { min-width: 0; }
+.evd-opt-label { display: block; font-size: 14px; line-height: 20px; color: #f4f5fa; word-break: keep-all; }
+.evd-opt:hover:not(:disabled) .evd-opt-label { color: #fff; }
+
+.evd-hints { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 3px; }
+.evd-hint { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; line-height: 18px; color: #a7adc2; }
+.evd-hint::before { content: ""; flex: none; width: 6px; height: 6px; }
+/* filled: will happen (70%+), hollow: may happen (20-69%) */
+.evd-hint.sure::before { background: #c9cde0; }
+.evd-hint.maybe { color: #8a90a8; }
+.evd-hint.maybe::before { box-shadow: inset 0 0 0 2px #6b7290; }
+.evd-hint.note { flex-basis: 100%; color: #959bb3; }
+.evd-hint.note::before { content: "※"; width: auto; height: auto; font-size: 11px; color: var(--dim); }
+.evd-hint.lock { color: var(--red); }
+.evd-hint.lock::before { content: none; }
+
+.evd-cost {
+  font-family: "Galmuri14", "Galmuri11"; font-size: 12px; line-height: 20px; white-space: nowrap;
+  color: var(--gold); background: #2a2310; padding: 0 6px; box-shadow: 0 0 0 2px #05060b;
+}
+.evd-cost.short { color: var(--red); background: #33141a; }
+
+.evd:focus { outline: none; }
+.evd-side { display: flex; align-items: center; gap: 6px; }
+.evd-lock {
+  font-family: "Galmuri9", "Galmuri11"; font-size: 11px; line-height: 18px; white-space: nowrap;
+  color: var(--dim); padding: 0 6px; box-shadow: inset 0 0 0 2px #2b3149;
+}
+
+/* .ev-opt (styles.css) fades disabled buttons; these dim their parts instead */
+.evd-opt.ev-opt { padding: 10px 8px 10px 6px; }
+.evd-opt.ev-opt:disabled { opacity: 1; cursor: not-allowed; }
+.evd-opt:disabled .evd-opt-label, .evd-opt:disabled .evd-hint:not(.lock) { color: var(--dim); }
+.evd-opt:disabled .evd-hint.sure::before { background: var(--dim); }
+.evd-opt:disabled .evd-hint.maybe::before { box-shadow: inset 0 0 0 2px #3a4262; }
+.evd-opt:disabled .evd-cost:not(.short) { opacity: 0.5; }
+
+/* ---------- result card ---------- */
+.evd.evd-res.frame { width: min(480px, 100%); }
+.evd-res.good { --tone: var(--green); }
+.evd-res.bad { --tone: var(--red); }
+.evd-res.mixed { --tone: var(--gold); }
+.evd-res-head {
+  position: relative; padding: 18px 18px 18px;
+  background: linear-gradient(180deg, #090b13 0%, #11152a 100%);
+  box-shadow: inset 0 4px 0 0 var(--tone);
+}
+.evd-res-head::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px;
+  background: repeating-conic-gradient(#1a1e30 0 25%, #11141e 0 50%) 0 0 / 4px 4px;
+}
+.evd-res-kicker { margin-bottom: 6px; font-family: "Galmuri9", "Galmuri11"; font-size: 11px; letter-spacing: 2px; color: var(--muted); }
+.evd-res-choice {
+  display: flex; align-items: baseline; gap: 8px; margin: 0;
+  font-family: "Galmuri14", "Galmuri11"; font-size: 19px; line-height: 1.3; color: #fff;
+  text-shadow: 2px 2px 0 #05060b; word-break: keep-all;
+}
+.evd-res-choice .evd-cur { visibility: visible; flex: none; font-size: 13px; text-shadow: none; }
+
+.evd-ledger { list-style: none; margin: 0; padding: 8px 18px 4px; }
+.evd-ledger li {
+  position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 0; font-size: 13px; line-height: 1.4;
+  animation: evdFade 0.2s steps(2) backwards; animation-delay: calc(0.18s + var(--i, 0) * 90ms);
+}
+.evd-ledger li + li::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background: repeating-linear-gradient(90deg, #262b40 0 4px, transparent 4px 8px);
+}
+.evd-ledger li.plain .evd-led-text::before { content: "›"; margin-right: 8px; color: var(--tone); }
+.evd-led-text { min-width: 0; word-break: keep-all; }
+.evd-led-extra { font-size: 12px; color: var(--muted); }
+.evd-delta {
+  flex: none; min-width: 56px; padding: 1px 8px; text-align: center;
+  font-family: "Galmuri14", "Galmuri11"; font-size: 13px; box-shadow: 0 0 0 2px #05060b;
+}
+.evd-delta.up { color: #8af0a6; background: #15301f; }
+.evd-delta.down { color: #ff8a8a; background: #36141a; }
+.evd-res-foot { display: flex; justify-content: flex-end; padding: 12px 16px 14px; }
+
+/* ---------- motion ---------- */
+@keyframes evdIn { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes evdRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes evdFade { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
+@keyframes evdBlink { 50% { visibility: hidden; } }
+@keyframes evdNudge { 50% { transform: translateX(2px); } }
+@media (prefers-reduced-motion: reduce) {
+  .evd.frame, .evd *, .evd *::before, .evd *::after { animation: none !important; }
+}
+
+/* ---------- phones (the backdrop is the visual viewport; a media query would see the wider layout viewport) ---------- */
+@container (max-width: 560px) {
+  .evd-stage { flex-direction: column; align-items: stretch; gap: 0; min-height: 0; padding: 10px 12px 0; }
+  .evd-caption { align-self: auto; padding-bottom: 0; }
+  .evd-title { margin-top: 8px; font-size: 21px; }
+  .evd-cast { justify-content: center; margin-top: 12px; }
+  .evd-fig .avatar { width: 64px; height: 64px; }
+  .evd-plate { min-width: 96px; }
+  .evd-say { margin: 12px 10px 0; font-size: 13px; }
+  .evd-ask { margin: 14px 12px 4px; }
+  .evd-opts { padding: 0 4px 10px; }
+  .evd-res-choice { font-size: 17px; }
+}

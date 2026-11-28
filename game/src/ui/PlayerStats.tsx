@@ -36,7 +36,7 @@ function Bars({ rows, tab }: { rows: Row[]; tab: Tab }) {
       {([0, 1] as const).map((side) => (
         <div class="ps-col">
           {rows.filter((r) => r.side === side).map((r) => (
-            <div class="ps-row" title={r.sub}>
+            <div class="ps-row" data-tip={r.sub}>
               <ChampIcon id={r.champ} size={22} />
               <span class="ps-name">{r.name}</span>
               <div class="ps-bar"><i class={side ? "red" : "blue"} style={{ width: `${Math.max(0, (r.value / max) * 100)}%` }} /></div>

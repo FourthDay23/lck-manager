@@ -6,7 +6,8 @@ import { readFileSync, existsSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { newGame } from "../src/core/game";
 import { joinTeam, autoLineup } from "../src/core/market";
-import { Engine, applyEarlyTune } from "../src/match/engine";
+import { Engine, ENGINE_FLAGS, applyEarlyTune } from "../src/match/engine";
+import { applyWaveTune } from "../src/match/minions";
 import { newDraft, autoDraft } from "../src/match/draft";
 import { Rng } from "../src/core/rng";
 import { ROLES } from "../src/data/types";
@@ -18,6 +19,9 @@ const data = assembleData(dir, j("champions.json"), j("players.json"), j("staff.
 const N = Number(process.argv[3] ?? 60);
 const rosterSeed = Number(process.argv[4] ?? 3);
 applyEarlyTune(process.env.EARLY_TUNE);
+// WAVE_TUNE=lastHit:0.9 overrides the wave knobs (minions.ts); FLAGS=-minions runs the engine without real minions
+applyWaveTune(process.env.WAVE_TUNE);
+for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter(Boolean)) (ENGINE_FLAGS as Record<string, boolean>)[fl.replace(/^-/, "")] = !fl.startsWith("-");
 const s = newGame(data, { team: data.teams[0].id, difficulty: "normal", manager: "test", seed: 7 });
 s.user = "__nobody__";
 const rr = new Rng(rosterSeed);

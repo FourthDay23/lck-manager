@@ -36,11 +36,11 @@ export function MoneyStepper({ value, min, max, step, big, onChange, presets }: 
   return (
     <div class="stepper">
       <div class="row" style={{ gap: 4, flexWrap: "nowrap" }}>
-        <button class="btn small" onClick={() => set(value - big)} title={`−${money(big)}`}>−−</button>
-        <button class="btn small" onClick={() => set(value - step)} title={`−${money(step)}`}>−</button>
+        <button class="btn small" onClick={() => set(value - big)} data-tip={`−${money(big)}`} aria-label={`−${money(big)}`}>−−</button>
+        <button class="btn small" onClick={() => set(value - step)} data-tip={`−${money(step)}`} aria-label={`−${money(step)}`}>−</button>
         <input type="range" min={min} max={max} step={step} value={value} onInput={(e) => set(Number((e.target as HTMLInputElement).value))} style={{ width: 200 }} />
-        <button class="btn small" onClick={() => set(value + step)} title={`+${money(step)}`}>+</button>
-        <button class="btn small" onClick={() => set(value + big)} title={`+${money(big)}`}>++</button>
+        <button class="btn small" onClick={() => set(value + step)} data-tip={`+${money(step)}`} aria-label={`+${money(step)}`}>+</button>
+        <button class="btn small" onClick={() => set(value + big)} data-tip={`+${money(big)}`} aria-label={`+${money(big)}`}>++</button>
         <b style={{ minWidth: 64, textAlign: "right" }}>{money(value)}</b>
       </div>
       <div class="row muted" style={{ gap: 4, fontSize: 11, marginTop: 2 }}>
@@ -214,7 +214,7 @@ export function NegotiationModal({ pid, mode }: { pid: string; mode: NegMode }) 
                 {[1, 2, 3].map((y) => <button class={`btn small ${offer.years === y ? "on" : ""}`} onClick={() => setOffer({ ...offer, years: y })}>{y}년</button>)}
               </div>
               <div class="row bonus-row" style={{ alignItems: "flex-start" }}>
-                <span style={{ width: 60, paddingTop: 4 }} title="서명할 때 한 번만 주는 돈. 선수는 계약금 ÷ 기간의 80%를 연봉으로 더 받는 것으로 칩니다">계약금 ⓘ</span>
+                <span style={{ width: 60, paddingTop: 4 }} data-tip="서명할 때 한 번만 주는 돈. 선수는 계약금 ÷ 기간의 80%를 연봉으로 더 받는 것으로 칩니다">계약금 ⓘ</span>
                 <MoneyStepper value={offer.bonus} min={0} max={Math.round(ask)} step={500} big={2500} onChange={(v) => setOffer({ ...offer, bonus: v })}
                   presets={[{ label: "없음", value: 0 }, { label: "연봉 10%", value: offer.salary * 0.1 }, { label: "25%", value: offer.salary * 0.25 }, { label: "50%", value: offer.salary * 0.5 }]} />
               </div>

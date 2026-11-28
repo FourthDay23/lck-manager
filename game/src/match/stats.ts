@@ -125,7 +125,9 @@ function itemSums(e: Engine, u: Unit): { s: Required<ItemStats>; x: Required<Non
 }
 
 // ---------- unit stats (cached per level + owned items) ----------
-interface Cache { key: string; st: UStats }
+/** Key of the cached stats: level, then kind 0 = no item data, 1 = full build, 2 = next item `next`, `part`/20 of it
+ *  bought (the same cases as a "level|next:part" string, without building one at every read). */
+interface Cache { lvl: number; kind: number; next: number; part: number; st: UStats }
 const caches = new WeakMap<Engine, Cache[]>();
 
 interface Memo { t: number; base: UStats; st: UStats }
@@ -149,22 +151,21 @@ export function stats(e: Engine, u: Unit): UStats {
   return s;
 }
 
-/** Cheap key for the stats from level and items: level, the next item on the path, how far its components are. */
-function baseKey(e: Engine, u: Unit): string {
-  const pend = Items.pending(e, u);
-  if (!pend) return `${u.level}|-`;
-  if (pend.next == null) return `${u.level}|full`;
-  const cost = e.data.items?.items[String(pend.next)]?.cost ?? 0;
-  return `${u.level}|${pend.next}:${cost > 0 ? Math.round(Math.min(1, pend.spent / cost) * 20) : 0}`;
-}
-
 /** Stats from level and items only. */
 export function baseStats(e: Engine, u: Unit): UStats {
   let list = caches.get(e);
   if (!list) caches.set(e, (list = []));
-  const key = baseKey(e, u);
+  // cheap key: level, the next item on the path, how far its components are
+  const pend = Items.pending(e, u);
+  const kind = !pend ? 0 : pend.next == null ? 1 : 2;
+  let next = 0, part = 0;
+  if (pend && pend.next != null) {
+    next = pend.next;
+    const cost = e.data.items?.items[String(pend.next)]?.cost ?? 0;
+    part = cost > 0 ? Math.round(Math.min(1, pend.spent / cost) * 20) : 0;
+  }
   const hit = list[u.i];
-  if (hit && hit.key === key) return hit.st;
+  if (hit && hit.lvl === u.level && hit.kind === kind && hit.next === next && hit.part === part) return hit.st;
   const items = itemSums(e, u);
   const c = champStats(u.champ.id);
   const n = Math.max(1, Math.min(18, u.level));
@@ -197,7 +198,7 @@ export function baseStats(e: Engine, u: Unit): UStats {
     ov: x.ov / 100,
     hsp: x.hsp / 100,
   };
-  list[u.i] = { key, st };
+  list[u.i] = { lvl: u.level, kind, next, part, st };
   return st;
 }
 
@@ -242,8 +243,14 @@ export function skillOrder(id: string): number[] {
   return order;
 }
 
+// ranks() by champion and level, worked out once (rankOf is read for every spell number, many times a step)
+const rankCache = new Map<string, Map<number, [number, number, number, number]>>();
 export function rankOf(u: Unit, k: number): number {
-  return ranks(u.level, skillOrder(u.champ.id))[k];
+  let byLevel = rankCache.get(u.champ.id);
+  if (!byLevel) rankCache.set(u.champ.id, (byLevel = new Map()));
+  let r = byLevel.get(u.level);
+  if (!r) byLevel.set(u.level, (r = ranks(u.level, skillOrder(u.champ.id))));
+  return r[k];
 }
 
 // ---------- spell numbers ----------
@@ -380,6 +387,29 @@ export function cooldown(e: Engine, u: Unit, k: number): number | null {
   const base = cd[Math.min(cd.length - 1, rank - 1)];
   const s = stats(e, u);
   return base * 100 / (100 + s.haste + (k === 3 ? s.ultHaste : s.basicHaste));
+}
+
+interface StatMemo { lvl: number; a: number; b: number; st: UStats; v: number }
+const statMemos = new WeakMap<Engine, StatMemo[]>();
+/**
+ * f() kept across steps while what it is made of stays the same: u's stats (all of them, after effects and buffs),
+ * its level (spell ranks) and two engine multipliers a, b the caller passes in. Only for an f that reads nothing
+ * else (engine power: spell damage, cooldowns, attack dps, durability). Exact: any change, even -0 to 0, recomputes.
+ */
+export function byStats(e: Engine, u: Unit, a: number, b: number, f: () => number): number {
+  const st = stats(e, u);
+  let list = statMemos.get(e);
+  if (!list) statMemos.set(e, (list = []));
+  const m = list[u.i];
+  if (m && m.lvl === u.level && Object.is(m.a, a) && Object.is(m.b, b) && sameStats(m.st, st)) return m.v;
+  const v = f();
+  list[u.i] = { lvl: u.level, a, b, st, v };
+  return v;
+}
+function sameStats(x: UStats, y: UStats): boolean {
+  if (x === y) return true;
+  for (const k in y) if (!Object.is(x[k as keyof UStats], y[k as keyof UStats])) return false;
+  return true;
 }
 
 /** Once-per-step memo for values that are expensive and only change between steps (engine team power). */

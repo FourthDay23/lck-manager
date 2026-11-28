@@ -12,6 +12,12 @@ description: LoLSim 작업 세션이 맡은 작업(Txx)을 끝낼 때의 완료 
 
 - `npm --prefix game run check`(tsc)를 돌린다. 작업과 관련된 검증 스크립트(`game/scripts/*-check.ts` 등)가 있으면 그것도 돌린다. Git Bash가 경로를 망가뜨리면 PowerShell에서 실행한다.
 - 실패하면 고칠 때까지 다음 단계로 가지 않는다.
+- 엔진·밸런스 수치를 확인하는 측정은 `CLAUDE.md` 3-1절대로 한다.
+  - 자기 변경 확인은 짝 비교로 짧게 한다: `node scripts/ab.mjs calibrate.ts 200 3 --base main --until kills:1,length:0.5`.
+  - 200판 이상 큰 보정은 하지 않는다. 필요한 보정 명령은 요약에 적어 병합 뒤 통합 보정으로 넘긴다.
+  - 2분 넘는 측정은 `node scripts/par.mjs …`로 백그라운드에서 돌린다.
+  - 끊을 때는 자기가 띄운 PID만 끊는다. 이름이나 패턴으로 끊지 않는다.
+  - 엔진을 결과가 바뀌면 안 되는 방식으로 고쳤으면(속도, 리팩터) `scripts/engine-same.ts` 해시가 전과 같아야 한다.
 
 ## a. 코드 리뷰 (복잡하거나 큰 작업)
 

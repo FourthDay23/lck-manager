@@ -2,7 +2,8 @@
 import { createServer } from "vite";
 
 const file = process.argv[2];
-const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
+// ws: false: no HMR socket (port 24678), so several runs at once (scripts/par.mjs) do not fight over the port
+const server = await createServer({ server: { middlewareMode: true, ws: false }, appType: "custom", logLevel: "error" });
 try {
   await server.ssrLoadModule("/" + file.replace(/\\/g, "/"));
 } finally {

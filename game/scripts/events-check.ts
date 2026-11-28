@@ -5,7 +5,7 @@ import { assembleData } from "../src/data/load";
 import { autoAdvance, closeUserSeries, newGame, resolveEvent, userSeriesToday } from "../src/core/game";
 import { playQuickSeries } from "../src/core/quick";
 import { Rng } from "../src/core/rng";
-import { EVENT_DEFS, chooseSetBreak, endSetBreak, forceEvent, setBreakDue } from "../src/core/events";
+import { EVENT_DEFS, chooseSetBreak, endSetBreak, eventsDay, forceEvent, setBreakDue } from "../src/core/events";
 import { weekStartOf } from "../src/core/evmemo";
 
 const dir = existsSync("public/data/players.json") ? "data" : "data-sample";
@@ -28,12 +28,19 @@ const fired: { day: number; def: string; cls: string; pol: string }[] = [];
 const counts: Record<string, number> = {};
 let setBreaks = 0;
 const endDay = Math.round(365 * 2);
+// no choice events from a new game until its first official match is played (that match day's morning included)
+// (read straight from the career stats, not through events.ts, so the check does not trust the code it checks)
+const played = () => s.stats.seriesW + s.stats.seriesL > 0;
+let beforeFirst = 0;
+let firstMatchDay = -1;
 for (let guard = 0; s.day < endDay && guard < 20000; guard++) {
   const dup0 = dupLineup();
   autoAdvance(s, data, "match");
   if (!dup0 && dupLineup()) { dupDays++; if (dupDays <= 3) console.log("lineup duplicate appeared while advancing to", s.day, JSON.stringify(s.teams[s.user].lineup)); }
+  if (firstMatchDay < 0 && played()) firstMatchDay = s.day;
   while (s.events.length) {
     const ev = s.events[0];
+    if (!played() && ++beforeFirst <= 3) fail(`${ev.def ?? ev.kind} on day ${s.day}, before the first match was played`);
     const d = ev.def ? cls.get(ev.def) : undefined;
     if (d) {
       fired.push({ day: s.day, def: d.id, cls: d.cls, pol: d.pol });
@@ -110,9 +117,38 @@ console.log(`negative share: random ${(negShare * 100).toFixed(0)}%, all events 
 console.log("by event", Object.entries(counts).sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })).map(([k, v]) => `${k}:${v}`).join(" "));
 const never = EVENT_DEFS.filter((d) => !counts[d.id]).map((d) => d.id);
 console.log("never fired", never.join(" ") || "-");
-console.log("set breaks checked", setBreaks, "| queue left", s.ev?.queue.length, "| promises left", s.ev?.promises.length);
+console.log(`before the first match: ${beforeFirst} events (events open from day ${firstMatchDay})`);
+console.log("set breaks checked", setBreaks,"| queue left", s.ev?.queue.length, "| promises left", s.ev?.promises.length);
 console.log("memo sample", Object.entries(s.ev?.memo ?? {}).slice(0, 3).map(([k, v]) => `${s.players[k]?.name ?? k}: ${v.slice(-3).map((m) => m.text).join(" / ")}`).join(" | "));
 if (rnd.length && (negShare < 0.45 || negShare > 0.75)) fail(`random negative share ${negShare.toFixed(2)} is far from 0.6`);
+
+// the next series is a bracket slot whose opponent is not decided yet (playoff seed waiting for a quarterfinal):
+// the daily check two days before must not crash (P14 read teams[null].name) or name no opponent ("FA의")
+{
+  const t = JSON.parse(JSON.stringify(s)) as typeof s;
+  const next = t.series.filter((x) => !x.done && x.a && x.b && (x.a === t.user || x.b === t.user)).sort((a, b) => a.day - b.day)[0]
+    ?? t.series.find((x) => x.a === t.user || x.b === t.user)!;
+  if (next.a === t.user) next.b = null;
+  else next.a = null;
+  next.done = false;
+  next.comp = "PO";
+  next.stage = "SF";
+  t.day = next.day - 2;
+  t.teams[t.user].facilities.analysis = Math.max(1, t.teams[t.user].facilities.analysis);
+  const snap = JSON.stringify(t);
+  let crashed = 0;
+  for (let k = 0; k < 200; k++) {
+    const u = JSON.parse(snap) as typeof s;
+    u.events = [];
+    try {
+      eventsDay(u, data, new Rng(1000 + k));
+      for (const e of u.events) if (/FA의|undefined|null/.test(e.body)) fail(`${e.def} names no opponent before the bracket is decided: ${e.body}`);
+    } catch (e) {
+      if (++crashed <= 2) fail(`daily check before an undecided bracket series threw: ${(e as Error).message}`);
+    }
+  }
+  console.log(`undecided bracket opponent: 200 daily checks, ${crashed} crashes`);
+}
 
 // every option of every event, forced on a copy of the end state: no crash, a result, chances under 1
 const base = JSON.stringify(s);
