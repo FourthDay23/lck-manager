@@ -30,6 +30,7 @@ import { NegotiationModal } from "./Negotiation";
 import { StaffNegotiationModal } from "./StaffNegotiation";
 import { AlertLayer, EventModal, EventResultModal, CutsceneLayer } from "./Overlays";
 import { TutorialLayer } from "./Tutorial";
+import { AutoControls, AutoFeed, auto } from "./AutoPlay";
 import { TeamModal } from "./screens/Teams";
 
 let saveTimer: number | undefined;
@@ -109,7 +110,7 @@ export function App() {
         <div class="grow" />
         {today ? (
           <button class="btn primary" onClick={() => store.go("series")}>오늘 경기 하러 가기</button>
-        ) : (
+        ) : !auto.on && (
           <>
             <button class="btn" onClick={() => advance("day")}>다음 날</button>
             <button class="btn" onClick={() => advance("week")}>1주</button>
@@ -118,6 +119,7 @@ export function App() {
             </button>
           </>
         )}
+        <AutoControls />
       </div>
       <div class="side">
         {NAV.map(([k, label]) =>
@@ -167,6 +169,7 @@ export function App() {
       {s.events.length > 0 && !s.ev?.result?.title && scr !== "series" && scr !== "exhibition" && <EventModal />}
       {!!s.ev?.result?.title && scr !== "series" && scr !== "exhibition" && <EventResultModal />}
       {(s.alerts?.length ?? 0) > 0 && !s.events.length && !s.ev?.result?.title && scr !== "series" && scr !== "exhibition" && <AlertLayer />}
+      <AutoFeed />
       <CutsceneLayer />
       <TutorialLayer />
       {st.toast && <div class="toast frame">{st.toast.text}</div>}
