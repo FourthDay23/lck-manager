@@ -3,6 +3,7 @@ import type { Engine, Fx, GameEvent, ObjKey, Unit } from "./engine";
 import { MAP, NEXUS, LANES, BARON_PIT, DRAGON_PIT, GRUB_SPOTS, MIRROR_C, lanePoint, laneU } from "./map";
 import type { CampKind, Vec } from "./map";
 import { champImg, spellImg } from "../data/load";
+import { drakeSprite, mapSprite, preloadMapSprites } from "./sprites";
 import { SkillFx } from "./vfx";
 import * as Macro from "./macro";
 import * as Summoners from "./summoners";
@@ -82,32 +83,19 @@ function champImage(version: string, id: string): HTMLImageElement {
 const BLUE = "#4aa3ff";
 const RED = "#ff5a5a";
 
-// ---------- pixel sprites: rows of palette keys, "." is empty (MatchRenderer.sprite) ----------
-/** tower, 7 x 9 cells: crown (x), light (c), body and base (b) */
-const TOWER = [
-  ".x.x.x.",
-  ".xxxxx.",
-  "..ccc..",
-  "..bbb..",
-  "..bbb..",
-  "..bbb..",
-  "..bbb..",
-  ".bbbbb.",
-  "bbbbbbb",
-];
 /**
- * Jungle camps and epic monsters are all drawn as the same mark, a disc with a dark outline (MatchRenderer.disc):
- * no shape of its own per monster (the owner's call, 11-28). Colour tells them apart, and size the camps from the
- * epic monsters. Radius in buffer px on the whole map and in a close-up; a disc is 2r + 1 across.
+ * Jungle camps, epic monsters and structures are the owner's pixel sprites (sprites.ts, MatchRenderer.mark). Until
+ * a sprite's file has loaded, and if it never does, the thing is a plain disc with a dark outline instead
+ * (MatchRenderer.disc), so the map is never without it. Radius of that disc in canvas px on the whole map and in a
+ * close-up (a disc is 2r + 1 across), and its colours:
  */
 const CAMP_R = [3, 5];
 const EPIC_R = [5, 9];
 const GRUB_R = [2, 3];
-/** A camp that is up: a bright colour inside the dark outline, so it stands out from the olive ground. */
 const CAMP_COL: Record<CampKind | "scuttle", string> = {
   blue: "#5fb0ff", red: "#ff6b4a", gromp: "#ffe9a8", wolves: "#ffe9a8", raptors: "#ffe9a8", krugs: "#ffe9a8", scuttle: "#7ff0d0",
 };
-/** A camp or monster that is not up: the same disc, dim, with the time left under it. */
+/** a camp or monster that is not up, a structure that is down */
 const GONE_COL = "#5a6274";
 const GONE_ALPHA = 0.8;
 const OBJ_COL: Record<ObjKey, string> = { dragon: "#ff9a3c", elder: "#c9f0ff", baron: "#b06cff", herald: "#9a7bff", grubs: "#d7a4ff" };
@@ -179,6 +167,7 @@ export class MatchRenderer {
     this.version = version;
     this.highlightSide = highlightSide;
     for (const u of e.units) champImage(version, u.champ.id);
+    preloadMapSprites();
   }
 
   setEngine(e: Engine) {
@@ -844,26 +833,22 @@ export class MatchRenderer {
   }
 
   /**
-   * A pixel sprite (rows of palette keys, "." empty) with its middle on a world point, `u` buffer px a cell, a dark
-   * outline around it. Returns the box it covers.
+   * A map sprite (sprites.ts) with its middle on a world point: on whole canvas pixels and at its own size, never
+   * scaled, so its pixels stay square whatever size the map is shown at. `gone` draws the dimmed copy (cleared, not
+   * up yet). While the file has not loaded, a disc of radius `r` in `col` stands in. Returns the box of the drawing
+   * (without its one-pixel outline), for the bar and the time under it.
    */
-  private sprite(rows: string[], p: Vec, u: number, pal: Record<string, string>, alpha = 1): Box {
+  private mark(name: string, p: Vec, gone: boolean, r: number, col: string): Box {
+    const s = name ? mapSprite(name, this.cam.size < 9000) : null;
+    if (!s?.on) return this.disc(p, r, gone ? GONE_COL : col, gone ? GONE_ALPHA : 1);
     const c = this.ctx;
-    const w = rows[0].length * u, h = rows.length * u;
-    const ox = Math.round(this.sx(p.x) - w / 2), oy = Math.round(this.sy(p.y) - h / 2);
-    c.globalAlpha = alpha;
-    c.fillStyle = "#05070d";
-    for (let ry = 0; ry < rows.length; ry++) for (let rx = 0; rx < rows[ry].length; rx++) {
-      if (rows[ry][rx] !== ".") c.fillRect(ox + rx * u - 1, oy + ry * u - 1, u + 2, u + 2);
-    }
-    for (let ry = 0; ry < rows.length; ry++) for (let rx = 0; rx < rows[ry].length; rx++) {
-      const ch = rows[ry][rx];
-      if (ch === ".") continue;
-      c.fillStyle = pal[ch];
-      c.fillRect(ox + rx * u, oy + ry * u, u, u);
-    }
-    c.globalAlpha = 1;
-    return { x: ox, y: oy, w, h };
+    const x = Math.round(this.sx(p.x) - s.w / 2), y = Math.round(this.sy(p.y) - s.h / 2);
+    if (gone && !s.off) {
+      c.globalAlpha = 0.45;
+      c.drawImage(s.on, x, y);
+      c.globalAlpha = 1;
+    } else c.drawImage(gone ? s.off! : s.on, x, y);
+    return { x: x + 1, y: y + 1, w: s.w - 2, h: s.h - 2 };
   }
 
   /**
@@ -884,16 +869,6 @@ export class MatchRenderer {
     }
     c.globalAlpha = 1;
     return { x: cx - r, y: cy - r, w: 2 * r + 1, h: 2 * r + 1 };
-  }
-
-  /** A filled pixel diamond with its middle on buffer pixel (cx, cy), `r` px from there to each tip. */
-  private diamond(cx: number, cy: number, r: number, col: string) {
-    const c = this.ctx;
-    c.fillStyle = col;
-    for (let d = -r; d <= r; d++) {
-      const half = r - Math.abs(d);
-      c.fillRect(cx - half, cy + d, half * 2 + 1, 1);
-    }
   }
 
   /** A health bar under a sprite's box. */
@@ -1001,7 +976,7 @@ export class MatchRenderer {
     this.drawLanes(now);
     this.drawStructures();
     this.drawCamps(now);
-    this.drawObjectives(now);
+    this.drawObjectives();
     this.drawDeaths(now);
     this.skills.under(this.e, this.live, now);
     this.drawWork(now);
@@ -1353,24 +1328,24 @@ export class MatchRenderer {
     return lanePoint(lane, u);
   }
 
-  /** Turrets as small pixel towers with an outline, HP bar and attack range when enemies are near. */
+  /**
+   * Turrets, inhibitors and the two nexuses as sprites in their team's colour, the middle of each on its spot (the
+   * tower's foot stood there before, so it was drawn above the spot and off the middle of its own range ring). One
+   * that is down is its ruin. A health bar while damaged, the turret's range while an enemy is near.
+   */
   private drawStructures() {
     const c = this.ctx;
     const zoom = this.cam.size < 9000;
-    const u = zoom ? 2 : 1; // pixel unit
+    const r = zoom ? 5 : 3; // the stand-in disc (see mark)
     for (const t of this.e.turrets) {
       const x = Math.round(this.sx(t.pos.x)), y = Math.round(this.sy(t.pos.y));
       if (x < -30 || y < -30 || x > RES + 30 || y > RES + 30) continue;
+      const side = t.side ? "red" : "blue";
       if (!t.alive) {
-        c.fillStyle = "#05070d";
-        c.fillRect(x - 3 * u - 1, y - u - 1, 6 * u + 2, 3 * u + 2);
-        c.fillStyle = "#5a5f6e";
-        c.fillRect(x - 3 * u, y - u, 2 * u, 2 * u);
-        c.fillRect(x, y, 3 * u, u * 2);
+        this.mark(`turret_${side}_destroyed`, t.pos, false, r, GONE_COL);
         continue;
       }
       const body = t.side ? "#ff6b6b" : "#5aa9ff";
-      const crown = t.side ? "#ffc2c2" : "#c2e2ff";
       // range ring while an enemy champion is close
       const threat = this.e.units.some((v) => v.alive && v.side !== t.side && Math.hypot(v.x - t.pos.x, v.y - t.pos.y) < 1150);
       if (threat) {
@@ -1380,35 +1355,27 @@ export class MatchRenderer {
         c.arc(this.sx(t.pos.x), this.sy(t.pos.y), this.len(775), 0, Math.PI * 2);
         c.stroke();
       }
-      // the middle of the tower on the turret's spot (its foot stood there before, so the tower was drawn above the
-      // spot and off the middle of its own range ring)
-      const b = this.sprite(TOWER, t.pos, u, { x: crown, c: "#ffffff", b: body });
+      const b = this.mark(`turret_${side}`, t.pos, false, r, body);
       if (t.hp < t.maxHp) this.bar(b, t.hp / t.maxHp, body);
     }
-    // inhibitors and the nexus: pixel diamonds with their middle on the pixel the spot falls in
     for (const ih of this.e.inhibs) {
-      const x = Math.floor(this.sx(ih.pos.x)), y = Math.floor(this.sy(ih.pos.y));
-      const s = zoom ? 7 : 4;
-      this.diamond(x, y, s + 1, "#05070d");
-      this.diamond(x, y, s, ih.alive ? (ih.side ? "#ff9a9a" : "#9ad0ff") : "#3a3f4b");
-      if (!ih.alive && zoom && ih.respawnAt > this.e.t) this.timer({ x: x - s, y: y - s, w: 2 * s + 1, h: 2 * s + 1 }, Math.ceil(ih.respawnAt - this.e.t));
+      const side = ih.side ? "red" : "blue";
+      const b = this.mark(ih.alive ? `inhibitor_${side}` : `inhibitor_${side}_destroyed`, ih.pos, false, r + 1, ih.alive ? (ih.side ? "#ff9a9a" : "#9ad0ff") : GONE_COL);
+      if (!ih.alive && zoom && ih.respawnAt > this.e.t) this.timer(b, Math.ceil(ih.respawnAt - this.e.t));
     }
     NEXUS.forEach((p, side) => {
-      const x = Math.floor(this.sx(p.x)), y = Math.floor(this.sy(p.y));
-      const s = zoom ? 13 : 7;
-      this.diamond(x, y, s + 2, "#05070d");
-      this.diamond(x, y, s, side ? RED : BLUE);
-      c.fillStyle = "#ffffff";
-      c.fillRect(x - 1, y - 1, 3, 3);
+      const name = side ? "red" : "blue";
       const hp = this.e.nexus[side] / 4000;
-      if (hp < 1) this.bar({ x: x - s, y: y - s, w: 2 * s + 1, h: 2 * s + 2 }, hp, side ? RED : BLUE);
+      const b = this.mark(hp > 0 ? `nexus_${name}` : `nexus_${name}_destroyed`, p, false, r + 3, hp > 0 ? (side ? RED : BLUE) : GONE_COL);
+      if (hp > 0 && hp < 1) this.bar(b, hp, side ? RED : BLUE);
     });
   }
 
   /**
-   * Jungle camps, readable on the whole map: a camp that is up is a bright disc with a dark outline (the small tan
-   * dot it used to be was the colour of the ground), one that was cleared is the same disc dimmed, with the time
-   * until it is back under it. A camp that just came up is ringed for a moment; one being cleared shows its health.
+   * Jungle camps, readable on the whole map: a camp that is up is its icon in full colour (the small tan dot it used
+   * to be was the colour of the ground), one that was cleared is the same icon dimmed and grey, with the time until
+   * it is back under it. The two buffs share one icon and the small camps and the scuttlers another, as on the
+   * game's own minimap. A camp that just came up is ringed for a moment; one being cleared shows its health.
    */
   private drawCamps(now: number) {
     const c = this.ctx;
@@ -1426,13 +1393,14 @@ export class MatchRenderer {
       } else if (camp.hp > up.full) up.full = camp.hp;
       const x = this.sx(camp.pos.x), y = this.sy(camp.pos.y);
       if (x < -20 || y < -20 || x > RES + 20 || y > RES + 20) continue;
+      const name = camp.kind === "blue" || camp.kind === "red" ? "camp_buff" : "camp_small";
       if (!camp.alive || !up) {
-        const b = this.disc(camp.pos, r, GONE_COL, GONE_ALPHA);
+        const b = this.mark(name, camp.pos, true, r, CAMP_COL[camp.kind]);
         const left = Math.ceil(camp.spawnAt - this.e.t);
         if (left > 0) this.timer(b, left, "#cfd5e2");
         continue;
       }
-      const b = this.disc(camp.pos, r, CAMP_COL[camp.kind]);
+      const b = this.mark(name, camp.pos, false, r, CAMP_COL[camp.kind]);
       if (camp.hp < up.full) this.bar(b, camp.hp / up.full, "#ffe28a");
       const k = (now - up.at) / CAMP_UP_MS;
       if (k >= 0 && k < 1) {
@@ -1441,7 +1409,7 @@ export class MatchRenderer {
         c.strokeStyle = "#ffffff";
         c.lineWidth = 1;
         c.beginPath();
-        c.arc(b.x + b.w / 2, b.y + b.h / 2, r + 3 + (1 - k) * 6, 0, Math.PI * 2);
+        c.arc(b.x + b.w / 2, b.y + b.h / 2, Math.max(b.w, b.h) / 2 + 3 + (1 - k) * 6, 0, Math.PI * 2);
         c.stroke();
         c.globalAlpha = 1;
       }
@@ -1449,32 +1417,24 @@ export class MatchRenderer {
   }
 
   /**
-   * Epic monsters, each on its own spot (the Voidgrubs one by one): the same disc as a camp, larger. A monster that
-   * is up has a slow ring around it and shows its health while it is hit; an empty pit shows what comes there next
-   * as a dim disc with the time left, the same way as a cleared camp.
+   * Epic monsters as sprites, each on its own spot (the Voidgrubs one by one, the dragon in the look of its
+   * element). One that is up shows its health while it is hit; an empty pit shows what comes there next dimmed and
+   * grey with the time left, the same way as a cleared camp.
    */
-  private drawObjectives(now: number) {
-    const c = this.ctx, e = this.e;
+  private drawObjectives() {
+    const e = this.e;
     const zoom = this.cam.size < 9000 ? 1 : 0;
     const draw = (k: ObjKey, up: boolean): Box => {
       const o = e.obj[k];
-      const col = up ? OBJ_COL[k] : GONE_COL;
-      const alpha = up ? 1 : GONE_ALPHA;
       if (k !== "grubs") {
-        const b = this.disc(o.pos, EPIC_R[zoom], col, alpha);
-        if (up) {
-          // a dark core, as the epic monsters always had: with their size it sets them apart from a camp
-          const s = zoom ? 3 : 1;
-          c.fillStyle = "#0a0d16";
-          c.fillRect(b.x + (b.w - s) / 2, b.y + (b.h - s) / 2, s, s);
-        }
-        return b;
+        const name = k === "dragon" ? drakeSprite(o.type) : k === "elder" ? drakeSprite("장로") : k;
+        return this.mark(name, o.pos, !up, EPIC_R[zoom], OBJ_COL[k]);
       }
-      // as many grubs as are left, each on its own spot; the box around them carries the ring, the bar and the time
+      // as many grubs as are left, each on its own spot; the box around them carries the bar and the time
       const n = up ? Math.max(1, Math.min(GRUB_SPOTS.length, o.left ?? GRUB_SPOTS.length)) : GRUB_SPOTS.length;
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       for (let i = 0; i < n; i++) {
-        const b = this.disc(GRUB_SPOTS[i], GRUB_R[zoom], col, alpha);
+        const b = this.mark("grub", GRUB_SPOTS[i], !up, GRUB_R[zoom], OBJ_COL.grubs);
         x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.w); y1 = Math.max(y1, b.y + b.h);
       }
       return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
@@ -1484,13 +1444,6 @@ export class MatchRenderer {
       for (const k of up) {
         const o = e.obj[k];
         const b = draw(k, true);
-        c.strokeStyle = OBJ_COL[k];
-        c.globalAlpha = 0.55;
-        c.lineWidth = 1;
-        c.beginPath();
-        c.arc(b.x + b.w / 2, b.y + b.h / 2, Math.max(b.w, b.h) / 2 + 3 + Math.sin(now / 250), 0, Math.PI * 2);
-        c.stroke();
-        c.globalAlpha = 1;
         if (o.hp < o.maxHp) this.bar(b, o.hp / o.maxHp, "#ffe28a");
       }
       if (up.length) continue;

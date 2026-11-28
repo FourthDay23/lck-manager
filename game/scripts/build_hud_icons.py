@@ -91,16 +91,24 @@ def tint(im: Image.Image, light, dark) -> Image.Image:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cache", default=os.path.join(tempfile.gettempdir(), "lck_hud_atlas"))
-    cache = ap.parse_args().cache
+    # The dragon and dragon-soul icons (drake_*.png, soul_*.png) are no longer the client's: they are the owner's
+    # pixel art, written by build_map_sprites.py. This script leaves them alone unless told to put the client's back.
+    ap.add_argument("--client-dragons", action="store_true", help="also overwrite drake_*.png and soul_*.png with the client's icons")
+    args = ap.parse_args()
+    cache = args.cache
     os.makedirs(cache, exist_ok=True)
     os.makedirs(OUT, exist_ok=True)
     src = {k: fetch(u, cache) for k, u in SRC.items()}
 
     timers = Image.open(src["timers"]).convert("RGBA")
     for name, box in TIMERS.items():
+        if name.startswith("drake_") and not args.client_dragons:
+            continue
         trim(timers, box).save(os.path.join(OUT, f"{name}.png"))
     srx = Image.open(src["srx"]).convert("RGBA")
     for name, box in SRX.items():
+        if not args.client_dragons:
+            continue
         trim(srx, box).save(os.path.join(OUT, f"{name}.png"))
     trim(Image.open(src["grub"]).convert("RGBA"), (0, 0, 64, 64)).save(os.path.join(OUT, "grub.png"))
 
