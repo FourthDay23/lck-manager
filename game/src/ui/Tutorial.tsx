@@ -19,7 +19,7 @@ import { comp } from "../core/schedule";
 import { windowOpen } from "../core/market";
 import { evState } from "../core/evmemo";
 import { autosave } from "./App";
-import { appH, appW, toLocal } from "./scale";
+import { appH, appW, toLocal, uiZoom } from "./scale";
 import "./tutorial.css";
 
 /** Places the screens report (tutSpot), and what the player's steps wait for. */
@@ -81,92 +81,92 @@ const PARTS: Record<string, Step[]> = {
   intro: [
     {
       screen: "home", title: "단장 취임을 축하드립니다!",
-      body: (s) => `${sir(s)}, ${s.teams[s.user].name}의 새로운 단장으로 부임하신 것을 축하드립니다! 아직 처음이셔서 낯서실 수 있으니, 제가 옆에서 도와드리겠습니다.`,
+      body: (s) => `${sir(s)}, ${s.teams[s.user].name}의 **새로운 단장**으로 부임하신 것을 축하드립니다! 아직 처음이셔서 낯서실 수 있으니, 제가 옆에서 도와드리겠습니다.`,
     },
     {
       screen: "home", sel: ".topbar .stat", text: "날짜", title: "1부 · 일정",
-      body: "구단의 다음 일정을 확인할 수 있습니다.",
-      first: "현재 Faker(T1)와 ShowMaker(DK)를 뺀 모든 선수와 감독이 FA인 상태로 시즌이 시작했습니다. 1월 14일 LCK 컵 개막 전까지 감독과 주전 5명을 갖춰야 합니다.",
+      body: "구단의 **다음 일정**을 확인할 수 있습니다.",
+      first: "현재 Faker(T1)와 ShowMaker(DK)를 뺀 모든 선수와 감독이 **FA**인 상태로 시즌이 시작했습니다. **1월 14일 LCK 컵 개막** 전까지 **감독**과 **주전 5명**을 갖춰야 합니다.",
     },
-    { screen: "home", sel: ".topbar .stat", text: "자금", title: "1부 · 자금", body: "구단이 쓸 수 있는 돈입니다. 계약금과 이적료는 계약하는 순간 빠지고, 수익금은 매달 1일에 들어옵니다. 마이너스가 되면 게임이 오버되니 주의하세요!" },
-    { screen: "home", sel: ".main h2", text: "할 일", title: "1부 · 할 일", body: "지금 꼭 해야 할 일을 여기서 확인할 수 있습니다.", first: "우선 주전 선수들을 영입해 볼까요?" },
-    { firstOnly: true, sel: tut("todo-market"), until: "market", done: () => store.screen.name === "market", title: "1부 · 할 일", body: "할 일 패널의 '이적시장' 버튼을 눌러 보세요." },
+    { screen: "home", sel: ".topbar .stat", text: "자금", title: "1부 · 자금", body: "구단이 쓸 수 있는 돈입니다. **계약금**과 **이적료**는 계약하는 순간 빠지고, **수익금**은 **매달 1일**에 들어옵니다. **마이너스**가 되면 게임이 오버되니 주의하세요!" },
+    { screen: "home", sel: ".main h2", text: "할 일", title: "1부 · 할 일", body: "지금 **꼭 해야 할 일**을 여기서 확인할 수 있습니다.", first: "우선 **주전 선수**들을 영입해 볼까요?" },
+    { firstOnly: true, sel: tut("todo-market"), until: "market", done: () => store.screen.name === "market", title: "1부 · 할 일", body: "할 일 패널의 **'이적시장'** 버튼을 눌러 보세요." },
     {
       screen: "market", sel: ".main table", hands: true, until: "player", done: (_s, m) => m === "player", lock: { marketRole: "Top", marketTab: "fa" },
       title: "1부 · 선수 찾기",
-      body: "FA와 영입할 수 있는 선수 목록입니다. 포지션과 능력치, 요구 연봉을 보고 신중히 선택하세요. 선호도가 낮은 구단은 같은 조건에서 선수가 다른 팀을 고릅니다.",
-      first: "우선 탑 포지션의 선수를 한 명 영입해 볼까요?",
+      body: "**FA**와 영입할 수 있는 선수 목록입니다. **포지션**과 **능력치**, **요구 연봉**을 보고 신중히 선택하세요. **선호도**가 낮은 구단은 같은 조건에서 선수가 다른 팀을 고릅니다.",
+      first: "우선 **탑** 포지션의 선수를 한 명 영입해 볼까요?",
     },
     {
       sel: tut("player-sign"), hands: true, until: "nego", done: (_s, m) => m === "nego",
       title: "1부 · 선수 영입",
-      body: "선수를 누르면 선수의 능력치와 챔피언 숙련도를 확인할 수 있습니다. 신중히 선택하세요!\n그럼 선수와 협상을 시작해 볼까요?",
+      body: "선수를 누르면 선수의 **능력치**와 **챔피언 숙련도**를 확인할 수 있습니다. 신중히 선택하세요!\n그럼 선수와 **협상**을 시작해 볼까요?",
     },
-    { sel: ".modal", title: "1부 · 협상", body: "선수를 누르면 협상이 시작됩니다. 면담에서 선수 성향에 맞는 답을 고르면 요구액이 내려갑니다. 그다음 연봉, 기간, 계약금, 주전 보장을 정해 제안합니다. 계약금은 서명할 때 한 번만 주는 돈으로, 월 급여를 늘리지 않고 요구액을 맞출 때 씁니다. 만약 선수를 만족시키지 못한다면 협상을 거절할 수도 있습니다." },
+    { sel: ".modal", title: "1부 · 협상", body: "선수를 누르면 협상이 시작됩니다. **면담**에서 선수 성향에 맞는 답을 고르면 **요구액**이 내려갑니다. 그다음 **연봉, 기간, 계약금, 주전 보장**을 정해 제안합니다. **계약금**은 서명할 때 **한 번만** 주는 돈으로, 월 급여를 늘리지 않고 요구액을 맞출 때 씁니다. 만약 선수를 만족시키지 못한다면 **협상을 거절**할 수도 있습니다." },
   ],
   // after the first signing (a replay goes on from the intro)
   signed: [
-    { firstOnly: true, screen: "roster", sel: ".main h2", text: "주전 라인업", title: "1부 · 선수단", body: "첫 번째 선수를 영입하신 것을 축하드립니다!\n이곳에서 현재 영입한 선수들을 확인할 수 있습니다.\n만약 주전 자리가 공석인 상태로 경기를 시작할 경우, 2군 선수가 자동으로 콜업되니 주의하세요!" },
-    { screen: "staff", sel: ".main h2", text: "감독 · 코치 목록", skip: (s, f) => f && hasHC(s), title: "1부 · 감독 영입", body: "이제 감독을 구할 차례입니다. 감독이 없으면 밴픽에서 추천을 거의 받지 못하고 팀 전력도 깎입니다. 감독과 코치의 밴픽 · 분석 능력이 높을수록 전력이 강해집니다." },
+    { firstOnly: true, screen: "roster", sel: ".main h2", text: "주전 라인업", title: "1부 · 선수단", body: "**첫 번째 선수**를 영입하신 것을 축하드립니다!\n이곳에서 현재 영입한 선수들을 확인할 수 있습니다.\n만약 주전 자리가 공석인 상태로 경기를 시작할 경우, **2군 선수**가 자동으로 **콜업**되니 주의하세요!" },
+    { screen: "staff", sel: ".main h2", text: "감독 · 코치 목록", skip: (s, f) => f && hasHC(s), title: "1부 · 감독 영입", body: "이제 **감독**을 구할 차례입니다. 감독이 없으면 **밴픽 추천**을 거의 받지 못하고 **팀 전력**도 깎입니다. 감독과 코치의 **밴픽 · 분석 능력**이 높을수록 전력이 강해집니다." },
     {
       firstOnly: true, screen: "staff", sel: ".main h2", text: "감독 · 코치 목록", skip: hasHC, until: "staffnego", done: (_s, m) => m === "staffnego", lock: { staffRole: "hc" },
       title: "1부 · 감독 선임",
-      body: "감독만 보이도록 목록을 골라 두었습니다. 밴픽 · 육성 · 동기부여 · 분석 능력과 명성, 우승 횟수, 요구 연봉을 비교해 보고 마음에 드는 감독의 '선임 협상'을 눌러 보세요.",
+      body: "**감독**만 보이도록 목록을 골라 두었습니다. 밴픽 · 육성 · 동기부여 · 분석 능력과 명성, 우승 횟수, 요구 연봉을 비교해 보고 마음에 드는 감독의 **'선임 협상'**을 눌러 보세요.",
     },
-    { sel: ".modal", skip: (s, f) => f && hasHC(s), title: "1부 · 감독 협상", body: "감독 선임도 선수 영입처럼 면담 3문항을 거친 뒤 연봉, 기간, 계약금을 정해 제안합니다. 감독마다 드러나지 않는 최저 연봉이 있어서, 너무 낮게 부르면 인내심이 떨어지고 결국 협상을 거부합니다. 합의하면 바로 팀에 합류합니다." },
+    { sel: ".modal", skip: (s, f) => f && hasHC(s), title: "1부 · 감독 협상", body: "감독 선임도 선수 영입처럼 **면담 3문항**을 거친 뒤 **연봉, 기간, 계약금**을 정해 제안합니다. 감독마다 드러나지 않는 **최저 연봉**이 있어서, 너무 낮게 부르면 **인내심**이 떨어지고 결국 협상을 거부합니다. 합의하면 **바로 팀에 합류**합니다." },
   ],
   // after the head coach is hired (a replay goes on from "signed")
   coach: [
-    { sel: ".topbar .stat", text: "월 급여", title: "1부 · 월 급여", body: "선수와 스태프 연봉 합계를 12로 나눈 돈이 매달 25일에 나갑니다. 고정 수입보다 크면 구단이 적자가 되니 주의하세요!" },
+    { sel: ".topbar .stat", text: "월 급여", title: "1부 · 월 급여", body: "선수와 스태프 **연봉 합계를 12로 나눈 돈**이 **매달 25일**에 나갑니다. **고정 수입**보다 크면 구단이 **적자**가 되니 주의하세요!" },
     {
       sel: ".topbar .stat", text: "이적시장", title: "1부 · 이적시장 기간",
-      body: "이적시장이 열려 있을 때만 FA 영입과 이적을 할 수 있습니다. 1년에 세 번 열립니다.\n· 스토브리그: 11월 14일 ~ 1월 13일\n· LCK 컵이 끝난 뒤: 3월 초 ~ 3월 31일\n· MSI 개막 ~ 정규 시즌 3라운드 전: 6월 24일 ~ 8월 4일\n마우스를 올리면 다음 개장이나 마감까지 남은 날이 나옵니다.",
-      first: "지금은 스토브리그라 열려 있습니다.",
+      body: "**이적시장**이 열려 있을 때만 **FA 영입**과 **이적**을 할 수 있습니다. **1년에 세 번** 열립니다.\n· **스토브리그**: 11월 14일 ~ 1월 13일\n· **LCK 컵이 끝난 뒤**: 3월 초 ~ 3월 31일\n· **MSI 개막 ~ 정규 시즌 3라운드 전**: 6월 24일 ~ 8월 4일\n마우스를 올리면 다음 **개장**이나 **마감**까지 남은 날이 나옵니다.",
+      first: "지금은 **스토브리그**라 열려 있습니다.",
     },
-    { firstOnly: true, skip: (s) => readyForMatch(s), title: "1부 · 남은 준비", body: "이제 주전 다섯 명을 모두 채워 주세요. 감독과 주전 다섯 명이 갖춰지면 첫 경기로 가는 길을 안내해 드리겠습니다." },
+    { firstOnly: true, skip: (s) => readyForMatch(s), title: "1부 · 남은 준비", body: "이제 **주전 다섯 명**을 모두 채워 주세요. **감독과 주전 다섯 명**이 갖춰지면 **첫 경기**로 가는 길을 안내해 드리겠습니다." },
   ],
   // once a head coach and five starters are signed (see readyForMatch)
   go: [
-    { sel: ".topbar .btn.primary", until: "series", title: "2부 · 경기하러 가기", body: "축하드립니다 단장님! 드디어 감독과 주전 다섯 명이 모두 갖춰졌습니다. 드디어 첫 번째 경기를 진행할 시간입니다. '다음 경기까지 ▶'를 누르면 다음 경기 날까지 시간이 흐르고 경기 화면으로 넘어갑니다." },
+    { sel: ".topbar .btn.primary", until: "series", title: "2부 · 경기하러 가기", body: "축하드립니다 단장님! 드디어 **감독과 주전 다섯 명**이 모두 갖춰졌습니다. 드디어 **첫 번째 경기**를 진행할 시간입니다. **'다음 경기까지 ▶'**를 누르면 다음 경기 날까지 시간이 흐르고 경기 화면으로 넘어갑니다." },
   ],
   series: [
-    { sel: tut("series-prep"), title: "2부 · 세트 준비", body: "진영 선택권이 있으면 블루(먼저 픽)와 레드(마지막 픽) 중에 고릅니다. 작전은 교전을 얼마나 거는지, 운영 방식은 감독의 경기 계획입니다. 밴픽 없이 결과만 보려면 '이 세트 결과만 보기'나 '시리즈 끝까지 결과만'을 누르세요." },
-    { sel: tut("series-draft"), until: "draft", title: "2부 · 밴픽 시작", body: "'밴픽 시작'을 눌러 밴픽 화면으로 가 보세요." },
+    { sel: tut("series-prep"), title: "2부 · 세트 준비", body: "**진영 선택권**이 있으면 **블루**(먼저 픽)와 **레드**(마지막 픽) 중에 고릅니다. **작전**은 교전을 얼마나 거는지, **운영 방식**은 감독의 경기 계획입니다. 밴픽 없이 결과만 보려면 **'이 세트 결과만 보기'**나 **'시리즈 끝까지 결과만'**을 누르세요." },
+    { sel: tut("series-draft"), until: "draft", title: "2부 · 밴픽 시작", body: "**'밴픽 시작'**을 눌러 밴픽 화면으로 가 보세요." },
   ],
   // the first time it is our turn to ban
   ban: [
-    { sel: tut("draft-head"), title: "밴픽 · 순서", body: "블루와 레드가 번갈아 고릅니다. 밴 3개씩 → 픽 3개씩 → 밴 2개씩 → 픽 2개씩 순서입니다. 여기에 지금 단계(빨간 '밴' · 금색 '픽')와 누구 차례인지, 몇 번째인지 나옵니다. 단계가 바뀌면 화면 가운데에 크게 알려 주고, 차례인 팀의 판에는 '밴 차례' · '픽 차례' 표시가 붙습니다." },
-    { sel: tut("draft-grid"), title: "밴픽 · 챔피언 목록", body: "왼쪽 위 S · A 표시는 이번 패치에서 강한 챔피언, '너프'는 약해진 챔피언입니다. 초록 테두리는 감독이 이번 차례에 추천하는 챔피언입니다. 흐린 챔피언은 이미 밴 · 픽됐거나, 이번 시리즈에서 이미 써서(F, 피어리스) 고를 수 없습니다." },
-    { sel: tut("draft-sug"), title: "밴픽 · 감독 추천", body: "감독이 이번 차례에 고를 만한 챔피언과 그 이유를 보여 줍니다. 누르면 그 챔피언이 후보로 올라갑니다(확정은 아래 버튼). 감독의 밴픽 능력이 높을수록 추천이 많고 정확합니다." },
-    { sel: tut("draft-filter"), title: "밴픽 · 찾기", body: "포지션 버튼과 검색으로 목록을 좁힐 수 있습니다. '추천대로'를 누르면 감독이 고를 챔피언이 후보로 올라갑니다." },
-    { sel: tut("draft-confirm"), title: "밴픽 · 확정", body: "챔피언을 누르면 먼저 후보로만 올라가고, 이 버튼을 눌러야 확정됩니다(Enter도 됨). 확정 전에는 다른 챔피언을 눌러 바꿀 수 있습니다. 버튼은 밴 차례에 빨간 '밴하기', 픽 차례에 금색 '선택하기'로 바뀝니다. 이제 밴할 챔피언을 골라 확정해 보세요." },
+    { sel: tut("draft-head"), title: "밴픽 · 순서", body: "블루와 레드가 번갈아 고릅니다. **밴 3개씩 → 픽 3개씩 → 밴 2개씩 → 픽 2개씩** 순서입니다. 여기에 지금 단계(빨간 '밴' · 금색 '픽')와 누구 차례인지, 몇 번째인지 나옵니다. 단계가 바뀌면 화면 가운데에 크게 알려 주고, 차례인 팀의 판에는 '밴 차례' · '픽 차례' 표시가 붙습니다." },
+    { sel: tut("draft-grid"), title: "밴픽 · 챔피언 목록", body: "왼쪽 위 **S · A** 표시는 이번 패치에서 강한 챔피언, **'너프'**는 약해진 챔피언입니다. **초록 테두리**는 감독이 이번 차례에 추천하는 챔피언입니다. **흐린 챔피언**은 이미 밴 · 픽됐거나, 이번 시리즈에서 이미 써서(F, 피어리스) 고를 수 없습니다." },
+    { sel: tut("draft-sug"), title: "밴픽 · 감독 추천", body: "감독이 이번 차례에 고를 만한 챔피언과 그 이유를 보여 줍니다. 누르면 그 챔피언이 **후보**로 올라갑니다(확정은 아래 버튼). 감독의 **밴픽 능력**이 높을수록 추천이 많고 정확합니다." },
+    { sel: tut("draft-filter"), title: "밴픽 · 찾기", body: "**포지션 버튼**과 **검색**으로 목록을 좁힐 수 있습니다. **'추천대로'**를 누르면 감독이 고를 챔피언이 후보로 올라갑니다." },
+    { sel: tut("draft-confirm"), title: "밴픽 · 확정", body: "챔피언을 누르면 먼저 **후보**로만 올라가고, 이 버튼을 눌러야 **확정**됩니다(Enter도 됨). 확정 전에는 다른 챔피언을 눌러 바꿀 수 있습니다. 버튼은 밴 차례에 빨간 '밴하기', 픽 차례에 금색 '선택하기'로 바뀝니다. 이제 밴할 챔피언을 골라 확정해 보세요." },
   ],
   // the first time it is our turn to pick
   pick: [
-    { sel: tut("draft-mine"), title: "픽 · 넣을 자리", body: "우리 팀 판입니다. 금색 테두리가 이번 픽이 들어갈 자리이고, 다른 빈 자리를 누르면 그 포지션으로 바꿉니다. 고른 챔피언 아래에는 그 선수의 숙련도가 나옵니다." },
-    { sel: tut("draft-grid"), title: "픽 · 선수의 선호 챔피언", body: "픽 차례에는 챔피언 아이콘 왼쪽 아래에 금색 숫자로 지금 자리 선수의 숙련도가 나옵니다. 선수가 많이 다뤄 본 선호 챔피언일수록 숫자가 높고, 숙련도가 높을수록 경기에서 잘 다룹니다. 숫자가 없는 챔피언은 그 선수가 프로 경기에서 써 본 적이 없는 챔피언입니다." },
-    { sel: tut("draft-sug"), title: "픽 · 추천 픽", body: "픽 차례의 감독 추천은 어느 포지션에 넣을지와 이유(선수 숙련도, 프로 메타 출현율, 티어)를 같이 보여 줍니다. 추천을 누르면 그 포지션의 후보로 올라가고, 금색 '선택하기'를 눌러야 들어갑니다. 목록의 초록 테두리도 같은 추천입니다." },
+    { sel: tut("draft-mine"), title: "픽 · 넣을 자리", body: "우리 팀 판입니다. **금색 테두리**가 이번 픽이 들어갈 자리이고, 다른 빈 자리를 누르면 그 포지션으로 바꿉니다. 고른 챔피언 아래에는 그 선수의 숙련도가 나옵니다." },
+    { sel: tut("draft-grid"), title: "픽 · 선수의 선호 챔피언", body: "픽 차례에는 챔피언 아이콘 왼쪽 아래에 **금색 숫자**로 지금 자리 선수의 **숙련도**가 나옵니다. 선수가 많이 다뤄 본 선호 챔피언일수록 숫자가 높고, 숙련도가 높을수록 경기에서 잘 다룹니다. 숫자가 없는 챔피언은 그 선수가 프로 경기에서 써 본 적이 없는 챔피언입니다." },
+    { sel: tut("draft-sug"), title: "픽 · 추천 픽", body: "픽 차례의 감독 추천은 **어느 포지션에 넣을지**와 **이유**(선수 숙련도, 프로 메타 출현율, 티어)를 같이 보여 줍니다. 추천을 누르면 그 포지션의 후보로 올라가고, 금색 '선택하기'를 눌러야 들어갑니다. 목록의 초록 테두리도 같은 추천입니다." },
   ],
   // the draft is over: runes, builds, then the game
   loadout: [
-    { sel: tut("draft-comp"), title: "룬 · 빌드 · 조합 비교", body: "밴픽이 끝났습니다. 두 팀 조합의 AD · AP 수와 초반 · 후반 · 이니시 · 보호 · 포킹 · 폭딜 성향을 막대로 비교합니다." },
-    { sel: ".loadout", title: "룬 · 빌드 · 고르기", body: "선수마다 핵심 룬과 아이템 빌드를 고릅니다. 이 챔피언이 LCK에서 많이 쓴 세 가지가 판수와 승률과 함께 나오고, +%p는 그 챔피언 평균보다 승률이 높은 정도입니다(표본이 적으면 줄여서 보여 줍니다). 그대로 두면 가장 많이 쓴 첫 번째로 나갑니다." },
-    { sel: tut("draft-go"), title: "룬 · 빌드 · 경기 시작", body: "예상 승률을 확인하고 '경기 시작'을 누르면 경기를 직접 관전하고, '결과만 보기'를 누르면 바로 결과로 넘어갑니다." },
+    { sel: tut("draft-comp"), title: "룬 · 빌드 · 조합 비교", body: "밴픽이 끝났습니다. 두 팀 **조합**의 **AD · AP 수**와 초반 · 후반 · 이니시 · 보호 · 포킹 · 폭딜 성향을 막대로 비교합니다." },
+    { sel: ".loadout", title: "룬 · 빌드 · 고르기", body: "선수마다 **핵심 룬**과 **아이템 빌드**를 고릅니다. 이 챔피언이 LCK에서 많이 쓴 세 가지가 판수와 승률과 함께 나오고, +%p는 그 챔피언 평균보다 승률이 높은 정도입니다(표본이 적으면 줄여서 보여 줍니다). 그대로 두면 가장 많이 쓴 첫 번째로 나갑니다." },
+    { sel: tut("draft-go"), title: "룬 · 빌드 · 경기 시작", body: "**예상 승률**을 확인하고 **'경기 시작'**을 누르면 경기를 직접 관전하고, **'결과만 보기'**를 누르면 바로 결과로 넘어갑니다." },
   ],
   // the first game watched (the game waits while this is on)
   match: [
-    { sel: tut("match-ctrl"), title: "관전 · 화면 조작", body: "카메라(중계 · 전체 · 라인별), 일시정지, 배속을 고릅니다. '중계'는 평소 전체 맵을 보여 주다가 6명 이상 붙는 한타 때만 확대합니다. 배속 숫자는 실제 경기 대비 빠르기입니다(8x = 8배). '한타 실시간'을 켜 두면 6명 이상 한타는 실제 속도로, 4~5명 교전은 최대 4배속으로 보여 줍니다. '끝까지'는 결과까지 바로 넘깁니다." },
-    { sel: tut("match-tactic"), title: "관전 · 작전", body: "경기 중에도 공격적 · 표준 · 안정적 작전을 바꿀 수 있습니다. 운영 방식은 경기 전에 정한 그대로 갑니다." },
-    { sel: tut("match-team"), title: "관전 · 선수 현황", body: "선수를 누르면 카메라가 그 선수를 따라갑니다. 초상화의 작은 원은 고른 룬, 오른쪽은 아이템입니다(작은 칸은 다음 아이템 재료). 튜토리얼을 닫으면 경기가 이어집니다." },
+    { sel: tut("match-ctrl"), title: "관전 · 화면 조작", body: "**카메라**(중계 · 전체 · 라인별), **일시정지**, **배속**을 고릅니다. '중계'는 평소 전체 맵을 보여 주다가 6명 이상 붙는 한타 때만 확대합니다. 배속 숫자는 실제 경기 대비 빠르기입니다(8x = 8배). **'한타 실시간'**을 켜 두면 6명 이상 한타는 실제 속도로, 4~5명 교전은 최대 4배속으로 보여 줍니다. '끝까지'는 결과까지 바로 넘깁니다." },
+    { sel: tut("match-tactic"), title: "관전 · 작전", body: "경기 중에도 **공격적 · 표준 · 안정적 작전**을 바꿀 수 있습니다. 운영 방식은 경기 전에 정한 그대로 갑니다." },
+    { sel: tut("match-team"), title: "관전 · 선수 현황", body: "선수를 누르면 **카메라가 그 선수를 따라갑니다**. 초상화의 작은 원은 고른 **룬**, 오른쪽은 **아이템**입니다(작은 칸은 다음 아이템 재료). 튜토리얼을 닫으면 경기가 이어집니다." },
   ],
   // first run: the set-break talk after the first game of a series that goes on (tutBreakDue)
   setbreak: [
     {
       firstOnly: true, sel: tut("series-break"), title: "3부 · 이벤트",
-      body: (s) => "경기 중에도 이벤트가 생깁니다. 세트가 끝나고 시리즈가 이어질 때, 대기실에서 선수들에게 어떤 말을 할지 고를 수 있습니다. 고른 말에 따라 남은 세트 동안 선수들의 사기나 팀 합이 오르거나 내립니다.\n선택지 아래에는 일어날 수 있는 일이 적혀 있습니다. '~할 거예요'는 거의 확실한 일, '~할 수도 있어요'는 그럴 수도 있는 일입니다."
+      body: (s) => "**경기 중에도 이벤트**가 생깁니다. 세트가 끝나고 시리즈가 이어질 때, **대기실**에서 선수들에게 어떤 말을 할지 고를 수 있습니다. 고른 말에 따라 남은 세트 동안 선수들의 **사기**나 **팀 합**이 오르거나 내립니다.\n선택지 아래에는 일어날 수 있는 일이 적혀 있습니다. **'~할 거예요'**는 거의 확실한 일, **'~할 수도 있어요'**는 그럴 수도 있는 일입니다."
         + (lastGameWon(s) ? "\n보통은 세트를 내주고 끌려갈 때만 대기실에 들르지만, 이번에는 처음이라 보여 드립니다." : ""),
     },
-    { firstOnly: true, sel: tut("series-break"), until: "setbreak", done: (s) => !!s.ev?.setBreak, title: "3부 · 이벤트", body: "선수들에게 할 말을 하나 골라 보세요." },
+    { firstOnly: true, sel: tut("series-break"), until: "setbreak", done: (s) => !!s.ev?.setBreak, title: "3부 · 이벤트", body: "선수들에게 **할 말을 하나** 골라 보세요." },
   ],
   // back home after the first series: move the clock on (a first run brings a good event the next day)
   after: [
@@ -174,26 +174,26 @@ const PARTS: Record<string, Step[]> = {
       sel: ".topbar .btn", text: "다음 날", hands: true, until: "event", done: (s) => s.events.length > 0,
       arm: (s) => { evState(s).tutPos = true; autosave(); },
       title: "3부 · 이벤트 [2]",
-      body: "경기를 마쳤으면 다시 시간을 보내며 다음 일정을 진행합니다. 시간이 흐르다 보면 구단에 여러 가지 일이 생기는데, 이것을 이벤트라고 합니다.",
-      firstBody: "첫 경기를 치르셨습니다, 수고하셨습니다! 이제 다음 일정을 진행해 볼까요? '다음 날'을 눌러 하루를 보내 보세요.",
+      body: "경기를 마쳤으면 다시 시간을 보내며 **다음 일정**을 진행합니다. 시간이 흐르다 보면 구단에 여러 가지 일이 생기는데, 이것을 **이벤트**라고 합니다.",
+      firstBody: "첫 경기를 치르셨습니다, 수고하셨습니다! 이제 **다음 일정**을 진행해 볼까요? **'다음 날'**을 눌러 하루를 보내 보세요.",
     },
   ],
   // the first event window after that (over the window)
   event: [
     {
       over: true, full: true, sel: ".evd", title: "3부 · 이벤트 [2]",
-      body: "구단에 이벤트가 생겼습니다. 시간을 보내다 보면 선수, 팬, 스폰서, 다른 구단과 얽힌 일이 생기고, 그때마다 어떻게 대응할지 골라야 합니다. 선택지 아래에는 일어날 수 있는 일이 적혀 있고, 돈이 드는 선택지는 금액이 함께 나옵니다.",
-      first: "이번에는 좋은 소식이네요!",
+      body: "구단에 **이벤트**가 생겼습니다. 시간을 보내다 보면 선수, 팬, 스폰서, 다른 구단과 얽힌 일이 생기고, 그때마다 **어떻게 대응할지** 골라야 합니다. 선택지 아래에는 **일어날 수 있는 일**이 적혀 있고, 돈이 드는 선택지는 **금액**이 함께 나옵니다.",
+      first: "이번에는 **좋은 소식**이네요!",
     },
     {
       over: true, full: true, sel: ".evd-opts", until: "chosen", done: (s) => !!s.ev?.result?.title || !s.events.length,
       title: "3부 · 이벤트 [2]",
-      body: "하지만 늘 좋은 일만 생기지는 않습니다. 선수의 부상이나 불만, 구설수 같은 부정적인 이벤트도 생기고, 무엇을 고르느냐에 따라 결과가 달라집니다. 이제 선택지를 하나 골라 보세요.",
+      body: "하지만 늘 좋은 일만 생기지는 않습니다. 선수의 부상이나 불만, 구설수 같은 **부정적인 이벤트**도 생기고, **무엇을 고르느냐에 따라 결과가 달라집니다**. 이제 선택지를 하나 골라 보세요.",
     },
     {
       over: true, full: true, sel: ".evd-res", skip: (s) => !s.ev?.result?.title, until: "result", done: (s) => !s.ev?.result?.title,
       title: "3부 · 이벤트 결과",
-      body: "고른 선택지의 결과입니다. 선수 사기, 팬 수, 자금 같은 것이 바뀌고, 어떤 선택은 선수의 이벤트 기록에 남아 나중에 다른 이벤트로 이어지기도 합니다. 확인했으면 '확인'을 눌러 주세요.",
+      body: "고른 선택지의 결과입니다. **선수 사기, 팬 수, 자금** 같은 것이 바뀌고, 어떤 선택은 선수의 **이벤트 기록**에 남아 나중에 다른 이벤트로 이어지기도 합니다. 확인했으면 '확인'을 눌러 주세요.",
     },
   ],
   // right after the event part: money besides the monthly income, hands-on goods
@@ -201,33 +201,33 @@ const PARTS: Record<string, Step[]> = {
     {
       firstOnly: true, sel: ".side .nav", text: "재정", until: "finance", done: () => store.screen.name === "finance",
       title: "4부 · 재정과 굿즈",
-      body: "구단의 돈은 매달 들어오는 스폰서 · 분배금만으로 버는 것이 아닙니다. 경기에서 이기면 승리 수당이, 대회 성적에 따라 상금이 들어오고, 굿즈를 만들어 팔아 추가 수입을 얻을 수도 있습니다. 직접 한번 해 볼까요? 왼쪽 메뉴의 '재정 · 굿즈'를 눌러 보세요.",
+      body: "구단의 돈은 매달 들어오는 스폰서 · 분배금만으로 버는 것이 아닙니다. 경기에서 이기면 **승리 수당**이, 대회 성적에 따라 **상금**이 들어오고, **굿즈**를 만들어 팔아 **추가 수입**을 얻을 수도 있습니다. 직접 한번 해 볼까요? 왼쪽 메뉴의 **'재정 · 굿즈'**를 눌러 보세요.",
     },
-    { screen: "finance", sel: ".main .grid3", title: "4부 · 재정과 굿즈", body: "재정 · 굿즈 화면입니다. 위쪽에서 지금 자금과 매달 1일에 들어오는 고정 수입(스폰서, 리그 분배금, 방송 · 콘텐츠), 매달 나가는 지출을 볼 수 있습니다. 승리 수당, 상금, 굿즈 판매 수익은 고정 수입과 따로 들어옵니다." },
-    { screen: "finance", sel: tut("goods"), title: "4부 · 굿즈 종류", body: "굿즈를 만들면 6주 동안 팔립니다. 먼저 위쪽 버튼으로 종류를 고릅니다. 포토카드 팩은 싸고 많이 팔리지만 남는 돈이 적고, 유니폼과 피규어는 대표 선수를 골라야 하며 그 선수의 인기에 따라 판매가 크게 달라집니다." },
-    { screen: "finance", sel: tut("goods"), title: "4부 · 굿즈 수량", body: "수량을 고르면 아래에 제작비와 6주 동안 팔릴 것으로 보이는 개수, 예상 매출이 나옵니다. 예상치는 팬 수, 명성, 대표 선수 인기, 최근 성적으로 계산합니다. 다 팔지 못하고 남은 재고는 그대로 손해이니, 예상 판매량보다 조금 적게 만드는 것이 안전합니다." },
+    { screen: "finance", sel: ".main .grid3", title: "4부 · 재정과 굿즈", body: "재정 · 굿즈 화면입니다. 위쪽에서 지금 자금과 **매달 1일**에 들어오는 **고정 수입**(스폰서, 리그 분배금, 방송 · 콘텐츠), 매달 나가는 **지출**을 볼 수 있습니다. **승리 수당, 상금, 굿즈 판매 수익**은 고정 수입과 따로 들어옵니다." },
+    { screen: "finance", sel: tut("goods"), title: "4부 · 굿즈 종류", body: "굿즈를 만들면 **6주 동안** 팔립니다. 먼저 위쪽 버튼으로 **종류**를 고릅니다. **포토카드 팩**은 싸고 많이 팔리지만 남는 돈이 적고, **유니폼**과 **피규어**는 **대표 선수**를 골라야 하며 그 선수의 인기에 따라 판매가 크게 달라집니다." },
+    { screen: "finance", sel: tut("goods"), title: "4부 · 굿즈 수량", body: "**수량**을 고르면 아래에 **제작비**와 6주 동안 팔릴 것으로 보이는 개수, **예상 매출**이 나옵니다. 예상치는 팬 수, 명성, 대표 선수 인기, 최근 성적으로 계산합니다. 다 팔지 못하고 **남은 재고는 그대로 손해**이니, 예상 판매량보다 조금 적게 만드는 것이 안전합니다." },
     {
       firstOnly: true, screen: "finance", sel: tut("goods"), full: true, until: "goods", canNext: true,
       title: "4부 · 굿즈 제작",
-      body: "이제 직접 만들어 볼까요? 종류와 수량을 정하고 '제작'을 눌러 보세요. 제작비는 누르는 순간 자금에서 빠집니다. 자금이 모자라면 '다음'을 눌러 넘어가도 됩니다.",
+      body: "이제 직접 만들어 볼까요? 종류와 수량을 정하고 **'제작'**을 눌러 보세요. 제작비는 누르는 순간 **자금에서 빠집니다**. 자금이 모자라면 '다음'을 눌러 넘어가도 됩니다.",
     },
-    { screen: "finance", sel: tut("goods"), title: "4부 · 판매 현황", body: "만든 굿즈는 1주마다 팔리고, 판매 수익은 그때그때 자금에 들어옵니다. 아래 판매 현황에서 팔린 개수와 매출을 확인할 수 있습니다. 성적이 좋고 팬이 많을수록 잘 팔리고, 동시에 세 종류까지 팔 수 있습니다." },
+    { screen: "finance", sel: tut("goods"), title: "4부 · 판매 현황", body: "만든 굿즈는 **1주마다** 팔리고, **판매 수익**은 그때그때 자금에 들어옵니다. 아래 판매 현황에서 팔린 개수와 매출을 확인할 수 있습니다. 성적이 좋고 팬이 많을수록 잘 팔리고, **동시에 세 종류**까지 팔 수 있습니다." },
     {
       sel: ".topbar .auto-ctl", title: "4부 · 자동 진행",
-      body: "날마다 직접 넘기기 번거로우면 상단 바의 '자동 진행'을 쓰세요. 하루씩 저절로 넘기다가 이벤트와 경기, 새 제안에서 기다리고, 처리하면 이어서 갑니다. 옆의 ▾에서 다음 경기, 이적시장 개장 · 마감 같은 목표를 골라 거기까지만 갈 수도 있습니다.",
+      body: "날마다 직접 넘기기 번거로우면 상단 바의 **'자동 진행'**을 쓰세요. 하루씩 저절로 넘기다가 **이벤트와 경기, 새 제안**에서 기다리고, 처리하면 이어서 갑니다. 옆의 ▾에서 다음 경기, 이적시장 개장 · 마감 같은 **목표**를 골라 거기까지만 갈 수도 있습니다.",
     },
     {
       sel: ".topbar .stat", text: "날짜", title: "4부 · 도움말 말풍선",
-      body: "상단 바의 날짜, 자금, 월 급여 같은 항목이나 화면 곳곳의 표시에 마우스를 올리면(휴대폰은 누르면) 자세한 설명이 말풍선으로 나옵니다. 날짜에는 가장 가까운 일정까지 남은 날과 그다음 일정이 나옵니다.",
+      body: "상단 바의 날짜, 자금, 월 급여 같은 항목이나 화면 곳곳의 표시에 **마우스를 올리면**(휴대폰은 누르면) 자세한 설명이 **말풍선**으로 나옵니다. 날짜에는 가장 가까운 일정까지 남은 날과 그다음 일정이 나옵니다.",
     },
-    { title: "기초 완료", body: "이제 구단 운영의 기초는 모두 익히셨습니다! 선수단과 감독, 경기, 이벤트, 재정까지 잘 챙겨서 LCK 정상에 올라 보세요. 튜토리얼은 저장 · 설정 화면에서 언제든 다시 볼 수 있습니다.\n행운을 빕니다, 단장님." },
+    { title: "기초 완료", body: "이제 **구단 운영의 기초**는 모두 익히셨습니다! 선수단과 감독, 경기, 이벤트, 재정까지 잘 챙겨서 **LCK 정상**에 올라 보세요. 튜토리얼은 **저장 · 설정** 화면에서 언제든 다시 볼 수 있습니다.\n행운을 빕니다, 단장님." },
   ],
   // the window open again after the LCK Cup
   trade: [
-    { firstOnly: true, sel: ".topbar .stat", text: "이적시장", title: "5부 · 이적시장 재개장", body: "LCK 컵이 끝나고 이적시장이 다시 열렸습니다! 열려 있는 동안 FA 영입은 물론 다른 구단 선수의 이적과 트레이드도 할 수 있습니다. 부족한 포지션을 보강할 기회입니다." },
-    { screen: "trade", sel: ".main .tabs", title: "5부 · 트레이드", body: "트레이드는 다른 LCK 구단과 선수를 맞바꾸는 것입니다. 먼저 위에서 상대 구단을 고릅니다." },
-    { screen: "trade", sel: ".main .grid2", title: "5부 · 트레이드", body: "왼쪽에서 우리가 내줄 선수를, 오른쪽에서 데려올 선수를 고릅니다. 여러 명을 함께 고를 수 있고, 선수들의 계약은 그대로 넘어갑니다." },
-    { screen: "trade", sel: tut("trade-send"), title: "5부 · 트레이드 제안", body: "가치가 모자라면 현금을 얹을 수 있습니다. '상대 반응 예상'을 보고 '제안하기'를 누르면, 상대 구단이 받는 선수의 가치(나이, 능력치, 남은 계약, 주전 여부)와 포지션 공백을 따져 수락하거나 거절합니다. 다른 구단이 먼저 트레이드를 제안해 오기도 하니, 이적시장의 '받은 제안'도 확인해 보세요." },
+    { firstOnly: true, sel: ".topbar .stat", text: "이적시장", title: "5부 · 이적시장 재개장", body: "LCK 컵이 끝나고 **이적시장이 다시 열렸습니다**! 열려 있는 동안 **FA 영입**은 물론 다른 구단 선수의 **이적**과 **트레이드**도 할 수 있습니다. 부족한 포지션을 보강할 기회입니다." },
+    { screen: "trade", sel: ".main .tabs", title: "5부 · 트레이드", body: "**트레이드**는 다른 LCK 구단과 **선수를 맞바꾸는 것**입니다. 먼저 위에서 **상대 구단**을 고릅니다." },
+    { screen: "trade", sel: ".main .grid2", title: "5부 · 트레이드", body: "왼쪽에서 우리가 **내줄 선수**를, 오른쪽에서 **데려올 선수**를 고릅니다. 여러 명을 함께 고를 수 있고, 선수들의 **계약은 그대로** 넘어갑니다." },
+    { screen: "trade", sel: tut("trade-send"), title: "5부 · 트레이드 제안", body: "가치가 모자라면 **현금**을 얹을 수 있습니다. **'상대 반응 예상'**을 보고 **'제안하기'**를 누르면, 상대 구단이 받는 선수의 가치(나이, 능력치, 남은 계약, 주전 여부)와 포지션 공백을 따져 수락하거나 거절합니다. 다른 구단이 먼저 트레이드를 제안해 오기도 하니, 이적시장의 **'받은 제안'**도 확인해 보세요." },
   ],
 };
 
@@ -464,33 +464,57 @@ function Hole({ r, act }: { r: DOMRect; act?: boolean }) {
 
 const BOX_W = 340, BOX_H = 250;
 
+/**
+ * The part of the page the player sees, in the app's CSS pixels. On a phone the page is laid out wider than the
+ * screen (the game has no phone layout) and the screen shows a part of it (the visual viewport): the box must sit
+ * there, not at the far side of the page.
+ */
+function seenArea(): { x0: number; y0: number; x1: number; y1: number } {
+  const vv = window.visualViewport;
+  const z = uiZoom();
+  if (!vv || vv.width >= innerWidth - 1) return { x0: 0, y0: 0, x1: appW(), y1: appH() };
+  return { x0: vv.offsetLeft / z, y0: vv.offsetTop / z, x1: (vv.offsetLeft + vv.width) / z, y1: (vv.offsetTop + vv.height) / z };
+}
+
+/** The step box's width: 340, narrower on a narrow screen. */
+const boxWidth = () => { const a = seenArea(); return Math.max(160, Math.min(BOX_W, a.x1 - a.x0 - 20)); };
+
 /** Where the step box goes: beside the lit part, else below or above it, else in the widest free strip at the edge. */
 function boxPlace(rect: DOMRect | null): Record<string, string | number> {
-  if (!rect) return { left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
-  const vw = appW(), vh = appH(), W = BOX_W;
-  const y0 = Math.max(10, Math.min(vh - BOX_H - 10, rect.top));
-  if (rect.right + 16 + W <= vw - 10) return { left: rect.right + 16, top: y0 };
-  if (rect.left - 16 - W >= 10) return { left: rect.left - W - 16, top: y0 };
-  const x = Math.min(vw - W - 10, Math.max(10, rect.left + 12));
-  if (rect.bottom + 14 + BOX_H <= vh) return { left: x, top: rect.bottom + 14 };
-  if (rect.top - 14 - BOX_H >= 0) return { left: x, top: rect.top - BOX_H - 14 };
+  const { x0, y0: t0, x1, y1 } = seenArea();
+  const W = boxWidth();
+  if (!rect) return { left: (x0 + x1) / 2, top: (t0 + y1) / 2, transform: "translate(-50%, -50%)" };
+  const y0 = Math.max(t0 + 10, Math.min(y1 - BOX_H - 10, rect.top));
+  if (rect.right + 16 + W <= x1 - 10) return { left: rect.right + 16, top: y0 };
+  if (rect.left - 16 - W >= x0 + 10) return { left: rect.left - W - 16, top: y0 };
+  const x = Math.min(x1 - W - 10, Math.max(x0 + 10, rect.left + 12));
+  if (rect.bottom + 14 + BOX_H <= y1) return { left: x, top: rect.bottom + 14 };
+  if (rect.top - 14 - BOX_H >= t0) return { left: x, top: rect.top - BOX_H - 14 };
   // a big window: the corner or side strip that covers the least of it (the box takes clicks, so it must not sit
   // on the buttons of a window the player is to use)
-  const side = Math.max(rect.left, vw - rect.right) - 20;
+  const side = Math.max(rect.left - x0, x1 - rect.right) - 20;
   const w = Math.max(200, Math.min(W, side));
   const cands: Record<string, number>[] = [
-    { left: Math.max(10, rect.left - w - 10), top: 10, width: w },
-    { left: Math.max(10, rect.left - w - 10), top: vh - BOX_H - 10, width: w },
-    { left: Math.min(vw - w - 10, rect.right + 10), top: 10, width: w },
-    { left: Math.min(vw - w - 10, rect.right + 10), top: vh - BOX_H - 10, width: w },
-    { left: 10, top: 10, width: W },
-    { left: vw - W - 10, top: 10, width: W },
-    { left: 10, top: vh - BOX_H - 10, width: W },
-    { left: vw - W - 10, top: vh - BOX_H - 10, width: W },
+    { left: Math.max(x0 + 10, rect.left - w - 10), top: t0 + 10, width: w },
+    { left: Math.max(x0 + 10, rect.left - w - 10), top: y1 - BOX_H - 10, width: w },
+    { left: Math.min(x1 - w - 10, rect.right + 10), top: t0 + 10, width: w },
+    { left: Math.min(x1 - w - 10, rect.right + 10), top: y1 - BOX_H - 10, width: w },
+    { left: x0 + 10, top: t0 + 10, width: W },
+    { left: x1 - W - 10, top: t0 + 10, width: W },
+    { left: x0 + 10, top: y1 - BOX_H - 10, width: W },
+    { left: x1 - W - 10, top: y1 - BOX_H - 10, width: W },
   ];
   const cover = (b: Record<string, number>) =>
     Math.max(0, Math.min(b.left + b.width, rect.right) - Math.max(b.left, rect.left)) * Math.max(0, Math.min(b.top + BOX_H, rect.bottom) - Math.max(b.top, rect.top));
   return cands.reduce((a, b) => (cover(b) < cover(a) ? b : a));
+}
+
+/**
+ * A step's text with its key words in gold: the steps mark them **like this** (every run of the tour, the one-time
+ * tips too). Line breaks stay as written (white-space: pre-line in tutorial.css).
+ */
+function rich(text: string) {
+  return text.split(/\*\*(.+?)\*\*/g).map((part, k) => (k % 2 ? <b class="tut-kw">{part}</b> : part));
 }
 
 export function TutorialLayer() {
@@ -562,14 +586,24 @@ export function TutorialLayer() {
   }, [key, st.screen.name, st.modal?.kind, busy]);
   useEffect(() => {
     if (!spot) return;
-    const onResize = () => { const el = locate(spot); setRect(el ? clip(el.getBoundingClientRect(), step?.full) : null); };
+    // the tick re-renders even when nothing is lit (rect stays null), so the box follows the visible part
+    const onResize = () => { const el = locate(spot); setRect(el ? clip(el.getBoundingClientRect(), step?.full) : null); setTick((x) => x + 1); };
+    // on a phone, moving around the page moves the visible part (visualViewport): the box follows it
+    const vv = window.visualViewport;
     addEventListener("resize", onResize);
     addEventListener("scroll", onResize, true);
-    return () => { removeEventListener("resize", onResize); removeEventListener("scroll", onResize, true); };
+    vv?.addEventListener("resize", onResize);
+    vv?.addEventListener("scroll", onResize);
+    return () => {
+      removeEventListener("resize", onResize);
+      removeEventListener("scroll", onResize, true);
+      vv?.removeEventListener("resize", onResize);
+      vv?.removeEventListener("scroll", onResize);
+    };
   }, [key]);
   if (!spot || !s) return null;
   if (busy) return null;
-  const box = { width: BOX_W, ...boxPlace(rect) };
+  const box = { width: boxWidth(), ...boxPlace(rect) };
   if (!t || !step) {
     // one-time tip: same look, a single button
     const tip = st.tip!;
@@ -580,7 +614,7 @@ export function TutorialLayer() {
         <div class="tut-box frame" style={box}>
           <div class="tut-step">도움말 · 처음 한 번만 보입니다</div>
           <h3>{tip.title}</h3>
-          <p>{tip.body}</p>
+          <p>{rich(tip.body)}</p>
           <div class="row" style={{ justifyContent: "flex-end" }}>
             <button class="btn small primary" onClick={closeTip}>확인</button>
           </div>
@@ -607,7 +641,7 @@ export function TutorialLayer() {
       <div class="tut-box frame" style={box}>
         {n > 1 && <div class="tut-step">{at} / {n}</div>}
         <h3>{step.title}</h3>
-        <p>{text}</p>
+        <p>{rich(text)}</p>
         {n > 1 && <div class="tut-bar"><i style={{ width: `${(at / n) * 100}%` }} /></div>}
         <div class="row" style={{ gap: 6 }}>
           <button class="btn small" data-tip="남은 튜토리얼을 모두 끕니다. 저장 · 설정에서 다시 볼 수 있습니다." onClick={() => endPart(true)}>건너뛰기</button>
