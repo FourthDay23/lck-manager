@@ -36,6 +36,7 @@ import { autosave } from "../App";
 import { headCoach, seriesWinProb } from "../../core/quick";
 import * as Matchup from "../../match/matchup";
 import { META_LABEL, metaTier } from "../../core/meta";
+import { searchRank } from "../../core/hangul";
 import { tutSpot } from "../Tutorial";
 import { appH, localRect, onScale, toLocal } from "../scale";
 import { chooseSetBreak, setBreakDue, setBreakOptions } from "../../core/events";
@@ -409,9 +410,22 @@ export function DraftView({ d, userSide, onDone, auto, hotseat }: { d: DraftStat
   };
   let list = data.champions;
   if (roleF) list = list.filter((c) => (c.roles[roleF] ?? 0) >= 0.1);
-  if (q) list = list.filter((c) => c.name.includes(q) || c.nameEn.toLowerCase().includes(q.toLowerCase()));
+  // the search takes the Korean name (initial consonants too: ㄹㅅ = 리 신) or the English one; a champion already
+  // banned, picked or locked by fearless is left out of the list, and only a search shows it (grey, not selectable)
+  const query = q.trim();
+  /** with a search, the closest names first: the whole name, then its start, then inside it (Korean or English) */
+  const hit = new Map<string, number>();
+  if (query) {
+    for (const c of list) {
+      const ko = searchRank(c.name, query), en = searchRank(c.nameEn, query);
+      const r = Math.min(ko < 0 ? 9 : ko, en < 0 ? 9 : en);
+      if (r < 9) hit.set(c.id, r);
+    }
+    list = list.filter((c) => hit.has(c.id));
+  } else list = list.filter((c) => !blocked.has(c.id));
   const tierRank = (id: string) => { const t = metaTier(s, id); return t === "S" ? 0 : t === "A" ? 1 : t === "N" ? 3 : 2; };
-  const shown = [...list].sort((a, b) => tierRank(a.id) - tierRank(b.id) || b.pro.presence - a.pro.presence || a.name.localeCompare(b.name, "ko"));
+  const out = (id: string) => (blocked.has(id) ? 1 : 0);
+  const shown = [...list].sort((a, b) => (hit.get(a.id) ?? 0) - (hit.get(b.id) ?? 0) || out(a.id) - out(b.id) || tierRank(a.id) - tierRank(b.id) || b.pro.presence - a.pro.presence || a.name.localeCompare(b.name, "ko"));
   /** Hover a champion (nothing is locked in yet). `forRole`: a coach suggestion names the slot it is for (an open
    *  one), which wins over the selected slot; a pick moves the slot to a role the champion plays. */
   const choose = (c: ChampionData, forRole?: Role | null) => {
@@ -572,7 +586,7 @@ export function DraftView({ d, userSide, onDone, auto, hotseat }: { d: DraftStat
             <div class="row" data-tut="draft-filter" style={{ margin: "6px 0" }}>
               <button class={`btn small ${roleF === "" ? "on" : ""}`} onClick={() => setRoleF("")}>전체</button>
               {ROLES.map((r) => <button class={`btn small ${roleF === r ? "on" : ""}`} onClick={() => setRoleF(r)}>{ROLE_KO[r]}</button>)}
-              <input type="text" placeholder="챔피언 검색" value={q} onInput={(e) => setQ((e.target as HTMLInputElement).value)} style={{ width: 120 }} />
+              <input type="text" placeholder="챔피언·초성 검색" title="이름이나 초성(ㄹㅅ = 리 신)으로 찾습니다. 밴·픽·피어리스로 쓸 수 없는 챔피언은 검색할 때만 회색으로 보입니다." value={q} onInput={(e) => setQ((e.target as HTMLInputElement).value)} style={{ width: 120 }} />
               {myTurn && <button class="btn small" onClick={recommend}>추천대로</button>}
             </div>
             <div class={`cgrid ${myTurn ? `pickable mode-${st![1]}` : ""}`} data-tut="draft-grid" ref={gridRef}>
