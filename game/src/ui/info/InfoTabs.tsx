@@ -21,10 +21,26 @@ function tabFromHash(): TabId | null {
   return TABS.some((t) => t.id === h) ? (h as TabId) : null;
 }
 
+/** Local midnight of "today": the device date, or ?today=YYYY-MM-DD in the dev server (to check both cases). */
+function today(): Date {
+  const q = import.meta.env.DEV && typeof location !== "undefined" ? new URLSearchParams(location.search).get("today") : null;
+  const d = q && /^\d{4}-\d{2}-\d{2}$/.test(q) ? new Date(`${q}T00:00`) : new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/** A patch is "new" for 7 days after its date (a date ahead of the device clock counts as new too). */
+const NEW_PATCH_DAYS = 7;
+function isNewPatch(date: string, now: Date): boolean {
+  const [y, m, d] = date.split("-").map(Number);
+  const days = Math.round((now.getTime() - new Date(y, m - 1, d).getTime()) / 86_400_000);
+  return days <= NEW_PATCH_DAYS;
+}
+
 const urlFor = (id: TabId | null) => location.pathname + location.search + (id ? `#${id}` : "");
 
 /** The row of tabs; place it in the start screen footer. */
 export function InfoTabs() {
+  const fresh = PATCH_NOTES.length > 0 && isNewPatch(PATCH_NOTES[0].date, today());
   const [open, setOpen] = useState<TabId | null>(tabFromHash);
   // Opening from the footer adds a history entry so the phone's back button closes the document;
   // a page that was opened at #privacy has no entry of ours to go back to, so closing just drops the hash.
@@ -57,7 +73,10 @@ export function InfoTabs() {
     <>
       <nav class="info-tabs" aria-label="안내">
         {TABS.map((t) => (
-          <button type="button" class={`info-tab ${t.id === "privacy" ? "strong" : ""}`} onClick={() => show(t.id)}>{t.label}</button>
+          <button type="button" class={`info-tab ${t.id === "privacy" ? "strong" : ""}`} onClick={() => show(t.id)}>
+            {t.label}
+            {t.id === "patchnotes" && fresh && <span class="info-new-dot" title="최근 1주일 안에 패치가 있습니다" aria-label="새 패치">!</span>}
+          </button>
         ))}
         <span class="info-ver">v{CURRENT_VERSION}</span>
       </nav>
@@ -124,6 +143,7 @@ function InfoModal({ tab, onTab, onClose }: { tab: TabId; onTab: (id: TabId) => 
 }
 
 function PatchNotes() {
+  const now = today();
   return (
     <div class="patch-list">
       <div class="patch-legend">
@@ -136,7 +156,7 @@ function PatchNotes() {
           <div class="patch-head">
             <b class="patch-ver">v{n.version}</b>
             <span class="patch-name">{n.title}</span>
-            {i === 0 && <span class="tag gold">최신</span>}
+            {i === 0 && isNewPatch(n.date, now) && <span class="tag patch-new">NEW</span>}
             <span class="patch-date">{n.date.replaceAll("-", ".")}</span>
           </div>
           <ul class="patch-items">
