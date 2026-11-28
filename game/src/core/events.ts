@@ -1678,6 +1678,15 @@ function preMatch(s: GameState) {
 }
 
 /** Once a day, after the day has moved on (advanceDay). */
+/**
+ * Has the user's team finished a series in this career? stats.seriesW/L count every finished user series of every
+ * competition and are never reset, so this turns true the day after the first official match (that match day's
+ * morning events are skipped too) and stays true across seasons.
+ */
+export function firstMatchPlayed(s: GameState): boolean {
+  return (s.stats?.seriesW ?? 0) + (s.stats?.seriesL ?? 0) > 0;
+}
+
 export function eventsDay(s: GameState, data: GameData, rng: Rng) {
   if (s.over) return;
   const ev = evState(s);
@@ -1686,6 +1695,9 @@ export function eventsDay(s: GameState, data: GameData, rng: Rng) {
   checkPromises(s, rng);
   preMatch(s);
   if (s.events.length) return;
+  // no choice events until the career's first official match is played (user request, 2026-11-28): the days
+  // before it are spent signing a roster and skipping ahead. Inbox notes, alerts and the tutorial are not events.
+  if (!firstMatchPlayed(s)) return;
   if (ev.goodsBoost && s.day > ev.goodsBoost.until) ev.goodsBoost = undefined;
   // 1) aftermaths that are due
   ev.queue = ev.queue.filter((x) => s.day <= x.until);

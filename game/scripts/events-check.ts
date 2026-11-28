@@ -28,12 +28,19 @@ const fired: { day: number; def: string; cls: string; pol: string }[] = [];
 const counts: Record<string, number> = {};
 let setBreaks = 0;
 const endDay = Math.round(365 * 2);
+// no choice events from a new game until its first official match is played (that match day's morning included)
+// (read straight from the career stats, not through events.ts, so the check does not trust the code it checks)
+const played = () => s.stats.seriesW + s.stats.seriesL > 0;
+let beforeFirst = 0;
+let firstMatchDay = -1;
 for (let guard = 0; s.day < endDay && guard < 20000; guard++) {
   const dup0 = dupLineup();
   autoAdvance(s, data, "match");
   if (!dup0 && dupLineup()) { dupDays++; if (dupDays <= 3) console.log("lineup duplicate appeared while advancing to", s.day, JSON.stringify(s.teams[s.user].lineup)); }
+  if (firstMatchDay < 0 && played()) firstMatchDay = s.day;
   while (s.events.length) {
     const ev = s.events[0];
+    if (!played() && ++beforeFirst <= 3) fail(`${ev.def ?? ev.kind} on day ${s.day}, before the first match was played`);
     const d = ev.def ? cls.get(ev.def) : undefined;
     if (d) {
       fired.push({ day: s.day, def: d.id, cls: d.cls, pol: d.pol });
@@ -110,7 +117,8 @@ console.log(`negative share: random ${(negShare * 100).toFixed(0)}%, all events 
 console.log("by event", Object.entries(counts).sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })).map(([k, v]) => `${k}:${v}`).join(" "));
 const never = EVENT_DEFS.filter((d) => !counts[d.id]).map((d) => d.id);
 console.log("never fired", never.join(" ") || "-");
-console.log("set breaks checked", setBreaks, "| queue left", s.ev?.queue.length, "| promises left", s.ev?.promises.length);
+console.log(`before the first match: ${beforeFirst} events (events open from day ${firstMatchDay})`);
+console.log("set breaks checked", setBreaks,"| queue left", s.ev?.queue.length, "| promises left", s.ev?.promises.length);
 console.log("memo sample", Object.entries(s.ev?.memo ?? {}).slice(0, 3).map(([k, v]) => `${s.players[k]?.name ?? k}: ${v.slice(-3).map((m) => m.text).join(" / ")}`).join(" | "));
 if (rnd.length && (negShare < 0.45 || negShare > 0.75)) fail(`random negative share ${negShare.toFixed(2)} is far from 0.6`);
 
