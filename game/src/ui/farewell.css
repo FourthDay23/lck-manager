@@ -1,0 +1,146 @@
+/* Thank-you card for a player leaving the club (ui/Farewell.tsx).
+   --acc: the club colour made readable on dark (clubAccent), --g1..--g3: it at 10 / 6 / 3% for the light, --c2: the club's
+   second colour. A dark arena lit from above in the club colour, light sticks below, the card in the middle. */
+
+/* left / top / width / height follow the visual viewport (ui/onScreen.ts) */
+.fw {
+  position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 80;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 16px 16px 40px; overflow: hidden; cursor: pointer;
+  background: #06070c; container-type: inline-size;
+}
+.fw:focus { outline: none; }
+/* banded light from the top, like a pixel-art stage light */
+.fw-sky {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 560px 380px at 50% 0%, var(--g1) 0 34%, var(--g2) 34% 62%, var(--g3) 62% 88%, transparent 88%),
+    linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.55) 100%);
+}
+.fw-crowd { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 120px; pointer-events: none; image-rendering: pixelated; }
+
+/* ---------- card ---------- */
+.fw-card {
+  position: relative; width: min(560px, 100%); max-height: calc(100% - 40px); overflow-y: auto;
+  background: #11141e;
+  box-shadow:
+    0 -2px 0 0 var(--line2), 0 2px 0 0 var(--line2), -2px 0 0 0 var(--line2), 2px 0 0 0 var(--line2),
+    0 -4px 0 0 #05060b, 0 4px 0 0 #05060b, -4px 0 0 0 #05060b, 4px 0 0 0 #05060b,
+    8px 10px 0 0 rgba(0, 0, 0, 0.5);
+  animation: fwRise 0.4s steps(5) backwards;
+}
+.fw-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: var(--acc); }
+
+.fw-top {
+  display: flex; align-items: center; gap: 8px; padding: 14px 18px 0;
+  font-family: "Galmuri9", "Galmuri11"; font-size: 11px; letter-spacing: 2px; color: var(--muted);
+}
+.fw-club { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fw-tag { color: #0b0d14; background: var(--acc); padding: 2px 8px 1px; box-shadow: 0 0 0 2px #05060b; white-space: nowrap; }
+
+/* ---------- hero: portrait + thanks ---------- */
+.fw-hero { display: flex; align-items: flex-end; gap: 18px; padding: 16px 18px 0; }
+.fw-portrait {
+  position: relative; flex: none; width: 148px; height: 148px; overflow: hidden;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: linear-gradient(180deg, #0a0c14 0%, #161a2a 100%);
+  box-shadow: 0 -2px 0 0 var(--acc), 0 2px 0 0 var(--acc), -2px 0 0 0 var(--acc), 2px 0 0 0 var(--acc);
+  animation: fwSlide 0.36s steps(4) 0.12s backwards;
+}
+/* the club's colours as jersey stripes behind him, then a dithered floor */
+.fw-stripes {
+  position: absolute; inset: -30%; opacity: 0.32;
+  background: repeating-linear-gradient(-30deg, var(--acc) 0 14px, var(--c2) 14px 28px);
+}
+.fw-portrait::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18px;
+  background: repeating-conic-gradient(#1a1e30 0 25%, #10131d 0 50%) 0 0 / 4px 4px;
+  box-shadow: inset 0 2px 0 0 #262d4a;
+}
+.fw-portrait .avatar { position: relative; z-index: 1; display: block; width: 128px; height: 128px; margin-bottom: 6px; }
+.fw-role {
+  position: absolute; z-index: 2; left: 6px; bottom: 4px;
+  font-family: "Galmuri9", "Galmuri11"; font-size: 11px; color: #fff; background: #05060b; padding: 1px 6px;
+}
+
+.fw-words { flex: 1; min-width: 0; padding-bottom: 4px; }
+.fw-thanks {
+  font-family: "Galmuri14", "Galmuri11"; font-size: 18px; color: #d8dbe6; letter-spacing: 1px;
+  animation: fwFade 0.3s steps(3) 0.3s backwards;
+}
+.fw-name {
+  margin-top: 2px; font-family: "Galmuri14", "Galmuri11"; font-size: 44px; line-height: 1.1; color: var(--acc);
+  text-shadow: 3px 3px 0 #05060b; overflow-wrap: anywhere;
+  animation: fwStamp 0.3s steps(3) 0.45s backwards;
+}
+.fw-real { margin-top: 2px; font-size: 12px; color: var(--muted); }
+.fw-years {
+  display: inline-block; margin-top: 8px; padding: 2px 8px;
+  font-family: "Galmuri9", "Galmuri11"; font-size: 11px; letter-spacing: 1px; color: #e6e8f0;
+  box-shadow: inset 0 0 0 2px #2b3149;
+}
+
+/* ---------- the club's words ---------- */
+.fw-msg {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px;
+  margin: 16px 18px 0; padding: 10px 12px; font-size: 14px; line-height: 1.6; color: #eef0f7; word-break: keep-all;
+  background: #0b0d15; box-shadow: inset 3px 0 0 0 var(--acc);
+  animation: fwFade 0.3s steps(3) 0.55s backwards;
+}
+.fw-sign { font-family: "Galmuri9", "Galmuri11"; font-size: 11px; letter-spacing: 1px; color: var(--muted); }
+
+/* ---------- record with us ---------- */
+.fw-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); gap: 8px; margin: 14px 18px 0; }
+.fw-stat {
+  min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 6px;
+  background: #0b0d15; box-shadow: inset 0 0 0 2px #232842;
+  animation: fwFade 0.25s steps(2) backwards; animation-delay: calc(0.65s + var(--i, 0) * 80ms);
+}
+.fw-stat b { font-family: "Galmuri14", "Galmuri11"; font-weight: normal; font-size: 20px; line-height: 1.1; color: #fff; }
+.fw-stat span { font-family: "Galmuri9", "Galmuri11"; font-size: 11px; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fw-stat.champ img { box-shadow: 0 0 0 2px #05060b; }
+.fw-none { margin: 14px 18px 0; font-size: 12px; color: var(--dim); }
+
+.fw-titles { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 18px 0; padding: 0; }
+.fw-titles li {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 4px;
+  font-size: 12px; color: var(--gold); background: #1d1a10; box-shadow: inset 0 0 0 2px #3a3216;
+}
+.fw-titles svg { display: block; }
+
+.fw-dest {
+  display: flex; align-items: center; gap: 8px; margin: 14px 18px 0;
+  font-family: "Galmuri14", "Galmuri11"; font-size: 14px; color: #fff;
+}
+.fw-dest-k { font-family: "Galmuri9", "Galmuri11"; font-size: 11px; letter-spacing: 2px; color: var(--muted); }
+.fw-arrow { font-size: 10px; color: var(--acc); }
+
+.fw-card > :last-child { margin-bottom: 18px; }
+
+.fw-hint {
+  position: relative; flex: none; margin-top: 16px; text-align: center;
+  font-size: 12px; color: var(--muted); text-shadow: 2px 2px 0 #05060b; animation: blink 1s steps(2) infinite;
+}
+
+/* ---------- motion ---------- */
+@keyframes fwRise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes fwSlide { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+@keyframes fwFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fwStamp { from { opacity: 0; transform: scale(1.35); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .fw *, .fw *::before, .fw *::after { animation: none !important; }
+}
+
+/* ---------- phones (the layer is the visual viewport, so a container query sees the screen's width) ---------- */
+@container (max-width: 520px) {
+
+  .fw-hero { gap: 12px; padding: 14px 14px 0; }
+  .fw-portrait { width: 108px; height: 108px; }
+  .fw-portrait .avatar { width: 92px; height: 92px; margin-bottom: 4px; }
+  .fw-thanks { font-size: 15px; }
+  .fw-name { font-size: 32px; }
+  .fw-msg, .fw-stats, .fw-titles, .fw-dest, .fw-none { margin-left: 14px; margin-right: 14px; }
+  .fw-top { padding: 12px 14px 0; }
+  .fw-stats { gap: 6px; }
+  .fw-stat b { font-size: 17px; }
+}

@@ -9,6 +9,7 @@ import type { Bid, GameState, Player, Staff, Team, TradeOffer } from "./types";
 import { seasonDates } from "./schedule";
 import { earn, spend, teamCash } from "./ledger";
 import { eventAskMul, outLabel } from "./evmemo";
+import { farewellHow, queueFarewell } from "./farewell";
 
 export const ROSTER_MAX = 10;
 
@@ -92,8 +93,10 @@ export function aiCapRoom(s: GameState, t: Team): number {
   return aiPayrollCap(t) - payroll(s, t) - open;
 }
 
-function removeFromTeam(s: GameState, p: Player) {
-  if (!p.team) return;
+/** Takes him off his club. Leaving the user's main roster for anywhere else queues the thank-you card (core/farewell.ts), which is returned so the caller can say how he left. */
+function removeFromTeam(s: GameState, p: Player, to?: string) {
+  if (!p.team) return undefined;
+  const bye = to === s.user ? undefined : queueFarewell(s, p);
   const t = s.teams[p.team];
   if (t) {
     t.roster = t.roster.filter((x) => x !== p.id);
@@ -107,10 +110,12 @@ function removeFromTeam(s: GameState, p: Player) {
   p.team = null;
   p.academy = false;
   p.feeTalk = undefined; // also covers paths that set p.team directly afterwards (2군 등록)
+  return bye;
 }
 
 export function joinTeam(s: GameState, p: Player, teamId: string, salary: number, years: number, starterPromise = false) {
-  removeFromTeam(s, p);
+  const bye = removeFromTeam(s, p, teamId);
+  if (bye?.farewell) Object.assign(bye.farewell, { how: "transfer", to: teamId });
   const t = s.teams[teamId];
   p.team = teamId;
   p.academy = false;
@@ -135,7 +140,8 @@ export function joinTeam(s: GameState, p: Player, teamId: string, salary: number
 
 export function releasePlayer(s: GameState, p: Player, reason: string) {
   const from = p.team;
-  removeFromTeam(s, p);
+  const bye = removeFromTeam(s, p);
+  if (bye?.farewell) Object.assign(bye.farewell, farewellHow(reason));
   p.contract = null;
   p.listed = false;
   if (from) p.history.push(`${s.season}: ${teamName(s, from)} 계약 해지 (${reason})`);

@@ -306,13 +306,32 @@ export interface EvState {
 }
 
 export interface Cutscene {
-  kind: "sign" | "renew" | "title" | "trade" | "qualify";
+  kind: "sign" | "renew" | "title" | "trade" | "qualify" | "farewell";
   title: string;
   sub?: string;
   player?: string;
   team?: string;
   lines?: string[];
   trophy?: CompId;
+  /** kind "farewell": the thank-you card for a player leaving the user's club (core/farewell.ts) */
+  farewell?: Farewell;
+}
+
+/** A player's time with the user's club, taken when he leaves it (core/farewell.ts, ui/Farewell.tsx). */
+export interface Farewell {
+  how: "transfer" | "release" | "expire" | "retire" | "military";
+  /** release: the reason given (구단 결정, 품위 손상, 임금 체불...) */
+  why?: string;
+  /** transfer: the club he joined */
+  to?: string;
+  /** first season of his (last) spell with us, and the season he left in */
+  since: number;
+  until: number;
+  /** games he played for us: played, won, kills, deaths, assists, MVPs; his most played champion */
+  g: number; w: number; k: number; d: number; a: number; mvp: number;
+  champ?: string;
+  /** trophies the club won with him in the lineup */
+  titles: { comp: CompId; name: string }[];
 }
 
 export interface LedgerMonth {

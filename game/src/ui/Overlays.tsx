@@ -6,7 +6,8 @@ import { acceptSale, acceptTradeOffer } from "../core/market";
 import { ovr } from "../core/player";
 import { Avatar, Ovr, TeamLogo, TrophyArt } from "./components";
 import { autosave } from "./App";
-import { appW } from "./scale";
+import { useOnScreen } from "./onScreen";
+import { FarewellCard } from "./Farewell";
 import { ROLE_KO } from "../data/types";
 import { money } from "../core/format";
 import "./alerts.css";
@@ -53,35 +54,6 @@ function useTyped(text: string): [string, string, () => void] {
     return () => cancelAnimationFrame(raf);
   }, []);
   return [chars.slice(0, n).join(""), chars.slice(n).join(""), () => setN(len)];
-}
-
-/**
- * Keeps the backdrop on the part of the page being looked at. On a phone the app's layout is wider than the screen,
- * so the browser's layout viewport (what position: fixed covers) grows past it and a centred dialog lands off screen;
- * the visual viewport is what the player sees. On a desktop the two are the same.
- */
-function useOnScreen() {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const vv = window.visualViewport;
-    const el = ref.current;
-    if (!vv || !el) return;
-    const fit = () => {
-      const z = window.innerWidth / appW() || 1; // the app's zoom on <html> (ui/scale.ts)
-      el.style.left = `${vv.offsetLeft / z}px`;
-      el.style.top = `${vv.offsetTop / z}px`;
-      el.style.width = `${vv.width / z}px`;
-      el.style.height = `${vv.height / z}px`;
-    };
-    fit();
-    vv.addEventListener("resize", fit);
-    vv.addEventListener("scroll", fit);
-    return () => {
-      vv.removeEventListener("resize", fit);
-      vv.removeEventListener("scroll", fit);
-    };
-  }, []);
-  return ref;
 }
 
 function moraleClass(v: number) {
@@ -232,8 +204,9 @@ function ResultCard() {
   const r = s.ev!.result!;
   const ok = useRef<HTMLButtonElement>(null);
   const bg = useOnScreen();
-  // only confirms what already happened, so Enter may close it
-  useEffect(() => ok.current?.focus({ preventScroll: true }), []);
+  // only confirms what already happened, so Enter may close it; not while a cutscene (a farewell card for a player this
+  // choice let go) is over it, whose layer takes the keys
+  useEffect(() => { if (!s.cutscenes.length) ok.current?.focus({ preventScroll: true }); }, []);
   const done = () => {
     s.ev!.result = undefined;
     autosave();
@@ -323,6 +296,13 @@ export function CutsceneLayer() {
     autosave();
     store.bump();
   };
+  // a player leaving the club: its own card (ui/Farewell.tsx), keyed so each one starts its entrance over
+  if (c.kind === "farewell") {
+    if (c.farewell && p) return <FarewellCard key={s.cutscenes.length + p.id} c={c} next={next} />;
+    // nothing to show (a broken entry): skip it once rather than fall into the welcome layout
+    queueMicrotask(() => { if (s.cutscenes[0] === c) next(); });
+    return null;
+  }
   const c1 = t.colors[0] === "#000000" ? "#f2c14e" : t.colors[0];
   return (
     <div class="cut" style={{ "--c1": c1, "--c2": t.colors[1] } as Record<string, string>} onClick={next}>
