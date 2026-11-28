@@ -37,6 +37,7 @@ import { headCoach, seriesWinProb } from "../../core/quick";
 import * as Matchup from "../../match/matchup";
 import { META_LABEL, metaTier } from "../../core/meta";
 import { searchRank } from "../../core/hangul";
+import { LineupIntro, preloadSplashes } from "../LineupIntro";
 import { tutBreakDue, tutSpot } from "../Tutorial";
 import { EventModal, EventResultModal } from "../Overlays";
 import { appH, localRect, onScale, toLocal, uiZoom } from "../scale";
@@ -583,6 +584,8 @@ export function DraftView({ d, userSide, onDone, auto, hotseat }: { d: DraftStat
     );
   };
   const done = !st;
+  // the ten splash arts of the lineup card before the game start loading now, while runes and builds are chosen
+  useEffect(() => { if (done) preloadSplashes([...ROLES.map((r) => d.picks.blue[r]), ...ROLES.map((r) => d.picks.red[r])]); }, [done]);
   const prob = done ? draftWinProb(s, data, d) : 0;
   const userProb = userSide === "blue" ? prob : 1 - prob;
   /** the team whose turn it is (short name), for the hot-seat wording */
@@ -870,8 +873,11 @@ export function MatchView({ e, userSide, series, seriesNote, tactic, setTactic, 
   const kq = useRef(new KillQueue());
   /** objectives alive at the last UI tick: a change to alive is a spawn banner (also covers the elder dragon) */
   const objAlive = useRef<Partial<Record<ObjKey, boolean>>>({});
-  const st = useRef({ speed, paused, slowmo });
-  st.current = { speed, paused, slowmo };
+  /** the lineup card (LineupIntro) before the first second of the game; the clock waits for it. Not when the screen is
+   *  opened again on a game already under way. */
+  const [intro, setIntro] = useState(() => e.t < 1 && !e.over);
+  const st = useRef({ speed, paused, slowmo, intro });
+  st.current = { speed, paused, slowmo, intro };
   /** the pace the match loop is running at right now (pacing.ts): the speed it is heading for, 1 = real time */
   const pace = useRef({ target: DEFAULT_SPEED, running: false });
   useEffect(() => {
@@ -891,7 +897,7 @@ export function MatchView({ e, userSide, series, seriesNote, tactic, setTactic, 
       const dt = Math.max(0, Math.min(100, now - last));
       last = now;
       // the game also waits while the tutorial explains the match screen
-      const running = !st.current.paused && !e.over && !store.tut;
+      const running = !st.current.paused && !e.over && !store.tut && !st.current.intro;
       if (running) {
         const gps = pacer.update(dt, st.current.speed, st.current.slowmo);
         acc += (dt / 1000) * gps;
@@ -958,7 +964,8 @@ export function MatchView({ e, userSide, series, seriesNote, tactic, setTactic, 
     return () => clearTimeout(id);
   }, [banners]);
   useEffect(() => { if (rend.current) rend.current.mode = cam; }, [cam]);
-  useEffect(() => tutSpot("match"), []);
+  // the tutorial's match tour once the lineup card has gone
+  useEffect(() => { if (!intro) tutSpot("match"); }, [intro]);
   // The whole map and the scoreboard above it fit the window (with the controls under the map when there is room),
   // as wide as the middle column allows.
   // The map is a canvas, so it can take any size; the text around it keeps its size (ui/scale.ts).
@@ -1025,6 +1032,7 @@ export function MatchView({ e, userSide, series, seriesNote, tactic, setTactic, 
   );
   return (
     <div>
+      {intro && <LineupIntro e={e} series={series} onDone={() => setIntro(false)} />}
       <Scorebar e={e} series={series} />
       <div class="match">
         {team(0)}
