@@ -70,7 +70,7 @@ export function TradeScreen() {
           {list(them.roster, get, setGet)}
         </div>
       </div>
-      <div class="frame pad">
+      <div class="frame pad" data-tut="trade-send">
         <div class="row" style={{ alignItems: "flex-start" }}>
           <span style={{ paddingTop: 4 }}>현금 얹기 (우리가 지급)</span>
           <MoneyStepper value={cash} min={0} max={Math.max(0, Math.min(me.cash, 200000))} step={1000} big={10000} onChange={setCash}

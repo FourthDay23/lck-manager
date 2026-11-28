@@ -5,6 +5,7 @@ import type { GoodsKind, Team } from "../../core/types";
 import { money } from "../../core/format";
 import { ovr } from "../../core/player";
 import { autosave } from "../App";
+import { tutSpot } from "../Tutorial";
 import { WinBonusPanel } from "../WinBonus";
 
 export function FinanceScreen() {
@@ -44,7 +45,7 @@ export function FinanceScreen() {
       </div>
       <WinBonusPanel />
       <div class="grid2">
-        <div class="frame pad">
+        <div class="frame pad" data-tut="goods">
           <h2>굿즈 제작</h2>
           <div class="tabs">
             {(Object.keys(GOODS) as GoodsKind[]).map((k) => <button class={`btn small ${kind === k ? "on" : ""}`} onClick={() => setKind(k)}>{GOODS[k].name}</button>)}
@@ -64,7 +65,7 @@ export function FinanceScreen() {
           </div>
           <div>제작비 <b>{money(Math.round(units * g.unitCost))}</b> · 6주 예상 판매 약 {Math.round(Math.min(units, est)).toLocaleString()}개 → 매출 약 {money(Math.round(Math.min(units, est) * g.price))}</div>
           <div class="dim" style={{ fontSize: 11 }}>예상치는 팬 수, 명성, 대표 선수 인기, 최근 성적으로 계산합니다. 성적이 떨어지면 덜 팔리고, 남은 재고는 손해입니다.</div>
-          <button class="btn primary" onClick={() => { const r = startGoods(s, kind, units, g.needsPlayer ? feat : null); setMsg(r.msg); autosave(); store.bump(); }}>제작</button>
+          <button class="btn primary" onClick={() => { const r = startGoods(s, kind, units, g.needsPlayer ? feat : null); setMsg(r.msg); autosave(); store.bump(); if (r.ok) tutSpot("goods"); }}>제작</button>
           {msg && <span class="gold"> {msg}</span>}
           <h3 style={{ marginTop: 10 }}>판매 현황</h3>
           <table class="t">

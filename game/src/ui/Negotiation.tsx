@@ -14,7 +14,7 @@ import { monthlyWages } from "../core/ledger";
 import { monthlyIncomePreview } from "../core/economy";
 import { ROLE_KO } from "../data/types";
 import "./negotiation.css";
-import { tipOnce } from "./Tutorial";
+import { tipOnce, tutSpot } from "./Tutorial";
 
 const BONUS_TIP = {
   key: "signing-bonus",
@@ -141,6 +141,7 @@ export function NegotiationModal({ pid, mode }: { pid: string; mode: NegMode }) 
     say(p.name, r.msg);
     if (r.kind === "accept") {
       completeUserSigning(s, p, mode, offer, fee0); // joinTeam clears p.feeTalk
+      if (mode !== "renew") tutSpot("signed");
       autosave();
       store.close();
       const now = offer.bonus + fee0;

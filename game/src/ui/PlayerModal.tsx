@@ -109,7 +109,7 @@ export function PlayerModal({ pid }: { pid: string }) {
                   </>
                 ) : p.origin !== "intl" && !p.retired ? (
                   <>
-                    <button class="btn small primary" disabled={!talk.ok || (!open && !!p.team)} onClick={() => store.open("nego", p.id, p.team ? "transfer" : "sign")}>
+                    <button class="btn small primary" data-tut="player-sign" disabled={!talk.ok || (!open && !!p.team)} onClick={() => store.open("nego", p.id, p.team ? "transfer" : "sign")}>
                       {p.team ? "이적 협상" : "영입 협상"}
                     </button>
                     {p.team && <button class="btn small" disabled={!open} onClick={() => { store.close(); store.go("trade", `${p.team}:${p.id}`); }}>트레이드 제안</button>}

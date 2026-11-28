@@ -5,6 +5,7 @@ import { money } from "../../core/format";
 import type { Staff } from "../../core/types";
 import { TeamLogo } from "../components";
 import { autosave } from "../App";
+import { tutLock } from "../Tutorial";
 
 const ROLE_NAME: Record<Staff["role"], string> = { "Head Coach": "감독", Coach: "코치", "Strategic Coach": "전략 코치", Analyst: "분석관" };
 
@@ -19,7 +20,9 @@ function Attrs({ st }: { st: Staff }) {
 export function StaffScreen() {
   const s = S();
   const me = s.teams[s.user];
-  const [role, setRole] = useState<"all" | "hc" | "coach">("all");
+  const [pick, setRole] = useState<"all" | "hc" | "coach">("all");
+  // the first-run tutorial holds the list on head coaches while the player picks one
+  const role = tutLock()?.staffRole ?? pick;
   const mine = me.staff.map((id) => s.staff[id]).filter(Boolean);
   const slots = staffSlots(s, me);
   const pool = Object.values(s.staff).filter((x) => x.team !== s.user && (role === "all" || (role === "hc" ? x.role === "Head Coach" : x.role !== "Head Coach")))

@@ -37,7 +37,7 @@ import { headCoach, seriesWinProb } from "../../core/quick";
 import * as Matchup from "../../match/matchup";
 import { META_LABEL, metaTier } from "../../core/meta";
 import { searchRank } from "../../core/hangul";
-import { tutSpot } from "../Tutorial";
+import { tutBreakDue, tutSpot } from "../Tutorial";
 import { EventModal, EventResultModal } from "../Overlays";
 import { appH, localRect, onScale, toLocal, uiZoom } from "../scale";
 import { chooseSetBreak, setBreakDue, setBreakOptions } from "../../core/events";
@@ -105,6 +105,26 @@ export function StrategyPicker({ value, onPick }: { value: Strategy; onPick: (st
   );
 }
 
+/** The set-break talk between games: what to tell the players before the next one. */
+function SetBreakTalk({ won, skipAll, onPick }: { won: boolean; skipAll: boolean; onPick: (i: number) => void }) {
+  useEffect(() => tutSpot("setbreak"), []);
+  return (
+    <div class="frame pad" style={{ marginBottom: 8 }} data-tut="series-break">
+      <h2>세트 사이 대기실</h2>
+      <div class="speech">{won
+        ? "세트를 따냈습니다. 대기실 분위기가 좋습니다. 이 기세를 다음 세트까지 이어 가도록 한마디 해 주세요."
+        : "세트를 내줬습니다. 대기실 분위기가 무겁습니다. 다음 세트 전에 한마디 해야 합니다."}</div>
+      {setBreakOptions().map((o, i) => (
+        <button class="btn qbtn ev-opt" onClick={() => onPick(i)}>
+          <b>{o.label}</b>
+          {o.hints.map((h) => <div class="ev-hint">{h}</div>)}
+        </button>
+      ))}
+      {skipAll && <div class="muted" style={{ fontSize: 11, marginTop: 6 }}>고르면 남은 세트를 이어서 결과만 봅니다.</div>}
+    </div>
+  );
+}
+
 export function SeriesScreen() {
   const s = S();
   const sr = userSeriesToday(s) ?? (live ? s.series.find((x) => x.id === live!.srId) : undefined);
@@ -167,7 +187,7 @@ export function SeriesScreen() {
     L.phase = doneNow ? "done" : "post";
     // "시리즈 끝까지 결과만" stops for the set-break talk (N15): its choice moves the next games, so it is not
     // skipped past; choosing goes on with the run (set-break buttons below)
-    if (L.skipAll && !doneNow && !setBreakDue(s, sr)) {
+    if (L.skipAll && !doneNow && !setBreakDue(s, sr) && !tutBreakDue(s, sr)) {
       L.phase = "pre";
       quickGame();
       return;
@@ -181,6 +201,7 @@ export function SeriesScreen() {
     closeUserSeries(s, D(), sr);
     showIncomeSince(s, before);
     live = null;
+    tutSpot("series-done");
     autosave();
     store.go("home");
   };
@@ -218,25 +239,17 @@ export function SeriesScreen() {
   }
 
   const pWin = seriesWinProb(0.5, sr.bo);
-  // set-break talk after a lost game (core/events.ts N15): once a series, before the next game is set up
-  const breakNow = L.phase === "post" && setBreakDue(s, sr);
+  // set-break talk after a lost game (core/events.ts N15): once a series, before the next game is set up (the first
+  // run's tutorial also stops here once after a won game to show how it works)
+  const breakNow = L.phase === "post" && (setBreakDue(s, sr) || tutBreakDue(s, sr));
   const breakDone = s.ev?.setBreak?.sr === sr.id ? s.ev.setBreak.lines : null;
   return (
     <div>
       {header}
       {(L.phase === "post" || L.phase === "done") && L.last && <GameResult g={L.last} />}
       {breakNow && (
-        <div class="frame pad" style={{ marginBottom: 8 }}>
-          <h2>세트 사이 대기실</h2>
-          <div class="speech">세트를 내줬습니다. 대기실 분위기가 무겁습니다. 다음 세트 전에 한마디 해야 합니다.</div>
-          {setBreakOptions().map((o, i) => (
-            <button class="btn qbtn ev-opt" onClick={() => { chooseSetBreak(s, sr, i); autosave(); if (L.skipAll) quickGame(); else bump(); }}>
-              <b>{o.label}</b>
-              {o.hints.map((h) => <div class="ev-hint">{h}</div>)}
-            </button>
-          ))}
-          {L.skipAll && <div class="muted" style={{ fontSize: 11, marginTop: 6 }}>고르면 남은 세트를 이어서 결과만 봅니다.</div>}
-        </div>
+        <SetBreakTalk won={sr.games.at(-1)?.winner === s.user} skipAll={!!L.skipAll}
+          onPick={(i) => { chooseSetBreak(s, sr, i); autosave(); if (L.skipAll) quickGame(); else bump(); store.bump(); /* the tutorial waits for it */ }} />
       )}
       {!breakNow && (L.phase === "post" || L.phase === "done") && breakDone && <div class="frame pad muted" style={{ marginBottom: 8 }}>대기실: {breakDone.join(", ")}</div>}
       {breakNow ? null : L.phase === "done" ? (
