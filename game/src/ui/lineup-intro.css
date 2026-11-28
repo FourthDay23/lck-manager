@@ -1,0 +1,95 @@
+/* The lineup card before the game (LineupIntro.tsx): over the whole window, blue rows from the left, red from the
+   right, top lane first. Pixel look: hard frames, no blur, stepped motion, splash art drawn small and blown up. */
+.li {
+  position: fixed; left: 0; top: 0; width: var(--app-w, 100vw); height: var(--app-h, 100vh); z-index: 905; /* over the tutorial layer (900): its match tour waits for the card */
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px; box-sizing: border-box; overflow: hidden; cursor: pointer;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 4px),
+    radial-gradient(ellipse at 50% 45%, #141a2c 0%, #07090f 75%);
+  /* (no fade-in: the card covers the match screen from its first frame, the clock waits under it) */
+}
+.li.out { animation: li-bg-out 0.26s steps(4) both; }
+
+/* --- head: both teams and the game --- */
+.li-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; width: min(1120px, 100%); animation: li-drop 0.25s steps(4) both; }
+.li-side { display: flex; align-items: center; gap: 8px; font-family: "Galmuri14"; font-size: 22px; text-shadow: 2px 2px 0 #000; }
+.li-side.blue { justify-content: flex-end; color: var(--blue); }
+.li-side.red { justify-content: flex-start; color: var(--red); }
+.li-title { display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
+.li-title small { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.li-title b { font-family: "Galmuri14"; font-size: 30px; letter-spacing: 4px; color: var(--gold); text-shadow: 3px 3px 0 #3a2a08, 5px 5px 0 #000; }
+
+/* --- the board: blue strip | lane | red strip, five rows --- */
+.li-board {
+  display: grid; grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); grid-template-rows: repeat(5, minmax(0, 1fr));
+  row-gap: 6px; width: min(1120px, 100%); height: min(640px, calc(var(--app-h, 100vh) - 150px));
+}
+.li-strip {
+  position: relative; overflow: hidden; display: flex; align-items: center;
+  background: #0e1220; box-shadow: 0 0 0 2px #05070c, inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+.li-strip.blue { justify-content: flex-end; border-left: 4px solid var(--blue); animation: li-in-l 0.3s steps(6) both; }
+.li-strip.red { justify-content: flex-start; border-right: 4px solid var(--red); animation: li-in-r 0.3s steps(6) both; }
+.li-strip, .li-lane { animation-delay: calc(0.12s + var(--i) * 0.16s) !important; }
+.li.out .li-strip.blue { animation: li-out-l 0.26s steps(4) both; animation-delay: 0s !important; }
+.li.out .li-strip.red { animation: li-out-r 0.26s steps(4) both; animation-delay: 0s !important; }
+
+/* the art on the outer side, fading into the panel under the names */
+.li-art-box { position: absolute; top: 0; bottom: 0; width: 64%; }
+.li-strip.blue .li-art-box { left: 0; }
+.li-strip.red .li-art-box { right: 0; }
+.li-art { display: block; width: 100%; height: 100%; opacity: 0; filter: brightness(1.15) saturate(1.1); }
+.li-art.ready { opacity: 1; animation: li-art 0.24s steps(3) both; }
+.li-art-box::after { content: ""; position: absolute; inset: 0; }
+.li-strip.blue .li-art-box::after { background: linear-gradient(90deg, rgba(14, 18, 32, 0) 45%, rgba(14, 18, 32, 0.7) 80%, #0e1220 100%); }
+.li-strip.red .li-art-box::after { background: linear-gradient(270deg, rgba(14, 18, 32, 0) 45%, rgba(14, 18, 32, 0.7) 80%, #0e1220 100%); }
+
+.li-text { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 0 14px; min-width: 0; max-width: 62%; }
+.li-strip.blue .li-text { align-items: flex-end; text-align: right; }
+.li-strip.red .li-text { align-items: flex-start; text-align: left; }
+.li-champ { font-size: 12px; line-height: 1.35; color: #c9d1e6; text-shadow: 1px 1px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.li-name { font-family: "Galmuri14"; font-size: 28px; line-height: 1.35; color: #fff; text-shadow: 2px 2px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.li-strip.blue .li-team { color: #8cc6ff; }
+.li-strip.red .li-team { color: #ff9a9a; }
+
+/* the lane icons down the middle */
+.li-lane { display: flex; align-items: center; justify-content: center; color: #e8ecf5; animation: li-pop 0.2s steps(3) both; }
+.li-lane .lane-ic { padding: 3px; background: #0b0d14; box-shadow: 0 0 0 2px #262c44; filter: drop-shadow(1px 1px 0 #000); }
+.li.out .li-lane { animation: li-bg-out 0.2s steps(3) both; animation-delay: 0s !important; }
+
+.li-hint { font-size: 11px; color: var(--muted); animation: li-bg 0.3s steps(3) 1.2s both; }
+
+@keyframes li-bg { from { opacity: 0; } to { opacity: 1; } }
+@keyframes li-bg-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes li-drop { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes li-in-l { from { transform: translateX(calc(-1 * var(--app-w, 100vw))); } to { transform: none; } }
+@keyframes li-in-r { from { transform: translateX(var(--app-w, 100vw)); } to { transform: none; } }
+@keyframes li-out-l { from { transform: none; } to { transform: translateX(calc(-1 * var(--app-w, 100vw))); } }
+@keyframes li-out-r { from { transform: none; } to { transform: translateX(var(--app-w, 100vw)); } }
+@keyframes li-pop { from { transform: scale(0); } to { transform: none; } }
+@keyframes li-art { from { opacity: 0; } to { opacity: 1; } }
+
+/* phones: narrower strips, the art fills the strip and the names sit at its inner side */
+@media (max-width: 720px) {
+  .li { gap: 6px; padding: 8px 6px; }
+  .li-head { gap: 8px; }
+  .li-side { font-size: 15px; gap: 4px; }
+  .li-side .badge-logo, .li-side img { width: 22px !important; height: 22px !important; }
+  .li-title b { font-size: 20px; letter-spacing: 2px; }
+  .li-title small { font-size: 10px; white-space: normal; text-align: center; }
+  .li-board { grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr); row-gap: 4px; height: min(520px, calc(var(--app-h, 100vh) - 110px)); }
+  .li-art-box { width: 100%; }
+  .li-strip.blue .li-art-box::after { background: linear-gradient(90deg, rgba(14, 18, 32, 0) 20%, rgba(14, 18, 32, 0.85) 100%); }
+  .li-strip.red .li-art-box::after { background: linear-gradient(270deg, rgba(14, 18, 32, 0) 20%, rgba(14, 18, 32, 0.85) 100%); }
+  .li-strip { align-items: flex-end; }
+  .li-text { max-width: 100%; padding: 0 6px 5px; }
+  .li-champ { font-size: 10px; }
+  .li-name { font-size: 14px; }
+  .li-lane .lane-ic { width: 16px; height: 16px; padding: 2px; }
+}
+
+/* reduce motion: everything in place at once, no slides */
+@media (prefers-reduced-motion: reduce) {
+  .li, .li *, .li.out, .li.out * { animation: none !important; }
+}

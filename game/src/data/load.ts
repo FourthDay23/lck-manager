@@ -143,6 +143,10 @@ export function assembleData(
 export function champImg(version: string, id: string): string {
   return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${id}.png`;
 }
+/** The champion's base splash art (1215×717, ~170 KB), same Data Dragon source as the icons (not versioned). */
+export function champSplash(id: string): string {
+  return `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${id}_0.jpg`;
+}
 export function spellImg(version: string, icon: string): string {
   return `https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/${icon}`;
 }
