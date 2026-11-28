@@ -117,6 +117,22 @@ function flatten(s: GameState) {
 }
 
 const rows: Row[] = [];
+// foreign clubs' starting fives at Worlds start (T22): top-12 clubs avg OVR, best club, avg age, replacements; LCK top-3
+const intlSnap: { season: number; ovr: number; age: number; best: number; lck3: number; subs: number }[] = [];
+function snapIntl(s: GameState, season: number, firstSeason: number) {
+  const five = (tid: string) => ROLES.map((r) => s.teams[tid].lineup[r]).filter(Boolean).map((id) => s.players[id!]);
+  const avgOvr = (tid: string) => { const xs = five(tid); return xs.reduce((a, p) => a + ovr(p), 0) / Math.max(1, xs.length); };
+  const intlTop = [...s.intl].map(avgOvr).sort((a, b) => b - a).slice(0, 12);
+  const ps = s.intl.flatMap(five);
+  intlSnap.push({
+    season: season - firstSeason + 1,
+    ovr: intlTop.reduce((a, b) => a + b, 0) / intlTop.length,
+    age: ps.reduce((a, p) => a + (season - p.birthYear), 0) / ps.length,
+    best: intlTop[0],
+    lck3: s.lck.map(avgOvr).sort((a, b) => b - a).slice(0, 3).reduce((a, b) => a + b, 0) / 3,
+    subs: ps.filter((p) => p.id.includes(":sub") || p.id.includes(":new")).length,
+  });
+}
 const t0 = Date.now();
 for (let run = 0; run < RUNS; run++) {
   const seed = SEED0 + run;
@@ -143,6 +159,7 @@ for (let run = 0; run < RUNS; run++) {
       }
     }
     const season = s.season;
+    if (s.day === d.worlds) snapIntl(s, season, firstSeason);
     try {
       autoAdvance(s, data, "day");
     } catch (e) {
@@ -309,6 +326,12 @@ if (USER !== "none") {
     if (!d.power) continue;
     console.log(`  @${snap.padEnd(6)} ` + keys.map((k) => `${k} ${sg(m(d[k]))}`).join(" · ") + `  [synergy ${USER} ${m(raw.u).toFixed(0)} / AI ${m(raw.a).toFixed(0)}]`);
   }
+console.log("\nforeign clubs at Worlds start (top-12 clubs' starting five): season  avgOVR  bestClub  avgAge  newPlayers | LCK top-3 avgOVR");
+for (let sn = 1; sn <= SEASONS; sn++) {
+  const x = intlSnap.filter((r) => r.season === sn);
+  if (!x.length) continue;
+  const m = (k: "ovr" | "best" | "age" | "subs" | "lck3") => x.reduce((a, r) => a + r[k], 0) / x.length;
+  console.log(`  ${String(sn).padStart(2)}  ${m("ovr").toFixed(1)}  ${m("best").toFixed(1)}  ${m("age").toFixed(1)}  ${m("subs").toFixed(1)} | ${m("lck3").toFixed(1)}`);
 }
 if (OUT) writeFileSync(OUT, JSON.stringify(rows));
 console.error(`done in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
