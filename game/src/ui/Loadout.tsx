@@ -1,5 +1,6 @@
 // Builds and keystones: the coach's pick after the draft (LoadoutPicker) and the items a unit owns during a match
 // (ItemStrip). Data: public/data/items.json via match/items.ts.
+import type { ComponentChildren } from "preact";
 import { D } from "../store";
 import { ROLES, ROLE_KO } from "../data/types";
 import type { Role } from "../data/types";
@@ -28,8 +29,9 @@ export function RuneIcon({ items, id, size = 18 }: { items: ItemData; id: number
   return <img class="rune-ic" src={runeImg(k.icon)} width={size} height={size} title={`${k.name} (${k.treeName})`} alt="" loading="lazy" />;
 }
 
-/** After the draft: pick each player's keystone and core build among the champion's most played LCK options. */
-export function LoadoutPicker({ d, side, onChange }: { d: DraftState; side: Side; onChange: () => void }) {
+/** After the draft: pick each player's keystone and core build among the champion's most played LCK options.
+ *  `title`: the heading, when it should name the side (both sides pick on one device). */
+export function LoadoutPicker({ d, side, onChange, title }: { d: DraftState; side: Side; onChange: () => void; title?: ComponentChildren }) {
   const data = D();
   const items = data.items;
   if (!items) return null;
@@ -42,7 +44,7 @@ export function LoadoutPicker({ d, side, onChange }: { d: DraftState; side: Side
   return (
     <div class="loadout">
       <div class="row" style={{ justifyContent: "space-between" }}>
-        <b>룬 · 빌드</b>
+        <b>{title ?? "룬 · 빌드"}</b>
         <span class="muted" style={{ fontSize: 11 }}>LCK {items.games}경기 기준 · 승률 차는 표본 수를 감안해 줄인 값입니다</span>
       </div>
       {ROLES.map((r) => {
