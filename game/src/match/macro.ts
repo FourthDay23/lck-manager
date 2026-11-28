@@ -25,17 +25,40 @@
 //    out-muscle what can arrive; hitter counts are drawn from the LCK participant shares; a jungler solos only when
 //    the enemy jungler is dead or far and nobody is near. Laning-phase objectives are given up by the side without
 //    the area (its jungler keeps farming), which is what lets the other jungler solo grubs.
+//  * Voidgrubs are three monsters (engine GRUB_TUNE, GRUB_MACRO here). One side holds the area during laning (power
+//    ratio x a per-game tilt) and takes them when it is free; the other side's jungler may walk in alone to smite one
+//    (a "poach": a contest plan of one) or start on an unwatched camp (a "sneak"). A jungler on the grubs stays
+//    against one enemy; when more show up it finishes the grub it is on and leaves with what it has.
 //  * Danger: outnumbered units fall back to a turret away from the threat; groups back off together; survivors of a
 //    lost fight keep retreating while the engine's calm runs; hurt units reset instead of walking back in.
 //  * Heatmaps/zones only scatter positions inside the area a plan picked.
 //  * planLabel(e, side) gives the current plan in Korean for a HUD; st(e).log records plan changes when logOn.
+//
+// Objective fights (2026-11-27, T08; measured with scripts/objfight-diag.ts against scripts/lck_objfights.py)
+//  * Before: a take was dropped as "outnumbered" whenever every enemy that could arrive out-muscled the plan's own
+//    three or four members, so two even teams both left the same dragon; the side without the area waited 2,700 u
+//    back and usually left as well. Fights over a dragon came with 25 % of dragon kills (LCK 2026: 31 %), fights of
+//    six or more before 14:00 0.04 times a game (0.77).
+//  * Now each side makes one of three calls on an epic monster from its whole-team presence-weighted power there:
+//    hold the area (stage at the entrance, start it), hover (대치: stand OBJ_TUNE.hover out on its own side and collapse
+//    on the take when the contest odds are there), or concede (below concedeAt: no plan, and the trade context below).
+//  * Standoff: a side that holds the area does not start the monster while enemies near the pit match it; it waits
+//    (the fight module opens the fight if somebody finds an engage) and starts it after its standoff time
+//    (OBJ_TUNE.standoffMin..standoffMax seconds) at even odds.
+//    Guards stand on the fan points nearest the enemy, between it and the pit.
+//  * Trade: while three or more enemies are on a pit we are not playing for, the other pit's monster and a turret on
+//    the far side of the map are worth more (tradeCtx); the plan remembers what it was traded for (HUD label).
+//  * purpose(e, side, f) tells fight.ts what a side wants from a fight next to a pit: "take" (finish the monster),
+//    "stop" (the enemy is on it: fight now or lose it) or "hold".
 import type { Engine, ObjKey, SideN, Unit } from "./engine";
-import { ENGINE_FLAGS, SIM_TUNE, applyTune } from "./engine";
+import { ENGINE_FLAGS, GRUB_TUNE, SIM_TUNE, applyTune } from "./engine";
 import type { LaneId, Vec } from "./map";
 import { BARON_PIT, DRAGON_PIT, FOUNTAIN, LANES, MIRROR_C, NEXUS, ROLE_LANE, dist, lanePoint, laneU, mirror } from "./map";
 import * as Nav from "./nav";
 import * as Items from "./items";
 import * as Minions from "./minions";
+import * as Summoners from "./summoners";
+import { STEAL_TUNE, secondsTo } from "./objsmite";
 import { LCK_STATS } from "./lck-stats.gen";
 import type { Strategy, StrategyParams } from "./strategy";
 import { STRATEGY_PARAMS } from "./strategy";
@@ -59,6 +82,40 @@ const rot = (p: Vec): Vec => ({ x: MIRROR_C - p.x, y: MIRROR_C - p.y });
 /** a side holds the dragon area (sets up at its entrance instead of waiting back) when its presence-weighted power is
  *  at least this share of the other side's */
 const DRAGON_HOLD = 0.8;
+/**
+ * Objective fights (T08). Scripts can override any of them with OBJ_TUNE=key:value,...
+ * hover: how far from the pit the side without the area waits, on its own side (was 2,700 u).
+ * concede / concedeBig / concedeMinor: below this share of the enemy's presence-weighted power at the pit a side gives
+ *   the monster up instead of showing up (dragon / soul-point dragon, baron, elder / herald, grubs).
+ * contest / contestBig / contestEpic: the same yardstick for collapsing on an enemy take (was 0.95 / 0.8 / 0.65, but
+ *   weighed against every enemy within 25 s; now both sides over the same few seconds, see contestCand).
+ * standoffEdge: a side holding the area starts the monster at once when it has this power edge over the enemies
+ *   within `near` of the pit; otherwise it waits standoffMin..standoffMax seconds and starts it at standoffGo.
+ * groupFrom: the minute from which a dragon is played as a group objective even if none has been taken (laningFor).
+ * seen: an enemy group this close to a monster that is up is about to take it (contestCand); laneReach: during
+ *   laning only champions within this many seconds of the pit answer; guard: how far out the guards stand.
+ * backOff: a committed take is called off when the enemies within `near` have this edge over our members there.
+ * tradeObj / tradeSiege: score bonus for the other pit's monster / a far-side turret while the enemy is on a pit we
+ *   are not playing for (on top of the strategy's `trade`).
+ * baronFrom: before this minute a baron call needs more bodies down (takeCand).
+ * stealFrom: a steal run is only for a jungler this close to the pit when the enemy commits; stealHover / stealLoose:
+ *   its chance when its team is at the pit for that monster / is not; stealBig: added for baron, elder and soul-race
+ *   dragons (stealTick, T09).
+ */
+export const OBJ_TUNE = {
+  hover: 2300,
+  concede: 0.6, concedeBig: 0.45, concedeMinor: 0.7,
+  contest: 0.95, contestBig: 0.78, contestEpic: 0.65,
+  near: 2600, standoffEdge: 1.25, standoffMin: 5, standoffMax: 12, standoffGo: 0.9,
+  seen: 2300, laneReach: 16, guard: 820, groupFrom: 11, stage: 0,
+  backOff: 1.5,
+  tradeObj: 0.35, tradeSiege: 0.3,
+  baronFrom: 24,
+  stealFrom: 3600, stealHover: 0.65, stealLoose: 0.3, stealBig: 0.2,
+};
+export function applyObjTune(spec: string | undefined) {
+  applyTune(OBJ_TUNE, "OBJ_TUNE", spec);
+}
 /** a sieging group whose wave has not reached the structure yet stands this far (lane fraction) behind the wave front */
 const SIEGE_WAVE_BACK = 0.012;
 /**
@@ -113,6 +170,62 @@ const PREF: Record<ObjKey, Role[]> = {
 };
 /** chance a safe jungler takes it alone (before the strategy's multiplier); LCK solo shares dragon 21 %, herald 19 %, grubs 78 % */
 const SOLO_P: Partial<Record<ObjKey, number>> = { dragon: 0.75, herald: 0.5, grubs: 1 };
+/**
+ * Voidgrub decisions (LCK 2026, scripts/lck_grubs.py; the engine's numbers come from scripts/grubs-diag.ts).
+ * poach: chance per camp that a side's jungler, seeing the enemy on the grubs and able to get there before they are
+ *   gone, walks in alone for a last hit (both teams got a grub in 19.7 % of LCK games, 71 % of those with the two
+ *   teams' kills within 20 s of each other, and only 13.5 % of games see a champion die at the pit).
+ * poachEdge: it only goes when the enemies at the pit are no stronger than this times the jungler (one enemy at most).
+ * stayEdge: a jungler alone on the grubs stays when a single enemy this much stronger at most comes near (it used to
+ *   leave for anyone within 2,600 u); two or more still chase it off with the grubs it has.
+ */
+export const GRUB_MACRO = {
+  poach: 1, poachEdge: 2.5, stayEdge: 1.3,
+  /** who holds the grubs during laning: the power ratio at the pit is multiplied by exp(tilt x a normal draw per
+   *  game + blueEdge) for blue and its inverse for red. LCK: the first grub goes to the side ahead in gold at 8:00
+   *  in 55.7 % of games only (lane states and jungle paths decide, which the power ratio does not see) and blue takes
+   *  59.6 % of all grubs. The same tilt decides who may answer a take with a group (contestCand). */
+  tilt: 0.55, blueEdge: 0.28,
+  /** sneak: chance per camp that the jungler of the side without the area starts on the grubs alone when the enemy
+   *  jungler is far and nobody is near. finish: a jungler chased off the grubs first finishes the one it is on when
+   *  that grub is under this share of its health (so it leaves with one or two instead of none). */
+  sneak: 1, finish: 0.9,
+  /** a side is at the pit when the grubs spawn in this share of camps; otherwise it is free for them an exponential
+   *  time later (mean lateMean seconds). LCK: first grub 14 / 18 / 32 / 74 / 117 s after 8:00 (P10 / 25 / 50 / 75 / 90). */
+  onTime: 0.42, lateMean: 62,
+  /** skip: share of games in which neither side starts on the camp (LCK: 2.8 % of camps leave untouched). back: a
+   *  side walks over for grubs somebody left behind this often (LCK: 9 % of the visits that stop with grubs alive
+   *  are never followed up and those grubs despawn). */
+  skip: 0.03, back: 0.6,
+  /** a group at the grubs leaves the hitting to its jungler this often (the others guard): LCK grubs die to one
+   *  champion 78 % of the time */
+  groupSolo: 0.6,
+};
+/** Scripts can override any of them with GRUB_MACRO=key:value,... */
+export function applyGrubMacro(spec: string | undefined) {
+  applyTune(GRUB_MACRO, "GRUB_MACRO", spec);
+}
+/** a side's multiplier on its power at the grubs during laning (GRUB_MACRO.tilt) */
+const grubTilt = (M: MacroState, side: SideN) => (side === 0 ? M.grubTilt : 1 / M.grubTilt);
+/** a grub this side is hitting right now is nearly dead: it finishes that one before leaving (GRUB_MACRO.finish).
+ *  A grub somebody else left damaged does not count (it regenerates for up to 25 s). */
+function grubInHand(e: Engine, side: SideN): boolean {
+  for (const g of e.grubUnits) if (g.alive && g.hp < g.maxHp * GRUB_MACRO.finish && e.t - g.hitAt[side] < 2) return true;
+  return false;
+}
+/** A side that came over to stop the enemy's grubs stays on the camp once the enemy is gone: the jungler that walked
+ *  in for a last hit (a poach) always, a group that answered only when it is free for the grubs by now (its start
+ *  delay has passed) and takes the trouble (GRUB_MACRO.back), the same tests as for a take of its own (takeCand). */
+function grubStays(e: Engine, b: Brain, p: Plan): boolean {
+  if (p.poach) return true;
+  const at = e.obj.grubs.spawnAt, r = rollFor(e, b, "grubs");
+  return (at === null || e.t >= at + grubDelay(r.late)) && r.back < GRUB_MACRO.back;
+}
+/** seconds after the spawn before a side is free for the grubs, from its per-camp draw (0..1) */
+function grubDelay(u: number): number {
+  if (u < GRUB_MACRO.onTime) return 0;
+  return Math.min(300, -Math.log(Math.max(1e-6, 1 - (u - GRUB_MACRO.onTime) / (1 - GRUB_MACRO.onTime))) * GRUB_MACRO.lateMean);
+}
 const FALLBACK_PART: Record<ObjKey, number[]> = {
   dragon: [0.21, 0.28, 0.3, 0.17, 0.05], baron: [0.01, 0.07, 0.28, 0.45, 0.19], herald: [0.19, 0.29, 0.29, 0.2, 0.04],
   grubs: [0.78, 0.17, 0.04, 0.01, 0], elder: [0.05, 0.14, 0.25, 0.45, 0.11],
@@ -160,7 +273,7 @@ interface Plan {
   engage: boolean;
   /** our presence-weighted power / theirs around the target */
   ratio: number;
-  /** we hold the area: set up close; without it wait further back */
+  /** we hold the area: set up close and start it; without it hover on our side (OBJ_TUNE.hover) */
   prio: boolean;
   emergency?: boolean;
   /** defend: the structure is an inhibitor or the nexus (BASE_TUNE) */
@@ -171,6 +284,16 @@ interface Plan {
   final?: boolean;
   /** siege: an end call (BASE_TUNE.endCall): its members go in hurt */
   call?: boolean;
+  /** grubs: a contest by the jungler alone, for a last hit (GRUB_MACRO.poach) */
+  poach?: boolean;
+  /** how long this side stands off before it starts the monster at even odds, and since when it has been standing
+   *  off (both set the first time its gathered group finds matching enemies at the pit) */
+  standoff?: number;
+  standAt?: number;
+  /** the monster the enemy was on when this plan was picked as the trade for it */
+  trade?: ObjKey;
+  /** contest: the seconds both sides were weighed over when it was picked (contestCand); planValid uses the same */
+  hz?: number;
 }
 
 interface Group {
@@ -198,8 +321,17 @@ interface Brain {
   group: Group;
   hist: { t: number; my: number; th: number }[];
   cool: Partial<Record<string, number>>;
-  rolls: Partial<Record<ObjKey, { at: number; solo: number; h: number }>>;
+  rolls: Partial<Record<ObjKey, { at: number; solo: number; h: number; poach: number; late: number; sneak: number; back: number }>>;
   wonFight: boolean;
+  /** lost the fight of the last 20 s (two kills or more behind in it) */
+  lostFight: boolean;
+  /** when takeCand last gave a monster up for lack of power (concedeAt), by monster */
+  gaveUp: Partial<Record<ObjKey, number>>;
+  /** the enemy is on a pit we are not playing for (think): the monster and its pit */
+  trade: { k: ObjKey; pit: Pit } | null;
+  /** the jungler is going for a steal of monster k (stealTick); `tried`: the spawn it was last decided for, by monster */
+  steal: { k: ObjKey; by: number; until: number } | null;
+  stealTried: Partial<Record<ObjKey, number>>;
 }
 
 interface Geo {
@@ -209,7 +341,12 @@ interface Geo {
   slots: Record<Pit, Vec[]>;
 }
 
-export interface MacroStats { plans: Record<string, number>; aborts: Record<string, number>; formations: Record<string, number> }
+export interface MacroStats {
+  plans: Record<string, number>; aborts: Record<string, number>; formations: Record<string, number>;
+  /** objective calls (T08): hover:<obj> = thinks spent hovering, standoff:<obj> = commits that waited out a standoff,
+   *  start:<obj> = commits at once, concede:<obj>, trade:<what> = plans picked as a trade */
+  calls: Record<string, number>;
+}
 
 export interface MacroState {
   brains: [Brain, Brain];
@@ -220,6 +357,10 @@ export interface MacroState {
   stats: [MacroStats, MacroStats];
   log: string[];
   logOn: boolean;
+  /** blue's multiplier on its hold of the grub area this game (red: the inverse), see GRUB_MACRO.tilt */
+  grubTilt: number;
+  /** nobody starts on the grubs this game (GRUB_MACRO.skip) */
+  grubSkip: boolean;
 }
 
 // ---------- small helpers ----------
@@ -309,7 +450,8 @@ function objValue(e: Engine, side: SideN, k: ObjKey, contest = false): number {
   const my = e.dragons[side].length, th = e.dragons[1 - side].length;
   switch (k) {
     case "dragon": return 1 + (my >= 3 ? 0.9 : my === 2 ? 0.25 : 0) + (th >= 3 ? 0.8 : th === 2 ? 0.2 : 0);
-    case "grubs": return 0.75;
+    // three grubs are worth what the camp was as one monster; leftovers less (a lone jungler still picks them up)
+    case "grubs": return 0.45 + 0.1 * (e.obj.grubs.alive ? e.obj.grubs.left ?? 3 : 3);
     case "herald": return 0.75;
     case "baron": return 1.6 + (e.minute() > 30 ? 0.3 : 0);
     // elder is the comeback for the side without the soul; the soul side (it wins ~90% of engine and LCK games anyway)
@@ -336,27 +478,111 @@ function powerAt(e: Engine, us: Unit[], p: Vec, horizon: number) {
   return s;
 }
 
+const bump = (o: Record<string, number>, k: string) => { o[k] = (o[k] ?? 0) + 1; };
+
+/** The monsters a team shows up for even when it is behind: baron, elder and the dragons of a soul race (the enemy on
+ *  two stacks or more, or our own soul point). */
+function bigObj(e: Engine, side: SideN, k: ObjKey): boolean {
+  return k === "baron" || k === "elder" || (k === "dragon" && (e.dragons[1 - side].length >= 2 || e.dragons[side].length >= 3));
+}
+
+/** Below this share of the enemy's presence-weighted power at the pit a side does not show up for the monster. */
+function concedeAt(e: Engine, b: Brain, k: ObjKey): number {
+  const base = bigObj(e, b.side, k) ? OBJ_TUNE.concedeBig : k === "dragon" ? OBJ_TUNE.concede : OBJ_TUNE.concedeMinor;
+  return base - b.P.fight * 0.5;
+}
+
+/** The power share (members that can get there in time against every enemy that can) a side needs to collapse on an
+ *  enemy take. A team behind still flanks a baron / elder for a steal or a fight (LCK teams rarely hand baron over). */
+function contestMin(e: Engine, b: Brain, k: ObjKey): number {
+  const base = k === "baron" || k === "elder" ? OBJ_TUNE.contestEpic : bigObj(e, b.side, k) ? OBJ_TUNE.contestBig : OBJ_TUNE.contest;
+  return base - b.P.fight * 0.5;
+}
+
+/** Who stands within OBJ_TUNE.near of a pit right now: our (plan members') count and power, the enemies', the edge. */
+function atPit(e: Engine, side: SideN, pit: Vec, members?: number[]) {
+  let ourN = 0, ourP = 0, thN = 0, thP = 0;
+  for (const u of e.units) {
+    if (!u.alive || channeling(u) || dist(u, pit) > OBJ_TUNE.near) continue;
+    if (u.side !== side) { thN++; thP += e.power(u); }
+    else if (!members || members.includes(u.i)) { ourN++; ourP += e.power(u); }
+  }
+  return { ourN, ourP, thN, thP, edge: (ourP + 1) / (thP + 1) };
+}
+
+/** Laning rules for a monster (no setup before the spawn, the side without lane priority gives it up, only the lanes
+ *  next to it come): everything during laning except the dragon once one has been taken or OBJ_TUNE.groupFrom minutes
+ *  have passed. From the second dragon on both teams set up for it as a group, as they do after laning (before, every
+ *  dragon before 14:00 ran on laning rules: fights of 6+ before 14:00 0.04 a game, LCK 2026 0.77, 45 % of them at the
+ *  dragon pit). */
+function laningFor(e: Engine, V: View, k: ObjKey): boolean {
+  if (!V.laning) return false;
+  if (k !== "dragon") return true;
+  return e.dragons[0].length + e.dragons[1].length < 1 && V.minute < OBJ_TUNE.groupFrom;
+}
+
+/** The monster in play at a pit: up, or spawning within `lead` seconds (the herald is held back while baron is up). */
+function inPlay(e: Engine, pk: Pit, lead: number): ObjKey | null {
+  for (const k of OBJS) {
+    if (PIT_OF[k] !== pk || (k === "herald" && e.obj.baron.alive)) continue;
+    const o = e.obj[k];
+    if (o.alive || (o.spawnAt !== null && o.spawnAt >= e.t && o.spawnAt - e.t < lead)) return k;
+  }
+  return null;
+}
+
+/** The other side is on the monster: its plan is committed on it and the monster has taken damage. (Health below full
+ *  alone also holds after our own called-off take, since a monster no longer heals while it is being fought over.) */
+function enemyOn(e: Engine, M: MacroState, side: SideN, k: ObjKey): boolean {
+  const o = e.obj[k], p = M.brains[1 - side].plan;
+  return o.alive && o.hp < o.maxHp * 0.97 && (p.kind === "take" || p.kind === "contest") && p.obj === k && p.phase === "commit";
+}
+
+/** The other side's plan is committed on monster k (walking in on it or hitting it). */
+function enemyCommitted(e: Engine, M: MacroState, side: SideN, k: ObjKey): boolean {
+  const p = M.brains[1 - side].plan;
+  return e.obj[k].alive && (p.kind === "take" || p.kind === "contest") && p.obj === k && p.phase === "commit";
+}
+
+/** The enemy is on a pit we are not playing for (three or more of them within OBJ_TUNE.near, its monster in play, and
+ *  we have no plan there or only hover): what we do elsewhere now is a trade for it. */
+function tradeCtx(e: Engine, b: Brain, V: View): Brain["trade"] {
+  const p = b.plan;
+  for (const pk of ["dragon", "baron"] as Pit[]) {
+    const k = inPlay(e, pk, 20);
+    if (!k) continue;
+    if ((p.kind === "take" || p.kind === "contest") && p.obj && PIT_OF[p.obj] === pk && (p.prio || p.kind === "contest" || p.phase === "commit")) continue;
+    if (V.theirs.filter((x) => dist(x, PIT_POS[pk]) < OBJ_TUNE.near).length >= 3) return { k, pit: pk };
+  }
+  return null;
+}
+
 // ---------- init ----------
 function buildGeo(): Geo {
   const stage: Geo["stage"] = [
     { dragon: snap(BLUE_STAGE.dragon), baron: snap(BLUE_STAGE.baron) },
     { dragon: snap(rot(BLUE_STAGE.baron)), baron: snap(rot(BLUE_STAGE.dragon)) },
   ];
+  // OBJ_TUNE.stage > 0 pulls the entrances in to that distance from the pit (they are 1,630-1,900 u out)
+  if (OBJ_TUNE.stage > 0) for (const side of [0, 1] as SideN[]) for (const pk of ["dragon", "baron"] as Pit[]) {
+    stage[side][pk] = snap(toward(PIT_POS[pk], stage[side][pk], OBJ_TUNE.stage));
+  }
   const guard: Geo["guard"] = [{} as Record<Pit, Vec[]>, {} as Record<Pit, Vec[]>];
   const back: Geo["back"] = [{} as Record<Pit, Vec>, {} as Record<Pit, Vec>];
   const slots = {} as Record<Pit, Vec[]>;
   for (const pk of ["dragon", "baron"] as Pit[]) {
     const pit = PIT_POS[pk];
     for (const side of [0, 1] as SideN[]) {
-      // guards hold our side of the pit: fanned around the line to our stage, ~950 u out
+      // guards hold our side of the pit: fanned around the line to our stage, just outside the hitters (was ~950 u
+      // out, and fights over a take happened 1,500-2,500 u from the pit; LCK: 20 % of big fights inside 1,500 u)
       const a0 = Math.atan2(stage[side][pk].y - pit.y, stage[side][pk].x - pit.x);
       guard[side][pk] = [-0.55, 0.55, 0].map((da) => {
-        let g = snap({ x: pit.x + Math.cos(a0 + da) * 980, y: pit.y + Math.sin(a0 + da) * 980 });
-        if (dist(g, pit) < 780) g = snap(toward(pit, g, 950));
+        let g = snap({ x: pit.x + Math.cos(a0 + da) * OBJ_TUNE.guard, y: pit.y + Math.sin(a0 + da) * OBJ_TUNE.guard });
+        if (dist(g, pit) < OBJ_TUNE.guard - 170) g = snap(toward(pit, g, OBJ_TUNE.guard));
         return g;
       });
-      // where the side without priority waits: further back toward its own jungle
-      back[side][pk] = snap(toward(pit, stage[side][pk], 2700));
+      // where the side without the area hovers: on the line to its own entrance, outside the guards' reach
+      back[side][pk] = snap(toward(pit, stage[side][pk], OBJ_TUNE.hover));
     }
     // hitter slots: a fan around the pit centre facing the opening (the mean direction to both stages)
     const mx = (stage[0][pk].x + stage[1][pk].x) / 2 - pit.x, my = (stage[0][pk].y + stage[1][pk].y) / 2 - pit.y;
@@ -392,13 +618,16 @@ export function init(e: Engine): void {
       side, strat, P: STRATEGY_PARAMS[strat] ?? STRATEGY_PARAMS.balanced, plan: noPlan(0), next: 1 + side * 1.25,
       formation: "lanes", formUntil: 0, splitter, side2: pickSplitter(e, side, splitter), splitLane: "top",
       group: { key: "", x: 0, y: 0, path: [], dest: { x: 0, y: 0 }, pathFor: null, members: [], quorum: 1 },
-      hist: [], cool: {}, rolls: {}, wonFight: false,
+      hist: [], cool: {}, rolls: {}, wonFight: false, lostFight: false, gaveUp: {}, trade: null, steal: null, stealTried: {},
     };
   }) as [Brain, Brain];
   const units = e.units.map((): UMem => ({ job: "old", spotFor: "", spotAt: -99, retreatUntil: 0 }));
   const state: MacroState = {
     brains, units, pit: [{}, {}], geo: buildGeo(),
-    stats: [{ plans: {}, aborts: {}, formations: {} }, { plans: {}, aborts: {}, formations: {} }], log: [], logOn: false,
+    stats: [{ plans: {}, aborts: {}, formations: {}, calls: {} }, { plans: {}, aborts: {}, formations: {}, calls: {} }], log: [], logOn: false,
+    // a normal draw from three uniforms (sd 1)
+    grubTilt: Math.exp(GRUB_MACRO.tilt * (e.rng.next() + e.rng.next() + e.rng.next() - 1.5) * 2 + GRUB_MACRO.blueEdge),
+    grubSkip: e.rng.next() < GRUB_MACRO.skip,
   };
   e.mods.macro = state;
 }
@@ -441,6 +670,7 @@ export function teamThink(e: Engine): void {
       think(e, M, b);
     }
     planTick(e, M, b);
+    stealTick(e, M, b);
     groupTick(e, b);
   }
   // committed hitters inside each pit (for hitsObjective)
@@ -468,12 +698,14 @@ function think(e: Engine, M: MacroState, b: Brain) {
   while (b.hist.length && e.t - b.hist[0].t > 20) b.hist.shift();
   const h0 = b.hist[0];
   b.wonFight = e.kills[b.side] - h0.my - (e.kills[1 - b.side] - h0.th) >= 2;
+  b.lostFight = e.kills[1 - b.side] - h0.th - (e.kills[b.side] - h0.my) >= 2;
   // side laner(s)
   const sp = e.units[b.splitter];
   if (!sp || (!sp.alive && sp.respawnAt - e.t > 25)) {
     const alt = pickSplitter(e, b.side, b.splitter);
     if (alt >= 0 && e.units[alt].alive) b.splitter = alt;
   }
+  b.trade = tradeCtx(e, b, V);
   choosePlan(e, M, b, V);
   chooseFormation(e, M, b, V);
   assign(e, M, b, V);
@@ -497,7 +729,9 @@ function rollFor(e: Engine, b: Brain, k: ObjKey) {
     const tot = sh.slice(1).reduce((a, v) => a + v, 0) || 1;
     let x = e.rng.next() * tot, h = 2;
     for (let n = 2; n <= 5; n++) { x -= sh[n - 1]; if (x <= 0) { h = n; break; } }
-    r = { at, solo: e.rng.next(), h };
+    const alone = e.rng.next();
+    if (k === "grubs" && alone < GRUB_MACRO.groupSolo) h = 1;
+    r = { at, solo: e.rng.next(), h, poach: e.rng.next(), late: e.rng.next(), sneak: e.rng.next(), back: e.rng.next() };
     b.rolls[k] = r;
   }
   return r;
@@ -526,9 +760,12 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
   const o = e.obj[k];
   if (k === "herald" && e.obj.baron.alive) return null;
   const spawnIn = o.alive ? 0 : o.spawnAt === null ? Infinity : o.spawnAt - e.t;
-  const lead = V.laning ? (k === "grubs" ? 40 : 0) : b.P.setupLead;
+  const lan = laningFor(e, V, k);
+  const lead = lan ? (k === "grubs" ? 40 : 0) : b.P.setupLead;
   if (spawnIn > lead) return null;
   if ((b.cool[k] ?? 0) > e.t) return null;
+  // the grubs leave at 14:45: no walking over for a camp that will be gone
+  if (k === "grubs" && o.alive && e.t > GRUB_TUNE.leaveAt - 15) return null;
   const pk = PIT_OF[k], pit = PIT_POS[pk];
   // another objective at the same pit already planned by us: one at a time
   const val = objValue(e, b.side, k) * (b.P.obj[k] ?? 1);
@@ -539,6 +776,13 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
   const foesClose = V.theirs.filter((x) => dist(x, pit) < (k === "grubs" ? 2200 : 2600)).length;
   const roll = rollFor(e, b, k);
   const cur = b.plan.kind === "take" && b.plan.obj === k ? b.plan : null;
+  if (k === "grubs" && !cur) {
+    if (M.grubSkip) return null;
+    // not every side is free for the grubs the moment they are up (GRUB_MACRO.onTime / lateMean); 12 s to walk over
+    if (o.spawnAt !== null && e.t < o.spawnAt + grubDelay(roll.late) - 12) return null;
+    // grubs left behind are not always worth the walk
+    if (o.alive && (o.left ?? 3) < 3 && roll.back >= GRUB_MACRO.back) return null;
+  }
   const soloP = (SOLO_P[k] ?? 0) * b.P.solo;
   const soloOk = soloP > 0 && jg.alive && hpf(jg) > 0.5 && ejFar && foesClose === 0 && spawnIn < 40;
   // decided freshly until the team commits, then kept
@@ -564,14 +808,14 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
     let p0 = 0;
     for (const u of pool) {
       if (!all && members.length >= need) {
-        const enough = V.laning ? members.length >= need + (roll.solo < 0.45 ? 1 : 0) : p0 > thP * (1.0 + Math.max(0, b.P.fight));
+        const enough = lan ? members.length >= need + (roll.solo < 0.45 ? 1 : 0) : p0 > thP * (1.0 + Math.max(0, b.P.fight));
         if (enough) break;
       }
       members.push(u.i);
       p0 += e.power(u.alive ? u : { ...u, hp: u.maxHp }) * presence(e, u, pit, horizon);
     }
     if (members.length < need) return null;
-    if (!members.includes(jg.i) && k !== "baron" && k !== "elder" && V.laning) return null;
+    if (!members.includes(jg.i) && k !== "baron" && k !== "elder" && lan) return null;
   }
   const mem = members.map((i) => e.units[i]);
   const ourP = powerAt(e, mem, pit, horizon);
@@ -581,18 +825,37 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
   // Engine fights at a 1.1-1.25 power edge go to the stronger side only ~61% of the time (1.25-1.5: ~79%), yet with a
   // 1.0 cut the side 5 % weaker always waited 2,700 u back and gave up: dragon 0-4 splits came as often in even
   // matchups (40-53%) as in lopsided ones (scripts/dragon-curve.ts; LCK 2026: 0-4 in 24% of games).
-  const area = (powerAt(e, V.team, pit, horizon) + 1) / (thP + 1) / (k === "dragon" ? DRAGON_HOLD : 1);
-  // laning-phase objectives are given up by the side without priority (its jungler goes back to farming)
-  if (V.laning && area < 1 && !cur) return null;
+  // (grubs during laning: who holds them is not the power ratio alone, GRUB_MACRO.tilt)
+  const raw = ((powerAt(e, V.team, pit, horizon) + 1) / (thP + 1)) * (k === "grubs" && lan ? grubTilt(M, b.side) : 1);
+  const area = raw / (k === "dragon" ? DRAGON_HOLD : 1);
+  // laning-phase objectives are given up by the side without priority (its jungler goes back to farming), except
+  // that its jungler may start alone on grubs nobody is watching (a sneak). A sneak that is off before it commits
+  // (the enemy jungler came near) ends there: it must not turn into a group that waits back without the area
+  const sneak = k === "grubs" && solo && roll.sneak < GRUB_MACRO.sneak;
+  if (lan && area < 1 && !sneak && (!cur || (k === "grubs" && cur.phase !== "commit"))) return null;
+  // too weak to show up at all: concede it (choosePlan ends a plan that has not committed as "concede") and look for a
+  // trade. Between this and the hold line the side hovers. A committed take is called off by planValid instead.
+  // A side that has just lost the fight and is down bodies gives an ordinary monster up as well, instead of staying
+  // for a second fight over it (4+ fights about a dragon: 2.4-2.8 a game, LCK 2026 1.66; baron, elder and soul-race
+  // dragons are still played for).
+  const beaten = b.lostFight && V.numAdv <= -1 && !bigObj(e, b.side, k);
+  if (!solo && !(cur && cur.phase === "commit") && (raw < concedeAt(e, b, k) || beaten)) {
+    b.gaveUp[k] = e.t;
+    return null;
+  }
   let score: number;
+  let trade: ObjKey | undefined;
   if (solo) score = val * 0.8 + 0.3;
   else {
-    score = val + clamp(ratio - 1, -1, 1) * (V.laning ? 0.6 : 1.1) + V.numAdv * 0.12 + b.P.fight * 0.5 + (b.wonFight ? 0.3 : 0);
-    // the enemy is busy at the other pit: trade
-    const otherPit = PIT_POS[pk === "dragon" ? "baron" : "dragon"];
-    if (V.theirs.filter((x) => dist(x, otherPit) < 1500).length >= 3) score += 0.5 * b.P.trade;
+    score = val + clamp(ratio - 1, -1, 1) * (lan ? 0.6 : 1.1) + V.numAdv * 0.12 + b.P.fight * 0.5 + (b.wonFight ? 0.3 : 0);
+    // the enemy is on the other pit and we are not playing for that one: this is the trade (before: only with three
+    // enemies inside 1,500 u of it)
+    if (b.trade && b.trade.pit !== pk) {
+      score += OBJ_TUNE.tradeObj + 0.4 * b.P.trade;
+      trade = b.trade.k;
+    }
   }
-  if (V.laning) {
+  if (lan) {
     // laning phase: lane priority next to the pit, the enemy lane partners missing, how long it has been up
     const lane: LaneId = pk === "dragon" ? "bot" : "top";
     const f = e.lanes[lane].front;
@@ -619,8 +882,12 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
     // call is kept for stomps; otherwise baron follows a pick or a won fight, as in LCK
     // one pick alone was enough before (any death + ratio 1.1 → baron every time it was up); before 23 min the first
     // baron needs two down or a won fight with a body up (LCK first baron median 24:53)
-    const veryEarly = V.minute < 23;
-    const down = V.numAdv >= 2 || (V.numAdv >= 1 && !veryEarly && (honest > 1.35 || b.wonFight)) || (V.numAdv >= 1 && veryEarly && b.wonFight);
+    // (T08: with fights over the 2nd / 3rd dragon and the herald there is a won fight around 20:00 far more often, and
+    // on the old rule (before 23 min: two down, or one down after a won fight) the first baron came at 21.8 min, the
+    // first inhibitor at 24.0 and games ran 2.4 min short. Before OBJ_TUNE.baronFrom it now takes three down, or two
+    // down after a won fight; with four / three the first baron came at 26.8 min, LCK 2026: 24.9.)
+    const veryEarly = V.minute < OBJ_TUNE.baronFrom;
+    const down = V.numAdv >= (veryEarly ? 3 : 2) || (V.numAdv >= 1 && !veryEarly && (honest > 1.35 || b.wonFight)) || (V.numAdv >= 2 && veryEarly && b.wonFight);
     // elder without a pick or a won fight needs a stomp: a full-strength enemy can flip it (LCK elder takers had more
     // champions alive in 52% of takes)
     const safe = down || honest > (k === "elder" ? 2.4 : late ? 1.75 : early ? 2.4 : 2.0) || (b.wonFight && !veryEarly && honest > 1.05);
@@ -634,7 +901,7 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
     obj: k, need, solo, h: solo ? 1 : Math.min(roll.h, members.length),
     phase: o.alive ? "gather" : "setup", until: o.alive ? e.t + 15 : e.t + spawnIn + 10, expires: e.t + spawnIn + 110,
     engage: ratio >= 1 - b.P.fight && !(V.minute < b.P.avoidUntil && ratio < 1.35),
-    ratio: area, prio: solo || area >= 1,
+    ratio: area, prio: solo || area >= 1, trade,
   });
   return plan;
 }
@@ -647,23 +914,43 @@ function contestCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Pl
   if (b.plan.kind === "take" && b.plan.obj === k && (b.plan.prio || b.plan.phase === "commit")) return null;
   if ((b.cool[`c:${k}`] ?? 0) > e.t) return null;
   const pit = PIT_POS[PIT_OF[k]];
+  // the enemy is on it, or its group stands at the entrance (OBJ_TUNE.seen): a dragon dies about 11 s after the first
+  // hit, so an answer that starts at the first hit (before: two enemies inside 1,400 u) mostly arrived too late
+  // Baron and elder take 20-30 s, long enough to answer once the enemy stands on them: for those the old trigger
+  // stays (answering every enemy pair seen near the baron pit made 2.0 fights a game about baron; LCK 2026: 0.9).
   const onIt = V.theirs.filter((x) => dist(x, pit) < 1400);
-  if (!onIt.length) return null;
-  const hitting = o.hp < o.maxHp * 0.97;
-  if (!hitting && onIt.length < 2) return null;
+  // the grubs' health does not come back with the dead ones: go by when the camp was last hit
+  const hitting = k === "grubs" ? e.t - (o.hitAt ?? -99) < 3 : o.hp < o.maxHp * 0.97;
+  const slow = k === "baron" || k === "elder";
+  const coming = slow ? onIt.length : V.theirs.filter((x) => dist(x, pit) < OBJ_TUNE.seen).length;
+  // grubs: only an enemy that is there for them counts (a jungler walking past the pit would start a "contest" that
+  // then takes the camp itself); one still walking in is early enough for ours to come over for a last hit
+  const ep = M.brains[1 - b.side].plan;
+  const foeOnGrubs = k === "grubs" && (ep.kind === "take" || ep.kind === "contest") && ep.obj === "grubs" && ep.phase !== "setup";
+  if (k === "grubs" ? !onIt.length || (!hitting && !foeOnGrubs) : hitting ? !onIt.length : coming < 2) return null;
   let dps = 0;
   for (const x of onIt) if (dist(x, pit) < 650 && !x.fightId) dps += e.aaDps(x) * 1.2 + 30;
   const ttk = o.hp / Math.max(60, dps);
-  const can = V.mine.filter((u) => !(channeling(u) && u.recallEnd !== undefined) && hpf(u) > 0.3 && dist(u, pit) / e.speed(u) < ttk + 5);
+  // who can be there in time; during laning only the ones close by answer (the far lanes keep farming)
+  const reach = laningFor(e, V, k) ? Math.min(ttk + 5, OBJ_TUNE.laneReach) : ttk + 5;
+  const can = V.mine.filter((u) => !(channeling(u) && u.recallEnd !== undefined) && hpf(u) > 0.3 && dist(u, pit) / e.speed(u) < reach);
   if (!can.length) return null;
-  const ourP = powerAt(e, can, pit, 25);
-  const thP = powerAt(e, V.foes, pit, 25);
-  const ratio = (ourP + 1) / (thP + 1);
+  // both sides weighed over the time this takes (before: our members that can make it against every enemy within
+  // 25 s, which counted a top laner 20 s away at 0.55 for them and nothing for us)
+  const hz = clamp(reach, 10, 25);
+  const ourP = powerAt(e, can, pit, hz);
+  const thP = powerAt(e, V.foes, pit, hz);
+  // grubs during laning: the side that holds the area (same tilt as its take) answers with a group, the other only
+  // with its jungler (poachCand)
+  const ratio = ((ourP + 1) / (thP + 1)) * (k === "grubs" && V.laning ? grubTilt(M, b.side) : 1);
   // the side about to lose the soul race fights for the dragon from the enemy's 2nd stack on (engine 200 games: one
-  // team took all four dragons in 48% of games; LCK 2026 ~22%)
-  const big = k === "baron" || k === "elder" || (k === "dragon" && (e.dragons[1 - b.side].length >= 2 || e.dragons[b.side].length >= 3));
-  // a team behind still flanks a baron / elder for a steal or a fight (LCK teams rarely hand baron over for free)
-  if (ratio < (k === "baron" || k === "elder" ? 0.65 : big ? 0.8 : 0.95) - b.P.fight * 0.5) return null;
+  // team took all four dragons in 48% of games; LCK 2026 ~22%); a team behind still flanks a baron / elder
+  if (ratio < contestMin(e, b, k)) {
+    // no fight for the grubs, but our jungler can still walk in for a last hit
+    return k === "grubs" && (hitting || foeOnGrubs) ? poachCand(e, b, V, can) : null;
+  }
+  // not straight back in after a lost fight with two or more down
+  if (b.lostFight && V.numAdv <= -2 && !bigObj(e, b.side, k)) return null;
   const val = objValue(e, b.side, k, true) * (b.P.obj[k] ?? 1);
   let score = val * b.P.contest * (hitting ? 1 : 0.7) - 0.3 + clamp(ratio - 1, -1, 0.8) * 1.3 + (can.length - onIt.length) * 0.15 + b.P.fight;
   if (V.minute < b.P.avoidUntil && ratio < 1.3) score -= 0.4;
@@ -671,8 +958,38 @@ function contestCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Pl
   return mkPlan(e, "contest", `contest:${k}`, score, can.map((u) => u.i), {
     // h = hitters needed in the pit before anyone damages it (hitsObjective): all of `can` meant a contest that won the
     // fight rarely started hitting (one member a few hundred units out blocked it) while the dragon regenerated
-    obj: k, need: Math.min(3, can.length), h: Math.min(3, can.length), hitters: can.map((u) => u.i), phase: "gather",
-    until: e.t + 15, expires: e.t + 60, engage: ratio >= 0.9 - b.P.fight, emergency: true, ratio, prio: true,
+    obj: k, need: Math.min(3, can.length), h: Math.min(3, can.length), hitters: contestHitters(e, b, k, can.map((u) => u.i)), phase: "gather",
+    until: e.t + 15, expires: e.t + 60, engage: ratio >= 0.9 - b.P.fight, emergency: true, ratio, prio: true, hz,
+  });
+}
+
+/** Who hits the objective in a contest: everyone, except at the grubs, where the jungler does, at times with one
+ *  more (LCK: a grub dies to one champion 78 % of the time, to three or more 5 %). */
+function contestHitters(e: Engine, b: Brain, k: ObjKey, ids: number[]): number[] {
+  if (k !== "grubs" || ids.length < 2) return ids.slice();
+  // among the living (a dead jungler as the only hitter would leave the others standing in the pit)
+  const live = ids.filter((i) => e.units[i].alive);
+  if (live.length < 2) return live.length ? live : ids.slice();
+  const jg = live.find((i) => e.units[i].role === "Jungle");
+  const rest = live.filter((i) => i !== jg).sort((a, c) => dist(e.units[a], BARON_PIT) - dist(e.units[c], BARON_PIT));
+  if (jg === undefined) return rest.slice(0, 2);
+  // the same draw as a group take's: mostly the jungler alone (GRUB_MACRO.groupSolo)
+  return rollFor(e, b, "grubs").h <= 1 ? [jg] : [jg, rest[0]];
+}
+
+/** The jungler alone goes for one of the grubs the enemy is taking (GRUB_MACRO). Only from no plan or a grub plan:
+ *  the brain runs one plan a side, and a dragon setup is not dropped for a grub. */
+function poachCand(e: Engine, b: Brain, V: View, can: Unit[]): Plan | null {
+  const jg = can.find((u) => u.role === "Jungle");
+  if (!jg || hpf(jg) < 0.5) return null;
+  const cur = b.plan;
+  if (cur.kind !== "none" && cur.obj !== "grubs") return null;
+  if (!(cur.kind === "contest" && cur.poach) && rollFor(e, b, "grubs").poach >= GRUB_MACRO.poach * b.P.contest) return null;
+  const there = V.theirs.filter((x) => dist(x, BARON_PIT) < 2200);
+  if (there.length > 1 || there.reduce((a, x) => a + e.power(x), 0) > e.power(jg) * GRUB_MACRO.poachEdge) return null;
+  return mkPlan(e, "contest", "contest:grubs", 0.9, [jg.i], {
+    obj: "grubs", need: 1, h: 1, hitters: [jg.i], phase: "gather", until: e.t + 10, expires: e.t + 45, engage: false,
+    emergency: true, ratio: 1, prio: true, poach: true,
   });
 }
 
@@ -790,13 +1107,17 @@ function siegeCand(e: Engine, M: MacroState, b: Brain, V: View): Plan | null {
     const inh = e.inhibs.find((x) => x.side === enemy && x.lane === lane);
     const baseOpen = !tierT && !!inh && !inh.alive;
     if (baseOpen) v += BASE_TUNE.openPush + V.numAdv * 0.15;
+    // the enemy is on a pit we are not playing for: a turret on the far side of the map is the trade (the lane away
+    // from that pit in full, mid for half)
+    const far = b.trade ? (lane === "mid" ? 0.5 : (b.trade.pit === "dragon") === (lane === "top") ? 1 : 0) : 0;
+    if (far) v += (OBJ_TUNE.tradeSiege + 0.35 * b.P.trade) * far;
     // (a lane whose inner turret is down: the inhibitor turret, the inhibitor or the nexus turrets are next)
     const endCall = kill && (!tierT || tierT.tier >= 3);
     // two champions only finish an open base
     if (pool.length < 3 && !baseOpen) continue;
     if (endCall) v += BASE_TUNE.endCall;
     // sieges follow an edge: bodies up, baron, a won fight, or a clearly stronger group (an open base needs only an even one)
-    if (V.numAdv < 1 && !V.baron && !b.wonFight && ratio < b.P.siegeEdge + 0.2 && !(baseOpen && ratio >= 1)) continue;
+    if (V.numAdv < 1 && !V.baron && !b.wonFight && ratio < b.P.siegeEdge + 0.2 && !(baseOpen && ratio >= 1) && !far) continue;
     if (ratio < 0.95) continue;
     if (!best || v > best.score) {
       const u0 = laneU(lane, tp);
@@ -806,7 +1127,7 @@ function siegeCand(e: Engine, M: MacroState, b: Brain, V: View): Plan | null {
       const buffLeft = V.baron ? Math.max(...pool.map((u) => u.baronUntil - e.t)) : 0;
       best = mkPlan(e, "siege", `siege:${lane}`, v + (V.baron ? 0.5 : 0), pool.map((u) => u.i), {
         lane, target: snap(stand), until: e.t + Math.max(baseOpen ? 40 : 20, Math.min(90, buffLeft)), expires: e.t + Math.max(70, buffLeft + 20),
-        engage: ratio >= 1.05 - b.P.fight, ratio, final: baseOpen, emergency: endCall, call: endCall,
+        engage: ratio >= 1.05 - b.P.fight, ratio, final: baseOpen, emergency: endCall, call: endCall, trade: far ? b.trade!.k : undefined,
       });
     }
   }
@@ -838,14 +1159,38 @@ function planValid(e: Engine, M: MacroState, b: Brain, V: View, p: Plan): string
     const mem = p.members.map((i) => e.units[i]);
     const alive = mem.filter((u) => u.alive || u.respawnAt - e.t < 6).length;
     if (alive < Math.min(p.need, p.kind === "contest" ? 1 : p.need)) return "members";
-    const late = o.alive && o.hp < o.maxHp * 0.3;
-    if (p.solo) {
-      if (!late && V.theirs.some((x) => dist(x, pit) < 2600)) return "spotted";
-    } else if (!late && o.alive && V.theirs.some((x) => dist(x, pit) < 4500)) {
-      // same yardstick as the candidates: presence-weighted power of the plan's members vs all enemies
-      const ourW = powerAt(e, mem, pit, 25);
-      const thW = powerAt(e, V.foes, pit, 25);
-      if (thW > ourW * (1.3 + b.P.fight)) return "outnumbered";
+    // nearly done, or (grubs) the one in hand is: finish it first
+    const late = o.alive && (o.hp < o.maxHp * 0.3 || (k === "grubs" && grubInHand(e, b.side)));
+    // nobody left to stop: the contest is over (a take of our own is takeCand's call). At the grubs whoever came
+    // over stays on what is left of the camp when it is free for it (grubStays), which is how the grubs a team walked
+    // away from are taken "right there" (LCK: in 52 % of the visits that stop with grubs alive); otherwise it goes
+    // back to what it was doing and the grubs are left for later.
+    if (p.kind === "contest" && e.t - p.since > 5 && !V.theirs.some((x) => dist(x, pit) < OBJ_TUNE.near + 400) && !(k === "grubs" && grubStays(e, b, p))) return "done";
+    if (p.poach) {
+      // in for a last hit, out when a second enemy turns up or it is getting hurt
+      const jg = mem[0];
+      if (V.theirs.filter((x) => dist(x, pit) < 1800).length > 1 || (jg.alive && hpf(jg) < 0.35)) return "spotted";
+    } else if (p.solo) {
+      const foes = V.theirs.filter((x) => dist(x, pit) < 2600);
+      // one enemy (a jungler come to smite a grub) does not chase a healthy jungler off the grubs; more do, and it
+      // leaves with the grubs it has
+      const jg = mem[0];
+      const stay = k === "grubs" && foes.length === 1 && jg.alive && hpf(jg) > 0.45 && e.power(foes[0]) <= e.power(jg) * GRUB_MACRO.stayEdge;
+      if (!late && foes.length && !stay) return "spotted";
+    } else if (!late && o.alive && p.kind === "contest") {
+      // the candidate's yardstick with some slack (before: a flat 1.3, so a baron contest allowed at 0.65 of the
+      // enemy's power was called off again in the next think)
+      const ourW = powerAt(e, mem, pit, p.hz ?? 25);
+      const thW = powerAt(e, V.foes, pit, p.hz ?? 25);
+      const tilt = k === "grubs" && V.laning ? grubTilt(M, b.side) : 1;
+      if (((ourW + 1) / (thW + 1)) * tilt < contestMin(e, b, k) - 0.12) return "outnumbered";
+    } else if (!late && o.alive && p.phase === "commit") {
+      // a committed take is called off by what stands at the pit: the enemies there against our members there.
+      // (Before, every enemy that could arrive within 25 s was weighed against the plan's own three or four members
+      // from the moment the plan started, so two even teams both dropped the same dragon as "outnumbered", 3.5 such
+      // aborts a game. Whether to show up at all is takeCand's call on whole-team power, see concedeAt.)
+      const a = atPit(e, b.side, pit, p.members);
+      if (a.thN > 0 && a.thP > a.ourP * (OBJ_TUNE.backOff + b.P.fight)) return "outnumbered";
     }
     if (p.kind === "take" && p.phase === "gather" && p.prio && e.t - p.phaseAt > 40) return "slow";
   }
@@ -898,11 +1243,12 @@ function choosePlan(e: Engine, M: MacroState, b: Brain, V: View) {
     // a take whose own candidate now vetoes it (solo is off, baron no longer safe, lost the area, too few members)
     // ends before it commits; before, the veto only blocked starting a plan and the old one ran on until it expired
     const vetoed = cur.kind === "take" && cur.phase !== "commit" && !cands.some((c) => c.id === cur.id);
-    const why = planValid(e, M, b, V, cur) ?? (vetoed ? "vetoed" : null);
+    const why = planValid(e, M, b, V, cur) ?? (vetoed ? (cur.obj && b.gaveUp[cur.obj] === e.t ? "concede" : "vetoed") : null);
     if (why) {
       if (why !== "done") {
         M.stats[b.side].aborts[`${cur.id}:${why}`] = (M.stats[b.side].aborts[`${cur.id}:${why}`] ?? 0) + 1;
-        if (cur.obj) b.cool[cur.kind === "contest" ? `c:${cur.obj}` : cur.obj] = e.t + (why === "outnumbered" || why === "spotted" ? 25 : 12);
+        if (why === "concede") bump(M.stats[b.side].calls, `concede:${cur.obj}`);
+        if (cur.obj) b.cool[cur.kind === "contest" ? `c:${cur.obj}` : cur.obj] = e.t + (why === "outnumbered" || why === "spotted" ? 25 : why === "concede" ? 20 : 12);
         if (cur.kind === "siege" || cur.kind === "defend") b.cool[cur.id] = e.t + 20;
       }
       log(M, e, b, `end ${cur.id}: ${why}`);
@@ -942,7 +1288,9 @@ function choosePlan(e: Engine, M: MacroState, b: Brain, V: View) {
             // and stays the team's plan while its members are inside the base (it was dropped for a baron mid-fight)
             if (cur.target && cur.members.filter((i) => e.units[i].alive && dist(e.units[i], cur.target!) < 2200).length >= 2) cur.until = Math.max(cur.until, e.t + 10);
           }
-          if (cur.kind === "contest") cur.hitters = cur.members.slice();
+          if (cur.kind === "contest") { cur.hitters = contestHitters(e, b, cur.obj!, cur.members); cur.hz = fresh.hz; }
+          // a poach that the team now backs is a contest like any other
+          if (cur.poach && !fresh.poach) { cur.poach = false; cur.need = fresh.need; cur.h = fresh.h; }
         }
       }
     }
@@ -975,14 +1323,19 @@ function choosePlan(e: Engine, M: MacroState, b: Brain, V: View) {
     }
     b.plan = best;
     M.stats[b.side].plans[best.id] = (M.stats[b.side].plans[best.id] ?? 0) + 1;
+    if (best.trade) bump(M.stats[b.side].calls, `trade:${best.kind === "siege" ? "turret" : best.obj}`);
     if (best.solo) M.stats[b.side].plans[`${best.id}:solo`] = (M.stats[b.side].plans[`${best.id}:solo`] ?? 0) + 1;
+    if (best.poach) M.stats[b.side].plans[`${best.id}:poach`] = (M.stats[b.side].plans[`${best.id}:poach`] ?? 0) + 1;
     if (best.kind === "take") pickHitters(e, b, best);
     log(M, e, b, `plan ${best.id}${best.solo ? " solo" : ""} score ${best.score.toFixed(2)} ratio ${best.ratio.toFixed(2)} prio ${best.prio} members ${best.members.map((i) => e.units[i].role).join("/")} (was ${cur.id})`);
   } else if (!best) {
     if (cur.kind !== "none") log(M, e, b, `plan none (was ${cur.id})`);
     b.plan = noPlan(e.t);
   }
-  if (b.plan.kind === "take") pickHitters(e, b, b.plan);
+  if (b.plan.kind === "take") {
+    pickHitters(e, b, b.plan);
+    if (!b.plan.prio && b.plan.phase !== "commit") bump(M.stats[b.side].calls, `hover:${b.plan.obj}`);
+  }
 }
 
 function pickHitters(e: Engine, b: Brain, p: Plan) {
@@ -993,12 +1346,123 @@ function pickHitters(e: Engine, b: Brain, p: Plan) {
   const rank = (u: Unit) => (u.role === "Jungle" ? -10 : u.role === "Bot" ? -2 : u.role === "Mid" ? -1.5 : u.role === "Top" ? -1 : 0) + dist(u, pit) / 3000;
   live.sort((a, c) => rank(a) - rank(c));
   const keep = p.hitters.filter((i) => live.some((u) => u.i === i));
-  const want = Math.max(2, Math.min(p.h, live.length));
+  // the grubs can be left to the jungler alone (rollFor)
+  const want = Math.max(p.obj === "grubs" ? 1 : 2, Math.min(p.h, live.length));
   for (const u of live) {
     if (keep.length >= want) break;
     if (!keep.includes(u.i)) keep.push(u.i);
   }
   p.hitters = keep;
+}
+
+/**
+ * Steal runs (T09). When the enemy commits to a monster (walks in on it: a dragon dies about 11 s after the first
+ * hit, so waiting for the hit leaves no time) a jungler close by with a Smite charge may go for it: once per monster,
+ * more often when its team is at the pit anyway (hovering, or gathered for it) than when it gave the monster up, and
+ * for the monsters that matter (bigObj). It waits outside Smite's reach and goes in at the last moment (stealJob);
+ * the Smite fight itself is objsmite.ts. Not for the grubs (three small monsters, T07).
+ */
+function stealTick(e: Engine, M: MacroState, b: Brain) {
+  const s = b.steal;
+  if (s) {
+    const u = e.units[s.by];
+    if (!e.obj[s.k].alive || !u.alive || e.t > s.until || hpf(u) < 0.2 || !enemyCommitted(e, M, b.side, s.k)) {
+      const why = !e.obj[s.k].alive ? "monster gone" : !u.alive ? "dead" : e.t > s.until ? "time" : hpf(u) < 0.2 ? "hurt" : "enemy left";
+      const d = dist(u, PIT_POS[PIT_OF[s.k]]);
+      bump(M.stats[b.side].calls, `stealend:${why}, ${d < STEAL_TUNE.range ? "in reach" : d < STEAL_TUNE.range + STEAL_TUNE.flashIn ? "a flash away" : d < 2000 ? "close" : "far"}`);
+      log(M, e, b, `steal run over: ${why}, ${Math.round(d)} u from the pit${u.fightId ? ", in a fight" : ""}`);
+      b.steal = null;
+      // back to what it was doing (stealJob put it on the objective task)
+      if (u.task === "obj") u.task = "jungle";
+      u.objTarget = undefined;
+      u.goal = null;
+      u.path = [];
+      M.units[u.i].spotFor = "";
+    }
+    return;
+  }
+  for (const k of OBJS) {
+    const o = e.obj[k];
+    if (k === "grubs" || !o.alive || !enemyCommitted(e, M, b.side, k)) continue;
+    const key = o.spawnAt ?? -1;
+    if (b.stealTried[k] === key) continue;
+    const jg = e.units.find((u) => u.side === b.side && u.role === "Jungle")!;
+    const pit = PIT_POS[PIT_OF[k]];
+    if (!jg.alive || hpf(jg) < 0.4 || channeling(jg) || dist(jg, pit) > OBJ_TUNE.stealFrom || Summoners.smiteReadyIn(e, jg) > 3) continue;
+    b.stealTried[k] = key;
+    const p = b.plan;
+    // its team is walking in on the monster already (a contest, or a take of its own: a race): the jungler is with it
+    if ((p.kind === "contest" || p.kind === "take") && p.obj === k && p.phase === "commit") continue;
+    const there = p.kind === "take" && p.obj === k;
+    const chance = (there ? OBJ_TUNE.stealHover : OBJ_TUNE.stealLoose) + (bigObj(e, b.side, k) ? OBJ_TUNE.stealBig : 0);
+    if (!e.rng.chance(clamp(chance * (0.6 + 0.4 * b.P.contest), 0, 0.95))) continue;
+    b.steal = { k, by: jg.i, until: e.t + 40 };
+    M.units[jg.i].spotFor = "";
+    bump(M.stats[b.side].calls, `steal:${k}`);
+    log(M, e, b, `steal run on ${k} by ${jg.name} (${Math.round((o.hp / o.maxHp) * 100)}% left)`);
+    return;
+  }
+}
+
+/** Whether u is on a steal run for monster k (objsmite.ts: it may flash into Smite's reach). */
+export function stealing(e: Engine, u: Unit, k?: ObjKey): boolean {
+  const s = st(e)?.brains[u.side].steal;
+  return !!s && s.by === u.i && (k === undefined || s.k === k);
+}
+
+/** fight.ts: a steal runner that got caught in a fight keeps walking to its spot instead of fighting (it takes the
+ *  hits; a stun still stops it). True when this moved the unit. */
+export function stealWalk(e: Engine, u: Unit): boolean {
+  const M = st(e);
+  if (!M) return false;
+  const b = M.brains[u.side];
+  if (!b.steal || b.steal.by !== u.i) return false;
+  stealJob(e, b, u, M.units[u.i]);
+  return true;
+}
+
+/** Open ground on a ring around a pit: the point that is nearest by foot for u, scored down for enemies standing near. */
+function ringSpot(e: Engine, u: Unit, pit: Vec, r: number, lo: number, hi: number): Vec | null {
+  let best: Vec | null = null, bv = Infinity;
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const q = snap({ x: pit.x + Math.cos(a) * r, y: pit.y + Math.sin(a) * r });
+    const d = dist(q, pit);
+    if (d < lo || d > hi) continue;
+    let len = 0, prev: Vec = u;
+    for (const w of Nav.findPath(u, q)) { len += dist(prev, w); prev = w; }
+    for (const x of e.units) if (x.alive && x.side !== u.side) len += Math.max(0, 1400 - dist(x, q)) * 4;
+    if (len < bv) { bv = len; best = q; }
+  }
+  return best;
+}
+
+/**
+ * The steal runner. It waits just outside Smite's reach, on open ground away from the enemy (often behind the pit
+ * wall), and goes in when the monster is about to drop into its Smite: when the time left at the current damage is
+ * what the walk in takes (with Flash up it can leave it later: objsmite.ts flashes it in). Walking in at once, it
+ * was caught and killed at the pit mouth before the monster was low (every run in the first 60 games).
+ */
+function stealJob(e: Engine, b: Brain, u: Unit, m: UMem) {
+  const k = b.steal!.k;
+  const pit = PIT_POS[PIT_OF[k]];
+  u.task = "obj";
+  u.objTarget = k;
+  // where it will Smite from: open ground inside the reach (counted from the monster's centre), nearest by foot
+  const tag = `steal:${k}`;
+  if (!m.spot || m.spotFor !== tag || (e.t - m.spotAt > 6 && dist(u, pit) > STEAL_TUNE.range + 700)) {
+    m.spot = ringSpot(e, u, pit, STEAL_TUNE.range - 180, 0, STEAL_TUNE.range - 120) ?? snap(toward(pit, u, STEAL_TUNE.range - 180));
+    m.spotFor = tag;
+    m.spotAt = e.t;
+  }
+  const toSpot = dist(u, m.spot);
+  const flash = Summoners.isReady(e, u, "flash");
+  // it waits on its way in, this far short of that spot: with Flash up as far out as the Flash still reaches from
+  // (objsmite.ts flashes it in), without it a short walk away
+  const out = flash ? STEAL_TUNE.flashIn + 40 : STEAL_TUNE.walkIn;
+  const left = secondsTo(e, k, Summoners.smiteDamage(e, u));
+  const dive = dist(u, pit) < STEAL_TUNE.range - 40 || (!flash && left <= toSpot / e.speed(u) + 0.5);
+  if (dive || toSpot > out + 40) go(e, u, m.spot, 40);
 }
 
 /** Per-step phase changes (gather -> commit as soon as the group is there). */
@@ -1021,6 +1485,19 @@ function planTick(e: Engine, M: MacroState, b: Brain) {
     for (const x of e.units) if (x.side !== b.side && x.alive && !x.fightId && dist(x, pit) < 650) dps += e.aaDps(x) * 1.2 + 30;
     const ttk = o.hp / Math.max(60, dps);
     go = go || e.t - p.phaseAt > 5 || ttk < 8;
+  } else if (go && !p.solo) {
+    // standoff: with enemies at the pit that match us, the group holds its entrance first instead of walking onto the
+    // monster in front of them. It starts it at once with a clear edge, after its standoff time at even odds, and
+    // when the enemy starts it first (then this is the answer to their take, on the contest yardstick).
+    const a = atPit(e, b.side, pit, p.members);
+    if (a.thN > 0 && a.edge < OBJ_TUNE.standoffEdge) {
+      p.standoff ??= OBJ_TUNE.standoffMin + e.rng.next() * (OBJ_TUNE.standoffMax - OBJ_TUNE.standoffMin);
+      // counted from the moment the two groups first face each other, not from the start of the gathering (a group
+      // that needed 15 s to gather would start the monster the moment it was complete)
+      p.standAt ??= e.t;
+      go = (e.t - p.standAt > p.standoff && a.edge >= OBJ_TUNE.standoffGo) || (enemyOn(e, M, b.side, p.obj!) && a.edge >= contestMin(e, b, p.obj!));
+      if (go) bump(M.stats[b.side].calls, `standoff:${p.obj}`);
+    } else bump(M.stats[b.side].calls, `start:${p.obj}`);
   }
   if (go) { p.phase = "commit"; p.phaseAt = e.t; }
 }
@@ -1527,8 +2004,8 @@ function objJob(e: Engine, M: MacroState, b: Brain, u: Unit, m: UMem, guard: boo
       m.spotAt = e.t;
       const stage = p.prio ? M.geo.stage[u.side][pk] : M.geo.back[u.side][pk];
       if (p.phase === "gather" && p.prio && dist(u, pit) < 1750 && dist(u, pit) > 800) m.spot = { x: u.x, y: u.y };
-      else m.spot = scatter(e, LCK_STATS?.zones?.[ZONE_OF[pk]]?.[u.role], u.side, stage, 0, p.prio ? 650 : 900,
-        (q) => dist(q, pit) > (p.prio ? 1050 : 2000) && ownHalf(u.side, q, p.prio ? 300 : -300));
+      else m.spot = scatter(e, LCK_STATS?.zones?.[ZONE_OF[pk]]?.[u.role], u.side, stage, 0, p.prio ? 650 : 700,
+        (q) => dist(q, pit) > (p.prio ? 1050 : OBJ_TUNE.hover - 400) && ownHalf(u.side, q, p.prio ? 300 : -300));
       m.spotFor = tag;
     }
     if (!joinFight(e, u)) go(e, u, m.spot, 120);
@@ -1543,12 +2020,21 @@ function objJob(e: Engine, M: MacroState, b: Brain, u: Unit, m: UMem, guard: boo
     go(e, u, s, 60);
     return;
   }
-  if (!m.spot || m.spotFor !== tag || e.t - m.spotAt > 10 + (u.i % 3) * 2) {
+  if (!m.spot || m.spotFor !== tag || e.t - m.spotAt > 4 + (u.i % 3)) {
     m.spotAt = e.t;
-    const gs = M.geo.guard[u.side][pk];
+    // guards stand between the pit and the enemy (zoning it off the take, the jungler off a steal): of the fan points
+    // of both sides, all on open ground ~950 u out, the three nearest to the enemies around the pit. With nobody
+    // near, our own side as before.
+    let gs = M.geo.guard[u.side][pk];
+    let fx = 0, fy = 0, fn = 0;
+    for (const x of e.units) if (x.alive && x.side !== u.side && dist(x, pit) < 3800) { fx += x.x; fy += x.y; fn++; }
+    if (fn) {
+      const c = { x: fx / fn, y: fy / fn };
+      gs = [...M.geo.guard[0][pk], ...M.geo.guard[1][pk]].sort((p1, p2) => dist(p1, c) - dist(p2, c)).slice(0, 3);
+    }
     const base = gs[SLOT_ROLE[u.role] % gs.length];
     let q = snap({ x: base.x + (e.rng.next() - 0.5) * 300, y: base.y + (e.rng.next() - 0.5) * 300 });
-    if (dist(q, pit) < 760) q = snap(toward(pit, q, 900));
+    if (dist(q, pit) < OBJ_TUNE.guard - 170) q = snap(toward(pit, q, OBJ_TUNE.guard));
     m.spot = q;
     m.spotFor = tag;
   }
@@ -1604,6 +2090,8 @@ export function unitTick(e: Engine, u: Unit): boolean {
   if (m.job === "old") return false;
   // regen in the fountain area (the old code does this only on its own path)
   if (dist(u, FOUNTAIN[u.side]) < 1200) u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.08 * DT);
+  // a steal run comes before everything else the jungler was doing (stealTick ends it)
+  if (b.steal && b.steal.by === u.i) { stealJob(e, b, u, m); return true; }
   if (m.job === "recall") {
     if (inFountain(u)) { if (hpf(u) < 0.95) return true; }
     else { startRecall(e, u); return true; }
@@ -1668,6 +2156,12 @@ export function hitsObjective(e: Engine, u: Unit, k: ObjKey): boolean {
   const p = M.brains[u.side].plan;
   if ((p.kind !== "take" && p.kind !== "contest") || p.obj !== k || p.phase !== "commit") return false;
   if (!p.hitters.includes(u.i)) return false;
+  // a contest answers the enemy's take: its hitters race for a monster the enemy is on, they do not start one or
+  // finish one the enemy has left. (Now that a contest begins when the enemy is seen at the entrance, it would
+  // otherwise be a take without any of takeCand's checks: 29 % of barons fell to a contest. A won contest goes on as a
+  // take, see choosePlan.) Not at the grubs: a contest there only starts when the enemy's plan is on them
+  // (contestCand), is one or two champions, and whoever came over stays on what is left of the camp (T07).
+  if (p.kind === "contest" && k !== "grubs" && !enemyOn(e, M, u.side, k)) return false;
   if (p.solo) return u.role === "Jungle";
   // counted live: a hitter may have been pulled into a fight earlier this step
   const pit = PIT_POS[PIT_OF[k]];
@@ -1679,7 +2173,8 @@ export function hitsObjective(e: Engine, u: Unit, k: ObjKey): boolean {
     if (!channeling(x) && dist(x, pit) < 650) n++;
   }
   M.pit[u.side][k] = n;
-  return n >= Math.max(2, Math.min(p.h, live));
+  // one hitter is enough for a grub (the jungler come to smite one); the other monsters need two in the pit
+  return n >= Math.max(k === "grubs" ? 1 : 2, Math.min(p.h, live));
 }
 
 const OBJ_NAME: Record<ObjKey, string> = { dragon: "드래곤", grubs: "공허 유충", herald: "협곡의 전령", baron: "내셔 남작", elder: "장로 드래곤" };
@@ -1696,14 +2191,42 @@ export function planLabel(e: Engine, side: SideN): string {
     case "take": {
       const o = OBJ_NAME[p.obj!];
       if (p.solo) return `정글 단독 ${o}`;
-      return p.phase === "setup" ? `${o} 준비` : p.phase === "gather" ? (p.prio ? `${o} 집결` : `${o} 대기`) : `${o} 사냥`;
+      if (p.phase === "commit") return `${o} 사냥`;
+      // enemies at the pit too: the two teams are facing each other
+      const facing = e.units.some((x) => x.alive && x.side !== side && dist(x, PIT_POS[PIT_OF[p.obj!]]) < OBJ_TUNE.near + 400);
+      if (facing && e.obj[p.obj!].alive) return `${o} 대치`;
+      const what = p.phase === "setup" ? `${o} 준비` : p.prio ? `${o} 집결` : `${o} 대기`;
+      return p.trade ? `${what}(${OBJ_NAME[p.trade]} 교환)` : what;
     }
-    case "contest": return `${OBJ_NAME[p.obj!]} 저지`;
-    case "siege": return `${LANE_NAME[p.lane!]} 공성`;
+    case "contest": return p.poach ? "유충 뺏기" : `${OBJ_NAME[p.obj!]} 저지`;
+    case "siege": return p.trade ? `${LANE_NAME[p.lane!]} 공성(${OBJ_NAME[p.trade]} 교환)` : `${LANE_NAME[p.lane!]} 공성`;
     case "defend": return `${LANE_NAME[p.lane!]} 수비`;
     case "reset": return "정비(귀환)";
     default: return FORMATION_NAME[b.formation];
   }
+}
+
+/** What a side wants from a fight next to a pit (fight.ts): "take" = it is on the monster and would rather finish
+ *  it, "stop" = the enemy is on it and this side has to fight now or lose it, "hold" = nobody has started it. */
+export type Purpose = "take" | "stop" | "hold";
+
+/** The monster a fight at `f` is about and what `side` wants from it; null away from the pits or with no monster in
+ *  play there (up, or spawning within 30 s). */
+export function purpose(e: Engine, side: SideN, f: Vec): { k: ObjKey; want: Purpose } | null {
+  const M = st(e);
+  if (!M) return null;
+  for (const pk of ["dragon", "baron"] as Pit[]) {
+    if (dist(f, PIT_POS[pk]) > OBJ_TUNE.near) continue;
+    const k = inPlay(e, pk, 30);
+    if (!k) return null;
+    const on = (p: Plan) => (p.kind === "take" || p.kind === "contest") && p.obj !== undefined && PIT_OF[p.obj] === pk;
+    const mine = M.brains[side].plan, theirs = M.brains[1 - side].plan;
+    if (on(mine) && mine.kind === "contest") return { k, want: "stop" };
+    if (on(mine) && mine.phase === "commit") return { k, want: "take" };
+    if (on(theirs) && enemyOn(e, M, side, k)) return { k, want: "stop" };
+    return { k, want: "hold" };
+  }
+  return null;
 }
 
 export function stance(e: Engine, u: Unit): Stance {
@@ -1712,6 +2235,8 @@ export function stance(e: Engine, u: Unit): Stance {
   const b = M.brains[u.side];
   const m = M.units[u.i];
   const p = b.plan;
+  // a steal runner is not there to fight: it does not start or answer one (fight.ts keeps it walking if it is caught)
+  if (b.steal && b.steal.by === u.i) return "avoid";
   if (m.job === "recall" || e.t < m.retreatUntil || hpf(u) < 0.3 || channeling(u)) return "avoid";
   const holdBack = e.minute() < b.P.avoidUntil;
   switch (m.job) {

@@ -68,7 +68,7 @@ export function TeamModal({ id }: { id: string }) {
               <td class="num">{age(p, s.season)}</td>
               <td>{p.contract && p.origin !== "intl" ? `${p.contract.until}년까지` : "-"}</td>
               <td class="num">{p.origin === "intl" ? "-" : money(p.contract?.salary ?? 0)}</td>
-              <td>{Object.entries(p.mastery).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([c]) => <ChampIcon id={c} size={20} />)}</td>
+              <td>{Object.entries(p.mastery).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([c, m]) => <ChampIcon id={c} size={20} mastery={m} />)}</td>
             </tr>
           ))}
         </tbody>

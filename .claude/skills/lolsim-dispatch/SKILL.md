@@ -63,6 +63,21 @@ orch board --json        # tasks[].id / title / area / status / session
      ```
 3. 돌아온 세션 id를 등록한다: `orch set Txx --session <local_id> --name <이름>`
 
+### effort (2026-11-28 사용자 지시)
+
+- 작업 세션은 항상 effort `xhigh`로 돌린다. `start_session`은 메인 세션보다 높은 effort를 줄 수 없어서, 메인이 medium이면 새 세션도 medium으로 열린다.
+- 그래서 세션을 연 직후 `set_session_effort`(`xhigh`)를 부른다. 기존 세션에 일을 다시 보낼 때도 effort를 확인한다.
+
+### 모델 지정 (사용자가 "[Fable]"처럼 모델을 정했을 때)
+
+- `start_session`의 `model`은 메인 세션보다 비싼 모델(Opus 메인에서 Fable)을 무시하고, 메인과 같은 모델로 연다(2026-11-27 확인).
+- 그래서 이렇게 연다.
+  1. 브리프 맨 위에 "이번 첫 턴에는 `orch setup Txx`만 하고 '준비 끝' 한 줄로 끝낸다. '시작' 메시지를 받으면 본 작업"을 넣어서 연다.
+  2. 곧바로 `set_session_model`(`claude-fable-5-2`)로 바꾼다. 다음 턴부터 적용된다.
+  3. `SendMessage`로 `[LoLSim Txx] 시작`을 보낸다.
+  4. `get_session`의 `model`로 확인한다.
+- 본 작업 브리프를 첫 턴에 넣어 이미 돌기 시작했으면 `stop_session`으로 멈추고, 모델을 바꾼 뒤 "이어서 진행"을 보낸다.
+
 ## 4. 사용자에게 보고
 
 작업마다 한 줄씩 쓰고, 끝에 현황판(`orch board`)을 붙인다.

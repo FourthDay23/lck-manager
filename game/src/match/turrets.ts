@@ -198,9 +198,12 @@ function overgrowth(e: Engine, side: SideN, age: number): number {
 /** A champion's basic attacks on a structure per second and their type: 100 % attack damage + 60 % ability power,
  *  magic when that part is the larger one, melee +20 %. No critical strikes. */
 function champRaw(e: Engine, u: Unit): { raw: number; type: "p" | "m" } {
-  if (!e.realStats()) return { raw: e.aaDps(u), type: "p" };
+  // the voidgrub stacks of its side burn structures (engine.grubSiege, GRUB_TUNE.towerPer / towerAll): the same
+  // multiplier the front-number lanes use, on turrets, inhibitors and the nexus
+  const grub = e.grubSiege(u.side);
+  if (!e.realStats()) return { raw: e.aaDps(u) * grub, type: "p" };
   const s = Stats.stats(e, u);
-  return { raw: (s.ad + 0.6 * s.ap) * s.as * (u.champ.ranged ? 1 : 1.2), type: s.bad > 0.6 * s.ap || s.ap <= 0 ? "p" : "m" };
+  return { raw: (s.ad + 0.6 * s.ap) * s.as * (u.champ.ranged ? 1 : 1.2) * grub, type: s.bad > 0.6 * s.ap || s.ap <= 0 ? "p" : "m" };
 }
 
 // ---------------------------------------------------------------- damage to structures

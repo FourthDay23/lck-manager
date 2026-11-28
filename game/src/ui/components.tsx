@@ -45,9 +45,9 @@ export function TeamLogo({ id, size = 28 }: { id: string | null | undefined; siz
 const SKIN = ["#f1c9a5", "#e8b991", "#d9a47a", "#c68b5e", "#f5d6b8"];
 const HAIR = ["#1b1b1f", "#2b1d14", "#3b2a1d", "#5a3a20", "#14141a", "#6b4b2a", "#a0a0a8", "#c25b2f"];
 
-/** Deterministic 12x12 pixel portrait in team colors. */
-export function avatarUrl(id: string, c1: string, c2: string): string {
-  const key = `${id}|${c1}|${c2}`;
+/** Deterministic 12x12 pixel portrait in team colors. `bare`: no background square, for a figure standing on a scene (the event dialog's stage). */
+export function avatarUrl(id: string, c1: string, c2: string, bare = false): string {
+  const key = `${id}|${c1}|${c2}|${bare ? 1 : 0}`;
   const hit = avatarCache.get(key);
   if (hit) return hit;
   const cv = document.createElement("canvas");
@@ -56,7 +56,7 @@ export function avatarUrl(id: string, c1: string, c2: string): string {
   const h = hash32(id);
   const skin = SKIN[h % SKIN.length], hair = HAIR[(h >> 4) % HAIR.length];
   const style = (h >> 8) % 4;
-  g.fillStyle = "#141826"; g.fillRect(0, 0, 12, 12);
+  if (!bare) { g.fillStyle = "#141826"; g.fillRect(0, 0, 12, 12); }
   g.fillStyle = c1; g.fillRect(1, 9, 10, 3);
   g.fillStyle = c2; g.fillRect(5, 9, 2, 3);
   g.fillStyle = skin; g.fillRect(3, 3, 6, 6); g.fillRect(5, 8, 2, 1);
@@ -75,18 +75,19 @@ export function avatarUrl(id: string, c1: string, c2: string): string {
 }
 const avatarCache = new Map<string, string>();
 
-export function Avatar({ pid, size = 36 }: { pid: string; size?: number }) {
+export function Avatar({ pid, size = 36, bare }: { pid: string; size?: number; bare?: boolean }) {
   const s = S();
   const p = s.players[pid];
   const t = p?.team ? s.teams[p.team] : null;
-  const url = avatarUrl(pid, t?.colors[0] ?? "#3a4262", t?.colors[1] ?? "#1b1f2e");
+  const url = avatarUrl(pid, t?.colors[0] ?? "#3a4262", t?.colors[1] ?? "#1b1f2e", bare);
   return <img class="avatar" src={url} width={size} height={size} alt="" />;
 }
 
-export function ChampIcon({ id, size = 32, title }: { id: string | null | undefined; size?: number; title?: string }) {
+/** a champion portrait; its tooltip is the champion's name (or `title`), plus the player's mastery when given */
+export function ChampIcon({ id, size = 32, title, mastery }: { id: string | null | undefined; size?: number; title?: string; mastery?: number }) {
   if (!id) return <span style={{ display: "inline-block", width: size, height: size, background: "#0b0d14" }} />;
   const d = D();
-  return <img class="px" src={champImg(d.ddVersion, id)} width={size} height={size} title={title ?? d.champ.get(id)?.name} alt="" loading="lazy" />;
+  return <img class="px" src={champImg(d.ddVersion, id)} width={size} height={size} data-tip={`${title ?? d.champ.get(id)?.name ?? id}${mastery !== undefined ? `\n숙련도 ${Math.round(mastery)} / 100` : ""}`} alt={d.champ.get(id)?.name ?? ""} loading="lazy" />;
 }
 
 export function Ovr({ v }: { v: number }) {

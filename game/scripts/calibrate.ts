@@ -1,19 +1,23 @@
 // Headless engine runs: game length, kills, objectives, and whether the watched engine agrees with
 // the one-line AI-vs-AI formula (gameWinProb) on who wins.
 // Run: node scripts/run-ts.mjs scripts/calibrate.ts [games] [rosterSeed]
+//  in parallel: node scripts/par.mjs calibrate.ts [games] [rosterSeed]  (same report; A/B: scripts/ab.mjs)
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { newGame } from "../src/core/game";
 import { joinTeam, autoLineup } from "../src/core/market";
-import { Engine, ENGINE_FLAGS, applyEarlyTune, applyGrowthTune, applyPaceTune, applySimTune } from "../src/match/engine";
+import { Engine, ENGINE_FLAGS, applyEarlyTune, applyGrowthTune, applyGrubTune, applyPaceTune, applySimTune } from "../src/match/engine";
 import { newDraft, autoDraft } from "../src/match/draft";
+import { par, engineSnap } from "./lib/par";
+import { DRAW } from "../src/match/engine";
+// no screen: skip the draw-only effects list (results stay the same; HEADLESS=0 keeps it)
+if (process.env.HEADLESS !== "0" && DRAW) DRAW.fx = false; // (DRAW is missing in code from before it, scripts/ab.mjs --base)
 import { Rng } from "../src/core/rng";
 import { gameWinProb, teamPower } from "../src/core/quick";
 import { ROLES } from "../src/data/types";
 import { ITEM_TUNE } from "../src/match/items";
-import { applyWaveTune } from "../src/match/minions";
+import { applyGrubMacro, applyObjTune } from "../src/match/macro";
 import * as Macro from "../src/match/macro";
-import { par, engineSnap } from "./lib/par";
 
 const dir = existsSync("public/data/champions.json") && existsSync("public/data/players.json") ? "data" : "data-sample";
 const j = (f: string) => {
@@ -38,8 +42,16 @@ applyGrowthTune(process.env.GROWTH_TUNE);
 applySimTune(process.env.SIM_TUNE);
 // PACE_TUNE=towerDmg:1.3 overrides the structure damage after laning (engine.ts PACE_TUNE) for this run
 applyPaceTune(process.env.PACE_TUNE);
+// OBJ_TUNE=hover:2300 overrides the objective calls (macro.ts OBJ_TUNE) for this run
+applyObjTune(process.env.OBJ_TUNE);
+// GRUB_TUNE=towerPer:0,towerAll:0 / GRUB_MACRO=poach:0.5 override the voidgrub values (engine.ts GRUB_TUNE, macro.ts GRUB_MACRO)
+applyGrubTune(process.env.GRUB_TUNE);
+applyGrubMacro(process.env.GRUB_MACRO);
 // WAVE_TUNE=lastHit:0.9,loneWave:0.4 overrides how champions and minions deal with waves and structures (minions.ts)
-applyWaveTune(process.env.WAVE_TUNE);
+// (loaded at run time and optional, like BASE_TUNE below: scripts/ab.mjs --base runs this script against older
+// code that has no minions.ts)
+const Minions: { applyWaveTune?: (s: string | undefined) => void } | null = await import("../src/match/minions").catch(() => null);
+Minions?.applyWaveTune?.(process.env.WAVE_TUNE);
 // BASE_TUNE=giveUp:0.6,endCall:2.5 overrides how a base is defended and how the push that ends the game goes (macro.ts)
 // (optional call: scripts/ab.mjs --base runs this script against older code that has no BASE_TUNE)
 (Macro as { applyBaseTune?: (s: string | undefined) => void }).applyBaseTune?.(process.env.BASE_TUNE);
@@ -96,7 +108,7 @@ for (let g = 0; g < N; g++) {
   ft += e.events.find((x) => x.type === "first_turret")?.t ?? e.t;
   doubles += e.events.filter((x) => x.type === "double").length;
   heralds += e.heralds[0] + e.heralds[1];
-  grubs += (e.grubs[0] + e.grubs[1]) / 3;
+  grubs += e.grubs[0] + e.grubs[1];
   souls += e.soul !== null ? 1 : 0;
   const key = [e.dragons[0].length, e.dragons[1].length].sort().join("-") + (e.soul !== null ? (e.winner === e.soul ? " soulWin" : " soulLose") : "");
   split[key] = (split[key] ?? 0) + 1;
@@ -137,9 +149,9 @@ const f = (x: number) => (x / N).toFixed(2);
 const pw = s.lck.map((t) => teamPower(s, t)).sort((x, y) => y - x);
 console.log(`data=${dir} games=${N} team power ${pw[0].toFixed(1)}..${pw[pw.length - 1].toFixed(1)}`);
 console.log(`length ${(len / N / 60).toFixed(1)} min | kills ${f(kills)} | dragons ${f(drag)} | barons ${f(barons)} | elder ${f(elders)} | solo ${f(solo)} | steals ${f(steals)} | triple+ ${f(multis)} | aces ${f(aces)}`);
-console.log(`first blood ${(fb / N / 60).toFixed(1)} min | first tower ${(ft / N / 60).toFixed(1)} min | doubles ${f(doubles)} | heralds ${f(heralds)} | grub camps ${f(grubs)} | soul ${f(souls)}`);
+console.log(`first blood ${(fb / N / 60).toFixed(1)} min | first tower ${(ft / N / 60).toFixed(1)} min | doubles ${f(doubles)} | heralds ${f(heralds)} | grubs ${f(grubs)} | soul ${f(souls)}`);
 console.log(`kills by 10-min block (per game): ${kpm.map((x) => (x / N).toFixed(1)).join(" / ")}`);
-console.log(`target (LCK 2026, 502 games): 32.2 min, 29.5 kills, 4.4 dragons, 1.31 barons, 0.09 elder, 1.6 solo, 4.1 multikills (double+), 1.03 ace, FB 5.1, FT 15.7, soul 0.46, kills by block 3.8/8.5/11.8/4.7/0.6`);
+console.log(`target (LCK 2026, 502 games): 32.2 min, 29.5 kills, 4.4 dragons, 1.31 barons, 0.09 elder, 1.6 solo, 4.1 multikills (double+), 1.03 ace, FB 5.1, FT 15.7, grubs 2.88, soul 0.46, kills by block 3.8/8.5/11.8/4.7/0.6`);
 console.log("formula p bucket -> engine blue win rate (should match the bucket's mean p):");
 for (const [i, bk] of buckets.entries()) if (bk.n) console.log(`  p ${(i / 5).toFixed(1)}-${((i + 1) / 5).toFixed(1)}: mean p ${(bk.expSum / bk.n).toFixed(2)}  engine ${(bk.wins / bk.n).toFixed(2)}  (n=${bk.n})`);
 console.log(`brier of formula vs engine results ${(brierEngine / N).toFixed(3)} (0.25 = coin flip)`);

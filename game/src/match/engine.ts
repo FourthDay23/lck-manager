@@ -12,8 +12,8 @@ import { coachBonus, fatiguePenalty, MOD_GAIN, starterFatigue } from "../core/qu
 import { compBonus, mastery } from "./draft";
 import { metaBonus } from "../core/meta";
 import {
-  BARON_PIT, CAMPS_BLUE, CAMP_POS_RED, DRAGON_PIT, FOUNTAIN, INHIBS, LANES, LANE_PATH, NEXUS, ROLE_LANE, SCUTTLE, TURRETS,
-  dist, findPath, laneU, lanePoint, mirror, sampleHeat, initMap,
+  BARON_PIT, CAMPS, DRAGON_PIT, FOUNTAIN, GRUBS_PIT, GRUB_SPOTS, HERALD_PIT, INHIBS, LANES, LANE_PATH, NEXUS, ROLE_LANE, SCUTTLE, TURRETS,
+  dist, findPath, laneU, lanePoint, sampleHeat, initMap,
 } from "./map";
 import type { CampKind, LaneId, Vec } from "./map";
 import * as Nav from "./nav";
@@ -24,6 +24,7 @@ import type { SideLoadout } from "./items";
 import * as Matchup from "./matchup";
 import * as Stats from "./stats";
 import * as Summoners from "./summoners";
+import * as ObjSmite from "./objsmite";
 import type { SummonerName } from "./summoners.gen";
 import * as Minions from "./minions";
 import * as Turrets from "./turrets";
@@ -54,6 +55,11 @@ export const ENGINE_FLAGS = {
  * played like a scale of ~6.2 (calibrate slope 1.53 vs 9.5 over 6 roster seeds), 0.7 brings it to ~1.05.
  */
 export const RATING_SPREAD = 0.7;
+/**
+ * Runs without a screen (measurement scripts) set `DRAW.fx = false`: the engine then does not keep the draw-only
+ * effects list (Engine.fx, read only by render.ts). Nothing the game decides reads it, so results stay the same.
+ */
+export const DRAW = { fx: true };
 const RATING_REF = 75;
 /** cds[3] (the ultimate) until level 6: every "t >= cds[k]" readiness check fails without a separate level test.
  *  Before this, ults were cast from level 1 (e.g. Galio R in a 2:20 lane all-in). */
@@ -140,9 +146,12 @@ export function applyGrowthTune(spec: string | undefined) {
  * Set 2026-11-27 after turret shots outside fights and sieges that wait for the wave (SIM_TUNE) made games 34.6-37.2
  * min with first towers at 16.7-17.2 and too few kills from 10 to 30 min (2.8 / 6.4 / 9.7 per 10-min block); with
  * these, EARLY_TUNE and SIM_TUNE.siegePush 3.2: 31.9 min, 28.8 kills, first tower 15.9 (200 games, roster seed 3).
+ * 2026-11-27 (T08): engage 3.8 -> 2.4. Fights over epic monsters (macro.ts OBJ_TUNE) now bring 10 kills a game where
+ * they brought 3; chance meetings of two groups are cut by as much so kills stay at 29.7 (120 games, seed 3: 32.7
+ * kills at 3.8, kills from such meetings 11.5 -> 5.5 a game).
  * Scripts can override them with PACE_TUNE=key:value,...
  */
-export const PACE_TUNE = { towerDmg: 1.6, minionDmg: 1.3, engage: 3.8 };
+export const PACE_TUNE = { towerDmg: 1.6, minionDmg: 1.3, engage: 2.4 };
 export function applyPaceTune(spec: string | undefined) {
   applyTune(PACE_TUNE, "PACE_TUNE", spec);
 }
@@ -183,6 +192,43 @@ export function applySimTune(spec: string | undefined) {
   applyTune(SIM_TUNE, "SIM_TUNE", spec);
 }
 
+/**
+ * Voidgrubs: three monsters at the baron pit from 8:00 that die one by one and leave at 14:45, so a team can walk away
+ * with one or two. LCK 2026 (scripts/lck_grubs.py, 502 games, one timeline event per grub): one team takes all three
+ * in 75.1 % of games, the teams share them 2-1 in 19.3 %, 5.6 % of camps are not finished (2.8 % never touched);
+ * 25 % of a team's visits stop with grubs still alive (the enemy took the rest right there 52 %, later 21 %, the same
+ * team came back 18 %, nobody 9 %); the first grub dies a median 32 s after the spawn, the next ones 7 s apart; 97 %
+ * of the last hits are the jungler's and 78 % of grubs die to one champion. scripts/grubs-diag.ts prints the same
+ * table from the engine.
+ * hp: one grub's health at 0:00 (it grows by 1 / 40 a minute like the other epic monsters). splash: the share of a
+ *   side's damage that the two grubs it is not focusing take (area damage; real camps die 7 s apart after a longer
+ *   first kill). regen: health a grub gets back per second while nobody hits the camp.
+ * Smite: a jungler in reach finishes the grub being worked on once it is inside its Smite (objsmite.ts grubSmite, the
+ *   same race as over the other epic monsters; the last charge is kept for a race); with no Smite the last hit goes by
+ *   damage share.
+ * leaveAt: the camp is gone at 14:45 (the herald comes at 15:00); grubs still alive then are nobody's. A fixed
+ *   time: change it together with the grubs' / herald's spawn times in the meta data (8:00 / 15:00 now).
+ * runGap: a side's kills are announced as one "grubs" event (N마리 처치) once it has stopped hitting for this long.
+ * towerPer / towerAll: champion damage to turrets, inhibitors and the nexus per grub taken, and the extra for all
+ *   three (Touch of the Void burns structures per stack; the third brings the voidmites): +2 / 4 / 10 %. LCK teams
+ *   with all three grubs win 56.0 % of their games (none: 45.6 %); the engine 56 % (44 %) with these, and 64 % (38 %)
+ *   at 0.04 / 0.06 before the merge below.
+ * Measured after the merge with the objective fights, Smite fights and jungle Smite (T08 / T09 / T12; node
+ * scripts/par.mjs grubs-diag.ts 300 3 and 5, 2026-11-28; LCK in brackets): one team all three 77.3 % (75.1), shared
+ * 2-1 17.8 % (19.3), not finished 4.8 % (5.6), blue's share of grubs 62.9 % (59.6), visits of 1 / 2 / 3 grubs 25.3 /
+ * 12.9 / 61.7 % (27.1 / 17.7 / 55.2), first grub a median 8:31 (8:32), kills 7 s apart (7), 23 % of the last hits a
+ * Smite. calibrate.ts 200 games x roster seeds 3 / 5 / 7 / 11 against main without the grub change: length 32.8 ->
+ * 32.3 min, kills 32.4 -> 31.3, steals 0.23 -> 0.21 a game (inside the seed-to-seed spread).
+ * Scripts can override any of them with GRUB_TUNE=key:value,...
+ */
+export const GRUB_TUNE = {
+  hp: 1150, splash: 0.25, regen: 0.02, leaveAt: 885, runGap: 4,
+  towerPer: 0.02, towerAll: 0.04,
+};
+export function applyGrubTune(spec: string | undefined) {
+  applyTune(GRUB_TUNE, "GRUB_TUNE", spec);
+}
+
 export interface Unit {
   i: number;
   side: SideN;
@@ -221,12 +267,22 @@ export interface Unit {
   elderUntil: number;
   dmg: number;
   fightId: number;
+  /** how fast the player's hands are (mechanics and consistency, about 60-96; 73 is the median LCK jungler): the Smite
+   *  fights over epic monsters read it (objsmite.ts) */
+  reflex?: number;
 }
 
 export type ObjKey = "dragon" | "grubs" | "herald" | "baron" | "elder";
 export const OBJ_KO: Record<ObjKey, string> = { dragon: "드래곤", grubs: "공허 유충", herald: "협곡의 전령", baron: "내셔 남작", elder: "장로 드래곤" };
 
-export interface ObjState { key: ObjKey; alive: boolean; spawnAt: number | null; hp: number; maxHp: number; pos: Vec; takenBy?: SideN; type?: string; left?: number }
+/** an epic monster heals unless a champion within this distance is fighting or walking in on it (objectivesTick) */
+const OBJ_LEASH = 1300;
+export interface ObjState { key: ObjKey; alive: boolean; spawnAt: number | null; hp: number; maxHp: number; pos: Vec; takenBy?: SideN; type?: string; left?: number; /** grubs: engine time the camp was last damaged */ hitAt?: number }
+/** One of the three voidgrubs. The camp itself is obj.grubs: alive while any grub is, hp / maxHp their sums, left = how many. */
+export interface GrubUnit { alive: boolean; hp: number; maxHp: number; pos: Vec; /** engine time each side last damaged it */ hitAt: [number, number]; takenBy?: SideN }
+/** A grub's death: who got the last hit (smote: with Smite), how many of that side were hitting the camp, whether the
+ *  enemy hit it too. */
+export interface GrubKill { t: number; side: SideN; by: number; order: number; helpers: number; foe: boolean; smote: boolean }
 export interface CampState { id: number; side: SideN; kind: CampKind | "scuttle"; pos: Vec; alive: boolean; spawnAt: number; hp: number; maxHp: number }
 export interface TurretState { side: SideN; lane: LaneId | "nexus"; tier: number; pos: Vec; hp: number; maxHp: number; alive: boolean; u: number; plates: number }
 export interface InhibState { side: SideN; lane: LaneId; pos: Vec; hp: number; alive: boolean; respawnAt: number }
@@ -264,7 +320,9 @@ export interface Fx {
 
 export type EvType =
   | "kill" | "first_blood" | "solo" | "double" | "triple" | "quadra" | "penta" | "ace" | "shutdown"
-  | "dragon" | "soul" | "elder" | "grubs" | "herald" | "baron" | "steal" | "turret" | "first_turret" | "inhib" | "nexus" | "info";
+  | "dragon" | "soul" | "elder" | "grubs" | "herald" | "baron" | "steal" | "turret" | "first_turret" | "inhib" | "nexus" | "info"
+  /** a jungler stood in Smite's reach of an epic monster the other team was taking and did not get it (objsmite.ts) */
+  | "steal_fail";
 
 export interface GameEvent { t: number; type: EvType; side: SideN; text: string; actor?: number; victim?: number; big: boolean; x?: number; y?: number }
 
@@ -304,7 +362,14 @@ export class Engine {
   kills: [number, number] = [0, 0];
   towers: [number, number] = [0, 0];
   dragons: [string[], string[]] = [[], []];
+  /** voidgrubs taken per side: one per grub (0-3), each a stack of the structure-damage buff (grubSiege) */
   grubs: [number, number] = [0, 0];
+  grubUnits: GrubUnit[] = [];
+  grubLog: GrubKill[] = [];
+  /** a side's run of grub kills not announced yet: one "grubs" event per visit, not per grub */
+  grubRun: { side: SideN; n: number; last: number; by: number } | null = null;
+  /** the jungle pet has had its treat for this camp, per side (one a camp, as when the camp was one monster) */
+  grubFed: [boolean, boolean] = [false, false];
   heralds: [number, number] = [0, 0];
   barons: [number, number] = [0, 0];
   soul: SideN | null = null;
@@ -361,6 +426,7 @@ export class Engine {
           hp: 1, maxHp: 1, alive: true, respawnAt: 0, level: 1, xp: 0, gold: 500, cs: 0, k: 0, d: 0, a: 0, streak: 0,
           multi: { n: 0, last: -99 }, cds: [0, 0, 0, R_LOCKED], stunUntil: 0, shield: 0, task: "lane", taskUntil: 0, goal: null,
           lastHitBy: new Map(), baronUntil: 0, elderUntil: 0, dmg: 0, fightId: 0,
+          reflex: p ? p.attrs.mechanics * 0.7 + p.attrs.consistency * 0.3 + p.form * 0.3 : undefined,
         };
         this.units.push(u);
       });
@@ -384,8 +450,9 @@ export class Engine {
     const camps = this.meta.camps;
     let id = 0;
     for (const side of [0, 1] as SideN[]) {
-      for (const c of CAMPS_BLUE) {
-        const pos = side === 0 ? c.pos : CAMP_POS_RED[c.kind] ?? mirror(c.pos);
+      // each side's own list: the jungle is a half turn of itself, not a mirror image like the lanes (map.ts CAMPS)
+      for (const c of CAMPS[side]) {
+        const pos = c.pos;
         const timing = camps[c.kind] ?? { firstSpawn: 90, respawn: 135 };
         const hp = (c.kind === "blue" || c.kind === "red" ? 1600 : 1100) * GROWTH.campHp;
         this.camps.push({ id: id++, side, kind: c.kind, pos, alive: false, spawnAt: timing.firstSpawn, hp, maxHp: hp });
@@ -397,8 +464,8 @@ export class Engine {
     const mk = (key: ObjKey, pos: Vec, spawnAt: number | null, hp: number): ObjState => ({ key, alive: false, spawnAt, hp, maxHp: hp, pos });
     this.obj = {
       dragon: mk("dragon", DRAGON_PIT, o.dragon?.firstSpawn ?? 300, 3600),
-      grubs: { ...mk("grubs", BARON_PIT, o.grubs?.firstSpawn ?? 480, 2400), left: 3 },
-      herald: mk("herald", BARON_PIT, o.herald?.firstSpawn ?? 900, 5200),
+      grubs: { ...mk("grubs", GRUBS_PIT, o.grubs?.firstSpawn ?? 480, 2400), left: 3 },
+      herald: mk("herald", HERALD_PIT, o.herald?.firstSpawn ?? 900, 5200),
       baron: mk("baron", BARON_PIT, o.baron?.firstSpawn ?? 1200, 9500),
       elder: mk("elder", DRAGON_PIT, null, 8000),
     };
@@ -488,14 +555,15 @@ export class Engine {
     if (this.realStats()) {
       // damage over ~6 s (attacks + each spell at most twice, the ultimate once) x durability (armor / magic resist);
       // that part only changes between steps, so it is worked out once per step (it is read very often)
-      const base = Stats.perStep(this, `pw${u.i}`, () => {
+      // (and kept across steps while the unit's stats, level and multipliers stay the same: Stats.byStats)
+      const base = Stats.perStep(this, `pw${u.i}`, () => Stats.byStats(this, u, this.realMul(u, "sp"), this.realMul(u, "aa"), () => {
         let spells = 0;
         u.champ.spells.forEach((sp, k) => {
           const d = this.spellDmg(u, sp);
           if (d > 0) spells += d * Math.min(k === 3 ? 1 : 2, 6 / Math.max(2, this.cdOf(u, sp, k)));
         });
         return (this.aaDps(u) * 6 + spells) * Math.sqrt(Stats.effectiveHp(this, u) / 1900);
-      });
+      }));
       return base * (u.hp / u.maxHp + 0.35);
     }
     return (this.aaDps(u) * 6 + this.spellDmg(u, u.champ.spells[0] ?? ({ power: 1 } as SpellData)) * 2) * (u.hp / u.maxHp + 0.35) * Math.sqrt(this.maxHp(u) / 1200);
@@ -512,6 +580,8 @@ export class Engine {
   /** Queue a visual effect; returns it so a caller can still set `miss` after rolling the hit in the same step. */
   fx_(f: Omit<Fx, "t" | "id">): Fx {
     const fx: Fx = { t: this.t, id: ++this.fxSeq, ...f };
+    // only render.ts reads the list: headless runs (DRAW.fx = false) skip keeping it
+    if (!DRAW.fx) return fx;
     this.fx.push(fx);
     if (this.fx.length > 400) this.fx.splice(0, this.fx.length - 400);
     return fx;
@@ -697,7 +767,10 @@ export class Engine {
           if (this.obj.herald.alive) this.obj.herald.alive = false;
           this.obj.herald.spawnAt = null;
         }
-        if (k === "grubs") this.event("info", 0, "공허 유충 등장", false);
+        if (k === "grubs") {
+          this.spawnGrubs(o);
+          this.event("info", 0, "공허 유충 등장", false);
+        }
         if (k === "herald") this.event("info", 0, "협곡의 전령 등장", false);
       }
     }
@@ -1126,6 +1199,9 @@ export class Engine {
     // cost 2.6x as much per camp and junglers went home at 28 % hp after 2-4 camps)
     const hurt = (c.maxHp / (GROWTH.campHp * GROWTH.campHp)) * 0.004 * DT * 4 * GROWTH.campHurt;
     u.hp = Math.max(u.maxHp * 0.25, u.hp - hurt);
+    // the jungler finishes the camp with Smite once it is within Smite's damage (summoners.ts: charges, upgrades and
+    // when a charge is kept for an epic monster)
+    if (c.hp > 0 && Summoners.wantsCampSmite(this, u, c)) Summoners.smite(this, u, { camp: c });
     if (c.hp > 0) return;
     c.alive = false;
     const timing = c.kind === "scuttle" ? this.meta.camps.scuttle : this.meta.camps[c.kind];
@@ -1134,6 +1210,8 @@ export class Engine {
     u.gold += (big ? 100 : c.kind === "scuttle" ? 120 : 75) * GROWTH.campGold;
     u.xp += big ? GROWTH.campXpBig : GROWTH.campXpSmall;
     u.cs += 4;
+    // every camp has one large monster: the jungle pet's treat (Smite's upgrades)
+    Summoners.feedPet(this, u);
   }
 
   /**
@@ -1726,19 +1804,19 @@ export class Engine {
         if (!t.alive || t.side === u.side || dist(t.pos, u) > 750) continue;
         const defenders = this.units.some((e) => e.alive && e.side === t.side && dist(e, t.pos) < 1300);
         if (defenders && this.laningPhase()) continue;
-        this.damageTurret(t, this.aaDps(u) * (this.minute() > 20 ? 0.75 : 0.55) * PACE_TUNE.towerDmg * DT, u);
+        this.damageTurret(t, this.aaDps(u) * (this.minute() > 20 ? 0.75 : 0.55) * PACE_TUNE.towerDmg * this.grubSiege(u.side) * DT, u);
       }
       for (const ih of this.inhibs) {
         if (!ih.alive || ih.side === u.side || dist(ih.pos, u) > 700) continue;
         if (this.turrets.some((t) => t.alive && t.side === ih.side && t.lane === ih.lane)) continue;
-        ih.hp -= this.aaDps(u) * PACE_TUNE.towerDmg * DT;
+        ih.hp -= this.aaDps(u) * PACE_TUNE.towerDmg * this.grubSiege(u.side) * DT;
         if (ih.hp <= 0) this.destroyInhib(ih, u.side);
       }
       if (dist(NEXUS[1 - u.side], u) < 900) {
         const standing = this.turrets.some((t) => t.alive && t.side !== u.side && t.lane === "nexus");
         const anyInhib = this.inhibs.some((x) => x.side !== u.side && !x.alive);
         if (!standing && anyInhib) {
-          this.nexus[1 - u.side] -= this.aaDps(u) * DT;
+          this.nexus[1 - u.side] -= this.aaDps(u) * this.grubSiege(u.side) * DT;
           if (this.nexus[1 - u.side] <= 0) this.finish(u.side);
         }
       }
@@ -1801,42 +1879,49 @@ export class Engine {
     for (const k of Object.keys(this.obj) as ObjKey[]) {
       const o = this.obj[k];
       if (!o.alive) continue;
+      // the grubs are three monsters with their own health and last hits
+      if (k === "grubs") { this.grubsTick(o); continue; }
       const at = this.units.filter((u) => u.alive && !u.fightId && dist(u, o.pos) < 650 && (!ENGINE_FLAGS.macro || Macro.hitsObjective(this, u, k)));
       if (!at.length) {
-        o.hp = Math.min(o.maxHp, o.hp + o.maxHp * 0.02 * DT);
+        // nobody is hitting it (a fight over it): a jungler in reach whose Smite covers what is left still takes it
+        const fin = ObjSmite.finish(this, k, at, [0, 0]);
+        if (fin) { this.takeObjective(k, fin); continue; }
+        // it does not heal while it is being fought over: champions in a fight at the pit (nobody in a fight can hit
+        // it) or walking in on it. It keeps the damage it has taken, so the side that wins the fight finishes it.
+        // Before, it healed 2 % a second through the fight (30 % over a 15 s fight) and the take started over.
+        // Bystanders do not count (both river scuttles are 1,000 u from a pit).
+        if (!this.units.some((u) => u.alive && (u.fightId !== 0 || u.task === "obj") && dist(u, o.pos) < OBJ_LEASH)) o.hp = Math.min(o.maxHp, o.hp + o.maxHp * 0.02 * DT);
         continue;
       }
       const bySide = [0, 0];
       for (const u of at) bySide[u.side] += this.aaDps(u) * 1.2 + 30;
       const contested = bySide[0] > 0 && bySide[1] > 0;
-      o.hp -= (bySide[0] + bySide[1]) * DT * (contested ? 0.5 : 1);
+      const mul = DT * (contested ? 0.5 : 1);
+      o.hp -= (bySide[0] + bySide[1]) * mul;
+      ObjSmite.dealt(this, k, [bySide[0] * mul, bySide[1] * mul]);
       if (this.rng.chance(0.15)) {
         const hitter = at[Math.floor(this.rng.next() * at.length)];
         this.fx_({ kind: "objhit", side: hitter.side, x: hitter.x, y: hitter.y, tx: o.pos.x, ty: o.pos.y, color: "#ffd36b", r: 0, w: 0, from: hitter.i });
       }
-      if (o.hp <= 0) {
-        // last hit: smite fight between junglers near the pit
-        let side: SideN = bySide[0] >= bySide[1] ? 0 : 1;
-        const jg = [0, 1].map((sd) => this.units.find((u) => u.side === sd && u.role === "Jungle" && u.alive && dist(u, o.pos) < 900));
-        let steal = false;
-        const other = (1 - side) as SideN;
-        if (jg[other] && (contested || this.rng.chance(0.3))) {
-          // no jungler on the taking side: an average-ish rating of 60 on the raw scale (unit ratings are compressed)
-          const noJg = RATING_REF + (60 - RATING_REF) * RATING_SPREAD;
-          const pSteal = clamp(0.12 + (jg[other]!.rating - (jg[side]?.rating ?? noJg)) / 120 + (jg[side] ? 0 : 0.35), 0.03, 0.6);
-          if (this.rng.chance(pSteal)) {
-            side = other;
-            steal = true;
-          }
-        }
-        const taker = jg[side] ?? at.find((u) => u.side === side) ?? at[0];
-        // the jungler's Smite takes the last hit (anyone else's is just the last hit: no spell to show)
-        const smote = Summoners.has(taker, "smite");
-        if (smote) Summoners.spend(this, taker, "smite", { quiet: true });
-        this.fx_({ kind: "smite", side, x: o.pos.x, y: o.pos.y, tx: o.pos.x, ty: o.pos.y, color: "#ffe28a", r: 320, w: 0, from: taker.i, sum: smote ? "smite" : undefined });
-        this.secure(k, side, taker, steal);
-      }
+      // last hit: a Smite fight between the junglers in reach, or the team's damage (objsmite.ts; T12's rule was the
+      // taking side's jungler finishing it at its Smite damage, with a flat steal roll for the other jungler)
+      const fin = ObjSmite.finish(this, k, at, bySide);
+      if (fin) this.takeObjective(k, fin);
     }
+  }
+
+  /** The last hit on an epic monster: the taker's Smite if it was one, the effect, the reward and the pet's treat. */
+  takeObjective(k: ObjKey, fin: ObjSmite.Finish) {
+    const o = this.obj[k];
+    const { side, taker, steal } = fin;
+    // the jungler's Smite takes the last hit (anyone else's, or one with no charge left, is just the last hit: no
+    // spell to show)
+    const smote = fin.smote && Summoners.smite(this, taker, { obj: k }, { quiet: true, why: steal ? "steal" : "obj" }) > 0;
+    this.fx_({ kind: "smite", side, x: o.pos.x, y: o.pos.y, tx: o.pos.x, ty: o.pos.y, color: "#ffe28a", r: 320, w: 0, from: taker.i, sum: smote ? "smite" : undefined });
+    // the jungle pet eats a treat for an epic monster its team takes with the jungler there
+    const pet = this.units.find((u) => u.side === side && u.role === "Jungle" && u.alive && dist(u, o.pos) < 1500);
+    this.secure(k, side, taker, steal);
+    if (pet) Summoners.feedPet(this, pet);
   }
 
   secure(k: ObjKey, side: SideN, taker: Unit, steal: boolean) {
@@ -1844,8 +1929,8 @@ export class Engine {
     const team = this.names[side];
     const respawn = this.meta.objectives[k]?.respawn ?? null;
     const mates = this.units.filter((u) => u.side === side);
-    // epic monsters count as CS for whoever lands the last hit, like the camps (the grubs camp is three monsters)
-    taker.cs += k === "grubs" ? GROWTH.grubCs * 3 : GROWTH.epicCs;
+    // epic monsters count as CS for whoever lands the last hit, like the camps (each grub pays its own in grubDies)
+    taker.cs += GROWTH.epicCs;
     if (steal) this.event("steal", side, `스틸! ${josa(`${taker.name}(${taker.champ.name})`, "이가")} ${josa(OBJ_KO[k], "을를")} 빼앗았습니다`, true, taker.i, undefined, o.pos);
     if (k === "dragon") {
       this.dragons[side].push(o.type!);
@@ -1883,13 +1968,6 @@ export class Engine {
       o.spawnAt = this.t + (respawn ?? 360);
       return;
     }
-    if (k === "grubs") {
-      this.grubs[side] += 3;
-      this.event("grubs", side, `${team}, 공허 유충 3마리 처치`, false, taker.i, undefined, o.pos);
-      o.alive = false;
-      o.spawnAt = null;
-      return;
-    }
     if (k === "herald") {
       this.heralds[side] += 1;
       this.event("herald", side, `${team}, 협곡의 전령 획득`, false, taker.i, undefined, o.pos);
@@ -1899,6 +1977,130 @@ export class Engine {
       // in the same step it was taken
       this.heraldHeld = { side, taker: taker.i, at: this.t };
     }
+  }
+
+  // ---------- voidgrubs (GRUB_TUNE) ----------
+  spawnGrubs(o: ObjState) {
+    const hp = GRUB_TUNE.hp * (1 + this.minute() / 40);
+    // each on its own spot in the pit (map.ts GRUB_SPOTS, where the renderer draws them); the camp is their middle
+    this.grubUnits = GRUB_SPOTS.map((pos) => ({ alive: true, hp, maxHp: hp, pos, hitAt: [-99, -99] as [number, number] }));
+    this.grubFed = [false, false];
+    o.maxHp = hp * 3;
+    o.hp = o.maxHp;
+    o.left = 3;
+    o.hitAt = undefined;
+  }
+
+  /** The camp's step: each side's hitters work on the weakest grub, the others take the splash; every grub that
+   *  drops is a last hit of its own (grubDies). Nobody on it: the grubs regenerate. */
+  grubsTick(o: ObjState) {
+    if (this.t >= GRUB_TUNE.leaveAt) {
+      this.grubsLeave(o);
+      return;
+    }
+    const G = this.grubUnits.filter((g) => g.alive);
+    const at = this.units.filter((u) => u.alive && !u.fightId && dist(u, o.pos) < 650 && (!ENGINE_FLAGS.macro || Macro.hitsObjective(this, u, "grubs")));
+    const dps: [number, number] = [0, 0];
+    for (const u of at) dps[u.side] += this.aaDps(u) * 1.2 + 30;
+    let focus = G[0];
+    for (const g of G) if (g.hp < focus.hp) focus = g;
+    if (!at.length) {
+      // like the other epic monsters they do not heal while they are being fought over (champions in a fight at the
+      // pit or walking in on them), so the side that wins the fight goes on from where the camp was
+      if (!this.units.some((u) => u.alive && (u.fightId !== 0 || u.task === "obj") && dist(u, o.pos) < OBJ_LEASH)) {
+        for (const g of G) g.hp = Math.min(g.maxHp, g.hp + g.maxHp * GRUB_TUNE.regen * DT);
+      }
+    } else {
+      o.hitAt = this.t;
+      for (const side of [0, 1] as SideN[]) {
+        if (dps[side] <= 0) continue;
+        for (const g of G) {
+          g.hp -= dps[side] * DT * (g === focus ? 1 : GRUB_TUNE.splash);
+          g.hitAt[side] = this.t;
+        }
+      }
+      // who has been doing the camp (objsmite.ts ownerOf: the owner's jungler has the better of a Smite race)
+      ObjSmite.dealt(this, "grubs", [dps[0] * DT, dps[1] * DT]);
+      if (this.rng.chance(0.15)) {
+        const hitter = at[Math.floor(this.rng.next() * at.length)];
+        this.fx_({ kind: "objhit", side: hitter.side, x: hitter.x, y: hitter.y, tx: focus.pos.x, ty: focus.pos.y, color: "#ffd36b", r: 0, w: 0, from: hitter.i });
+      }
+    }
+    // Smite: a jungler in reach finishes the grub being worked on once it is inside its Smite (objsmite.ts grubSmite:
+    // the same race as over the other epic monsters, also from inside a fight at the pit)
+    const smiter = focus.alive && focus.hp > 0 ? ObjSmite.grubSmite(this, focus.hp, dps[0] > 0 && dps[1] > 0) : null;
+    if (smiter) {
+      focus.hp -= Summoners.smiteDamage(this, smiter);
+      Summoners.spend(this, smiter, "smite", { at: focus.pos, why: "grub", quiet: true, pve: true });
+      this.grubDies(o, focus, at, dps, smiter);
+    }
+    // weakest first, so the focused grub's last hit is settled before a splashed one's
+    for (const g of [...G].sort((a, b) => a.hp - b.hp)) if (g.alive && g.hp <= 0) this.grubDies(o, g, at, dps);
+    const left = this.grubUnits.filter((g) => g.alive);
+    o.left = left.length;
+    o.hp = left.reduce((a, g) => a + g.hp, 0);
+    if (!left.length) {
+      o.alive = false;
+      o.spawnAt = null;
+    }
+    // a side's kills are announced together once the camp is done or it has stopped hitting
+    const run = this.grubRun;
+    if (run && (!left.length || (dps[run.side] <= 0 && this.t - run.last >= GRUB_TUNE.runGap))) this.grubAnnounce(o);
+  }
+
+  /** One grub's last hit: the jungler whose Smite took it (grubsTick), or with no Smite the damage; with both teams
+   *  hitting, the last hit then follows the damage as for the other epic monsters (objsmite.ts finish). */
+  grubDies(o: ObjState, g: GrubUnit, at: Unit[], dps: [number, number], smiter?: Unit) {
+    const side: SideN = smiter ? smiter.side : dps[0] > 0 && dps[1] > 0 ? (this.rng.chance(dps[0] / (dps[0] + dps[1])) ? 0 : 1) : dps[0] > 0 ? 0 : 1;
+    const mine = at.filter((u) => u.side === side);
+    const taker = smiter ?? mine.find((u) => u.role === "Jungle") ?? mine[0];
+    this.fx_({ kind: "smite", side, x: g.pos.x, y: g.pos.y, tx: g.pos.x, ty: g.pos.y, color: "#ffe28a", r: 200, w: 0, from: taker.i, sum: smiter ? "smite" : undefined });
+    g.alive = false;
+    g.hp = 0;
+    g.takenBy = side;
+    this.grubs[side] += 1;
+    taker.cs += GROWTH.grubCs;
+    // the jungle pet's treat for an epic monster its team takes with the jungler there: one a camp
+    const pet = this.units.find((u) => u.side === side && u.role === "Jungle" && u.alive && dist(u, o.pos) < 1500);
+    if (pet && !this.grubFed[side]) {
+      this.grubFed[side] = true;
+      Summoners.feedPet(this, pet);
+    }
+    const order = this.grubUnits.filter((x) => !x.alive).length;
+    // (a jungler that smote from a fight is not among the hitters: it still counts as one champion on the grub)
+    this.grubLog.push({ t: this.t, side, by: taker.i, order, helpers: Math.max(1, mine.length), foe: this.t - g.hitAt[1 - side] <= 10, smote: !!smiter });
+    // the other side's run ends where this one starts
+    if (this.grubRun && this.grubRun.side !== side) this.grubAnnounce(o);
+    if (this.grubRun) {
+      this.grubRun.n += 1;
+      this.grubRun.last = this.t;
+      this.grubRun.by = taker.i;
+    } else this.grubRun = { side, n: 1, last: this.t, by: taker.i };
+  }
+
+  grubAnnounce(o: ObjState) {
+    const run = this.grubRun;
+    if (!run) return;
+    this.grubRun = null;
+    this.event("grubs", run.side, `${this.names[run.side]}, 공허 유충 ${run.n}마리 처치`, false, run.by, undefined, o.pos);
+  }
+
+  /** 14:45: the camp leaves; the grubs still alive are nobody's. */
+  grubsLeave(o: ObjState) {
+    this.grubAnnounce(o);
+    const left = this.grubUnits.filter((g) => g.alive);
+    for (const g of left) g.alive = false;
+    o.alive = false;
+    o.spawnAt = null;
+    o.left = 0;
+    o.hp = 0;
+    if (left.length) this.event("info", 0, `남은 공허 유충 ${left.length}마리가 사라졌습니다`, false);
+  }
+
+  /** Champion damage to structures with the grub stacks a side holds (GRUB_TUNE.towerPer / towerAll). */
+  grubSiege(side: SideN): number {
+    const n = this.grubs[side];
+    return 1 + n * GRUB_TUNE.towerPer + (n >= 3 ? GRUB_TUNE.towerAll : 0);
   }
 
   /** A herald that was taken and not used yet. */

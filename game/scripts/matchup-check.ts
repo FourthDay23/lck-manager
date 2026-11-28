@@ -16,6 +16,10 @@ import { ROLES } from "../src/data/types";
 import type { Role } from "../src/data/types";
 import { ovr } from "../src/core/player";
 import { MATCHUP_TUNE } from "../src/match/matchup";
+import { par } from "./lib/par";
+import { DRAW } from "../src/match/engine";
+// no screen: skip the draw-only effects list (results stay the same; HEADLESS=0 keeps it)
+if (process.env.HEADLESS !== "0" && DRAW) DRAW.fx = false; // (DRAW is missing in code from before it, scripts/ab.mjs --base)
 
 const j = (f: string) => (existsSync(`public/data/${f}`) ? JSON.parse(readFileSync(`public/data/${f}`, "utf8")) : null);
 const data = assembleData("data", j("champions.json"), j("players.json"), j("staff.json"), j("teams.json"), j("intl.json"), j("meta.json"), j("heatmap.json"), j("items.json"), j("matchups.json"));
@@ -59,18 +63,25 @@ for (let g = 0; g < N; g++) {
   const blue = swapTeams ? B : A, red = swapTeams ? A : B;
   if (COMP) MATCHUP_TUNE.forceComp = favBlue ? M : -M;
   else MATCHUP_TUNE.force = { role: ROLE, m: favBlue ? M : -M };
-  const e = new Engine({ s, data, blue, red, picks, seed: 900 + g });
-  while (!e.over && e.t < 14 * 60) e.step();
-  const fav = e.units.find((u) => u.role === ROLE && u.side === (favBlue ? 0 : 1))!;
-  const other = e.units.find((u) => u.role === ROLE && u.side !== fav.side)!;
-  gold += fav.gold - other.gold;
-  cs += fav.cs - other.cs;
-  kills += fav.k - other.k;
-  deaths += fav.d - other.d;
-  e.runToEnd();
-  len += e.t;
-  if (e.winner === fav.side) favWins++;
+  // par.game: plays the game here, or leaves it to another piece of a parallel run (scripts/par.mjs)
+  const r = par.game(g, () => {
+    const e = new Engine({ s, data, blue, red, picks, seed: 900 + g });
+    while (!e.over && e.t < 14 * 60) e.step();
+    const fav = e.units.find((u) => u.role === ROLE && u.side === (favBlue ? 0 : 1))!;
+    const other = e.units.find((u) => u.role === ROLE && u.side !== fav.side)!;
+    const at14 = { gold: fav.gold - other.gold, cs: fav.cs - other.cs, kills: fav.k - other.k, deaths: fav.d - other.d };
+    e.runToEnd();
+    return { ...at14, t: e.t, favWon: e.winner === fav.side };
+  });
+  if (!r) continue;
+  gold += r.gold;
+  cs += r.cs;
+  kills += r.kills;
+  deaths += r.deaths;
+  len += r.t;
+  if (r.favWon) favWins++;
 }
+par.end();
 MATCHUP_TUNE.force = null;
 MATCHUP_TUNE.forceComp = null;
 const wr = favWins / N;

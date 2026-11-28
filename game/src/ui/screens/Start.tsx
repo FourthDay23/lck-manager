@@ -65,7 +65,7 @@ export function StartScreen() {
       </div>
       <div class="start-tools">
         {saves.map(({ n, m }) => (
-          <button class="btn small" onClick={() => load(n)} title={`슬롯 ${n}`}>이어하기 · {m!.label}</button>
+          <button class="btn small" onClick={() => load(n)} data-tip={`슬롯 ${n}`}>이어하기 · {m!.label}</button>
         ))}
         <label class="btn small" style={{ cursor: "pointer" }}>
           세이브 파일 열기
@@ -86,7 +86,7 @@ export function StartScreen() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <b>{t.name}</b>
                     <div class="muted" style={{ fontSize: 11 }}>자금력 {"■".repeat(t.wealth)}{"□".repeat(5 - t.wealth)} · LCK 우승 {t.titles.lck} · 월즈 {t.titles.worlds}</div>
-                    <div style={{ marginTop: 3 }} title={df.why}>
+                    <div style={{ marginTop: 3 }} data-tip={df.why}>
                       <span class={`diff-badge ${LEVEL_CLASS[df.level]}`}>난이도 {"★".repeat(df.level)}{"☆".repeat(4 - df.level)} {df.label}</span>
                     </div>
                   </div>
