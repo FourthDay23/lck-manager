@@ -41,6 +41,8 @@ import { LineupIntro, preloadSplashes } from "../LineupIntro";
 import { tutBreakDue, tutSpot } from "../Tutorial";
 import { EventModal, EventResultModal } from "../Overlays";
 import { appH, localRect, onScale, toLocal, uiZoom } from "../scale";
+import { QuickSimLayer, quickBusy, runToEndSliced } from "../quicksim";
+import "../quicksim.css";
 import { chooseSetBreak, setBreakDue, setBreakOptions } from "../../core/events";
 import { MatchStake, SeriesPayout, WinStake, incomeNow, showIncomeSince } from "../WinBonus";
 
@@ -160,15 +162,16 @@ export function SeriesScreen() {
     L.phase = "draft";
     bump();
   };
-  const quickGame = () => {
-    if (eventWaiting()) return;
+  const quickGame = async () => {
+    if (eventWaiting() || quickBusy()) return;
     // read the game number now: "시리즈 끝까지 결과만" plays the next games from this same closure
     const seed = seedOf(sr.games.length);
     const d = newDraft(L.blue, L.red, fearlessOf(sr));
     autoDraft(s, D(), d, new Rng(seed));
     L.draft = d;
     const e = makeEngine(d, L.tactic, userSide, seed + 1, L.strategy);
-    e.runToEnd();
+    // a slice at a time with a progress layer (ui/quicksim.tsx), not one long freeze; same result as runToEnd()
+    await runToEndSliced(e, `${sr.games.length + 1}세트`);
     finishGame(e, d);
   };
   const finishGame = (e: Engine, d: DraftState) => {
@@ -190,6 +193,7 @@ export function SeriesScreen() {
     // skipped past; choosing goes on with the run (set-break buttons below)
     if (L.skipAll && !doneNow && !setBreakDue(s, sr) && !tutBreakDue(s, sr)) {
       L.phase = "pre";
+      bump(); // the score and set number move while the next game is worked out
       quickGame();
       return;
     }
@@ -219,7 +223,7 @@ export function SeriesScreen() {
     </div>
   );
 
-  if (L.phase === "draft" && L.draft) return <div>{header}<DraftView d={L.draft} userSide={userSide === 0 ? "blue" : "red"} onDone={(go) => { if (go === "skip") { const e = makeEngine(L.draft!, L.tactic, userSide, seedBase + 1, L.strategy); e.runToEnd(); finishGame(e, L.draft!); } else { L.engine = makeEngine(L.draft!, L.tactic, userSide, seedBase + 1, L.strategy); L.phase = "match"; bump(); } }} /></div>;
+  if (L.phase === "draft" && L.draft) return <div>{header}<QuickSimLayer /><DraftView d={L.draft} userSide={userSide === 0 ? "blue" : "red"} onDone={(go) => { if (go === "skip") { if (quickBusy()) return; const e = makeEngine(L.draft!, L.tactic, userSide, seedBase + 1, L.strategy); runToEndSliced(e, `${sr.games.length + 1}세트`).then(() => finishGame(e, L.draft!)); } else { L.engine = makeEngine(L.draft!, L.tactic, userSide, seedBase + 1, L.strategy); L.phase = "match"; bump(); } }} /></div>;
   if (L.phase === "match" && L.engine && L.draft) {
     // the broadcast scorebar carries the series (pips, label), so the series header is not shown during the game
     const sub: Record<string, string> = {};
@@ -247,6 +251,7 @@ export function SeriesScreen() {
   return (
     <div>
       {header}
+      <QuickSimLayer />
       {(L.phase === "post" || L.phase === "done") && L.last && <GameResult g={L.last} />}
       {breakNow && (
         <SetBreakTalk won={sr.games.at(-1)?.winner === s.user} skipAll={!!L.skipAll}

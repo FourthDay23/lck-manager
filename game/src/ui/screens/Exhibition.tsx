@@ -12,6 +12,8 @@ import type { Engine, Tactic } from "../../match/engine";
 import { DraftView, GameResult, MatchView, StrategyPicker, makeEngineSides, recordFromEngine } from "./Series";
 import type { Strategy } from "../../match/strategy";
 import { TeamLogo } from "../components";
+import { QuickSimLayer, quickBusy, runToEndSliced } from "../quicksim";
+import "../quicksim.css";
 import type { SeriesInfo } from "../Scorebar";
 
 type ExId = "EXA" | "EXB";
@@ -181,12 +183,14 @@ export function ExhibitionScreen() {
     L.phase = "draft";
     bump();
   };
-  const quick = () => {
+  const quick = async () => {
+    if (quickBusy()) return;
     const d = newDraft(L.blue, red, fearless);
     autoDraft(s, D(), d, new Rng(seed));
     L.draft = d;
     const e = engineFor(d);
-    e.runToEnd();
+    // a slice at a time with a progress layer (ui/quicksim.tsx); same result as runToEnd()
+    await runToEndSliced(e, `${L.games.length + 1}세트`);
     finishGame(e, d);
   };
   const header = (
@@ -204,9 +208,11 @@ export function ExhibitionScreen() {
     return (
       <div>
         {header}
+        <QuickSimLayer />
         <DraftView d={L.draft} userSide={userSide === 0 ? "blue" : "red"} auto={humans.length === 0} hotseat={hotseat} onDone={(go) => {
+          if (go === "skip" && quickBusy()) return;
           const e = engineFor(L.draft!);
-          if (go === "skip") { e.runToEnd(); finishGame(e, L.draft!); }
+          if (go === "skip") runToEndSliced(e, `${L.games.length + 1}세트`).then(() => finishGame(e, L.draft!));
           else { L.engine = e; L.phase = "match"; bump(); }
         }} />
       </div>
@@ -232,6 +238,7 @@ export function ExhibitionScreen() {
   return (
     <div>
       {header}
+      <QuickSimLayer />
       {L.last && <GameResult g={L.last} />}
       {L.phase === "done" ? (
         <div class="frame pad center">

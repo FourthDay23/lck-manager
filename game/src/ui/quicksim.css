@@ -1,0 +1,24 @@
+/* "결과만" progress layer (ui/quicksim.tsx): over the screen, holds clicks while a quick run is going */
+.quicksim-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+.quicksim-box {
+  min-width: 280px;
+  text-align: center;
+}
+.quicksim-bar {
+  margin-top: 8px;
+  height: 8px;
+  border: 1px solid var(--line, #555);
+  background: rgba(255, 255, 255, 0.06);
+}
+.quicksim-bar > div {
+  height: 100%;
+  background: var(--gold, #e0b040);
+}
