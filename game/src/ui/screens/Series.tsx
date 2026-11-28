@@ -724,7 +724,8 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
   /** the pace the match loop is running at right now (pacing.ts): the speed it is heading for, 1 = real time */
   const pace = useRef({ target: DEFAULT_SPEED, running: false });
   useEffect(() => {
-    const r = new MatchRenderer(canvas.current!, e, data.ddVersion, userSide);
+    // captions name the teams by their short names (HLE), like the scoreboard and the banners
+    const r = new MatchRenderer(canvas.current!, e, data.ddVersion, userSide, (id) => (store.override ?? store.s)?.teams[id]?.short);
     rend.current = r;
     // the clock and the auto camera go together: fast-forward on the whole map, real time and a close-up only for a
     // teamfight of six or more, smaller fights at 4x at most (pacing.ts)
@@ -892,6 +893,8 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
                 const a = ev.actor !== undefined ? e.units[ev.actor] : null;
                 const v = ev.victim !== undefined ? e.units[ev.victim] : null;
                 const mega = ["penta", "quadra", "ace", "steal", "nexus", "soul"].includes(ev.type);
+                // the short name the scoreboard shows big (HLE, not Hanwha Life Esports), so a banner stays short
+                const short = s.teams[e.teamIds[ev.side]]?.short ?? e.names[ev.side];
                 if (spawn) {
                   return (
                     <div key={id} class="banner obj-spawn">
@@ -907,16 +910,16 @@ export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e
                   return (
                     <div key={id} class={`banner ${ev.side ? "red" : "blue"} ${mega ? "mega" : ""}`}>
                       {a && <ChampIcon id={a.champ.id} size={32} />}
-                      <span class="obj-team">{e.names[ev.side]}</span>
+                      <span class="obj-team">{short}</span>
                       <span>{what}</span>
                     </div>
                   );
                 }
                 if (ev.type === "nexus") {
-                  // "T1 승리": the winner's short name, as big on the scoreboard
+                  // "T1 승리"
                   return (
                     <div key={id} class={`banner ${ev.side ? "red" : "blue"} mega`}>
-                      <span>{s.teams[e.teamIds[ev.side]]?.short ?? e.names[ev.side]} 승리</span>
+                      <span>{short} 승리</span>
                     </div>
                   );
                 }
