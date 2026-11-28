@@ -63,10 +63,17 @@ orch board --json        # tasks[].id / title / area / status / session
      ```
 3. 돌아온 세션 id를 등록한다: `orch set Txx --session <local_id> --name <이름>`
 
-### effort (2026-11-28 사용자 지시)
+### effort (2026-11-28 사용자 지시, 같은 날 갱신)
 
-- 작업 세션은 항상 effort `xhigh`로 돌린다. `start_session`은 메인 세션보다 높은 effort를 줄 수 없어서, 메인이 medium이면 새 세션도 medium으로 열린다.
-- 그래서 세션을 연 직후 `set_session_effort`(`xhigh`)를 부른다. 기존 세션에 일을 다시 보낼 때도 effort를 확인한다.
+작업 난이도에 따라 정한다.
+- **`medium`: 단순한 작업.** 문구·텍스트 수정, 이미지·아이콘 교체, 색·크기·여백 같은 CSS 조정, 한두 줄짜리 표시 수정. 엔진 로직이나 상태 구조는 건드리지 않는다.
+- **`xhigh`: 복잡한 작업.** 엔진·시뮬(`game/src/match/`), 밸런스·보정, 세이브 구조나 `core` 상태, 새 시스템이나 새 화면, 원인을 모르는 버그 조사, 병합 충돌 해결. CLAUDE.md 4절에서 '큰 작업'으로 보는 것도 여기 들어간다.
+- 애매하면 `xhigh`로 한다.
+
+적용 방법:
+- `start_session`은 메인 세션보다 높은 effort를 줄 수 없다. 그래서 세션을 연 직후 `set_session_effort`로 위 기준에 맞는 값을 지정한다.
+- 기존 세션에 일을 다시 보낼 때도 이번 작업에 맞는 값으로 바꾼다. 앞 작업이 xhigh였어도 이번이 단순하면 medium으로 내리고, 반대도 마찬가지다.
+- 사용자에게 분배를 알리는 한 줄에 effort를 붙인다. 예: `T42 버튼 문구 → [세션](#local_…)에 전달 (medium)`
 
 ### 모델 지정 (사용자가 "[Fable]"처럼 모델을 정했을 때)
 
