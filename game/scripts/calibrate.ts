@@ -17,6 +17,7 @@ import { gameWinProb, teamPower } from "../src/core/quick";
 import { ROLES } from "../src/data/types";
 import { ITEM_TUNE } from "../src/match/items";
 import { applyGrubMacro, applyObjTune } from "../src/match/macro";
+import * as Macro from "../src/match/macro";
 
 const dir = existsSync("public/data/champions.json") && existsSync("public/data/players.json") ? "data" : "data-sample";
 const j = (f: string) => {
@@ -46,6 +47,14 @@ applyObjTune(process.env.OBJ_TUNE);
 // GRUB_TUNE=towerPer:0,towerAll:0 / GRUB_MACRO=poach:0.5 override the voidgrub values (engine.ts GRUB_TUNE, macro.ts GRUB_MACRO)
 applyGrubTune(process.env.GRUB_TUNE);
 applyGrubMacro(process.env.GRUB_MACRO);
+// WAVE_TUNE=lastHit:0.9,loneWave:0.4 overrides how champions and minions deal with waves and structures (minions.ts)
+// (loaded at run time and optional, like BASE_TUNE below: scripts/ab.mjs --base runs this script against older
+// code that has no minions.ts)
+const Minions: { applyWaveTune?: (s: string | undefined) => void } | null = await import("../src/match/minions").catch(() => null);
+Minions?.applyWaveTune?.(process.env.WAVE_TUNE);
+// BASE_TUNE=giveUp:0.6,endCall:2.5 overrides how a base is defended and how the push that ends the game goes (macro.ts)
+// (optional call: scripts/ab.mjs --base runs this script against older code that has no BASE_TUNE)
+(Macro as { applyBaseTune?: (s: string | undefined) => void }).applyBaseTune?.(process.env.BASE_TUNE);
 // FLAGS=nav,macro,fight turns engine modules on (default: the engine's own defaults)
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x && !x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl] = true;
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl.slice(1)] = false;

@@ -26,6 +26,8 @@ import * as Stats from "./stats";
 import * as Summoners from "./summoners";
 import * as ObjSmite from "./objsmite";
 import type { SummonerName } from "./summoners.gen";
+import * as Minions from "./minions";
+import * as Turrets from "./turrets";
 import type { Strategy } from "./strategy";
 import { defaultStrategy } from "./strategy";
 
@@ -37,7 +39,12 @@ export type SideN = 0 | 1;
  * objectives, fight = teamfights with champion kits) is wired in behind its flag so it can be tested on its own;
  * test scripts may flip these at runtime. With a flag off the engine runs the old code path.
  */
-export const ENGINE_FLAGS = { nav: true, macro: true, fight: true };
+export const ENGINE_FLAGS = {
+  nav: true, macro: true, fight: true,
+  /** lane minions as real units, turrets with the game's targeting, health, plates and backdoor rules (minions.ts,
+   *  turrets.ts, 2026-11-27). Off: the lane is one number pushed by a formula and CS is a rate, as before. */
+  minions: true,
+};
 
 /**
  * How far apart player strength puts two units in this engine. A unit's rating (overall + role fit + form +
@@ -73,9 +80,12 @@ export const EARLY_TUNE = {
   // 6.5 min and 2.8 kills by 10 min; these give 5.5 and 3.8 (200 games, seed 3)
   gankRate: 0.012,
   gankMin: 0.15,
-  allinTop: 0.0013,
-  allinMid: 0.0009,
-  allinBot: 0.0013,
+  // 2026-11-28, with real minions (minions.ts: a wave now joins a trade next to it, and laners stand under the enemy
+  // turret while their wave is on it): 0.0013 / 0.0009 / 0.0013 gave 1.5 all-in kills a game (0.9 before) and 4.4
+  // kills by 10 min
+  allinTop: 0.001,
+  allinMid: 0.0007,
+  allinBot: 0.001,
   meet: 0.006,
   meetEdge: 0.02,
 };
@@ -426,10 +436,17 @@ export class Engine {
       u.hp = u.maxHp;
     }
     for (const td of TURRETS) {
-      const maxHp = td.tier === 1 ? 3600 : td.tier === 2 ? 3800 : td.tier === 3 ? 4200 : 3200;
-      this.turrets.push({ side: td.side, lane: td.lane, tier: td.tier, pos: td.pos, hp: maxHp, maxHp, alive: true, u: td.lane === "nexus" ? (td.side ? 0.97 : 0.03) : laneU(td.lane, td.pos), plates: td.tier === 1 ? 5 : 0 });
+      const real = ENGINE_FLAGS.minions;
+      const maxHp = real ? Turrets.maxHp(td.tier) : td.tier === 1 ? 3600 : td.tier === 2 ? 3800 : td.tier === 3 ? 4200 : 3200;
+      const plates = real ? Turrets.platesOf(td.tier) : td.tier === 1 ? 5 : 0;
+      this.turrets.push({ side: td.side, lane: td.lane, tier: td.tier, pos: td.pos, hp: maxHp, maxHp, alive: true, u: td.lane === "nexus" ? (td.side ? 0.97 : 0.03) : laneU(td.lane, td.pos), plates });
     }
-    for (const ih of INHIBS) this.inhibs.push({ side: ih.side, lane: ih.lane, pos: ih.pos, hp: 3000, alive: true, respawnAt: 0 });
+    for (const ih of INHIBS) this.inhibs.push({ side: ih.side, lane: ih.lane, pos: ih.pos, hp: ENGINE_FLAGS.minions ? Turrets.INHIB_HP : 3000, alive: true, respawnAt: 0 });
+    if (ENGINE_FLAGS.minions) {
+      this.nexus = [Turrets.NEXUS_HP, Turrets.NEXUS_HP];
+      Minions.init(this);
+      Turrets.init(this);
+    }
     const camps = this.meta.camps;
     let id = 0;
     for (const side of [0, 1] as SideN[]) {
@@ -664,6 +681,8 @@ export class Engine {
   }
   /** The attacking side's minion wave has reached this turret: it shoots minions, so champions may stand in range. */
   waveAt(t: TurretState): boolean {
+    // real minions: the wave is on the turret while it has minions to shoot (minions.ts)
+    if (ENGINE_FLAGS.minions) return Minions.waveOn(this, t);
     if (t.lane === "nexus") return LANES.some((l) => (t.side === 1 ? this.lanes[l].front >= 0.93 : this.lanes[l].front <= 0.07));
     // by distance, not by lane fraction: 0.045 of a lane is about 1,035 u on top and bot but 760 u on mid, so on the
     // side lanes a wave still outside the turret's own range (780) counted as on it, and on mid one inside it did not
@@ -687,7 +706,17 @@ export class Engine {
   laneStand(u: Unit, lane: LaneId) {
     const f = this.lanes[lane].front;
     const back = (u.champ.ranged ? 0.035 : 0.018) * (u.side === 0 ? -1 : 1);
-    const p = lanePoint(lane, f + back);
+    let p = lanePoint(lane, f + back);
+    if (ENGINE_FLAGS.minions) {
+      // our wave is on their turret: step up and hit it while the turret shoots the minions (at the front-based
+      // spot a ranged laner stood 1,000 u from the turret and never touched it)
+      const t = this.frontierTurret((1 - u.side) as SideN, lane);
+      // (not when hurt: under half health a poke and one turret shot after the wave died was a death)
+      if (t && u.hp > u.maxHp * 0.5 && this.waveAt(t)) p = lanePoint(lane, t.u + ((u.champ.ranged ? 560 : 330) / Minions.laneLength(lane)) * (u.side === 0 ? -1 : 1));
+      // and never inside the range of a turret with no wave on it
+      const x = this.exposedAt(u.side, p, 860);
+      if (x) p = lanePoint(lane, (x.lane === lane ? x.u : laneU(lane, x.pos)) + (1000 / Minions.laneLength(lane)) * (u.side === 0 ? -1 : 1));
+    }
     const jitter = (u.role === "Support" ? 260 : 120);
     return { x: p.x + (this.rng.next() - 0.5) * jitter, y: p.y + (this.rng.next() - 0.5) * jitter };
   }
@@ -745,7 +774,7 @@ export class Engine {
         if (k === "herald") this.event("info", 0, "협곡의 전령 등장", false);
       }
     }
-    for (const ih of this.inhibs) if (!ih.alive && ih.respawnAt && this.t >= ih.respawnAt) { ih.alive = true; ih.hp = 3000; }
+    for (const ih of this.inhibs) if (!ih.alive && ih.respawnAt && this.t >= ih.respawnAt) { ih.alive = true; ih.hp = ENGINE_FLAGS.minions ? Turrets.INHIB_HP : 3000; }
     for (const u of this.units) {
       if (!u.alive && this.t >= u.respawnAt) {
         u.alive = true;
@@ -873,6 +902,24 @@ export class Engine {
     if (!u.alive) return;
     // Teleport: channelling, landing, or walking from the landing spot to the fight it came for (summoners.ts)
     if (Summoners.teleportTick(this, u)) return;
+    if (ENGINE_FLAGS.minions && !u.fightId) {
+      // a turret is firing on this champion (its wave died, or it walked in): out of the range first, by the
+      // shortest way. A recall channel is broken by the shot.
+      const t = Turrets.aimingAt(this, u);
+      if (t) {
+        const d = dist(t.pos, u) || 1;
+        u.recallEnd = undefined;
+        let out = Nav.nearestWalkable({ x: t.pos.x + ((u.x - t.pos.x) / d) * 950, y: t.pos.y + ((u.y - t.pos.y) / d) * 950 });
+        // straight out would be into the next turret's range (it stood behind this one): out toward its own base
+        if (this.exposedAt(u.side, out, 800)) {
+          const f = FOUNTAIN[u.side], fd = dist(t.pos, f) || 1;
+          out = Nav.nearestWalkable({ x: t.pos.x + ((f.x - t.pos.x) / fd) * 950, y: t.pos.y + ((f.y - t.pos.y) / fd) * 950 });
+        }
+        this.setGoal(u, out);
+        this.moveStep(u, DT);
+        return;
+      }
+    }
     // recall channel
     if (u.task === "recall") {
       if (u.recallEnd !== undefined) {
@@ -889,12 +936,19 @@ export class Engine {
         return;
       }
       if (dist(u, FOUNTAIN[u.side]) < 900) {
-        u.hp = u.maxHp = this.maxHp(u);
+        // walked home: full health at once, unless the enemy is in the base (then the fountain heals it over a few
+        // seconds, macro.ts: a defender ran 900 u out of a fight, came back at 100 % and the dive was pointless)
+        // (after laning only: before it macro does not drive the lane champions, so nothing would hold them there)
+        const f = ENGINE_FLAGS.macro && !this.laningPhase() && Macro.baseRaided(this, u.side) ? u.hp / Math.max(1, u.maxHp) : 1;
+        u.maxHp = this.maxHp(u);
+        u.hp = u.maxHp * f;
         u.task = "return";
         return;
       }
       // not next to an enemy, and not inside the range of a turret that would shoot the whole channel
-      if (!this.enemies(u).some((e) => dist(e, u) < 1300) && !this.exposedAt(u.side, u, 860)) {
+      // (real minions: nor under a turret that is busy with a wave for now: the wave dies before the channel ends)
+      if (!this.enemies(u).some((e) => dist(e, u) < 1300) && !this.exposedAt(u.side, u, 860) &&
+        !(ENGINE_FLAGS.minions && this.turrets.some((t) => t.alive && t.side !== u.side && dist(t.pos, u) < 900))) {
         u.recallEnd = this.t + 8;
         u.path = [];
         this.fx_({ kind: "recall", side: u.side, x: u.x, y: u.y, tx: u.x, ty: u.y, color: "#7fd3ff", r: 160, w: 0, from: u.i });
@@ -918,7 +972,15 @@ export class Engine {
     // Laning units run on this path (macro gives them the "old" job), so this is where early recalls come from.
     const urge = Items.shopUrge(this, u);
     const rich = urge !== null ? urge > 0 : u.gold - (u as Unit & { lastShop?: number }).lastShop! > 1500;
-    if ((low || (rich && this.rng.chance(urge !== null ? Items.recallChance(urge) : 0.004))) && u.task !== "obj") {
+    // real minions: a laner goes home to shop once the wave in front of it is dead (leaving in the middle of one
+    // gave it up: a fifth of the lane's minions died with nobody there), so the roll comes less often and counts more
+    // (not for ever: after 40 s of waiting with a wave always on it, it goes anyway)
+    const laneWave = ENGINE_FLAGS.minions && u.task === "lane";
+    const sw = u as Unit & { shopWait?: number };
+    if (!rich || !laneWave) sw.shopWait = undefined;
+    else sw.shopWait ??= this.t;
+    const shopNow = rich && (!laneWave || this.t - sw.shopWait! > 40 || !Minions.anyNear(this, u, 1100, (1 - u.side) as SideN));
+    if ((low || (shopNow && this.rng.chance((urge !== null ? Items.recallChance(urge) : 0.004) * (laneWave ? Minions.WAVE_TUNE.recallOnClear : 1)))) && u.task !== "obj") {
       u.task = "recall";
       (u as Unit & { lastShop?: number }).lastShop = u.gold;
       return;
@@ -994,7 +1056,8 @@ export class Engine {
         if (g) this.setGoal(u, g);
       } else {
         u.task = "lane";
-        if (!u.goal || this.rng.chance(0.15) || dist(u.goal, this.laneFrontPos(lane)) > 900) this.setGoal(u, this.laneStand(u, lane));
+        // (real minions: at once when the wave under the turret it stands at has died)
+        if (!u.goal || this.rng.chance(0.15) || dist(u.goal, this.laneFrontPos(lane)) > 900 || (ENGINE_FLAGS.minions && this.exposedAt(u.side, u.goal, 800))) this.setGoal(u, this.laneStand(u, lane));
       }
       this.moveStep(u, DT);
       return;
@@ -1196,6 +1259,9 @@ export class Engine {
   /** Chance per second that u picks a fight with e right now. */
   engageRate(u: Unit, e: Unit, ratio: number, underTurret: boolean, sizes = 2): number {
     const aggro = this.tactic[u.side] === "aggressive" ? 1.4 : this.tactic[u.side] === "safe" ? 0.6 : 1;
+    // defenders of an inhibitor / the nexus fight for it (macro.ts BASE_TUNE)
+    const base = ENGINE_FLAGS.macro ? Macro.baseEngage(this, u, e, ratio) : null;
+    if (base !== null) return base;
     let r: number;
     if (u.task === "gank") {
       r = ratio > 0.8 ? 1.2 : SIM_TUNE.gankPoor;
@@ -1405,6 +1471,8 @@ export class Engine {
       }
       for (const m of members) this.fightAct(m, members);
     }
+    // the old fight code has its own turret shots at champions (fightAct); minions are still shot by the rules
+    if (ENGINE_FLAGS.minions) Turrets.shots(this, null, () => false);
   }
 
   endFight(id: number) {
@@ -1573,6 +1641,8 @@ export class Engine {
 
   /** One skill effect. Returns the Fx so the caller can mark `miss` once the hit is rolled (same step). */
   emitSpellFx(u: Unit, sp: SpellData, target: Unit | null, at: Vec, pve: boolean): Fx {
+    // a spell that covers ground also hits the enemy minions standing in it
+    if (ENGINE_FLAGS.minions && !pve) Minions.splash(this, u, sp, at);
     const color = u.champ.color || (u.side ? "#ff6b6b" : "#5aa9ff");
     return this.fx_({
       kind: sp.vfx, side: u.side, x: u.x, y: u.y, tx: at.x, ty: at.y, color,
@@ -1648,7 +1718,7 @@ export class Engine {
       a.gold += kg ? kg.assist : Math.round(150 / Math.max(1, assists.length)) + 20;
       a.xp += 120;
     }
-    const kName = killer ? `${killer.name}(${killer.champ.name})` : "포탑";
+    const kName = killer ? `${killer.name}(${killer.champ.name})` : this.execBy === "minion" ? "미니언" : "포탑";
     const vName = `${v.name}(${v.champ.name})`;
     if (!this.firstBlood) {
       this.firstBlood = true;
@@ -1673,8 +1743,24 @@ export class Engine {
     }
   }
 
+  /** what a killing blow with no champion behind it came from (the kill line names it) */
+  execBy: "turret" | "minion" = "turret";
+  /** Lane minions hitting a champion (minions.ts): through the fight module's shields and saves when it is on. */
+  minionHit(v: Unit, amount: number) {
+    this.execBy = "minion";
+    if (ENGINE_FLAGS.fight) Fight.outsideHurt(this, v, amount);
+    else this.damage(null, v, amount);
+    this.execBy = "turret";
+  }
+
   // ---------- lanes, turrets, structures ----------
   lanesTick() {
+    if (ENGINE_FLAGS.minions) {
+      // real waves (the first one leaves the nexus at 0:30) and the structures they and the champions hit
+      Minions.tick(this);
+      Turrets.tick(this);
+      return;
+    }
     if (this.t < 55) return;
     // blue power / red power, clamped, for map pressure after laning
     const tp = [0, 1].map((sd) => this.units.filter((u) => u.side === sd && u.alive).reduce((a, u) => a + this.power(u), 0));
@@ -1762,11 +1848,17 @@ export class Engine {
         if (by) by.gold += 125;
       }
     }
-    if (t.hp <= 0 && t.alive) {
+    if (t.hp <= 0) this.turretDown(t, by);
+  }
+
+  /** A turret falls: the count, the gold and the event (turrets.ts pays the 2026 amounts when real minions are on). */
+  turretDown(t: TurretState, by: Unit | null) {
+    if (t.alive) {
       t.alive = false;
       const side = (1 - t.side) as SideN;
       this.towers[side] += 1;
-      for (const u of this.units) if (u.side === side) u.gold += by && u === by ? 300 : 70;
+      if (ENGINE_FLAGS.minions) Turrets.payout(this, t, !this.firstTurret);
+      else for (const u of this.units) if (u.side === side) u.gold += by && u === by ? 300 : 70;
       const where = t.lane === "nexus" ? "쌍둥이" : `${t.lane === "top" ? "탑" : t.lane === "mid" ? "미드" : "바텀"} ${t.tier}차`;
       if (!this.firstTurret) {
         this.firstTurret = true;
@@ -2048,7 +2140,8 @@ export class Engine {
     const d = dist(back, t.pos) || 1;
     const from = { x: t.pos.x + ((back.x - t.pos.x) / d) * 900, y: t.pos.y + ((back.y - t.pos.y) / d) * 900 };
     this.fx_({ kind: "dash", side: h.side, x: t.pos.x, y: t.pos.y, tx: from.x, ty: from.y, color: "#b48cff", r: 300, w: 260, text: "전령 돌진" });
-    this.damageTurret(t, t.maxHp * 0.45, best.by);
+    if (ENGINE_FLAGS.minions) Turrets.heraldHit(this, t, best.by);
+    else this.damageTurret(t, t.maxHp * 0.45, best.by);
   }
 
   // ---------- passive income ----------
@@ -2061,11 +2154,19 @@ export class Engine {
       const lane = ROLE_LANE[u.role];
       let nearWave = false;
       for (const l of LANES) if (dist(u, this.laneFrontPos(l)) < 1100) nearWave = true;
+      // real minions: also wherever enemy minions are within experience range (the front is where the waves meet,
+      // which is not where a wave under a turret or a wave walking in is)
+      if (!nearWave && ENGINE_FLAGS.minions && Minions.anyNear(this, u, Minions.WAVE_TUNE.xpRange, (1 - u.side) as SideN)) nearWave = true;
       const solo = u.role === "Top" || u.role === "Mid";
       if (nearWave && this.t > 55) {
         const share = u.role === "Support" ? 0.6 : u.role === "Bot" ? 0.8 : 1;
-        u.xp += (solo ? GROWTH.laneXpSolo : GROWTH.laneXpDuo) * share * DT * (1 + m * GROWTH.laneXpGrow);
-        if (u.role !== "Support") {
+        // real minions: the experience comes with each minion that dies in range, shared as in the game (minions.ts).
+        // The rate below paid for standing at the front, and with waves that crash and reset laners stand there
+        // less: they were 0.5 levels behind at 15:00
+        if (!ENGINE_FLAGS.minions) u.xp += (solo ? GROWTH.laneXpSolo : GROWTH.laneXpDuo) * share * DT * (1 + m * GROWTH.laneXpGrow);
+        if (ENGINE_FLAGS.minions && u.role !== "Support") {
+          // real minions: CS and its gold come from the minions this champion kills (minions.ts), not from a rate
+        } else if (u.role !== "Support") {
           // the lane's LCK matchup moves the CS share between the two laners (zero-sum on average, matchup.ts)
           const mu = this.laningPhase() && lane && u.role !== "Jungle" ? Matchup.laneEdge(this, u) * Matchup.MATCHUP_TUNE.cs : 0;
           const rate = (GROWTH.laneCs / 60) * (0.85 + u.rating / 500) * (lane ? 1 : 0.9) * clamp(1 + mu, 0.5, 1.5);
@@ -2086,7 +2187,8 @@ export class Engine {
         u.xp += (this.laningPhase() ? GROWTH.awayXpLaning : side ? GROWTH.sideXp : GROWTH.awayXp) * DT;
         // side waves and jungle camps away from the main fronts
         if (u.role !== "Support" && !u.fightId && this.t > 840) {
-          const g = ((GROWTH.sideCs * (u.role === "Bot" ? GROWTH.sideBot : 1)) / 60) * DT;
+          // (real minions: the waves a champion walks past are farmed for real, so less of this is left)
+          const g = ((GROWTH.sideCs * (ENGINE_FLAGS.minions ? Minions.WAVE_TUNE.sideCs : 1) * (u.role === "Bot" ? GROWTH.sideBot : 1)) / 60) * DT;
           u.cs += g;
           u.gold += g * 21;
         }

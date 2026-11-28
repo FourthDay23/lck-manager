@@ -56,6 +56,7 @@ import type { LaneId, Vec } from "./map";
 import { BARON_PIT, DRAGON_PIT, FOUNTAIN, LANES, MIRROR_C, NEXUS, ROLE_LANE, dist, lanePoint, laneU, mirror } from "./map";
 import * as Nav from "./nav";
 import * as Items from "./items";
+import * as Minions from "./minions";
 import * as Summoners from "./summoners";
 import { STEAL_TUNE, secondsTo } from "./objsmite";
 import { LCK_STATS } from "./lck-stats.gen";
@@ -115,10 +116,49 @@ export const OBJ_TUNE = {
 export function applyObjTune(spec: string | undefined) {
   applyTune(OBJ_TUNE, "OBJ_TUNE", spec);
 }
-/** siege score bonus when the target lane's inhibitor is already down (the nexus is next), see siegeCand */
-const BASE_OPEN_PUSH = 0.6;
 /** a sieging group whose wave has not reached the structure yet stands this far (lane fraction) behind the wave front */
 const SIEGE_WAVE_BACK = 0.012;
+/**
+ * Fights at a base: how an inhibitor or the nexus is defended, and how the push that ends the game goes.
+ * Measured before (scripts/base-diag.ts, 60 games): defenders stood next to the champions hitting their nexus turrets
+ * and fought only when a small random roll said so (74 % of their time inside the base during a push was not
+ * fighting), the defence plan was dropped below a 0.55 power ratio or after 50 s (the living defenders walked back to
+ * a lane), a base fight was over in 2 s (a runner "got away" by standing next to the nearest turret), attackers
+ * walked in and out twice a push and only 41 % of the pushes with 3+ attackers ended the game.
+ *
+ * Defence (defendCand, defendJob, baseEngage; fight.ts think / shouldBail / runFight):
+ *  engage / engageTwin: power ratio (turret cover counted) from which the defenders start the fight themselves, with
+ *    both nexus turrets up / with one of them down. With the nexus itself open they always do (the last stand).
+ *  giveUp: below this ratio (two against five) they do not walk out to die one by one: they wait for the others, at
+ *    the nexus turrets for an inhibitor, at the fountain for the nexus turrets, until the ratio is back or the nexus
+ *    is open.
+ *  rate / holdRate: chance per second that defenders in contact start the fight when engaging / when holding.
+ *  recallFrom: a defender farther than this from the rally point recalls instead of walking (8 s channel).
+ *  corner: a side fighting this close to its own nexus has nowhere to fall back to: no team retreat, and with
+ *    stand = 1 nobody leaves the fight at low health either (it ran 900 u to the fountain, healed and came back).
+ *  radius: the base area: a runner in it is safe at the fountain, not next to the nearest turret.
+ *  guard: 1 = a free champion clears enemy minions that are inside the base (assign).
+ * Attack (siegeCand, planValid, baseEngage):
+ *  dive: an attacker opens on a defender standing under a nexus turret only above this power ratio; below it the
+ *    turret is hit while the wave holds.
+ *  openPush: siege score bonus when the target lane's inhibitor is already down (the nexus is next).
+ *  closeNum / closeHp / closeOut: the push into an open base, with its members at the target, is called off only
+ *    this many champions down / below this mean hp / against this power ratio (a normal siege: 0 / 0.38 / 1.3).
+ *  endCall / endAdv / endFrom: from minute endFrom a team with endAdv more champions alive goes for a lane whose
+ *    inner turret is down (the inhibitor turret or what is behind it), hurt or not, ahead of a new objective or a
+ *    reset; endCall is its score bonus (0 = off). An objective already being hit is finished first.
+ *    Paired runs (scripts/ab.mjs, 160 games each): endCall 0 -> 2.5 with endAdv 2: length -2.6 +-1.3 min, barons
+ *    2.14 -> 1.45 (LCK 1.31); endAdv 2 -> 1: length -2.3 +-1.0 min (34.6 -> 32.4), barons 1.45 -> 1.00.
+ * What each part costs in game length (60 games, roster seed 3, not paired, +-1 min): the defence that always comes
+ * home +3.3 min, the minion guard +2.0, the fountain / runner rules +1.6, the recall +1.5. The end call pays it back.
+ */
+export const BASE_TUNE = {
+  engage: 0.9, engageTwin: 0.8, giveUp: 0.75, rate: 1.2, holdRate: 0.04, recallFrom: 5500, corner: 1800, stand: 1, radius: 2600, guard: 1,
+  dive: 2.5, openPush: 0.6, closeNum: 1, closeHp: 0.28, closeOut: 1.7, endCall: 2.5, endAdv: 1, endFrom: 22,
+};
+export function applyBaseTune(spec: string | undefined) {
+  applyTune(BASE_TUNE, "BASE_TUNE", spec);
+}
 /** minimum group before a team commits (spec); a safe jungler may still solo dragon / herald / grubs */
 const MIN_GROUP: Record<ObjKey, number> = { dragon: 3, herald: 3, grubs: 2, baron: 4, elder: 4 };
 const PREF: Record<ObjKey, Role[]> = {
@@ -236,6 +276,14 @@ interface Plan {
   /** we hold the area: set up close and start it; without it hover on our side (OBJ_TUNE.hover) */
   prio: boolean;
   emergency?: boolean;
+  /** defend: the structure is an inhibitor or the nexus (BASE_TUNE) */
+  base?: boolean;
+  /** defend: where the defended structure is (the members may stand elsewhere: target) */
+  at?: Vec;
+  /** siege: the enemy base is open on this lane (the push that ends the game) */
+  final?: boolean;
+  /** siege: an end call (BASE_TUNE.endCall): its members go in hurt */
+  call?: boolean;
   /** grubs: a contest by the jungler alone, for a last hit (GRUB_MACRO.poach) */
   poach?: boolean;
   /** how long this side stands off before it starts the monster at even odds, and since when it has been standing
@@ -968,30 +1016,52 @@ function defendCand(e: Engine, M: MacroState, b: Brain, V: View): Plan | null {
     const foes = V.theirs.filter((x) => dist(x, s.pos) < 1700);
     const threat = foes.length >= 2 || (foes.length >= 1 && (s.tier >= 3 || foes.some((x) => x.baronUntil > e.t)));
     if (!threat) continue;
+    // a base structure (inhibitor, nexus) is defended whatever the odds: BASE_TUNE
+    const base = s.tier >= 4;
     const near = V.mine.filter((u) => hpf(u) > 0.3 && !(channeling(u) && u.recallEnd !== undefined) && (u.i !== b.splitter || s.tier >= 4 || dist(u, s.pos) < 4000))
       .sort((a, c) => dist(a, s.pos) - dist(c, s.pos));
     const thP = V.theirs.reduce((a, x) => a + e.power(x) * (dist(x, s.pos) < 3000 ? 1 : 0.3), 0);
+    const thHere = foes.reduce((a, x) => a + e.power(x), 0);
     // send the nearest defenders until (with the turret) they match the siege; inner structures get everyone
+    // (a base with one or two enemies in it: one more defender than them, not the whole team off its own push)
     const pool: Unit[] = [];
-    let acc = 0;
+    let acc = 0, raw = 0;
     for (const u of near) {
       if (s.tier < 3 && pool.length >= 2 && acc * 1.3 > thP * 1.1) break;
+      if (base && foes.length <= 2 && pool.length > foes.length && raw > thHere * 1.3) break;
       pool.push(u);
       acc += e.power(u) * presence(e, u, s.pos, 15);
+      raw += e.power(u);
     }
     if (!pool.length) continue;
     const ourP = powerAt(e, pool, s.pos, 15) * 1.3;
     const ratio = (ourP + 1) / (thP + 1);
     // outer towers are given up unless we can hold them (turret counted); inner ones are fought for harder
-    if (ratio < (s.tier <= 2 ? 1 : s.tier === 3 ? 0.8 : 0.55) - b.P.fight * 0.5) continue;
+    if (!base && ratio < (s.tier <= 2 ? 1 : 0.8) - b.P.fight * 0.5) continue;
     const id = `defend:${s.lane}:${s.tier}`;
-    if ((b.cool[id] ?? 0) > e.t) continue;
-    let score = s.value + clamp(ratio - 1, -1, 1) * 1.2 + 0.25;
+    if (!base && (b.cool[id] ?? 0) > e.t) continue;
+    let score = s.value + clamp(ratio - 1, base ? 0 : -1, 1) * 1.2 + 0.25;
     if (V.minute < b.P.avoidUntil) score += 0.2; // scaling teams hold under their towers
     if (!best || score > best.score) {
       const back = lanePoint(s.lane, laneU(s.lane, s.pos) + (b.side === 0 ? -0.016 : 0.016));
+      let target = back, engage = ratio >= 1.05;
+      if (base) {
+        const twins = e.turrets.filter((t) => t.alive && t.side === b.side && t.lane === "nexus").length;
+        const c = { x: foes.reduce((a, x) => a + x.x, 0) / foes.length, y: foes.reduce((a, x) => a + x.y, 0) / foes.length };
+        // the rally: in front of the nexus facing them (between the twin turrets), or behind the inhibitor
+        target = snap(s.tier >= 5 ? toward(NEXUS[b.side], c, 380) : toward(s.pos, NEXUS[b.side], 450));
+        const open = s.tier >= 5 && twins === 0;
+        engage = open || ratio >= (s.tier >= 5 && twins < 2 ? BASE_TUNE.engageTwin : BASE_TUNE.engage);
+        // hopeless for now (two against five): no walking out to die one by one. They give the structure up and wait
+        // for the others, at the nexus turrets for an inhibitor, at the fountain for the nexus turrets, and fight
+        // when the numbers are back or the nexus itself is open
+        if (!open && ratio < BASE_TUNE.giveUp) {
+          target = snap(s.tier >= 5 ? toward(FOUNTAIN[b.side], NEXUS[b.side], 450) : toward(NEXUS[b.side], s.pos, 380));
+          engage = false;
+        }
+      }
       best = mkPlan(e, "defend", id, score, pool.map((u) => u.i), {
-        lane: s.lane, target: s.tier >= 5 ? s.pos : back, until: e.t + 12, expires: e.t + 50, emergency: true, engage: ratio >= 1.05, ratio,
+        lane: s.lane, target, until: e.t + 12, expires: e.t + 50, emergency: true, engage, ratio, base, at: s.pos,
       });
     }
   }
@@ -1000,13 +1070,24 @@ function defendCand(e: Engine, M: MacroState, b: Brain, V: View): Plan | null {
 
 function siegeCand(e: Engine, M: MacroState, b: Brain, V: View): Plan | null {
   if (V.laning) return null;
-  const pool = V.mine.filter((u) => u.i !== b.splitter && hpf(u) > 0.45 && !(channeling(u) && u.recallEnd !== undefined));
-  if (pool.length < 3 || V.mine.length < V.theirs.length) return null;
   const enemy = (1 - b.side) as SideN;
+  // the enemy base is open and we stand in it with more champions alive than they have: the push is finished with
+  // whoever is left (three attackers at a nexus turret with 1,200 hp against one defender walked off, because one of
+  // them was under 45 % hp and a siege needs three)
+  const open = e.inhibs.some((x) => x.side === enemy && !x.alive);
+  const inBase = (u: Unit) => open && dist(u, NEXUS[enemy]) < 4500;
+  // champions up late in the game: the team goes for the base as it is, hurt or not (BASE_TUNE.endCall). Not with two
+  // enemies in its own base (that is a defence first), and an objective already being hit is finished first
+  const raided = V.theirs.filter((x) => dist(x, NEXUS[b.side]) < BASE_TUNE.radius + 400).length >= 2;
+  const onTake = b.plan.kind === "take" && b.plan.phase === "commit";
+  const kill = BASE_TUNE.endCall > 0 && V.numAdv >= BASE_TUNE.endAdv && V.minute >= BASE_TUNE.endFrom && !raided && !onTake;
+  const pool = V.mine.filter((u) => (u.i !== b.splitter || inBase(u) || kill) && hpf(u) > (inBase(u) ? 0.25 : kill ? 0.3 : 0.45) && !(channeling(u) && u.recallEnd !== undefined));
+  const finish = pool.filter(inBase).length >= 2 && V.theirs.length < pool.length;
+  if ((pool.length < 3 && !finish) || V.mine.length < V.theirs.length) return null;
   const cx = pool.reduce((a, u) => a + u.x, 0) / pool.length, cy = pool.reduce((a, u) => a + u.y, 0) / pool.length;
   let best: Plan | null = null;
   for (const lane of LANES) {
-    if (lane === b.splitLane && b.formation !== "five" && pool.length < 4) continue;
+    if (lane === b.splitLane && b.formation !== "five" && pool.length < 4 && !finish) continue;
     if ((b.cool[`siege:${lane}`] ?? 0) > e.t) continue;
     const tp = e.siegeTarget(enemy, lane);
     if (!tp) continue;
@@ -1025,11 +1106,16 @@ function siegeCand(e: Engine, M: MacroState, b: Brain, V: View): Plan | null {
     // and broke it again after it respawned.
     const inh = e.inhibs.find((x) => x.side === enemy && x.lane === lane);
     const baseOpen = !tierT && !!inh && !inh.alive;
-    if (baseOpen) v += BASE_OPEN_PUSH + V.numAdv * 0.15;
+    if (baseOpen) v += BASE_TUNE.openPush + V.numAdv * 0.15;
     // the enemy is on a pit we are not playing for: a turret on the far side of the map is the trade (the lane away
     // from that pit in full, mid for half)
     const far = b.trade ? (lane === "mid" ? 0.5 : (b.trade.pit === "dragon") === (lane === "top") ? 1 : 0) : 0;
     if (far) v += (OBJ_TUNE.tradeSiege + 0.35 * b.P.trade) * far;
+    // (a lane whose inner turret is down: the inhibitor turret, the inhibitor or the nexus turrets are next)
+    const endCall = kill && (!tierT || tierT.tier >= 3);
+    // two champions only finish an open base
+    if (pool.length < 3 && !baseOpen) continue;
+    if (endCall) v += BASE_TUNE.endCall;
     // sieges follow an edge: bodies up, baron, a won fight, or a clearly stronger group (an open base needs only an even one)
     if (V.numAdv < 1 && !V.baron && !b.wonFight && ratio < b.P.siegeEdge + 0.2 && !(baseOpen && ratio >= 1) && !far) continue;
     if (ratio < 0.95) continue;
@@ -1041,7 +1127,7 @@ function siegeCand(e: Engine, M: MacroState, b: Brain, V: View): Plan | null {
       const buffLeft = V.baron ? Math.max(...pool.map((u) => u.baronUntil - e.t)) : 0;
       best = mkPlan(e, "siege", `siege:${lane}`, v + (V.baron ? 0.5 : 0), pool.map((u) => u.i), {
         lane, target: snap(stand), until: e.t + Math.max(baseOpen ? 40 : 20, Math.min(90, buffLeft)), expires: e.t + Math.max(70, buffLeft + 20),
-        engage: ratio >= 1.05 - b.P.fight, ratio, trade: far ? b.trade!.k : undefined,
+        engage: ratio >= 1.05 - b.P.fight, ratio, final: baseOpen, emergency: endCall, call: endCall, trade: far ? b.trade!.k : undefined,
       });
     }
   }
@@ -1110,19 +1196,23 @@ function planValid(e: Engine, M: MacroState, b: Brain, V: View, p: Plan): string
   }
   if (p.kind === "defend") {
     if (!p.target) return "done";
-    const foes = V.theirs.filter((x) => dist(x, p.target!) < 2300).length;
+    const at = p.at ?? p.target;
+    const foes = V.theirs.filter((x) => dist(x, at) < 2300).length;
     if (!foes) return "done";
     const lane = p.lane!;
-    if (!ownStructures(e, b.side).some((s) => s.lane === lane && dist(s.pos, p.target!) < 1500)) return "lost";
+    if (!ownStructures(e, b.side).some((s) => s.lane === lane && dist(s.pos, at) < 1500)) return "lost";
     const ourW = powerAt(e, p.members.map((i) => e.units[i]), p.target, 15) * 1.3;
     if (powerAt(e, V.foes, p.target, 15) > ourW * 1.6 && !p.id.endsWith(":5") && !p.id.endsWith(":4")) return "outnumbered";
   }
   if (p.kind === "siege") {
-    if (V.mine.length < V.theirs.length) return "numbers";
     const mem = p.members.map((i) => e.units[i]).filter((u) => u.alive);
-    if (mem.length < 3) return "members";
-    if (mem.reduce((a, u) => a + hpf(u), 0) / mem.length < 0.38) return "hp";
-    if (p.target && powerAt(e, V.foes, p.target, 25) > powerAt(e, mem, p.target, 25) * 1.3) return "outnumbered";
+    // the push that ends the game is not called off for one respawn or a few scratches (BASE_TUNE): the attackers
+    // walked out of the base and back in twice per push
+    const closing = !!p.final && !!p.target && mem.length >= 2 && mem.filter((u) => dist(u, p.target!) < 2200).length >= Math.min(3, mem.length);
+    if (V.mine.length < V.theirs.length - (closing ? BASE_TUNE.closeNum : 0)) return "numbers";
+    if (mem.length < 3 && !(p.final && mem.length >= 2 && V.theirs.length < mem.length)) return "members";
+    if (mem.reduce((a, u) => a + hpf(u), 0) / mem.length < (closing ? BASE_TUNE.closeHp : p.call ? 0.3 : 0.38)) return "hp";
+    if (p.target && powerAt(e, V.foes, p.target, 25) > powerAt(e, mem, p.target, 25) * (closing ? BASE_TUNE.closeOut : 1.3)) return "outnumbered";
   }
   if (p.kind === "reset") {
     if (p.members.every((i) => !e.units[i].alive || inFountain(e.units[i]))) return "done";
@@ -1188,7 +1278,16 @@ function choosePlan(e: Engine, M: MacroState, b: Brain, V: View) {
           for (const i of fresh.members) if (!cur.members.includes(i) && !cur.solo) cur.members.push(i);
         } else if (cur.kind === "contest" || cur.kind === "defend" || cur.kind === "siege") {
           for (const i of fresh.members) if (!cur.members.includes(i)) cur.members.push(i);
-          if (cur.kind === "siege") cur.target = fresh.target;
+          if (cur.kind === "siege") { cur.target = fresh.target; cur.call = fresh.call; }
+          // a base defence / the push into an open base lasts as long as its reason does (it used to expire after
+          // 50 / 70 s and then sat out a 20 s cooldown with the enemy still in the base)
+          if (cur.base && fresh.base) { cur.target = fresh.target; cur.at = fresh.at; cur.expires = fresh.expires; }
+          if (cur.kind === "siege" && fresh.final) {
+            cur.final = true;
+            cur.expires = Math.max(cur.expires, fresh.expires);
+            // and stays the team's plan while its members are inside the base (it was dropped for a baron mid-fight)
+            if (cur.target && cur.members.filter((i) => e.units[i].alive && dist(e.units[i], cur.target!) < 2200).length >= 2) cur.until = Math.max(cur.until, e.t + 10);
+          }
           if (cur.kind === "contest") { cur.hitters = contestHitters(e, b, cur.obj!, cur.members); cur.hz = fresh.hz; }
           // a poach that the team now backs is a contest like any other
           if (cur.poach && !fresh.poach) { cur.poach = false; cur.need = fresh.need; cur.h = fresh.h; }
@@ -1406,7 +1505,7 @@ function planTick(e: Engine, M: MacroState, b: Brain) {
 // ---------- formation & jobs ----------
 function chooseFormation(e: Engine, M: MacroState, b: Brain, V: View) {
   if (V.laning) { b.formation = "lanes"; return; }
-  // an enemy inhibitor down: stay grouped to end instead of drifting back to side lanes (see BASE_OPEN_PUSH)
+  // an enemy inhibitor down: stay grouped to end instead of drifting back to side lanes (see BASE_TUNE.openPush)
   const baseOpen = e.inhibs.some((x) => x.side !== b.side && !x.alive);
   if (b.formation !== "lanes" && e.t < b.formUntil && !(baseOpen && b.formation !== "five")) return;
   b.formUntil = e.t + 35 + e.rng.next() * 25;
@@ -1534,6 +1633,22 @@ function assign(e: Engine, M: MacroState, b: Brain, V: View) {
       const cand = groupers.map((i) => e.units[i]).filter((u) => u.alive && u.role !== "Support" && e.power(u) > e.power(pusher) * 0.8)
         .sort((a, c) => dist(a, s.pos) - dist(c, s.pos))[0];
       if (!cand) continue;
+      groupers.splice(groupers.indexOf(cand.i), 1);
+      setJob(M.units[cand.i], cand, "lane", lane);
+      used.add(lane);
+    }
+  }
+  // enemy minions inside our base with nobody on them (super minions after an inhibitor went down hit the nexus
+  // turrets for 20 s a game unanswered): the nearest free champion holds that lane
+  if (ENGINE_FLAGS.minions && BASE_TUNE.guard && groupers.length) {
+    const enemy = (1 - b.side) as SideN;
+    for (const lane of LANES) {
+      if (used.has(lane) || (p.kind === "defend" && p.lane === lane)) continue;
+      if (!Minions.list(e).some((mn) => mn.side === enemy && mn.lane === lane && mn.hp > 0 && dist(mn, NEXUS[b.side]) < BASE_TUNE.radius)) continue;
+      // (one that is near enough to be there before the turrets have dealt with them)
+      const cand = groupers.map((i) => e.units[i]).filter((u) => u.alive && hpf(u) > 0.3 && dist(u, NEXUS[b.side]) < 7000)
+        .sort((a, c) => (a.role === "Support" ? 3000 : 0) + dist(a, NEXUS[b.side]) - (c.role === "Support" ? 3000 : 0) - dist(c, NEXUS[b.side]))[0];
+      if (!cand) break;
       groupers.splice(groupers.indexOf(cand.i), 1);
       setJob(M.units[cand.i], cand, "lane", lane);
       used.add(lane);
@@ -1716,6 +1831,12 @@ function wantRecall(e: Engine, b: Brain, u: Unit, m: UMem): boolean {
   const nx = nextSpawn(e);
   if (nx && nx.in < 45 && dist(u, PIT_POS[PIT_OF[nx.k]]) < 7000) return false;
   return e.rng.chance(urge !== null ? Items.recallChance(urge) : 0.004);
+}
+
+/** An enemy champion is inside this side's base (BASE_TUNE.radius around the nexus). */
+export function baseRaided(e: Engine, side: SideN): boolean {
+  for (const x of e.units) if (x.alive && x.side !== side && dist(x, NEXUS[side]) < BASE_TUNE.radius + 400) return true;
+  return false;
 }
 
 /** Outnumbered nearby: fall back toward a turret behind us. */
@@ -1924,7 +2045,9 @@ function defendJob(e: Engine, b: Brain, u: Unit, m: UMem) {
   const p = b.plan;
   const tgt = p.target ?? e.nearestOwnTurret(u)!;
   if (joinFight(e, u, 1800)) { u.task = "group"; return; }
-  if (!m.spot || m.spotFor !== `${p.id}:def` || e.t - m.spotAt > 8) {
+  // the base is under attack and the walk is longer than a recall
+  if (p.base && dist(u, tgt) > BASE_TUNE.recallFrom && !inFountain(u)) { startRecall(e, u); return; }
+  if (!m.spot || m.spotFor !== `${p.id}:def` || e.t - m.spotAt > 8 || dist(m.spot, tgt) > 400) {
     m.spotAt = e.t;
     m.spot = snap({ x: tgt.x + (e.rng.next() - 0.5) * 420, y: tgt.y + (e.rng.next() - 0.5) * 420 });
     m.spotFor = `${p.id}:def`;
@@ -1973,6 +2096,15 @@ export function unitTick(e: Engine, u: Unit): boolean {
     if (inFountain(u)) { if (hpf(u) < 0.95) return true; }
     else { startRecall(e, u); return true; }
   }
+  // hurt and home with the enemy in the base: heal up at the fountain before walking back out (walking into the
+  // fountain no longer heals at once then: engine.unitTick)
+  // (with both nexus turrets gone there is no time for a full heal)
+  if (!u.fightId && inFountain(u) && baseRaided(e, u.side) &&
+    hpf(u) < (e.turrets.some((t) => t.alive && t.side === u.side && t.lane === "nexus") ? 0.7 : 0.4)) {
+    u.task = "return";
+    go(e, u, e.fountainSpot(u), 60);
+    return true;
+  }
   if (wantRecall(e, b, u, m)) { startRecall(e, u); return true; }
   // just pulled out of a lost fight: keep backing off (the engine set a home goal and a short calm)
   const calm = (u as Unit & { calmUntil?: number }).calmUntil ?? 0;
@@ -1998,6 +2130,24 @@ export function unitTick(e: Engine, u: Unit): boolean {
     default: return false;
   }
   return true;
+}
+
+/**
+ * A defender of its own base (an inhibitor or the nexus under attack) against an enemy in it: the chance per second
+ * that it starts the fight (engine.engageRate), or null when this is not a base defence. Before, this went by the
+ * open-map rate (0.3 - 3 % a second for an even or weaker group), so defenders watched their nexus turrets fall.
+ */
+export function baseEngage(e: Engine, u: Unit, foe: Unit, ratio: number): number | null {
+  const M = st(e);
+  if (!M) return null;
+  // an attacker does not open on a defender standing under its nexus turrets unless the odds are overwhelming: it
+  // hits the turret while the wave holds (2-against-1 dives under both turrets lost the diver to the turrets)
+  if (BASE_TUNE.dive > 0 && ratio < BASE_TUNE.dive && dist(foe, NEXUS[foe.side]) < 1600 &&
+    e.turrets.some((t) => t.alive && t.side === foe.side && t.lane === "nexus" && dist(t.pos, foe) < 800)) return 0;
+  const p = M.brains[u.side].plan;
+  if (p.kind !== "defend" || !p.base || !p.target || M.units[u.i].job !== "defend") return null;
+  if (dist(foe, p.at ?? p.target) > 1900 && dist(foe, p.target) > 1900) return null;
+  return !BASE_TUNE.rate ? null : p.engage ? BASE_TUNE.rate : BASE_TUNE.holdRate;
 }
 
 export function hitsObjective(e: Engine, u: Unit, k: ObjKey): boolean {

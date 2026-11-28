@@ -21,7 +21,8 @@ import { buffOf, setCCHook, setFightShields, shieldLeft } from "./procs-lib";
 import * as Nav from "./nav";
 import * as Macro from "./macro";
 import type { Stance } from "./macro";
-import { BARON_PIT, DRAGON_PIT, FOUNTAIN, dist } from "./map";
+import * as Turrets from "./turrets";
+import { BARON_PIT, DRAGON_PIT, FOUNTAIN, NEXUS, dist } from "./map";
 import type { Vec } from "./map";
 
 const DT = 0.25;
@@ -93,6 +94,8 @@ interface UState {
   pathTo: Vec | null;
   pathAt: number;
   hitChampAt: number;
+  /** the enemy champion that hit landed on (turret and minion aggro) */
+  hitChampV: number;
   shields: { amt: number; until: number }[];
   joinAt: number;
   /** effective AI uses per slot: the kit's, plus engage/escape fallbacks when the kit lists none */
@@ -231,6 +234,24 @@ function mod(e: Engine): Mod {
   return m;
 }
 
+/** When `u` last damaged an enemy champion in a fight, and whom: a turret turns on a champion that hits one of its
+ *  own in its range, and so do the minions next to it (turrets.ts, minions.ts). */
+export function lastChampHit(e: Engine, u: Unit): { at: number; v: number } {
+  const s = (e.mods.fight as Mod | undefined)?.u[u.i];
+  return s ? { at: s.hitChampAt, v: s.hitChampV } : { at: -9, v: -1 };
+}
+
+/** False while `u` cannot be targeted (stasis, an untargetable spell): turrets and minions leave it alone too. */
+export function hittable(e: Engine, u: Unit): boolean {
+  const s = (e.mods.fight as Mod | undefined)?.u[u.i];
+  return !s || e.t >= s.untargetUntil;
+}
+
+/** Damage to a champion from lane minions (minions.ts), with the fight's shields, saves and kill credit. */
+export function outsideHurt(e: Engine, v: Unit, amount: number): void {
+  hurt(e, mod(e), null, v, amount, "proc");
+}
+
 /** Fight stats of this engine (fight-test). */
 export function stats(e: Engine): FightStats {
   return mod(e).stats;
@@ -268,7 +289,7 @@ function makeUnit(e: Engine, u: Unit): UState {
   return {
     kit, role: kit.role, melee, range, poke, aaMul: aa, spMul: sp, kitScale: ks, lat: u.i % 2 ? 1 : -1, target: -1, lockUntil: 0,
     rootUntil: 0, slowUntil: 0, silenceUntil: 0, blindUntil: 0, groundUntil: 0, ccEnd: 0, buffUntil: 0, buffKind: "",
-    untargetUntil: 0, bail: false, bailAt: 0, pathTo: null, pathAt: -9, hitChampAt: -9, shields: [], joinAt: 0,
+    untargetUntil: 0, bail: false, bailAt: 0, pathTo: null, pathAt: -9, hitChampAt: -9, hitChampV: -1, shields: [], joinAt: 0,
     uses: effectiveUses(kit, melee), helpers: [], invulnUntil: 0, reviveUntil: 0, airUntil: 0, arenaUntil: 0,
     arena: { x: 0, y: 0, r: 0 }, marks: new Map(), commitUntil: 0, hook: null, towerAt: -1,
   };
@@ -440,7 +461,7 @@ function hurt(e: Engine, M: Mod, src: Unit | null, v: Unit, amount: number, kind
   if (real) Procs.onDealt(e, src, v, amount, kind, M.deal);
   if (f) f.last = e.t;
   if (info && info.firstDmg < 0) info.firstDmg = e.t;
-  if (src) M.u[src.i].hitChampAt = e.t;
+  if (src) { M.u[src.i].hitChampAt = e.t; M.u[src.i].hitChampV = v.i; }
   if (died) {
     M.stats.kills++;
     const n = info ? info.members.size : 0;
@@ -710,7 +731,8 @@ function begin(e: Engine, M: Mod, u: Unit, foe: Unit, mine: Unit[], theirs: Unit
   if (trade || origin === "gank") info.phase = ["brawl", "brawl"];
   else if (small) {
     info.phase[s] = "brawl";
-    info.phase[o] = 1 / Math.max(0.01, ratio) < 0.62 ? "retreat" : "brawl";
+    // (not at its own nexus: a cornered side fights, see think)
+    info.phase[o] = 1 / Math.max(0.01, ratio) < 0.62 && dist(f, NEXUS[o]) >= Macro.BASE_TUNE.corner ? "retreat" : "brawl";
   } else {
     info.phase = ["position", "position"];
   }
@@ -920,12 +942,16 @@ function runFight(e: Engine, M: Mod, id: number, f: { x: number; y: number; star
     if (!u.alive || !s.bail) continue;
     let near = Infinity;
     for (const o of side[1 - u.side]) if (o.alive && !M.u[o.i].bail) near = Math.min(near, dist(o, u));
-    const home = e.nearestOwnTurret(u)!;
+    // inside its own base a runner is safe at the fountain, not next to a turret the enemy is already hitting (a base
+    // fight ended 2 s after it began: every defender "got away" on the spot and stood there, calm, next to the attackers)
+    const inBase = dist(u, NEXUS[u.side]) < Macro.BASE_TUNE.radius;
+    const home = inBase ? FOUNTAIN[u.side] : e.nearestOwnTurret(u)!;
     // a lane fight cannot be joined, so once nobody chases its runner any more it is over for the runner too (else the
     // winner stood idle until the runner was 1,350 u away)
     const unchased = info.kind !== "skirmish" && e.t - s.bailAt >= 0.5 &&
       !side[1 - u.side].some((o) => o.alive && !M.u[o.i].bail && M.u[o.i].target === u.i);
-    if (unchased || near > 1350 || (dist(u, home) < 500 && near > 700) || e.t - s.bailAt > 12) {
+    const safe = inBase ? dist(u, home) < 900 : dist(u, home) < 500 && near > 700;
+    if (unchased || near > 1350 || safe || e.t - s.bailAt > 12) {
       dropOut(e, M, u);
       setCalm(u, e.t + 5);
       e.setGoal(u, home);
@@ -1023,13 +1049,15 @@ function think(e: Engine, M: Mod, info: FInfo, f: Vec, side: [Unit[], Unit[]], g
     if (ph === "retreat" || n[s] === 0) continue;
     const ratio = pw[s] / Math.max(1, pw[o]);
     const tp = e.t - info.phaseAt[s];
+    // at its own nexus a side has nowhere to fall back to: no team retreat (a hurt champion still runs to the fountain)
+    const cornered = dist(f, NEXUS[s]) < Macro.BASE_TUNE.corner;
     if (ph === "position") {
       const g = gathered[s] / n[s];
       const plan = bestEngage(e, M, s, side[s], side[o]);
       // what this side wants from a fight over a monster: the side that has to stop a take cannot wait it out
       const aim = info.obj && ENGINE_FLAGS.macro ? Macro.purpose(e, s, f)?.want ?? null : null;
       const want = engageThreshold(e, info, s, side[s]) + (aim === "stop" ? FIGHT_TUNE.stopEdge : aim === "take" ? FIGHT_TUNE.takeEdge : 0);
-      if (ratio < 0.62 && tp > 1) { sideRetreat(e, M, info, s, `outmatched ${ratio.toFixed(2)}`); continue; }
+      if (ratio < 0.62 && tp > 1 && !cornered) { sideRetreat(e, M, info, s, `outmatched ${ratio.toFixed(2)}`); continue; }
       // hold the formation a moment (poke, wait for the rest) unless the enemy is already beaten
       const ready = (g >= 0.75 && tp >= info.hold[s]) || tp > 5 + (aim ? FIGHT_TUNE.objHold : 0) || (ratio > 1.6 && tp >= 1);
       const need = want - (plan ? 0.08 : 0) - Math.min(0.15, tp * 0.015);
@@ -1046,7 +1074,7 @@ function think(e: Engine, M: Mod, info: FInfo, f: Vec, side: [Unit[], Unit[]], g
           log(e, M, `  #${info.id} ${s ? "RED" : "BLUE"} walks in (no engage tool), ratio ${ratio.toFixed(2)}`);
           if (info.phase[o] !== "retreat") toBrawl(e, M, info, "walk-in");
         }
-      } else if (tp > wait) sideRetreat(e, M, info, s, "standoff");
+      } else if (tp > wait && !cornered) sideRetreat(e, M, info, s, "standoff");
     } else if (ph === "engage") {
       const plan = info.plan[s];
       const pu = plan ? e.units[plan.u] : null;
@@ -1062,7 +1090,9 @@ function think(e: Engine, M: Mod, info: FInfo, f: Vec, side: [Unit[], Unit[]], g
       const thr = (late ? 0.58 : 0.68) + (info.members.size >= 8 ? FIGHT_TUNE.bigRetreat : 0);
       const near = pwNear[s] / Math.max(1, pwNear[o]);
       const outnumbered = nNear[s] + 2 <= nNear[o] && near < 0.9;
-      if (info.brawlAt >= 0 && e.t - info.brawlAt > 3 && nNear[s] > 0 && ((near < thr && e.rng.chance(late ? 0.3 : 0.4)) || outnumbered)) {
+      if (cornered) {
+        // fights it out
+      } else if (info.brawlAt >= 0 && e.t - info.brawlAt > 3 && nNear[s] > 0 && ((near < thr && e.rng.chance(late ? 0.3 : 0.4)) || outnumbered)) {
         sideRetreat(e, M, info, s, `losing ${near.toFixed(2)} (${nNear[s]}v${nNear[o]})`);
       } else if (nNear[s] === 0 && pwNear[o] > 0 && pw[s] < pwNear[o] * 0.8 && info.brawlAt >= 0 && e.t - info.brawlAt > 1) {
         // the ones in front are gone: the rest do not walk into it one by one
@@ -1226,6 +1256,8 @@ function act(e: Engine, M: Mod, u: Unit, info: FInfo, side: [Unit[], Unit[]], ge
 function shouldBail(e: Engine, M: Mod, u: Unit, info: FInfo, foes: Unit[], allies: Unit[], geo: Geo): boolean {
   const f = hpF(u);
   if (f > 0.3) return false;
+  // at its own nexus nobody leaves the fight (it ran 900 u to the fountain, healed and came back, twice a fight)
+  if (Macro.BASE_TUNE.stand && dist(u, NEXUS[u.side]) < Macro.BASE_TUNE.corner + 400) return false;
   const threats = foes.filter((x) => !M.u[x.i].bail && (M.u[x.i].target === u.i || dist(x, u) < 500));
   if (!threats.length) return false;
   const myAvg = allies.reduce((a, x) => a + hpF(x), 0) / Math.max(1, allies.length);
@@ -1304,6 +1336,7 @@ function engagerAct(e: Engine, M: Mod, u: Unit, info: FInfo, foes: Unit[], allie
 }
 
 function retreatPoint(e: Engine, u: Unit, foes: Unit[]): Vec {
+  if (dist(u, NEXUS[u.side]) < Macro.BASE_TUNE.radius) return FOUNTAIN[u.side];
   const home = e.nearestOwnTurret(u) ?? FOUNTAIN[u.side];
   const act = foes.filter((x) => x.alive);
   if (!act.length) return home;
@@ -2270,6 +2303,13 @@ function turretShots(e: Engine, M: Mod) {
     const s = M.u[u.i];
     if (!u.alive || u.fightId || !e.exposedAt(u.side, u)) s.towerAt = -1;
     else if (s.towerAt < 0) s.towerAt = e.t;
+  }
+  if (ENGINE_FLAGS.minions) {
+    // the game's own targeting (turrets.ts): minions first, a champion when it hits one of the turret's champions
+    // or when no minions are in range (outside a fight: after SIM_TUNE.towerGrace)
+    Turrets.shots(e, (u, amount) => hurt(e, M, null, u, amount * FIGHT_TUNE.towerMul, "proc"),
+      (u) => M.u[u.i].towerAt >= 0 && e.t - M.u[u.i].towerAt >= SIM_TUNE.towerGrace);
+    return;
   }
   e.turrets.forEach((t, ti) => {
     const ts = M.tower[ti];
