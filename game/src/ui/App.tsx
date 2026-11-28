@@ -6,6 +6,8 @@ import { SAVE_VERSION, autoAdvance, migrateSave, phaseLabel, nextUserSeries, use
 import { inbox } from "../core/news";
 import type { AutoMode } from "../core/game";
 import { MarketNav, MarketStat } from "./MarketTip";
+import { tip } from "./Tip";
+import "./TopTips";
 import { saveGame } from "../core/save";
 import { monthlyWages } from "../core/ledger";
 import { TeamLogo } from "./components";
@@ -101,10 +103,10 @@ export function App() {
           </div>
         </div>
         <div class="stat"><span>날짜</span>{fmtDate(s.day)}</div>
-        <div class="stat"><span>시즌</span>{s.season} · {phaseLabel(s)}</div>
-        <div class="stat" title={me.cash < 0 ? "자금이 마이너스인 채로 하루가 지나면 게임 오버입니다." : undefined}><span>자금{me.cash < 0 && " · 게임 오버 위험"}</span><b class={me.cash < 0 ? "neg" : "gold"}>{money(me.cash)}</b></div>
-        <div class="stat" title="선수·스태프 연봉 합계 ÷ 12. 매달 25일에 나갑니다."><span>월 급여 (25일)</span><span class="neg">-{money(monthlyWages(s))}</span></div>
-        <div class="stat"><span>명성 · 팬</span>{Math.round(me.fame)} · {(me.fans / 10000).toFixed(1)}만</div>
+        <div class="stat" tabIndex={0} {...tip("season")}><span>시즌</span>{s.season} · {phaseLabel(s)}</div>
+        <div class="stat" tabIndex={0} {...tip("cash")}><span>자금{me.cash < 0 && " · 게임 오버 위험"}</span><b class={me.cash < 0 ? "neg" : "gold"}>{money(me.cash)}</b></div>
+        <div class="stat" tabIndex={0} {...tip("wages")}><span>월 급여 (25일)</span><span class="neg">-{money(monthlyWages(s))}</span></div>
+        <div class="stat" tabIndex={0} {...tip("fame")}><span>명성 · 팬</span>{Math.round(me.fame)} · {(me.fans / 10000).toFixed(1)}만</div>
         <MarketStat s={s} />
         <div class="grow" />
         {today ? (
@@ -113,7 +115,7 @@ export function App() {
           <>
             <button class="btn" onClick={() => advance("day")}>다음 날</button>
             <button class="btn" onClick={() => advance("week")}>1주</button>
-            <button class="btn primary" onClick={() => advance("match")} title={next ? `다음 경기 ${fmtDate(next.day, false)}` : ""}>
+            <button class="btn primary" onClick={() => advance("match")} data-tip={next ? `다음 경기 ${fmtDate(next.day, false)}` : undefined}>
               다음 경기까지 ▶
             </button>
           </>

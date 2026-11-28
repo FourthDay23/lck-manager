@@ -15,7 +15,7 @@ export function SummonerSpells({ e, u }: { e: Engine; u: Unit }) {
         const left = Math.ceil(s.left);
         const state = s.busy ? "시전 중" : left > 0 ? `${left}초 뒤 사용 가능` : "사용 가능";
         return (
-          <span class={`sum ${left > 0 ? "cd" : ""} ${s.busy ? "busy" : ""}`} title={`${SUMMONER_KO[s.name]} · ${state}`}>
+          <span class={`sum ${left > 0 ? "cd" : ""} ${s.busy ? "busy" : ""}`} data-tip={`${SUMMONER_KO[s.name]} · ${state}`}>
             <img src={spellImg(ver, SUMMONER_ICON[s.name])} alt="" />
             {left > 0 && !s.busy && <b>{left}</b>}
           </span>

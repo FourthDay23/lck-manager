@@ -150,7 +150,7 @@ function PatchNotes() {
 
 /** UPD (sky blue) / FIX (yellow) / BUG (red) card in front of a patch note line. */
 function PatchCard({ kind }: { kind: PatchKind }) {
-  return <span class={`patch-card ${kind.toLowerCase()}`} title={PATCH_KIND_LABEL[kind]}>{kind}</span>;
+  return <span class={`patch-card ${kind.toLowerCase()}`} data-tip={PATCH_KIND_LABEL[kind]}>{kind}</span>;
 }
 
 // ---------- the light markup of docs.ts ----------

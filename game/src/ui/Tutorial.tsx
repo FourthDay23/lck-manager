@@ -327,7 +327,7 @@ export function TutorialLayer() {
         <p>{step.body}</p>
         {n > 1 && <div class="tut-bar"><i style={{ width: `${((i + 1) / n) * 100}%` }} /></div>}
         <div class="row" style={{ gap: 6 }}>
-          <button class="btn small" title="남은 튜토리얼을 모두 끕니다. 저장 · 설정에서 다시 볼 수 있습니다." onClick={() => endPart(true)}>건너뛰기</button>
+          <button class="btn small" data-tip="남은 튜토리얼을 모두 끕니다. 저장 · 설정에서 다시 볼 수 있습니다." onClick={() => endPart(true)}>건너뛰기</button>
           <span class="grow" style={{ flex: 1 }} />
           {i > 0 && <button class="btn small" onClick={() => go(i - 1)}>이전</button>}
           {act ? <span class="gold" style={{ fontSize: 12 }}>빛나는 곳을 누르세요</span>

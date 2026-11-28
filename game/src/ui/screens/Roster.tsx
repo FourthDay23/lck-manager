@@ -27,7 +27,7 @@ const BAR_COLOR: Record<string, string> = { "f-good": "#5ad07a", "f-ok": "#f2c14
 export function FatigueBar({ v, autoRestAt }: { v: number; autoRestAt?: number | null }) {
   const [word, cls] = fatigueWord(v);
   return (
-    <span class="fbar" title="피로: 0 좋음 · 35 보통 · 55 지침(훈련 효율 80%) · 75 한계(훈련 효율 50%)">
+    <span class="fbar" data-tip="피로: 0 좋음 · 35 보통 · 55 지침(훈련 효율 80%) · 75 한계(훈련 효율 50%)">
       <span class="track">
         <i style={{ width: `${Math.min(100, v)}%`, background: BAR_COLOR[cls] }} />
         {autoRestAt != null && <b style={{ left: `${autoRestAt}%` }} />}
@@ -105,11 +105,11 @@ function FatiguePanel() {
       </div>
       <div class="row">
         {bulk.length > 0 ? (
-          <button class="btn small on" onClick={restore} title="일괄 휴식으로 바꾼 선수만 각자 하던 훈련으로 돌아갑니다. 직접 휴식으로 둔 선수는 그대로입니다.">
+          <button class="btn small on" onClick={restore} data-tip="일괄 휴식으로 바꾼 선수만 각자 하던 훈련으로 돌아갑니다. 직접 휴식으로 둔 선수는 그대로입니다.">
             휴식 전 설정으로 되돌리기 ({bulk.length}명)
           </button>
         ) : (
-          <button class="btn small" disabled={!working.length} onClick={() => sendToRest(working)} title="지금 훈련 설정을 기억해 두고 모두 휴식으로 바꿉니다. 같은 자리의 버튼으로 되돌립니다.">
+          <button class="btn small" disabled={!working.length} onClick={() => sendToRest(working)} data-tip="지금 훈련 설정을 기억해 두고 모두 휴식으로 바꿉니다. 같은 자리의 버튼으로 되돌립니다.">
             전원 휴식 ({working.length}명)
           </button>
         )}
@@ -245,7 +245,7 @@ export function RosterScreen() {
           {players.filter((p) => !Object.values(me.lineup).includes(p.id)).map((p) => {
             const ok = canSendDown(s, p);
             return (
-              <button class="btn small" disabled={!ok.ok} title={ok.msg ?? "계약은 그대로, 사기가 떨어집니다"} onClick={() => { if (sendDown(s, p)) { autosave(); store.bump(); } }}>
+              <button class="btn small" disabled={!ok.ok} data-tip={ok.msg ?? "계약은 그대로, 사기가 떨어집니다"} onClick={() => { if (sendDown(s, p)) { autosave(); store.bump(); } }}>
                 {p.name} ↓
               </button>
             );
@@ -283,7 +283,7 @@ function AcademyPanel() {
                 <td>{p.contract ? `${p.contract.until}년까지` : "-"}</td>
                 <td class="num">{money(p.contract?.salary ?? 0)}</td>
                 <td class="num">{Math.round(p.morale)}</td>
-                <td class="right"><button class="btn small primary" disabled={!ok.ok} title={ok.msg} onClick={() => { if (callUp(s, p)) { autosave(); store.bump(); } }}>콜업</button></td>
+                <td class="right"><button class="btn small primary" disabled={!ok.ok} data-tip={ok.msg} onClick={() => { if (callUp(s, p)) { autosave(); store.bump(); } }}>콜업</button></td>
               </tr>
             );
           })}

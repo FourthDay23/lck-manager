@@ -83,10 +83,11 @@ export function Avatar({ pid, size = 36 }: { pid: string; size?: number }) {
   return <img class="avatar" src={url} width={size} height={size} alt="" />;
 }
 
-export function ChampIcon({ id, size = 32, title }: { id: string | null | undefined; size?: number; title?: string }) {
+/** a champion portrait; its tooltip is the champion's name (or `title`), plus the player's mastery when given */
+export function ChampIcon({ id, size = 32, title, mastery }: { id: string | null | undefined; size?: number; title?: string; mastery?: number }) {
   if (!id) return <span style={{ display: "inline-block", width: size, height: size, background: "#0b0d14" }} />;
   const d = D();
-  return <img class="px" src={champImg(d.ddVersion, id)} width={size} height={size} title={title ?? d.champ.get(id)?.name} alt="" loading="lazy" />;
+  return <img class="px" src={champImg(d.ddVersion, id)} width={size} height={size} data-tip={`${title ?? d.champ.get(id)?.name ?? id}${mastery !== undefined ? `\n숙련도 ${Math.round(mastery)} / 100` : ""}`} alt={d.champ.get(id)?.name ?? ""} loading="lazy" />;
 }
 
 export function Ovr({ v }: { v: number }) {
