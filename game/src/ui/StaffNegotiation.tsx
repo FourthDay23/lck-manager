@@ -14,6 +14,7 @@ import { autosave } from "./App";
 import { monthlyWages } from "../core/ledger";
 import { monthlyIncomePreview } from "../core/economy";
 import { MoneyStepper } from "./Negotiation";
+import { tutSpot } from "./Tutorial";
 
 /** Talks to hire a head coach or coach: interview, then salary, years and bonus. */
 export function StaffNegotiationModal({ sid }: { sid: string }) {
@@ -64,6 +65,7 @@ export function StaffNegotiationModal({ sid }: { sid: string }) {
         store.bump();
         return;
       }
+      if (st.role === "Head Coach") tutSpot("coach");
       autosave();
       store.close();
       store.say(`${role} ${st.name} 선임: 지금 ${money(offer.bonus)} 지급, 매달 25일 급여 ${money(Math.round(offer.salary / 12))}`);

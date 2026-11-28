@@ -299,6 +299,8 @@ export interface EvState {
   setBreak?: { sr: string; morale: Record<string, number>; synergy: number; lines: string[] };
   /** what happened after the last choice, shown until confirmed */
   result?: { title: string; lines: string[]; open?: { pid: string; mode: "renew" } };
+  /** the first-run tutorial (ui/Tutorial.tsx) asked for a good event on the next day */
+  tutPos?: boolean;
 }
 
 export interface Cutscene {

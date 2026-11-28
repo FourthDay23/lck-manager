@@ -7,14 +7,19 @@ import { money, fmtShort } from "../../core/format";
 import { acceptSale, acceptTradeOffer, rivalsFor, windowOpen } from "../../core/market";
 import { Avatar, Ovr, PName, RoleTag, TeamLogo } from "../components";
 import { autosave } from "../App";
+import { tutLock } from "../Tutorial";
 
 type Tab = "fa" | "all" | "cl" | "abroad" | "offers" | "bids";
 
 export function MarketScreen() {
   const s = S();
   const initial = (store.screen.arg as Tab) ?? "fa";
-  const [tab, setTab] = useState<Tab>(initial);
-  const [role, setRole] = useState<Role | "">("");
+  const [tab0, setTab] = useState<Tab>(initial);
+  const [role0, setRole] = useState<Role | "">("");
+  // the first-run tutorial holds the list on free-agent top laners while the player picks one
+  const lock = tutLock();
+  const tab: Tab = lock?.marketTab ?? tab0;
+  const role: Role | "" = lock?.marketRole ?? role0;
   const [q, setQ] = useState("");
   const [minOvr, setMinOvr] = useState(0);
   const [sort, setSort] = useState<"ovr" | "ask" | "age" | "fame">("ovr");
@@ -77,7 +82,7 @@ export function MarketScreen() {
                     <td class="num">{p.team ? money(marketValue(p, s.season)) : "-"}</td>
                     <td>{rivals.length ? <span class="tag red">{rivals.length}개 구단</span> : ""}</td>
                     <td onClick={(e) => e.stopPropagation()}>
-                      <button class="btn small" disabled={!!p.team && !open} onClick={() => store.open("nego", p.id, p.team ? "transfer" : "sign")}>협상</button>
+                      <button class="btn small" disabled={(!!p.team && !open) || !!lock} onClick={() => store.open("nego", p.id, p.team ? "transfer" : "sign")}>협상</button>
                     </td>
                   </tr>
                 );

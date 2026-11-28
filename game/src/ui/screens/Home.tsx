@@ -57,7 +57,7 @@ export function HomeScreen() {
           <h2 style={{ color: "var(--warn)" }}>할 일</h2>
           {todo.map((t) => <div>· {t}</div>)}
           <div class="row" style={{ marginTop: 6 }}>
-            <button class="btn small" onClick={() => store.go("market")}>이적시장</button>
+            <button class="btn small" data-tut="todo-market" onClick={() => store.go("market")}>이적시장</button>
             <button class="btn small" onClick={() => store.go("staff")}>감독 · 코치진</button>
           </div>
         </div>

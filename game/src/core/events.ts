@@ -1676,6 +1676,11 @@ export function eventsDay(s: GameState, data: GameData, rng: Rng) {
   preMatch(s);
   if (s.events.length) return;
   if (ev.goodsBoost && s.day > ev.goodsBoost.until) ev.goodsBoost = undefined;
+  // 0) the first-run tutorial shows how events work with a good one, before anything else can come up
+  if (ev.tutPos) {
+    ev.tutPos = undefined;
+    if (firePositive(s, data, rng)) return;
+  }
   // 1) aftermaths that are due
   ev.queue = ev.queue.filter((x) => s.day <= x.until);
   ev.queue.sort((a, b) => a.due - b.due);
@@ -1726,6 +1731,32 @@ export function eventsDay(s: GameState, data: GameData, rng: Rng) {
     fire(s, pick.c, pick.d);
     return;
   }
+}
+
+/**
+ * One good random event today (the tutorial's first event): among the positive ones that fit today, as the
+ * daily roll would pick them, counted toward the week's 2. If none fits (all on cooldown), a solo-queue rank 1
+ * for a starter through forceEvent, which skips cooldowns: the tour needs one event that day, and this happens
+ * once a career.
+ */
+function firePositive(s: GameState, data: GameData, rng: Rng): boolean {
+  const matchDay = !!userSeriesOn(s, s.day);
+  const cands: { d: Def; c: Ctx; w: number }[] = [];
+  for (const d of DEFS) {
+    if (d.cls !== "random" || d.pol !== "pos" || !!d.matchDay !== matchDay) continue;
+    const c = ctxFor(s, rng, data, d.id);
+    const w = Number(d.find?.(c) ?? 0);
+    if (w <= 0) continue;
+    if (!cdOk(c, cdKey(c, d), d.team || !c.p ? 30 : 60)) continue;
+    cands.push({ d, c, w });
+  }
+  const pick = rng.weighted(cands, (x) => x.w);
+  if (!pick) return forceEvent(s, data, "P1", rng);
+  const ev = evState(s);
+  ev.cd[cdKey(pick.c, pick.d)] = s.day;
+  ev.week.n++;
+  fire(s, pick.c, pick.d);
+  return true;
 }
 
 function queuedCtx(s: GameState, rng: Rng, data: GameData | null, item: EvQueued): Ctx {

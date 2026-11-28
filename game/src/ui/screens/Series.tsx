@@ -36,7 +36,7 @@ import { autosave } from "../App";
 import { headCoach, seriesWinProb } from "../../core/quick";
 import * as Matchup from "../../match/matchup";
 import { META_LABEL, metaTier } from "../../core/meta";
-import { tutSpot } from "../Tutorial";
+import { tutBreakDue, tutSpot } from "../Tutorial";
 import { appH, localRect, onScale, toLocal } from "../scale";
 import { chooseSetBreak, setBreakDue, setBreakOptions } from "../../core/events";
 
@@ -93,6 +93,25 @@ export function StrategyPicker({ value, onPick }: { value: Strategy; onPick: (st
         {STRATEGIES.map((st) => <button class={`btn small ${value === st ? "on" : ""}`} title={STRATEGY_DESC[st]} onClick={() => onPick(st)}>{STRATEGY_KO[st]}</button>)}
       </div>
       <div class="muted" style={{ fontSize: 11 }}>{STRATEGY_DESC[value]} 경기 전에 정하며, 경기 중에는 바꿀 수 없습니다.</div>
+    </div>
+  );
+}
+
+/** The set-break talk between games: what to tell the players before the next one. */
+function SetBreakTalk({ won, onPick }: { won: boolean; onPick: (i: number) => void }) {
+  useEffect(() => tutSpot("setbreak"), []);
+  return (
+    <div class="frame pad" style={{ marginBottom: 8 }} data-tut="series-break">
+      <h2>세트 사이 대기실</h2>
+      <div class="speech">{won
+        ? "세트를 따냈습니다. 대기실 분위기가 좋습니다. 이 기세를 다음 세트까지 이어 가도록 한마디 해 주세요."
+        : "세트를 내줬습니다. 대기실 분위기가 무겁습니다. 다음 세트 전에 한마디 해야 합니다."}</div>
+      {setBreakOptions().map((o, i) => (
+        <button class="btn qbtn ev-opt" onClick={() => onPick(i)}>
+          <b>{o.label}</b>
+          {o.hints.map((h) => <div class="ev-hint">{h}</div>)}
+        </button>
+      ))}
     </div>
   );
 }
@@ -160,6 +179,7 @@ export function SeriesScreen() {
   const finishSeries = () => {
     closeUserSeries(s, D(), sr);
     live = null;
+    tutSpot("series-done");
     autosave();
     store.go("home");
   };
@@ -197,25 +217,15 @@ export function SeriesScreen() {
   }
 
   const pWin = seriesWinProb(0.5, sr.bo);
-  // set-break talk after a lost game (core/events.ts N15): once a series, before the next game is set up
-  const breakNow = L.phase === "post" && setBreakDue(s, sr);
+  // set-break talk after a lost game (core/events.ts N15): once a series, before the next game is set up (the first
+  // run's tutorial also stops here once after a won game to show how it works)
+  const breakNow = L.phase === "post" && (setBreakDue(s, sr) || tutBreakDue(s, sr));
   const breakDone = s.ev?.setBreak?.sr === sr.id ? s.ev.setBreak.lines : null;
   return (
     <div>
       {header}
       {(L.phase === "post" || L.phase === "done") && L.last && <GameResult g={L.last} />}
-      {breakNow && (
-        <div class="frame pad" style={{ marginBottom: 8 }}>
-          <h2>세트 사이 대기실</h2>
-          <div class="speech">세트를 내줬습니다. 대기실 분위기가 무겁습니다. 다음 세트 전에 한마디 해야 합니다.</div>
-          {setBreakOptions().map((o, i) => (
-            <button class="btn qbtn ev-opt" onClick={() => { chooseSetBreak(s, sr, i); autosave(); bump(); }}>
-              <b>{o.label}</b>
-              {o.hints.map((h) => <div class="ev-hint">{h}</div>)}
-            </button>
-          ))}
-        </div>
-      )}
+      {breakNow && <SetBreakTalk won={sr.games.at(-1)?.winner === s.user} onPick={(i) => { chooseSetBreak(s, sr, i); autosave(); bump(); store.bump(); /* the tutorial waits for it */ }} />}
       {!breakNow && L.phase === "post" && breakDone && <div class="frame pad muted" style={{ marginBottom: 8 }}>대기실: {breakDone.join(", ")}</div>}
       {breakNow ? null : L.phase === "done" ? (
         <div class="frame pad center">
