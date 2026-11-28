@@ -13,7 +13,7 @@ import { playQuickSeries } from "./quick";
 import { academySeasonEnd, autoCallUp, setupAcademies } from "./academy";
 import { patchDue, rollPatch } from "./meta";
 import { training } from "./training";
-import { aiDailyMarket, autoLineup, joinTeam, releasePlayer, releaseStaff, staffAsk, windowOpen } from "./market";
+import { aiDailyMarket, aiPayrollCap, autoLineup, joinTeam, payroll, releasePlayer, releaseStaff, staffAsk, windowOpen } from "./market";
 import { INTL_COMPS, economyDay, earn, spend, seriesRewards, sponsorFor } from "./economy";
 import type { CompId, Difficulty, GameState, Player, Series, Staff, Team } from "./types";
 import { COMP_NAME } from "./types";
@@ -187,7 +187,24 @@ function aiGrowth(s: GameState, rng: Rng) {
   }
 }
 
+/**
+ * AI clubs' morale drifts back toward `base` by `pull` of the gap each day (a staff keeps the dressing room level).
+ * Series results move morale +3 / -4 and nothing else moved it for AI players, so a club winning more than 57 % of
+ * its series climbed to 100 and the rest sank toward 0: about 10 power points between them by autumn, a snowball
+ * that made 27-0 seasons and grand slams common. The user's club keeps its own morale system (daily +0.15 for
+ * starters, events, rest). Measured with scripts/dynasty-check.ts (120 seasons): the clubs' spread in morale power
+ * fell from 2-4.4 to 0.1-0.2, 27-0 seasons from 12 % to 0 and grand slams from 11 % to 3 %.
+ */
+export const AI_MORALE = { base: 70, pull: 0.05 };
+
 function moraleDay(s: GameState, rng: Rng) {
+  for (const tid of [...s.lck, ...s.intl]) {
+    if (tid === s.user) continue;
+    for (const id of s.teams[tid]?.roster ?? []) {
+      const p = s.players[id];
+      if (p) p.morale += (AI_MORALE.base - p.morale) * AI_MORALE.pull;
+    }
+  }
   const t = s.teams[s.user];
   const starters = new Set(Object.values(t.lineup));
   for (const id of t.roster) {
@@ -317,12 +334,32 @@ function ensureAiLineups(s: GameState, rng: Rng) {
         autoLineup(s, t);
         continue;
       }
-      const fa = Object.values(s.players).filter((p) => !p.team && !p.retired && p.role === r && p.origin !== "intl" && !p.scandal)
-        .sort((a, b) => ovr(b) - ovr(a))[0] ?? makeRookieInto(s, rng, r);
-      joinTeam(s, fa, t.id, Math.max(6000, Math.round(salaryAsk(fa, s.season) / 100) * 100), 1);
+      aiEmergencySign(s, t, r, rng);
       autoLineup(s, t);
     }
   }
+}
+
+/** The league minimum: a one-year deal any club can always sign, over its payroll cap or not. */
+const MIN_SALARY = 6000;
+
+/**
+ * Fill an AI club's empty role when nobody can be called up from the 2군: the best free agent at that role whose
+ * asking salary fits under the payroll cap, else the best one asking only the minimum, else a new rookie. The last
+ * two sign on the minimum even over the cap, so the slot is never left empty. (T20: this used to sign the best free
+ * agent left at his full ask, cap or not, so a club the cap had kept out of the stove league could still buy a star
+ * the day before the cup.)
+ */
+function aiEmergencySign(s: GameState, t: Team, r: Role, rng: Rng): Player {
+  const room = aiPayrollCap(t) - payroll(s, t);
+  const fits = Math.max(room, MIN_SALARY);
+  const fa = Object.values(s.players)
+    .filter((p) => !p.team && !p.retired && p.role === r && p.origin !== "intl" && !p.scandal)
+    .sort((a, b) => ovr(b) - ovr(a))
+    .find((p) => salaryAsk(p, s.season) <= fits) ?? makeRookieInto(s, rng, r);
+  const ask = salaryAsk(fa, s.season);
+  joinTeam(s, fa, t.id, ask <= fits ? ask : MIN_SALARY, 1);
+  return fa;
 }
 
 function makeRookieInto(s: GameState, rng: Rng, r: Role): Player {
@@ -622,6 +659,9 @@ function seasonEnd(s: GameState, data: GameData, rng: Rng) {
   for (const id of s.intl) {
     const t = s.teams[id];
     t.intlStrength = clamp((t.intlStrength ?? 75) + rng.normal(0, 2), 60, 95);
+    // AI scrims grow synergy all year (core/training.ts SCRIM_SYNERGY), so overseas clubs lose some in the
+    // off-season like LCK clubs do below; without it they would sit at 100 for good
+    t.synergy = clamp(t.synergy - 10, 30, 100);
   }
   s.season = season + 1;
   s.stats.seasonsPlayed++;
@@ -701,9 +741,7 @@ function ensureAiLineupFor(s: GameState, tid: string, rng: Rng) {
   for (const r of ROLES) {
     if (t.lineup[r]) continue;
     if (autoCallUp(s, t, r)) continue;
-    const fa = Object.values(s.players).filter((p) => !p.team && !p.retired && p.role === r && p.origin !== "intl" && !p.scandal)
-      .sort((a, b) => ovr(b) - ovr(a))[0] ?? makeRookieInto(s, rng, r);
-    joinTeam(s, fa, t.id, Math.max(6000, salaryAsk(fa, s.season)), 1);
+    const fa = aiEmergencySign(s, t, r, rng);
     addNews(s, { kind: "sign", title: `[오피셜] ${t.name}, '${fa.name}' 영입`, teams: [t.id], players: [fa.id] });
   }
   autoLineup(s, t);
