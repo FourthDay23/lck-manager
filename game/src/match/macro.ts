@@ -25,6 +25,10 @@
 //    out-muscle what can arrive; hitter counts are drawn from the LCK participant shares; a jungler solos only when
 //    the enemy jungler is dead or far and nobody is near. Laning-phase objectives are given up by the side without
 //    the area (its jungler keeps farming), which is what lets the other jungler solo grubs.
+//  * Voidgrubs are three monsters (engine GRUB_TUNE, GRUB_MACRO here). One side holds the area during laning (power
+//    ratio x a per-game tilt) and takes them when it is free; the other side's jungler may walk in alone to smite one
+//    (a "poach": a contest plan of one) or start on an unwatched camp (a "sneak"). A jungler on the grubs stays
+//    against one enemy; when more show up it finishes the grub it is on and leaves with what it has.
 //  * Danger: outnumbered units fall back to a turret away from the threat; groups back off together; survivors of a
 //    lost fight keep retreating while the engine's calm runs; hurt units reset instead of walking back in.
 //  * Heatmaps/zones only scatter positions inside the area a plan picked.
@@ -47,7 +51,7 @@
 //  * purpose(e, side, f) tells fight.ts what a side wants from a fight next to a pit: "take" (finish the monster),
 //    "stop" (the enemy is on it: fight now or lose it) or "hold".
 import type { Engine, ObjKey, SideN, Unit } from "./engine";
-import { ENGINE_FLAGS, SIM_TUNE, applyTune } from "./engine";
+import { ENGINE_FLAGS, GRUB_TUNE, SIM_TUNE, applyTune } from "./engine";
 import type { LaneId, Vec } from "./map";
 import { BARON_PIT, DRAGON_PIT, FOUNTAIN, LANES, MIRROR_C, NEXUS, ROLE_LANE, dist, lanePoint, laneU, mirror } from "./map";
 import * as Nav from "./nav";
@@ -126,6 +130,62 @@ const PREF: Record<ObjKey, Role[]> = {
 };
 /** chance a safe jungler takes it alone (before the strategy's multiplier); LCK solo shares dragon 21 %, herald 19 %, grubs 78 % */
 const SOLO_P: Partial<Record<ObjKey, number>> = { dragon: 0.75, herald: 0.5, grubs: 1 };
+/**
+ * Voidgrub decisions (LCK 2026, scripts/lck_grubs.py; the engine's numbers come from scripts/grubs-diag.ts).
+ * poach: chance per camp that a side's jungler, seeing the enemy on the grubs and able to get there before they are
+ *   gone, walks in alone for a last hit (both teams got a grub in 19.7 % of LCK games, 71 % of those with the two
+ *   teams' kills within 20 s of each other, and only 13.5 % of games see a champion die at the pit).
+ * poachEdge: it only goes when the enemies at the pit are no stronger than this times the jungler (one enemy at most).
+ * stayEdge: a jungler alone on the grubs stays when a single enemy this much stronger at most comes near (it used to
+ *   leave for anyone within 2,600 u); two or more still chase it off with the grubs it has.
+ */
+export const GRUB_MACRO = {
+  poach: 1, poachEdge: 2.5, stayEdge: 1.3,
+  /** who holds the grubs during laning: the power ratio at the pit is multiplied by exp(tilt x a normal draw per
+   *  game + blueEdge) for blue and its inverse for red. LCK: the first grub goes to the side ahead in gold at 8:00
+   *  in 55.7 % of games only (lane states and jungle paths decide, which the power ratio does not see) and blue takes
+   *  59.6 % of all grubs. The same tilt decides who may answer a take with a group (contestCand). */
+  tilt: 0.55, blueEdge: 0.28,
+  /** sneak: chance per camp that the jungler of the side without the area starts on the grubs alone when the enemy
+   *  jungler is far and nobody is near. finish: a jungler chased off the grubs first finishes the one it is on when
+   *  that grub is under this share of its health (so it leaves with one or two instead of none). */
+  sneak: 1, finish: 0.9,
+  /** a side is at the pit when the grubs spawn in this share of camps; otherwise it is free for them an exponential
+   *  time later (mean lateMean seconds). LCK: first grub 14 / 18 / 32 / 74 / 117 s after 8:00 (P10 / 25 / 50 / 75 / 90). */
+  onTime: 0.42, lateMean: 62,
+  /** skip: share of games in which neither side starts on the camp (LCK: 2.8 % of camps leave untouched). back: a
+   *  side walks over for grubs somebody left behind this often (LCK: 9 % of the visits that stop with grubs alive
+   *  are never followed up and those grubs despawn). */
+  skip: 0.03, back: 0.6,
+  /** a group at the grubs leaves the hitting to its jungler this often (the others guard): LCK grubs die to one
+   *  champion 78 % of the time */
+  groupSolo: 0.6,
+};
+/** Scripts can override any of them with GRUB_MACRO=key:value,... */
+export function applyGrubMacro(spec: string | undefined) {
+  applyTune(GRUB_MACRO, "GRUB_MACRO", spec);
+}
+/** a side's multiplier on its power at the grubs during laning (GRUB_MACRO.tilt) */
+const grubTilt = (M: MacroState, side: SideN) => (side === 0 ? M.grubTilt : 1 / M.grubTilt);
+/** a grub this side is hitting right now is nearly dead: it finishes that one before leaving (GRUB_MACRO.finish).
+ *  A grub somebody else left damaged does not count (it regenerates for up to 25 s). */
+function grubInHand(e: Engine, side: SideN): boolean {
+  for (const g of e.grubUnits) if (g.alive && g.hp < g.maxHp * GRUB_MACRO.finish && e.t - g.hitAt[side] < 2) return true;
+  return false;
+}
+/** A side that came over to stop the enemy's grubs stays on the camp once the enemy is gone: the jungler that walked
+ *  in for a last hit (a poach) always, a group that answered only when it is free for the grubs by now (its start
+ *  delay has passed) and takes the trouble (GRUB_MACRO.back), the same tests as for a take of its own (takeCand). */
+function grubStays(e: Engine, b: Brain, p: Plan): boolean {
+  if (p.poach) return true;
+  const at = e.obj.grubs.spawnAt, r = rollFor(e, b, "grubs");
+  return (at === null || e.t >= at + grubDelay(r.late)) && r.back < GRUB_MACRO.back;
+}
+/** seconds after the spawn before a side is free for the grubs, from its per-camp draw (0..1) */
+function grubDelay(u: number): number {
+  if (u < GRUB_MACRO.onTime) return 0;
+  return Math.min(300, -Math.log(Math.max(1e-6, 1 - (u - GRUB_MACRO.onTime) / (1 - GRUB_MACRO.onTime))) * GRUB_MACRO.lateMean);
+}
 const FALLBACK_PART: Record<ObjKey, number[]> = {
   dragon: [0.21, 0.28, 0.3, 0.17, 0.05], baron: [0.01, 0.07, 0.28, 0.45, 0.19], herald: [0.19, 0.29, 0.29, 0.2, 0.04],
   grubs: [0.78, 0.17, 0.04, 0.01, 0], elder: [0.05, 0.14, 0.25, 0.45, 0.11],
@@ -176,6 +236,8 @@ interface Plan {
   /** we hold the area: set up close and start it; without it hover on our side (OBJ_TUNE.hover) */
   prio: boolean;
   emergency?: boolean;
+  /** grubs: a contest by the jungler alone, for a last hit (GRUB_MACRO.poach) */
+  poach?: boolean;
   /** how long this side stands off before it starts the monster at even odds, and since when it has been standing
    *  off (both set the first time its gathered group finds matching enemies at the pit) */
   standoff?: number;
@@ -211,7 +273,7 @@ interface Brain {
   group: Group;
   hist: { t: number; my: number; th: number }[];
   cool: Partial<Record<string, number>>;
-  rolls: Partial<Record<ObjKey, { at: number; solo: number; h: number }>>;
+  rolls: Partial<Record<ObjKey, { at: number; solo: number; h: number; poach: number; late: number; sneak: number; back: number }>>;
   wonFight: boolean;
   /** lost the fight of the last 20 s (two kills or more behind in it) */
   lostFight: boolean;
@@ -247,6 +309,10 @@ export interface MacroState {
   stats: [MacroStats, MacroStats];
   log: string[];
   logOn: boolean;
+  /** blue's multiplier on its hold of the grub area this game (red: the inverse), see GRUB_MACRO.tilt */
+  grubTilt: number;
+  /** nobody starts on the grubs this game (GRUB_MACRO.skip) */
+  grubSkip: boolean;
 }
 
 // ---------- small helpers ----------
@@ -336,7 +402,8 @@ function objValue(e: Engine, side: SideN, k: ObjKey, contest = false): number {
   const my = e.dragons[side].length, th = e.dragons[1 - side].length;
   switch (k) {
     case "dragon": return 1 + (my >= 3 ? 0.9 : my === 2 ? 0.25 : 0) + (th >= 3 ? 0.8 : th === 2 ? 0.2 : 0);
-    case "grubs": return 0.75;
+    // three grubs are worth what the camp was as one monster; leftovers less (a lone jungler still picks them up)
+    case "grubs": return 0.45 + 0.1 * (e.obj.grubs.alive ? e.obj.grubs.left ?? 3 : 3);
     case "herald": return 0.75;
     case "baron": return 1.6 + (e.minute() > 30 ? 0.3 : 0);
     // elder is the comeback for the side without the soul; the soul side (it wins ~90% of engine and LCK games anyway)
@@ -510,6 +577,9 @@ export function init(e: Engine): void {
   const state: MacroState = {
     brains, units, pit: [{}, {}], geo: buildGeo(),
     stats: [{ plans: {}, aborts: {}, formations: {}, calls: {} }, { plans: {}, aborts: {}, formations: {}, calls: {} }], log: [], logOn: false,
+    // a normal draw from three uniforms (sd 1)
+    grubTilt: Math.exp(GRUB_MACRO.tilt * (e.rng.next() + e.rng.next() + e.rng.next() - 1.5) * 2 + GRUB_MACRO.blueEdge),
+    grubSkip: e.rng.next() < GRUB_MACRO.skip,
   };
   e.mods.macro = state;
 }
@@ -611,7 +681,9 @@ function rollFor(e: Engine, b: Brain, k: ObjKey) {
     const tot = sh.slice(1).reduce((a, v) => a + v, 0) || 1;
     let x = e.rng.next() * tot, h = 2;
     for (let n = 2; n <= 5; n++) { x -= sh[n - 1]; if (x <= 0) { h = n; break; } }
-    r = { at, solo: e.rng.next(), h };
+    const alone = e.rng.next();
+    if (k === "grubs" && alone < GRUB_MACRO.groupSolo) h = 1;
+    r = { at, solo: e.rng.next(), h, poach: e.rng.next(), late: e.rng.next(), sneak: e.rng.next(), back: e.rng.next() };
     b.rolls[k] = r;
   }
   return r;
@@ -644,6 +716,8 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
   const lead = lan ? (k === "grubs" ? 40 : 0) : b.P.setupLead;
   if (spawnIn > lead) return null;
   if ((b.cool[k] ?? 0) > e.t) return null;
+  // the grubs leave at 14:45: no walking over for a camp that will be gone
+  if (k === "grubs" && o.alive && e.t > GRUB_TUNE.leaveAt - 15) return null;
   const pk = PIT_OF[k], pit = PIT_POS[pk];
   // another objective at the same pit already planned by us: one at a time
   const val = objValue(e, b.side, k) * (b.P.obj[k] ?? 1);
@@ -654,6 +728,13 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
   const foesClose = V.theirs.filter((x) => dist(x, pit) < (k === "grubs" ? 2200 : 2600)).length;
   const roll = rollFor(e, b, k);
   const cur = b.plan.kind === "take" && b.plan.obj === k ? b.plan : null;
+  if (k === "grubs" && !cur) {
+    if (M.grubSkip) return null;
+    // not every side is free for the grubs the moment they are up (GRUB_MACRO.onTime / lateMean); 12 s to walk over
+    if (o.spawnAt !== null && e.t < o.spawnAt + grubDelay(roll.late) - 12) return null;
+    // grubs left behind are not always worth the walk
+    if (o.alive && (o.left ?? 3) < 3 && roll.back >= GRUB_MACRO.back) return null;
+  }
   const soloP = (SOLO_P[k] ?? 0) * b.P.solo;
   const soloOk = soloP > 0 && jg.alive && hpf(jg) > 0.5 && ejFar && foesClose === 0 && spawnIn < 40;
   // decided freshly until the team commits, then kept
@@ -696,10 +777,14 @@ function takeCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Plan 
   // Engine fights at a 1.1-1.25 power edge go to the stronger side only ~61% of the time (1.25-1.5: ~79%), yet with a
   // 1.0 cut the side 5 % weaker always waited 2,700 u back and gave up: dragon 0-4 splits came as often in even
   // matchups (40-53%) as in lopsided ones (scripts/dragon-curve.ts; LCK 2026: 0-4 in 24% of games).
-  const raw = (powerAt(e, V.team, pit, horizon) + 1) / (thP + 1);
+  // (grubs during laning: who holds them is not the power ratio alone, GRUB_MACRO.tilt)
+  const raw = ((powerAt(e, V.team, pit, horizon) + 1) / (thP + 1)) * (k === "grubs" && lan ? grubTilt(M, b.side) : 1);
   const area = raw / (k === "dragon" ? DRAGON_HOLD : 1);
-  // laning-phase objectives are given up by the side without priority (its jungler goes back to farming)
-  if (lan && area < 1 && !cur) return null;
+  // laning-phase objectives are given up by the side without priority (its jungler goes back to farming), except
+  // that its jungler may start alone on grubs nobody is watching (a sneak). A sneak that is off before it commits
+  // (the enemy jungler came near) ends there: it must not turn into a group that waits back without the area
+  const sneak = k === "grubs" && solo && roll.sneak < GRUB_MACRO.sneak;
+  if (lan && area < 1 && !sneak && (!cur || (k === "grubs" && cur.phase !== "commit"))) return null;
   // too weak to show up at all: concede it (choosePlan ends a plan that has not committed as "concede") and look for a
   // trade. Between this and the hold line the side hovers. A committed take is called off by planValid instead.
   // A side that has just lost the fight and is down bodies gives an ordinary monster up as well, instead of staying
@@ -786,10 +871,15 @@ function contestCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Pl
   // Baron and elder take 20-30 s, long enough to answer once the enemy stands on them: for those the old trigger
   // stays (answering every enemy pair seen near the baron pit made 2.0 fights a game about baron; LCK 2026: 0.9).
   const onIt = V.theirs.filter((x) => dist(x, pit) < 1400);
-  const hitting = o.hp < o.maxHp * 0.97;
+  // the grubs' health does not come back with the dead ones: go by when the camp was last hit
+  const hitting = k === "grubs" ? e.t - (o.hitAt ?? -99) < 3 : o.hp < o.maxHp * 0.97;
   const slow = k === "baron" || k === "elder";
   const coming = slow ? onIt.length : V.theirs.filter((x) => dist(x, pit) < OBJ_TUNE.seen).length;
-  if (hitting ? !onIt.length : coming < 2) return null;
+  // grubs: only an enemy that is there for them counts (a jungler walking past the pit would start a "contest" that
+  // then takes the camp itself); one still walking in is early enough for ours to come over for a last hit
+  const ep = M.brains[1 - b.side].plan;
+  const foeOnGrubs = k === "grubs" && (ep.kind === "take" || ep.kind === "contest") && ep.obj === "grubs" && ep.phase !== "setup";
+  if (k === "grubs" ? !onIt.length || (!hitting && !foeOnGrubs) : hitting ? !onIt.length : coming < 2) return null;
   let dps = 0;
   for (const x of onIt) if (dist(x, pit) < 650 && !x.fightId) dps += e.aaDps(x) * 1.2 + 30;
   const ttk = o.hp / Math.max(60, dps);
@@ -802,10 +892,15 @@ function contestCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Pl
   const hz = clamp(reach, 10, 25);
   const ourP = powerAt(e, can, pit, hz);
   const thP = powerAt(e, V.foes, pit, hz);
-  const ratio = (ourP + 1) / (thP + 1);
+  // grubs during laning: the side that holds the area (same tilt as its take) answers with a group, the other only
+  // with its jungler (poachCand)
+  const ratio = ((ourP + 1) / (thP + 1)) * (k === "grubs" && V.laning ? grubTilt(M, b.side) : 1);
   // the side about to lose the soul race fights for the dragon from the enemy's 2nd stack on (engine 200 games: one
   // team took all four dragons in 48% of games; LCK 2026 ~22%); a team behind still flanks a baron / elder
-  if (ratio < contestMin(e, b, k)) return null;
+  if (ratio < contestMin(e, b, k)) {
+    // no fight for the grubs, but our jungler can still walk in for a last hit
+    return k === "grubs" && (hitting || foeOnGrubs) ? poachCand(e, b, V, can) : null;
+  }
   // not straight back in after a lost fight with two or more down
   if (b.lostFight && V.numAdv <= -2 && !bigObj(e, b.side, k)) return null;
   const val = objValue(e, b.side, k, true) * (b.P.obj[k] ?? 1);
@@ -815,8 +910,38 @@ function contestCand(e: Engine, M: MacroState, b: Brain, V: View, k: ObjKey): Pl
   return mkPlan(e, "contest", `contest:${k}`, score, can.map((u) => u.i), {
     // h = hitters needed in the pit before anyone damages it (hitsObjective): all of `can` meant a contest that won the
     // fight rarely started hitting (one member a few hundred units out blocked it) while the dragon regenerated
-    obj: k, need: Math.min(3, can.length), h: Math.min(3, can.length), hitters: can.map((u) => u.i), phase: "gather",
+    obj: k, need: Math.min(3, can.length), h: Math.min(3, can.length), hitters: contestHitters(e, b, k, can.map((u) => u.i)), phase: "gather",
     until: e.t + 15, expires: e.t + 60, engage: ratio >= 0.9 - b.P.fight, emergency: true, ratio, prio: true, hz,
+  });
+}
+
+/** Who hits the objective in a contest: everyone, except at the grubs, where the jungler does, at times with one
+ *  more (LCK: a grub dies to one champion 78 % of the time, to three or more 5 %). */
+function contestHitters(e: Engine, b: Brain, k: ObjKey, ids: number[]): number[] {
+  if (k !== "grubs" || ids.length < 2) return ids.slice();
+  // among the living (a dead jungler as the only hitter would leave the others standing in the pit)
+  const live = ids.filter((i) => e.units[i].alive);
+  if (live.length < 2) return live.length ? live : ids.slice();
+  const jg = live.find((i) => e.units[i].role === "Jungle");
+  const rest = live.filter((i) => i !== jg).sort((a, c) => dist(e.units[a], BARON_PIT) - dist(e.units[c], BARON_PIT));
+  if (jg === undefined) return rest.slice(0, 2);
+  // the same draw as a group take's: mostly the jungler alone (GRUB_MACRO.groupSolo)
+  return rollFor(e, b, "grubs").h <= 1 ? [jg] : [jg, rest[0]];
+}
+
+/** The jungler alone goes for one of the grubs the enemy is taking (GRUB_MACRO). Only from no plan or a grub plan:
+ *  the brain runs one plan a side, and a dragon setup is not dropped for a grub. */
+function poachCand(e: Engine, b: Brain, V: View, can: Unit[]): Plan | null {
+  const jg = can.find((u) => u.role === "Jungle");
+  if (!jg || hpf(jg) < 0.5) return null;
+  const cur = b.plan;
+  if (cur.kind !== "none" && cur.obj !== "grubs") return null;
+  if (!(cur.kind === "contest" && cur.poach) && rollFor(e, b, "grubs").poach >= GRUB_MACRO.poach * b.P.contest) return null;
+  const there = V.theirs.filter((x) => dist(x, BARON_PIT) < 2200);
+  if (there.length > 1 || there.reduce((a, x) => a + e.power(x), 0) > e.power(jg) * GRUB_MACRO.poachEdge) return null;
+  return mkPlan(e, "contest", "contest:grubs", 0.9, [jg.i], {
+    obj: "grubs", need: 1, h: 1, hitters: [jg.i], phase: "gather", until: e.t + 10, expires: e.t + 45, engage: false,
+    emergency: true, ratio: 1, prio: true, poach: true,
   });
 }
 
@@ -948,17 +1073,31 @@ function planValid(e: Engine, M: MacroState, b: Brain, V: View, p: Plan): string
     const mem = p.members.map((i) => e.units[i]);
     const alive = mem.filter((u) => u.alive || u.respawnAt - e.t < 6).length;
     if (alive < Math.min(p.need, p.kind === "contest" ? 1 : p.need)) return "members";
-    const late = o.alive && o.hp < o.maxHp * 0.3;
-    // nobody left to stop: the contest is over (a take of our own is takeCand's call)
-    if (p.kind === "contest" && e.t - p.since > 5 && !V.theirs.some((x) => dist(x, pit) < OBJ_TUNE.near + 400)) return "done";
-    if (p.solo) {
-      if (!late && V.theirs.some((x) => dist(x, pit) < 2600)) return "spotted";
+    // nearly done, or (grubs) the one in hand is: finish it first
+    const late = o.alive && (o.hp < o.maxHp * 0.3 || (k === "grubs" && grubInHand(e, b.side)));
+    // nobody left to stop: the contest is over (a take of our own is takeCand's call). At the grubs whoever came
+    // over stays on what is left of the camp when it is free for it (grubStays), which is how the grubs a team walked
+    // away from are taken "right there" (LCK: in 52 % of the visits that stop with grubs alive); otherwise it goes
+    // back to what it was doing and the grubs are left for later.
+    if (p.kind === "contest" && e.t - p.since > 5 && !V.theirs.some((x) => dist(x, pit) < OBJ_TUNE.near + 400) && !(k === "grubs" && grubStays(e, b, p))) return "done";
+    if (p.poach) {
+      // in for a last hit, out when a second enemy turns up or it is getting hurt
+      const jg = mem[0];
+      if (V.theirs.filter((x) => dist(x, pit) < 1800).length > 1 || (jg.alive && hpf(jg) < 0.35)) return "spotted";
+    } else if (p.solo) {
+      const foes = V.theirs.filter((x) => dist(x, pit) < 2600);
+      // one enemy (a jungler come to smite a grub) does not chase a healthy jungler off the grubs; more do, and it
+      // leaves with the grubs it has
+      const jg = mem[0];
+      const stay = k === "grubs" && foes.length === 1 && jg.alive && hpf(jg) > 0.45 && e.power(foes[0]) <= e.power(jg) * GRUB_MACRO.stayEdge;
+      if (!late && foes.length && !stay) return "spotted";
     } else if (!late && o.alive && p.kind === "contest") {
       // the candidate's yardstick with some slack (before: a flat 1.3, so a baron contest allowed at 0.65 of the
       // enemy's power was called off again in the next think)
       const ourW = powerAt(e, mem, pit, p.hz ?? 25);
       const thW = powerAt(e, V.foes, pit, p.hz ?? 25);
-      if ((ourW + 1) / (thW + 1) < contestMin(e, b, k) - 0.12) return "outnumbered";
+      const tilt = k === "grubs" && V.laning ? grubTilt(M, b.side) : 1;
+      if (((ourW + 1) / (thW + 1)) * tilt < contestMin(e, b, k) - 0.12) return "outnumbered";
     } else if (!late && o.alive && p.phase === "commit") {
       // a committed take is called off by what stands at the pit: the enemies there against our members there.
       // (Before, every enemy that could arrive within 25 s was weighed against the plan's own three or four members
@@ -1050,7 +1189,9 @@ function choosePlan(e: Engine, M: MacroState, b: Brain, V: View) {
         } else if (cur.kind === "contest" || cur.kind === "defend" || cur.kind === "siege") {
           for (const i of fresh.members) if (!cur.members.includes(i)) cur.members.push(i);
           if (cur.kind === "siege") cur.target = fresh.target;
-          if (cur.kind === "contest") { cur.hitters = cur.members.slice(); cur.hz = fresh.hz; }
+          if (cur.kind === "contest") { cur.hitters = contestHitters(e, b, cur.obj!, cur.members); cur.hz = fresh.hz; }
+          // a poach that the team now backs is a contest like any other
+          if (cur.poach && !fresh.poach) { cur.poach = false; cur.need = fresh.need; cur.h = fresh.h; }
         }
       }
     }
@@ -1085,6 +1226,7 @@ function choosePlan(e: Engine, M: MacroState, b: Brain, V: View) {
     M.stats[b.side].plans[best.id] = (M.stats[b.side].plans[best.id] ?? 0) + 1;
     if (best.trade) bump(M.stats[b.side].calls, `trade:${best.kind === "siege" ? "turret" : best.obj}`);
     if (best.solo) M.stats[b.side].plans[`${best.id}:solo`] = (M.stats[b.side].plans[`${best.id}:solo`] ?? 0) + 1;
+    if (best.poach) M.stats[b.side].plans[`${best.id}:poach`] = (M.stats[b.side].plans[`${best.id}:poach`] ?? 0) + 1;
     if (best.kind === "take") pickHitters(e, b, best);
     log(M, e, b, `plan ${best.id}${best.solo ? " solo" : ""} score ${best.score.toFixed(2)} ratio ${best.ratio.toFixed(2)} prio ${best.prio} members ${best.members.map((i) => e.units[i].role).join("/")} (was ${cur.id})`);
   } else if (!best) {
@@ -1105,7 +1247,8 @@ function pickHitters(e: Engine, b: Brain, p: Plan) {
   const rank = (u: Unit) => (u.role === "Jungle" ? -10 : u.role === "Bot" ? -2 : u.role === "Mid" ? -1.5 : u.role === "Top" ? -1 : 0) + dist(u, pit) / 3000;
   live.sort((a, c) => rank(a) - rank(c));
   const keep = p.hitters.filter((i) => live.some((u) => u.i === i));
-  const want = Math.max(2, Math.min(p.h, live.length));
+  // the grubs can be left to the jungler alone (rollFor)
+  const want = Math.max(p.obj === "grubs" ? 1 : 2, Math.min(p.h, live.length));
   for (const u of live) {
     if (keep.length >= want) break;
     if (!keep.includes(u.i)) keep.push(u.i);
@@ -1866,8 +2009,9 @@ export function hitsObjective(e: Engine, u: Unit, k: ObjKey): boolean {
   // a contest answers the enemy's take: its hitters race for a monster the enemy is on, they do not start one or
   // finish one the enemy has left. (Now that a contest begins when the enemy is seen at the entrance, it would
   // otherwise be a take without any of takeCand's checks: 29 % of barons fell to a contest. A won contest goes on as a
-  // take, see choosePlan.)
-  if (p.kind === "contest" && !enemyOn(e, M, u.side, k)) return false;
+  // take, see choosePlan.) Not at the grubs: a contest there only starts when the enemy's plan is on them
+  // (contestCand), is one or two champions, and whoever came over stays on what is left of the camp (T07).
+  if (p.kind === "contest" && k !== "grubs" && !enemyOn(e, M, u.side, k)) return false;
   if (p.solo) return u.role === "Jungle";
   // counted live: a hitter may have been pulled into a fight earlier this step
   const pit = PIT_POS[PIT_OF[k]];
@@ -1879,7 +2023,8 @@ export function hitsObjective(e: Engine, u: Unit, k: ObjKey): boolean {
     if (!channeling(x) && dist(x, pit) < 650) n++;
   }
   M.pit[u.side][k] = n;
-  return n >= Math.max(2, Math.min(p.h, live));
+  // one hitter is enough for a grub (the jungler come to smite one); the other monsters need two in the pit
+  return n >= Math.max(k === "grubs" ? 1 : 2, Math.min(p.h, live));
 }
 
 const OBJ_NAME: Record<ObjKey, string> = { dragon: "드래곤", grubs: "공허 유충", herald: "협곡의 전령", baron: "내셔 남작", elder: "장로 드래곤" };
@@ -1903,7 +2048,7 @@ export function planLabel(e: Engine, side: SideN): string {
       const what = p.phase === "setup" ? `${o} 준비` : p.prio ? `${o} 집결` : `${o} 대기`;
       return p.trade ? `${what}(${OBJ_NAME[p.trade]} 교환)` : what;
     }
-    case "contest": return `${OBJ_NAME[p.obj!]} 저지`;
+    case "contest": return p.poach ? "유충 뺏기" : `${OBJ_NAME[p.obj!]} 저지`;
     case "siege": return p.trade ? `${LANE_NAME[p.lane!]} 공성(${OBJ_NAME[p.trade]} 교환)` : `${LANE_NAME[p.lane!]} 공성`;
     case "defend": return `${LANE_NAME[p.lane!]} 수비`;
     case "reset": return "정비(귀환)";

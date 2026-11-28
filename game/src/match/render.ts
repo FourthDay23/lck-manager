@@ -330,7 +330,8 @@ export class MatchRenderer {
       if (!near.length) continue;
       const contested = new Set(near.map((u) => u.side)).size > 1;
       const side = near[0].side;
-      const hitting = o.hp < o.maxHp - 1;
+      // the grubs' health stays down with the dead ones: go by when the camp was last hit
+      const hitting = k === "grubs" ? e.t - (o.hitAt ?? -99) < 3 : o.hp < o.maxHp - 1;
       const noun = k === "dragon" && o.type ? `${o.type} 드래곤` : OBJ_NOUN[k];
       const reason = contested
         ? `${josa(noun, "을를")} 두고 양 팀 ${near.length}명이 모였습니다`
@@ -998,7 +999,8 @@ export class MatchRenderer {
       }
       if (f.kind === "blink") { this.burst(f.x, f.y, "#fff3a0", 8, now); this.burst(f.tx, f.ty, "#fff3a0", 8, now); }
       if (f.kind === "heal") this.burst(f.tx, f.ty, "#7dff8a", 6, now, -1);
-      if (f.kind === "smite") { this.burst(f.x, f.y, "#ffe28a", 18, now); this.shake = 6; }
+      // a single voidgrub's last hit (r 200) is a small pop; the other epic monsters shake the screen
+      if (f.kind === "smite") { this.burst(f.x, f.y, "#ffe28a", f.r < 300 ? 8 : 18, now); if (f.r >= 300) this.shake = 6; }
       if (f.kind === "global") this.shake = Math.max(this.shake, 3);
     }
     this.fxSeen = this.e.fxSeq;
@@ -1509,9 +1511,13 @@ export class MatchRenderer {
    * element). One that is up always has its health bar under it, gold going orange and then red as it falls toward
    * smite range; an empty pit shows what comes there next dimmed and grey with the time left, the same way as a
    * cleared camp.
+   * The Voidgrubs die one by one (T07, Engine.grubUnits): a live grub is its sprite on its spot, with its own small
+   * health bar once it is hurt; a dead one stays as a ring in the colour of the team that took it until the camp is
+   * done or leaves, so the pit shows how many are left and who has had how many.
    */
   private drawObjectives() {
     const e = this.e;
+    const c = this.ctx;
     const zoom = this.cam.size < 9000 ? 1 : 0;
     const draw = (k: ObjKey, up: boolean): Box => {
       const o = e.obj[k];
@@ -1519,13 +1525,37 @@ export class MatchRenderer {
         const name = k === "dragon" ? drakeSprite(o.type) : k === "elder" ? drakeSprite("장로") : k;
         return this.mark(name, o.pos, !up, EPIC_R[zoom], OBJ_COL[k]);
       }
-      // as many grubs as are left, each on its own spot; the box around them carries the bar and the time
-      const n = up ? Math.max(1, Math.min(GRUB_SPOTS.length, o.left ?? GRUB_SPOTS.length)) : GRUB_SPOTS.length;
+      // each grub on its own spot; the box around them carries the time before they are up
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-      for (let i = 0; i < n; i++) {
-        const b = this.mark("grub", GRUB_SPOTS[i], !up, GRUB_R[zoom], OBJ_COL.grubs);
+      GRUB_SPOTS.forEach((spot, i) => {
+        const g = up ? e.grubUnits[i] : undefined;
+        let b: Box;
+        if (g && !g.alive) {
+          // taken: a ring in the taker's colour where it stood (nobody's when the camp left with it alive)
+          const r = GRUB_R[zoom] + 1;
+          const cx = Math.floor(this.sx(spot.x)), cy = Math.floor(this.sy(spot.y));
+          b = { x: cx - r, y: cy - r, w: 2 * r + 1, h: 2 * r + 1 };
+          if (g.takenBy !== undefined) {
+            c.strokeStyle = "#05070d";
+            c.lineWidth = zoom ? 4 : 3;
+            c.beginPath();
+            c.arc(cx + 0.5, cy + 0.5, r, 0, Math.PI * 2);
+            c.stroke();
+            c.strokeStyle = g.takenBy === 0 ? BLUE : RED;
+            c.lineWidth = zoom ? 2 : 1;
+            c.beginPath();
+            c.arc(cx + 0.5, cy + 0.5, r, 0, Math.PI * 2);
+            c.stroke();
+          }
+        } else {
+          b = this.mark("grub", spot, !up, GRUB_R[zoom], OBJ_COL.grubs);
+          if (g && g.hp < g.maxHp) {
+            const f = g.hp / g.maxHp;
+            this.bar(b, f, MatchRenderer.monsterHp(f), [7, 11]);
+          }
+        }
         x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.w); y1 = Math.max(y1, b.y + b.h);
-      }
+      });
       return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
     };
     for (const pit of PITS) {
@@ -1533,6 +1563,8 @@ export class MatchRenderer {
       for (const k of up) {
         const o = e.obj[k];
         const b = draw(k, true);
+        // (the grubs carry their own bars)
+        if (k === "grubs") continue;
         const f = o.hp / o.maxHp;
         this.bar(b, f, MatchRenderer.monsterHp(f), [18, 30]);
       }

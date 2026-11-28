@@ -124,6 +124,39 @@ function pPress(e: Engine, u: Unit, thief: boolean): number {
   return Math.min(0.92, Math.max(0.12, p));
 }
 
+/**
+ * Voidgrubs (T07): the three grubs die one by one (engine.grubsTick), each with a last hit of its own. This is the
+ * Smite on the grub being worked on (`hp`: its health), by the same rules as finish(): a jungler in reach with a
+ * castable Smite presses once the grub is inside its damage; the jungler of the side doing the camp (ownerOf) has the
+ * better of it and wins most ties, and the loser's charge is gone all the same. What is different:
+ *  - a jungler alone on the camp spends only its spare charge and keeps the last one for a race (`contested`: both
+ *    sides are hitting; or the other jungler stands in reach);
+ *  - no steal runs and no steal banner: the other jungler walks in for a last hit (macro.ts poachCand) and sharing
+ *    the camp is ordinary (LCK 2026, scripts/lck_grubs.py: both teams got a grub in 19.7 % of games), so grubs stay
+ *    out of the steal counts above.
+ * Returns the jungler whose Smite takes the grub this quarter second (the caller casts it), or null.
+ */
+export function grubSmite(e: Engine, hp: number, contested: boolean): Unit | null {
+  const o = e.obj.grubs;
+  const own = ownerOf(e, "grubs");
+  const near = (side: SideN) => e.units.find((u) => u.side === side && u.role === "Jungle" && u.alive && dist(u, o.pos) < STEAL_TUNE.range);
+  const n0 = near(0), n1 = near(1);
+  const race = contested || (!!n0 && !!n1);
+  const ready = (u: Unit | undefined) => (u && e.t >= u.stunUntil && Summoners.canSmite(e, u) && hp <= Summoners.smiteDamage(e, u) && (race || Summoners.smiteCharges(e, u) >= 2) ? u : undefined);
+  const r0 = ready(n0), r1 = ready(n1);
+  const thief = (u: Unit) => own !== null && u.side !== own;
+  const p0 = !!r0 && e.rng.chance(pPress(e, r0, thief(r0)));
+  const p1 = !!r1 && e.rng.chance(pPress(e, r1, thief(r1)));
+  if (p0 && p1) {
+    const jo = own === 1 ? r1! : r0!, jt = own === 1 ? r0! : r1!;
+    const pT = Math.min(0.7, Math.max(0.08, STEAL_TUNE.tie + (reflexOf(jt) - reflexOf(jo)) * STEAL_TUNE.tieSkill));
+    const winner = e.rng.chance(pT) ? jt : jo;
+    Summoners.spend(e, winner === jt ? jo : jt, "smite", { at: o.pos, why: "lost", pve: true });
+    return winner;
+  }
+  return p0 ? r0! : p1 ? r1! : null;
+}
+
 export interface Finish { side: SideN; taker: Unit; steal: boolean; smote: boolean }
 
 /**

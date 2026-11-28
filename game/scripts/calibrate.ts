@@ -6,7 +6,7 @@ import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { assembleData } from "../src/data/load";
 import { newGame } from "../src/core/game";
 import { joinTeam, autoLineup } from "../src/core/market";
-import { Engine, ENGINE_FLAGS, applyEarlyTune, applyGrowthTune, applyPaceTune, applySimTune } from "../src/match/engine";
+import { Engine, ENGINE_FLAGS, applyEarlyTune, applyGrowthTune, applyGrubTune, applyPaceTune, applySimTune } from "../src/match/engine";
 import { newDraft, autoDraft } from "../src/match/draft";
 import { par, engineSnap } from "./lib/par";
 import { DRAW } from "../src/match/engine";
@@ -16,7 +16,7 @@ import { Rng } from "../src/core/rng";
 import { gameWinProb, teamPower } from "../src/core/quick";
 import { ROLES } from "../src/data/types";
 import { ITEM_TUNE } from "../src/match/items";
-import { applyObjTune } from "../src/match/macro";
+import { applyGrubMacro, applyObjTune } from "../src/match/macro";
 
 const dir = existsSync("public/data/champions.json") && existsSync("public/data/players.json") ? "data" : "data-sample";
 const j = (f: string) => {
@@ -43,6 +43,9 @@ applySimTune(process.env.SIM_TUNE);
 applyPaceTune(process.env.PACE_TUNE);
 // OBJ_TUNE=hover:2300 overrides the objective calls (macro.ts OBJ_TUNE) for this run
 applyObjTune(process.env.OBJ_TUNE);
+// GRUB_TUNE=towerPer:0,towerAll:0 / GRUB_MACRO=poach:0.5 override the voidgrub values (engine.ts GRUB_TUNE, macro.ts GRUB_MACRO)
+applyGrubTune(process.env.GRUB_TUNE);
+applyGrubMacro(process.env.GRUB_MACRO);
 // FLAGS=nav,macro,fight turns engine modules on (default: the engine's own defaults)
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x && !x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl] = true;
 for (const fl of (process.env.FLAGS ?? "").split(",").map((x) => x.trim()).filter((x) => x.startsWith("-"))) (ENGINE_FLAGS as Record<string, boolean>)[fl.slice(1)] = false;
@@ -96,7 +99,7 @@ for (let g = 0; g < N; g++) {
   ft += e.events.find((x) => x.type === "first_turret")?.t ?? e.t;
   doubles += e.events.filter((x) => x.type === "double").length;
   heralds += e.heralds[0] + e.heralds[1];
-  grubs += (e.grubs[0] + e.grubs[1]) / 3;
+  grubs += e.grubs[0] + e.grubs[1];
   souls += e.soul !== null ? 1 : 0;
   const key = [e.dragons[0].length, e.dragons[1].length].sort().join("-") + (e.soul !== null ? (e.winner === e.soul ? " soulWin" : " soulLose") : "");
   split[key] = (split[key] ?? 0) + 1;
@@ -137,9 +140,9 @@ const f = (x: number) => (x / N).toFixed(2);
 const pw = s.lck.map((t) => teamPower(s, t)).sort((x, y) => y - x);
 console.log(`data=${dir} games=${N} team power ${pw[0].toFixed(1)}..${pw[pw.length - 1].toFixed(1)}`);
 console.log(`length ${(len / N / 60).toFixed(1)} min | kills ${f(kills)} | dragons ${f(drag)} | barons ${f(barons)} | elder ${f(elders)} | solo ${f(solo)} | steals ${f(steals)} | triple+ ${f(multis)} | aces ${f(aces)}`);
-console.log(`first blood ${(fb / N / 60).toFixed(1)} min | first tower ${(ft / N / 60).toFixed(1)} min | doubles ${f(doubles)} | heralds ${f(heralds)} | grub camps ${f(grubs)} | soul ${f(souls)}`);
+console.log(`first blood ${(fb / N / 60).toFixed(1)} min | first tower ${(ft / N / 60).toFixed(1)} min | doubles ${f(doubles)} | heralds ${f(heralds)} | grubs ${f(grubs)} | soul ${f(souls)}`);
 console.log(`kills by 10-min block (per game): ${kpm.map((x) => (x / N).toFixed(1)).join(" / ")}`);
-console.log(`target (LCK 2026, 502 games): 32.2 min, 29.5 kills, 4.4 dragons, 1.31 barons, 0.09 elder, 1.6 solo, 4.1 multikills (double+), 1.03 ace, FB 5.1, FT 15.7, soul 0.46, kills by block 3.8/8.5/11.8/4.7/0.6`);
+console.log(`target (LCK 2026, 502 games): 32.2 min, 29.5 kills, 4.4 dragons, 1.31 barons, 0.09 elder, 1.6 solo, 4.1 multikills (double+), 1.03 ace, FB 5.1, FT 15.7, grubs 2.88, soul 0.46, kills by block 3.8/8.5/11.8/4.7/0.6`);
 console.log("formula p bucket -> engine blue win rate (should match the bucket's mean p):");
 for (const [i, bk] of buckets.entries()) if (bk.n) console.log(`  p ${(i / 5).toFixed(1)}-${((i + 1) / 5).toFixed(1)}: mean p ${(bk.expSum / bk.n).toFixed(2)}  engine ${(bk.wins / bk.n).toFixed(2)}  (n=${bk.n})`);
 console.log(`brier of formula vs engine results ${(brierEngine / N).toFixed(3)} (0.25 = coin flip)`);
