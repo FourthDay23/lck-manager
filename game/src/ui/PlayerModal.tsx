@@ -70,7 +70,7 @@ export function PlayerModal({ pid }: { pid: string }) {
               <div class="row" style={{ gap: 6 }}>
                 {champs.map(([c, m]) => (
                   <div class="col center" style={{ width: 46, gap: 0 }}>
-                    <ChampIcon id={c} size={36} />
+                    <ChampIcon id={c} size={36} mastery={m} />
                     <span style={{ fontSize: 10 }}>{Math.round(m)}</span>
                   </div>
                 ))}
@@ -97,7 +97,7 @@ export function PlayerModal({ pid }: { pid: string }) {
               <div class="row" style={{ marginTop: 8 }}>
                 {mine ? (
                   <>
-                    {p.academy && <button class="btn small primary" disabled={!canCallUp(s, p).ok} title={canCallUp(s, p).msg} onClick={() => { callUp(s, p); autosave(); store.bump(); }}>1군 콜업</button>}
+                    {p.academy && <button class="btn small primary" disabled={!canCallUp(s, p).ok} data-tip={canCallUp(s, p).msg} onClick={() => { callUp(s, p); autosave(); store.bump(); }}>1군 콜업</button>}
                     <button class="btn small primary" onClick={() => store.open("nego", p.id, "renew")} disabled={!talk.ok}>재계약 협상{expiring ? " (만료 예정)" : ""}</button>
                     <button class="btn small" onClick={() => { p.listed = !p.listed; autosave(); store.bump(); }}>{p.listed ? "이적 목록에서 내리기" : "이적 목록에 올리기"}</button>
                     <button class="btn small danger" onClick={() => {

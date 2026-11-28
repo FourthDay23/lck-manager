@@ -13,9 +13,8 @@ import { eventAskMul, outLabel } from "./evmemo";
 export const ROSTER_MAX = 10;
 
 // ---------- windows ----------
-export function windowOpen(s: GameState): boolean {
-  const d = seasonDates(s.season);
-  const dn = s.day;
+function openOn(season: number, dn: number): boolean {
+  const d = seasonDates(season);
   if (dn < d.cup) return true; // stove league
   if (dn >= d.cup + 47 && dn <= d.break1End) return true; // after the cup
   if (dn >= d.msi && dn < d.reg2) return true; // mid-season
@@ -23,8 +22,28 @@ export function windowOpen(s: GameState): boolean {
   return false;
 }
 
+export function windowOpen(s: GameState): boolean {
+  return openOn(s.season, s.day);
+}
+
 export function windowLabel(s: GameState): string {
   return windowOpen(s) ? "이적시장 열림" : "이적시장 닫힘";
+}
+
+/**
+ * When the window next opens (if closed today) or closes (if open today): `day` is the first day in the other state,
+ * `days` how many days away it is. Walks the same rule as windowOpen day by day, rolling to the next season after
+ * its last day (seasonEnd runs on seasonDates().end, so the day after belongs to the next season).
+ */
+export function windowCountdown(s: GameState): { open: boolean; days: number; day: number } {
+  const open = windowOpen(s);
+  let season = s.season;
+  for (let k = 1; k <= 400; k++) {
+    const dn = s.day + k;
+    while (dn > seasonDates(season).end) season++;
+    if (openOn(season, dn) !== open) return { open, days: k, day: dn };
+  }
+  return { open, days: 0, day: s.day };
 }
 
 // ---------- lineup helpers ----------
@@ -60,6 +79,17 @@ export function payroll(s: GameState, t: Team): number {
 
 export function aiPayrollCap(t: Team): number {
   return 50000 + t.wealth * 60000;
+}
+
+/**
+ * Room left under an AI club's payroll cap, counting the salaries of its bids still waiting for an answer (any of
+ * them may be accepted). Counting only signed contracts let a club with five open roles bid the same room five
+ * times: T1, who wins nearly every contested bid, ended its first stove league at 43-47억 against a 35억 cap with
+ * four of the five best players.
+ */
+export function aiCapRoom(s: GameState, t: Team): number {
+  const open = s.bids.reduce((a, b) => a + (b.team === t.id ? b.salary : 0), 0);
+  return aiPayrollCap(t) - payroll(s, t) - open;
 }
 
 function removeFromTeam(s: GameState, p: Player) {
@@ -651,7 +681,7 @@ function aiTargetScore(s: GameState, t: Team, p: Player, rng: Rng): number {
 }
 
 function placeAiBid(s: GameState, t: Team, role: Role | null, rng: Rng, minOvr = 0): boolean {
-  const cap = aiPayrollCap(t) - payroll(s, t);
+  const cap = aiCapRoom(s, t);
   const cands = Object.values(s.players).filter((p) =>
     !p.team && !p.retired && !p.scandal && (role ? p.role === role : true) && ovr(p) >= minOvr &&
     !s.bids.some((b) => b.player === p.id && b.team === t.id) && p.origin !== "intl");
@@ -678,14 +708,20 @@ export function resolveBids(s: GameState, rng: Rng) {
     }
     const offers = s.bids.filter((b) => b.player === pid && b.team !== s.user);
     if (!offers.length) continue;
-    const best = offers
+    const ranked = offers
       .map((b) => ({ b, v: b.salary * (0.7 + teamAppeal(s.teams[b.team], s) * 0.6) * rng.range(0.9, 1.1) }))
-      .sort((x, y) => y.v - x.v)[0].b;
+      .sort((x, y) => y.v - x.v).map((x) => x.b);
+    // a full roster, or a payroll that grew since the bid (emergency signings, call-ups): that offer lapses and the
+    // player takes the next one the same day
+    const fits = (b: Bid) => {
+      const tm = s.teams[b.team];
+      return tm.roster.length < ROSTER_MAX && payroll(s, tm) + b.salary <= aiPayrollCap(tm);
+    };
+    const best = ranked.find(fits);
+    const lapsed = new Set(ranked.slice(0, best ? ranked.indexOf(best) : ranked.length));
+    if (lapsed.size) s.bids = s.bids.filter((b) => !lapsed.has(b));
+    if (!best) continue;
     const t = s.teams[best.team];
-    if (t.roster.length >= ROSTER_MAX) {
-      s.bids = s.bids.filter((b) => b !== best);
-      continue;
-    }
     joinTeam(s, p, t.id, best.salary, best.years);
     p.morale = 70;
     addNews(s, { kind: "sign", title: `[오피셜] ${t.name}, '${p.name}' 영입`, body: `${p.origin === "gen" ? "신인 " : ""}${p.role} · ${best.years}년 계약 · 연봉 ${money(best.salary)}`, teams: [t.id], players: [p.id] });
@@ -756,7 +792,7 @@ function aiHireStaff(s: GameState, t: Team, role: Staff["role"], rng: Rng) {
 }
 
 function aiPoach(s: GameState, t: Team, rng: Rng) {
-  const cap = aiPayrollCap(t) - payroll(s, t);
+  const cap = aiCapRoom(s, t);
   const others = s.lck.filter((x) => x !== t.id && x !== s.user);
   const from = s.teams[rng.pick(others)];
   const cand = from.roster.map((x) => s.players[x]).filter((p) => p && !Object.values(from.lineup).includes(p.id) && ovr(p) > 70)

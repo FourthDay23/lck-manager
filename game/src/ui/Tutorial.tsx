@@ -37,7 +37,7 @@ const PARTS: Record<string, Step[]> = {
     { screen: "home", sel: ".topbar .stat", text: "자금", title: "1부 · 자금", body: "구단이 쓸 수 있는 돈입니다. 계약금과 이적료는 계약하는 순간 빠지고, 수익금은 매달 1일에 들어옵니다. 마이너스가 되면 게임이 오버되니 주의하세요!" },
     { screen: "home", sel: ".topbar .stat", text: "월 급여", title: "1부 · 월 급여", body: "선수와 스태프 연봉 합계를 12로 나눈 돈이 매달 25일에 나갑니다. 고정 수입보다 크면 승리 수당, 상금, 굿즈 판매로 메워야 합니다." },
     { screen: "home", sel: ".topbar .stat", text: "이적시장", title: "1부 · 이적시장 기간", body: "이적시장이 열려 있을 때만 FA 영입과 이적을 할 수 있습니다. 1년에 세 번 열립니다.\n· 스토브리그: 11월 14일 ~ 1월 13일\n· LCK 컵이 끝난 뒤: 3월 초 ~ 3월 31일\n· MSI 개막 ~ 정규 시즌 3라운드 전: 6월 24일 ~ 8월 4일\n지금은 스토브리그라 열려 있습니다." },
-    { screen: "home", sel: ".topbar .btn.primary", title: "1부 · 시간 진행", body: "다음 날, 1주, 다음 경기까지 중에서 골라 시간을 보냅니다. 큰 제안이나 사건이 생기면 알림이 옵니다." },
+    { screen: "home", sel: ".topbar .btn.primary", title: "1부 · 시간 진행", body: "다음 날, 1주, 다음 경기까지 중에서 골라 시간을 보냅니다. 큰 제안이나 사건이 생기면 알림이 옵니다. 옆의 '자동 진행'은 하루씩 저절로 넘기다가 이벤트와 경기에서 기다리고, 처리하면 이어서 갑니다(▾에서 어디까지 갈지 고름)." },
     { screen: "home", sel: ".side", title: "1부 · 메뉴", body: "왼쪽 메뉴로 각 화면을 오갑니다. 이적시장과 뉴스 옆의 표시는 새 제안과 읽지 않은 소식입니다." },
     { screen: "home", sel: ".main h2", text: "할 일", title: "1부 · 할 일", body: "지금 꼭 해야 할 일을 여기서 확인할 수 있습니다." },
     { screen: "staff", sel: ".main h2", text: "감독 · 코치 목록", title: "2부 · 감독 영입", body: "가장 먼저 감독을 구하세요. 감독이 없으면 밴픽에서 추천을 거의 받지 못하고 팀 전력도 깎입니다. 감독과 코치의 밴픽 · 분석 능력이 높을수록 전력이 강해집니다." },
@@ -188,6 +188,13 @@ export function tutSpot(spot: Spot) {
   begin(spot);
 }
 
+/** A tip or a tour step to read is on screen. A step that waits for the player to act ("until") does not count. */
+export function tutorialHolds(): boolean {
+  if (store.tip) return true;
+  const t = store.tut;
+  return !!t && !PARTS[t.part]?.[t.i]?.until;
+}
+
 /** A head coach and five starters: time to play. Only in a career that has not played a game yet. */
 function readyForMatch(s: GameState): boolean {
   const me = s.teams[s.user];
@@ -244,8 +251,9 @@ export function TutorialLayer() {
   const steps = t ? PARTS[t.part] : null;
   const step: Step | null = t ? steps![t.i] : st.tip;
   const key = t ? `${t.part}${t.i}` : st.tip ? `p${st.tip.key}` : "";
-  // the match screens' events and alerts wait while a match is on (App), so they do not hold the tour there
-  const busy = !!st.s && (st.s.cutscenes.length > 0 || (st.screen.name !== "series" && (st.s.events.length > 0 || (st.s.alerts?.length ?? 0) > 0)));
+  // alerts wait while a match is on (App), so they do not hold the tour on the match screens; a choice event is
+  // on screen everywhere, the match screens too (it is answered before the first game, Series.tsx)
+  const busy = !!st.s && (st.s.cutscenes.length > 0 || st.s.events.length > 0 || (st.screen.name !== "series" && (st.s.alerts?.length ?? 0) > 0));
   // "go" starts by itself once the team is ready to play (outside the match screens, with nothing else open)
   useEffect(() => {
     const s = st.s;
@@ -327,7 +335,7 @@ export function TutorialLayer() {
         <p>{step.body}</p>
         {n > 1 && <div class="tut-bar"><i style={{ width: `${((i + 1) / n) * 100}%` }} /></div>}
         <div class="row" style={{ gap: 6 }}>
-          <button class="btn small" title="남은 튜토리얼을 모두 끕니다. 저장 · 설정에서 다시 볼 수 있습니다." onClick={() => endPart(true)}>건너뛰기</button>
+          <button class="btn small" data-tip="남은 튜토리얼을 모두 끕니다. 저장 · 설정에서 다시 볼 수 있습니다." onClick={() => endPart(true)}>건너뛰기</button>
           <span class="grow" style={{ flex: 1 }} />
           {i > 0 && <button class="btn small" onClick={() => go(i - 1)}>이전</button>}
           {act ? <span class="gold" style={{ fontSize: 12 }}>빛나는 곳을 누르세요</span>

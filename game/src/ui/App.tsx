@@ -5,10 +5,13 @@ import { fmtDate, money } from "../core/format";
 import { SAVE_VERSION, autoAdvance, migrateSave, phaseLabel, nextUserSeries, userSeriesToday } from "../core/game";
 import { inbox } from "../core/news";
 import type { AutoMode } from "../core/game";
-import { windowLabel } from "../core/market";
+import { MarketNav, MarketStat } from "./MarketTip";
+import { tip } from "./Tip";
+import "./TopTips";
 import { saveGame } from "../core/save";
 import { monthlyWages } from "../core/ledger";
 import { TeamLogo } from "./components";
+import { CashGain, cashGainOn } from "./WinBonus";
 import { StartScreen } from "./screens/Start";
 import { HomeScreen } from "./screens/Home";
 import { ScheduleScreen } from "./screens/Schedule";
@@ -30,6 +33,7 @@ import { NegotiationModal } from "./Negotiation";
 import { StaffNegotiationModal } from "./StaffNegotiation";
 import { AlertLayer, EventModal, EventResultModal, CutsceneLayer } from "./Overlays";
 import { TutorialLayer } from "./Tutorial";
+import { AutoControls, AutoFeed, auto } from "./AutoPlay";
 import { TeamModal } from "./screens/Teams";
 
 let saveTimer: number | undefined;
@@ -100,33 +104,40 @@ export function App() {
             <div class="muted" style={{ fontSize: 11 }}>{s.managerName && s.managerName !== "단장" ? `단장 ${s.managerName}` : "단장"}</div>
           </div>
         </div>
-        <div class="stat"><span>날짜</span>{fmtDate(s.day)}</div>
-        <div class="stat"><span>시즌</span>{s.season} · {phaseLabel(s)}</div>
-        <div class="stat" title={me.cash < 0 ? "자금이 마이너스인 채로 하루가 지나면 게임 오버입니다." : undefined}><span>자금{me.cash < 0 && " · 게임 오버 위험"}</span><b class={me.cash < 0 ? "neg" : "gold"}>{money(me.cash)}</b></div>
-        <div class="stat" title="선수·스태프 연봉 합계 ÷ 12. 매달 25일에 나갑니다."><span>월 급여 (25일)</span><span class="neg">-{money(monthlyWages(s))}</span></div>
-        <div class="stat"><span>명성 · 팬</span>{Math.round(me.fame)} · {(me.fans / 10000).toFixed(1)}만</div>
-        <div class="stat"><span>이적시장</span>{windowLabel(s)}</div>
+        <div class="stat" tabIndex={0} {...tip("date")}><span>날짜</span>{fmtDate(s.day)}</div>
+        <div class="stat" tabIndex={0} {...tip("season")}><span>시즌</span>{s.season} · {phaseLabel(s)}</div>
+        <div class={`stat cash ${cashGainOn() ? "gained" : ""}`} tabIndex={0} {...tip("cash")}><span>자금{me.cash < 0 && " · 게임 오버 위험"}</span><b class={me.cash < 0 ? "neg" : "gold"}>{money(me.cash)}</b><CashGain /></div>
+        <div class="stat" tabIndex={0} {...tip("wages")}><span>월 급여 (25일)</span><span class="neg">-{money(monthlyWages(s))}</span></div>
+        <div class="stat" tabIndex={0} {...tip("fame")}><span>명성 · 팬</span>{Math.round(me.fame)} · {(me.fans / 10000).toFixed(1)}만</div>
+        <MarketStat s={s} />
         <div class="grow" />
         {today ? (
           <button class="btn primary" onClick={() => store.go("series")}>오늘 경기 하러 가기</button>
-        ) : (
+        ) : !auto.on && (
           <>
             <button class="btn" onClick={() => advance("day")}>다음 날</button>
             <button class="btn" onClick={() => advance("week")}>1주</button>
-            <button class="btn primary" onClick={() => advance("match")} title={next ? `다음 경기 ${fmtDate(next.day, false)}` : ""}>
+            <button class="btn primary" onClick={() => advance("match")} data-tip={next ? `다음 경기 ${fmtDate(next.day, false)}` : undefined}>
               다음 경기까지 ▶
             </button>
           </>
         )}
+        <AutoControls />
       </div>
       <div class="side">
-        {NAV.map(([k, label]) => (
-          <button class={`nav ${scr === k ? "on" : ""}`} onClick={() => store.go(k)}>
-            {label}
-            {k === "market" && offers > 0 && <span class="badge">{offers}</span>}
-            {k === "news" && s.inbox.some((m) => !m.read) && <span class="badge">!</span>}
-          </button>
-        ))}
+        {NAV.map(([k, label]) =>
+          k === "market" ? (
+            <MarketNav s={s} cls={`nav ${scr === k ? "on" : ""}`} onClick={() => store.go(k)}>
+              {label}
+              {offers > 0 && <span class="badge">{offers}</span>}
+            </MarketNav>
+          ) : (
+            <button class={`nav ${scr === k ? "on" : ""}`} onClick={() => store.go(k)}>
+              {label}
+              {k === "news" && s.inbox.some((m) => !m.read) && <span class="badge">!</span>}
+            </button>
+          ),
+        )}
         <div class="sec">다음 경기</div>
         <div class="pad muted" style={{ fontSize: 11 }}>
           {next ? (
@@ -161,6 +172,7 @@ export function App() {
       {s.events.length > 0 && !s.ev?.result?.title && scr !== "series" && scr !== "exhibition" && <EventModal />}
       {!!s.ev?.result?.title && scr !== "series" && scr !== "exhibition" && <EventResultModal />}
       {(s.alerts?.length ?? 0) > 0 && !s.events.length && !s.ev?.result?.title && scr !== "series" && scr !== "exhibition" && <AlertLayer />}
+      <AutoFeed />
       <CutsceneLayer />
       <TutorialLayer />
       {st.toast && <div class="toast frame">{st.toast.text}</div>}

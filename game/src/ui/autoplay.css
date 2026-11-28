@@ -1,0 +1,40 @@
+/* Auto-advance (AutoPlay.tsx): topbar control, target menu, the feed of days going by. */
+.auto-ctl { display: flex; align-items: center; position: relative; }
+.auto-ctl .auto-go { padding-right: 10px; }
+.auto-ctl .auto-pick { padding: 6px 7px; margin-left: 0; }
+.auto-stat { min-width: 150px; margin-right: 6px; }
+.auto-stat b { font-weight: normal; display: inline-flex; align-items: center; gap: 5px; }
+.auto-stat .run { color: var(--gold); }
+.auto-stat .hold { color: var(--warn); }
+.auto-dot { display: inline-block; width: 6px; height: 6px; background: var(--gold); animation: auto-blink 0.9s steps(2) infinite; }
+@keyframes auto-blink { 50% { opacity: 0.15; } }
+
+.auto-menu { position: absolute; right: 0; top: calc(100% + 10px); z-index: 45; width: 300px; padding: 8px; }
+.auto-menu-h { color: var(--muted); font-size: 11px; padding: 0 4px 4px; }
+.auto-menu-f { color: var(--dim); font-size: 11px; padding: 6px 4px 0; line-height: 1.45; word-break: keep-all; }
+.auto-opt {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%;
+  background: transparent; border: 0; padding: 6px 8px; cursor: pointer; text-align: left;
+}
+.auto-opt b { font-weight: normal; }
+.auto-opt span { font-size: 11px; }
+.auto-opt:hover:not(:disabled) { background: #1b2032; }
+.auto-opt.on { box-shadow: inset 3px 0 0 0 var(--gold); }
+.auto-opt.on b { color: var(--gold); }
+.auto-opt:disabled { opacity: 0.4; cursor: default; }
+
+.auto-feed { position: fixed; right: 14px; bottom: 14px; z-index: 40; width: 330px; padding: 8px 10px; font-size: 12px; }
+.auto-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.auto-head b { font-family: "Galmuri14", "Galmuri11"; font-weight: normal; color: var(--gold); }
+.auto-head .grow { flex: 1; }
+.auto-head .btn { margin: 0; }
+.auto-end { display: flex; align-items: center; gap: 8px; justify-content: space-between; padding: 5px 7px; margin-bottom: 4px; word-break: keep-all; }
+.auto-end.halt { background: #3a1a20; color: #ffd0d0; box-shadow: inset 3px 0 0 0 var(--red); }
+.auto-end.done { background: #2a2614; color: #ffe7a6; box-shadow: inset 3px 0 0 0 var(--gold); }
+.auto-end .btn { margin: 0; flex: none; }
+.auto-wait { color: var(--warn); padding: 3px 0 5px; }
+.auto-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 3px 0; border-top: 1px solid #222739; color: var(--muted); }
+.auto-line.mine .t { color: var(--text); }
+.auto-line.new { animation: auto-in 0.4s steps(4); }
+.auto-line.new .t { color: var(--gold); }
+@keyframes auto-in { from { opacity: 0; transform: translateY(4px); } }

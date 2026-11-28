@@ -1,6 +1,7 @@
 // Voidgrubs in headless engine games, in the same table as scripts/lck_grubs.py prints for the real LCK timelines:
 // camp split per game, order of takers, visit sizes, why a team left with one or two, timing, who, fights and leads.
 // Run: node scripts/run-ts.mjs scripts/grubs-diag.ts [games] [rosterSeed]
+//  in parallel: node scripts/par.mjs grubs-diag.ts [games] [rosterSeed]  (same report)
 //   GRUB_TUNE=key:value,... overrides engine.ts GRUB_TUNE, GRUB_MACRO=... macro.ts GRUB_MACRO; STRAT=a,b forces both game plans; LOG=n prints game n's
 //   grub kills and plan changes around them; JSON=C:/.../file.json writes the counts.
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
@@ -13,7 +14,8 @@ import * as Macro from "../src/match/macro";
 import { newDraft, autoDraft } from "../src/match/draft";
 import { Rng } from "../src/core/rng";
 import { ROLES } from "../src/data/types";
-import { BARON_PIT } from "../src/match/map";
+import { GRUBS_PIT } from "../src/match/map";
+import { par } from "./lib/par";
 
 const dir = existsSync("public/data/champions.json") && existsSync("public/data/players.json") ? "data" : "data-sample";
 const j = (f: string) => {
@@ -23,11 +25,7 @@ const j = (f: string) => {
 const data = assembleData(dir, j("champions.json"), j("players.json"), j("staff.json"), j("teams.json"), j("intl.json"), j("meta.json"), j("heatmap.json"), j("items.json"), j("matchups.json"));
 applyGrubTune(process.env.GRUB_TUNE);
 // GRUB_MACRO=poach:0.3,stayEdge:1.1 overrides macro.ts GRUB_MACRO
-for (const kv of (process.env.GRUB_MACRO ?? "").split(",").filter(Boolean)) {
-  const [k, v] = kv.split(":");
-  if (!(k in Macro.GRUB_MACRO) || !Number.isFinite(Number(v))) throw new Error(`GRUB_MACRO: bad entry "${kv}"`);
-  (Macro.GRUB_MACRO as Record<string, number>)[k] = Number(v);
-}
+Macro.applyGrubMacro(process.env.GRUB_MACRO);
 const N = Number(process.argv[3] ?? 100);
 const rosterSeed = Number(process.argv[4] ?? 3);
 const LOG = process.env.LOG ? Number(process.env.LOG) : -1;
@@ -63,7 +61,7 @@ const split: Record<string, number> = {}, seq: Record<string, number> = {}, visi
 const visitsLeft: Record<string, number> = {}, after: Record<string, number> = {}, ctx: Record<string, number> = {}, role: Record<string, number> = {}, part: Record<string, number> = {};
 const leadTakes: Record<string, number> = {}, soloVisits: Record<string, number> = {};
 const firstT: number[] = [], kth: number[][] = [[], [], []], gapIn: number[] = [], span: number[] = [], startDelay: number[] = [];
-let killed = 0, blue = 0, partialN = 0, fightGames = 0, sharedN = 0, sharedSimul = 0, foeAssist = 0, firstAhead = 0, firstN = 0, games = 0;
+let killed = 0, blue = 0, partialN = 0, fightGames = 0, sharedN = 0, sharedSimul = 0, foeAssist = 0, firstAhead = 0, firstN = 0, games = 0, smote = 0;
 let stacksWin = 0, stacksLose = 0;
 const plans: Record<string, number> = {}, aborts: Record<string, number> = {};
 const seqGames: Record<string, number[]> = {};
@@ -76,16 +74,36 @@ for (let g = 0; g < N; g++) {
   const d = newDraft(a, b, []);
   autoDraft(s, data, d, rng);
   const strategy = process.env.STRAT ? (process.env.STRAT.split(",").map((x) => x || null) as [never, never]) : undefined;
-  const e = new Engine({ s, data, blue: a, red: b, picks: { blue: d.picks.blue, red: d.picks.red }, seed: 1000 + g, strategy });
-  const M = Macro.st(e);
-  if (g === LOG && M) M.logOn = true;
-  while (!e.over && e.t < SPAWN) e.step();
-  const gold8 = [e.gold(0), e.gold(1)];
-  // SHORT=1 stops at 15:00 (the camp is gone at 14:45): twice as fast, no results in [8]
-  if (SHORT) while (!e.over && e.t < 900) e.step();
-  else e.runToEnd();
+  // par.game: plays the game here, or leaves it to another piece of a parallel run (scripts/par.mjs); what the
+  // report needs of the game comes back as plain data
+  const e = par.game(g, () => {
+    const eng = new Engine({ s, data, blue: a, red: b, picks: { blue: d.picks.blue, red: d.picks.red }, seed: 1000 + g, strategy });
+    const M = Macro.st(eng);
+    if (g === LOG && M) M.logOn = true;
+    while (!eng.over && eng.t < SPAWN) eng.step();
+    const gold8 = [eng.gold(0), eng.gold(1)];
+    // SHORT=1 stops at 15:00 (the camp is gone at 14:45): twice as fast, no results in [8]
+    if (SHORT) while (!eng.over && eng.t < 900) eng.step();
+    else eng.runToEnd();
+    const plans: Record<string, number> = {}, aborts: Record<string, number> = {};
+    if (M) for (const ms of M.stats) {
+      for (const [k, v] of Object.entries(ms.plans)) if (k.includes("grubs")) inc(plans, k, v);
+      for (const [k, v] of Object.entries(ms.aborts)) if (k.includes("grubs")) inc(aborts, k, v);
+    }
+    return {
+      grubLog: eng.grubLog, grubs: eng.grubs, gold8, over: eng.over, winner: eng.winner, names: eng.names,
+      units: eng.units.map((u) => ({ role: u.role, side: u.side, champ: { name: u.champ.name } })),
+      // champion kills with a place, and (LOG) everything said around the camp's time
+      events: eng.events.filter((x) => (["kill", "first_blood", "solo"].includes(x.type) && x.victim !== undefined && x.x !== undefined) || (g === LOG && x.t > 440 && x.t < 920))
+        .map((x) => ({ t: x.t, type: x.type, text: x.text, victim: x.victim, x: x.x, y: x.y })),
+      plans, aborts, log: g === LOG && M ? M.log : [],
+    };
+  });
+  if (!e) continue; // a game another piece plays
+  const gold8 = e.gold8;
   games++;
   const ks: K[] = e.grubLog.map((x) => ({ t: x.t, side: x.side, by: x.by, helpers: x.helpers, foe: x.foe }));
+  smote += e.grubLog.filter((x) => x.smote).length;
   const gone = 3 - ks.length;
   const nb = ks.filter((k) => k.side === 0).length, nr = ks.length - nb;
   inc(split, `${Math.max(nb, nr)}-${Math.min(nb, nr)} (+${gone} despawned)`);
@@ -109,7 +127,7 @@ for (let g = 0; g < N; g++) {
   }
   inc(perGame, String(vs.length));
   const kills = e.events.filter((x) => ["kill", "first_blood", "solo"].includes(x.type) && x.victim !== undefined && x.x !== undefined);
-  const near = kills.filter((x) => Math.hypot(x.x! - BARON_PIT.x, x.y! - BARON_PIT.y) < NEAR);
+  const near = kills.filter((x) => Math.hypot(x.x! - GRUBS_PIT.x, x.y! - GRUBS_PIT.y) < NEAR);
   const lastT = ks.length ? ks[ks.length - 1].t : LEAVE;
   if (near.some((x) => x.t >= SPAWN - 30 && x.t <= lastT + 15)) fightGames++;
   let done = 0;
@@ -153,10 +171,8 @@ for (let g = 0; g < N; g++) {
     firstN++;
     if (gold8[ks[0].side] > gold8[1 - ks[0].side]) firstAhead++;
   }
-  if (M) for (const ms of M.stats) {
-    for (const [k, v] of Object.entries(ms.plans)) if (k.includes("grubs")) inc(plans, k, v);
-    for (const [k, v] of Object.entries(ms.aborts)) if (k.includes("grubs")) inc(aborts, k, v);
-  }
+  for (const [k, v] of Object.entries(e.plans)) inc(plans, k, v);
+  for (const [k, v] of Object.entries(e.aborts)) inc(aborts, k, v);
   const w = e.winner ?? 0;
   stacksWin += e.grubs[w];
   stacksLose += e.grubs[1 - w];
@@ -167,11 +183,13 @@ for (let g = 0; g < N; g++) {
   }
   if (g === LOG) {
     console.log(`--- game ${g}: ${e.names[0]} vs ${e.names[1]}`);
-    for (const k of e.grubLog) console.log(`  ${mmss(k.t)} ${e.names[k.side]} ${e.units[k.by].role} ${e.units[k.by].champ.name} grub ${k.order} (helpers ${k.helpers}${k.foe ? ", enemy hit it too" : ""})`);
+    for (const k of e.grubLog) console.log(`  ${mmss(k.t)} ${e.names[k.side]} ${e.units[k.by].role} ${e.units[k.by].champ.name} grub ${k.order} (helpers ${k.helpers}${k.foe ? ", enemy hit it too" : ""}${k.smote ? ", Smite" : ""})`);
     for (const ev of e.events) if (ev.t > 440 && ev.t < 920) console.log(`  ${mmss(ev.t)} [${ev.type}] ${ev.text}`);
-    if (M) for (const l of M.log) console.log(`  ${l}`);
+    for (const l of e.log) console.log(`  ${l}`);
   }
 }
+
+par.end();
 
 const ord = (m: Record<string, number>) => Object.entries(m).sort((x, y) => y[1] - x[1]);
 console.log(`engine voidgrubs: ${games} games (roster seed ${rosterSeed}), ${killed} grubs killed (${(killed / games).toFixed(2)} a game), ${games * 3 - killed} left to despawn at 14:45`);
@@ -207,7 +225,7 @@ console.log(`  clean 3-grub visit, first to third kill (s, P10/25/50/75/90): ${q
 console.log("\n[6] who");
 console.log("  last hit by role: " + ROLES.map((r) => `${r} ${pct(role[r] ?? 0, killed).trim()}`).join(", "));
 console.log("  own-team participants per grub (hitters in the pit) 1/2/3/4/5: " + [1, 2, 3, 4, 5].map((n) => pct(part[String(n)] ?? 0, killed).trim()).join(" / "));
-console.log(`  an enemy also damaged the grub: ${pct(foeAssist, killed).trim()}`);
+console.log(`  an enemy also damaged the grub: ${pct(foeAssist, killed).trim()}; last hit with Smite (engine only): ${pct(smote, killed).trim()}`);
 console.log("\n[7] fights and leads");
 console.log(`  games with a champion kill within ${NEAR} u of the pit between 7:30 and the last grub: ${fightGames} ${pct(fightGames, games)}`);
 console.log(`  2-1 games where the teams' kills interleave within ${VISIT_GAP} s (both in the pit): ${sharedSimul} of ${sharedN} ${pct(sharedSimul, sharedN)}`);

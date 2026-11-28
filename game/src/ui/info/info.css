@@ -4,6 +4,15 @@
 .info-tab:hover { color: var(--gold); background: #1b2032; }
 .info-tab:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
 .info-tab.strong { color: var(--text); font-weight: bold; }
+/* red pixel "!" on the 패치노트 tab while the newest patch is under a week old */
+.info-tab { position: relative; }
+.info-new-dot {
+  position: absolute; top: -5px; right: -3px; width: 11px; height: 11px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--red); color: #fff; font-size: 9px; font-weight: bold; line-height: 1;
+  box-shadow: 0 0 0 1px #0b0d14; pointer-events: none;
+}
+.tag.patch-new { background: var(--red); color: #fff; font-weight: bold; letter-spacing: 1px; }
 .info-ver { font-size: 11px; color: var(--dim); padding: 0 6px; }
 html[data-vh="s"] .info-tabs { margin-bottom: 2px; }
 html[data-vh="s"] .info-tab { padding: 1px 6px; }

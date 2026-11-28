@@ -64,11 +64,18 @@ export function training(s: GameState, rng: Rng, matchToday: boolean) {
     p.fatigue = clamp(p.fatigue + load.fatigue, 0, 100);
   }
   // scrims build synergy among starters
-  if (!sunday && !matchToday) t.synergy = clamp(t.synergy + 0.25, 0, 100);
+  if (!sunday && !matchToday) t.synergy = clamp(t.synergy + SCRIM_SYNERGY.user, 0, 100);
   aiFatigue(s, sunday);
 }
 
-/** AI clubs run a sensible routine: normal training, Monday off, and rest for anyone at 65 or more. */
+/**
+ * Synergy a club gains per scrim day (no match, not Monday). AI clubs used to gain none, which left the user's
+ * club +8~13 power ahead of an equal AI roster by mid-season (T18). AI clubs now grow too, a little slower.
+ * Exported so scripts/dynasty-check.ts can measure other values (env USER_SYN / AI_SYN).
+ */
+export const SCRIM_SYNERGY = { user: 0.25, ai: 0.18 };
+
+/** AI clubs run a sensible routine: normal training, Monday off, rest for anyone at 65 or more, scrims on the other days. */
 const AI_REST_AT = 65;
 function aiFatigue(s: GameState, monday: boolean) {
   const playingToday = new Set<string>();
@@ -81,6 +88,7 @@ function aiFatigue(s: GameState, monday: boolean) {
     if (tid === s.user) continue;
     const t = s.teams[tid];
     if (!t) continue;
+    if (!monday && !playingToday.has(tid)) t.synergy = clamp(t.synergy + SCRIM_SYNERGY.ai, 0, 100);
     for (const id of [...t.roster, ...(t.academy ?? [])]) {
       const p = s.players[id];
       if (!p) continue;
