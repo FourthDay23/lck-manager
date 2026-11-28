@@ -107,6 +107,10 @@ os.makedirs(a.out, exist_ok=True)
 made = []
 for name, (src, h) in SPRITES.items():
     im = Image.open(os.path.join(a.src, src + ".png"))
+    if name.startswith("drake_"):
+        # the drawn dragons face left; their pit opens to the upper right (onto the river), and the owner wants the
+        # dragon to face the way in (11-28): mirrored
+        im = im.transpose(Image.FLIP_LEFT_RIGHT)
     for suffix, k in (("", 1), ("_2x", 2)):
         out = shrink(im, h * k, BOOST[k])
         out.save(os.path.join(a.out, f"{name}{suffix}.png"), optimize=True)

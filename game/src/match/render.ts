@@ -103,6 +103,8 @@ const OBJ_COL: Record<ObjKey, string> = { dragon: "#ff9a3c", elder: "#c9f0ff", b
 const PITS: ObjKey[][] = [["elder", "dragon"], ["baron", "herald", "grubs"]];
 /** ms a camp that just came up is ringed */
 const CAMP_UP_MS = 900;
+/** an inhibitor's full health (Engine builds them with it and puts it back when one comes up again) */
+const INHIB_HP = 3000;
 interface Box { x: number; y: number; w: number; h: number }
 
 export class MatchRenderer {
@@ -871,13 +873,34 @@ export class MatchRenderer {
     return { x: cx - r, y: cy - r, w: 2 * r + 1, h: 2 * r + 1 };
   }
 
-  /** A health bar under a sprite's box. */
-  private bar(b: Box, f: number, col: string) {
+  /**
+   * A health bar centred under a sprite's box: a dark outline, a dark track for the health that is gone and the
+   * part that is left in `col`, at least `minW` canvas px wide ([whole map, close-up]) so a narrow sprite (a turret
+   * is 10 px) still gets a bar that reads. 2 px tall on the whole map, 3 in a close-up, with a lighter top row there.
+   * (It was a 1 px line the width of the sprite.)
+   */
+  private bar(b: Box, f: number, col: string, minW: [number, number]) {
     const c = this.ctx;
+    const zoom = this.cam.size < 9000 ? 1 : 0;
+    const h = zoom ? 3 : 2;
+    const w = Math.max(b.w, minW[zoom]);
+    const x = Math.round(b.x + (b.w - w) / 2), y = b.y + b.h + 2;
+    const fill = Math.max(1, Math.round(w * Math.max(0, Math.min(1, f))));
     c.fillStyle = "#05070d";
-    c.fillRect(b.x - 1, b.y + b.h + 1, b.w + 2, 3);
+    c.fillRect(x - 1, y - 1, w + 2, h + 2);
+    c.fillStyle = "#262b38";
+    c.fillRect(x, y, w, h);
     c.fillStyle = col;
-    c.fillRect(b.x, b.y + b.h + 2, Math.max(1, Math.round(b.w * Math.max(0, Math.min(1, f)))), 1);
+    c.fillRect(x, y, fill, h);
+    if (zoom) {
+      c.fillStyle = "rgba(255,255,255,0.3)";
+      c.fillRect(x, y, fill, 1);
+    }
+  }
+
+  /** The colour of an epic monster's health: gold, orange under half, red under a quarter (smite range). */
+  private static monsterHp(f: number): string {
+    return f > 0.5 ? "#ffd36b" : f > 0.25 ? "#ff9a3c" : "#ff5a5a";
   }
 
   /** Time left as m:ss under a sprite's box, with a dark edge so it reads on any ground. */
@@ -1356,18 +1379,20 @@ export class MatchRenderer {
         c.stroke();
       }
       const b = this.mark(`turret_${side}`, t.pos, false, r, body);
-      if (t.hp < t.maxHp) this.bar(b, t.hp / t.maxHp, body);
+      if (t.hp < t.maxHp) this.bar(b, t.hp / t.maxHp, body, [12, 20]);
     }
     for (const ih of this.e.inhibs) {
       const side = ih.side ? "red" : "blue";
       const b = this.mark(ih.alive ? `inhibitor_${side}` : `inhibitor_${side}_destroyed`, ih.pos, false, r + 1, ih.alive ? (ih.side ? "#ff9a9a" : "#9ad0ff") : GONE_COL);
+      // (an inhibitor's health is 3,000: Engine sets it there when it is built and when it comes back)
+      if (ih.alive && ih.hp < INHIB_HP) this.bar(b, ih.hp / INHIB_HP, ih.side ? "#ff6b6b" : "#5aa9ff", [12, 20]);
       if (!ih.alive && zoom && ih.respawnAt > this.e.t) this.timer(b, Math.ceil(ih.respawnAt - this.e.t));
     }
     NEXUS.forEach((p, side) => {
       const name = side ? "red" : "blue";
       const hp = this.e.nexus[side] / 4000;
       const b = this.mark(hp > 0 ? `nexus_${name}` : `nexus_${name}_destroyed`, p, false, r + 3, hp > 0 ? (side ? RED : BLUE) : GONE_COL);
-      if (hp > 0 && hp < 1) this.bar(b, hp, side ? RED : BLUE);
+      if (hp > 0 && hp < 1) this.bar(b, hp, side ? "#ff6b6b" : "#5aa9ff", [18, 30]);
     });
   }
 
@@ -1401,7 +1426,7 @@ export class MatchRenderer {
         continue;
       }
       const b = this.mark(name, camp.pos, false, r, CAMP_COL[camp.kind]);
-      if (camp.hp < up.full) this.bar(b, camp.hp / up.full, "#ffe28a");
+      if (camp.hp < up.full) this.bar(b, camp.hp / up.full, "#ffe28a", [10, 16]);
       const k = (now - up.at) / CAMP_UP_MS;
       if (k >= 0 && k < 1) {
         // a white ring closing in on the camp
@@ -1418,8 +1443,9 @@ export class MatchRenderer {
 
   /**
    * Epic monsters as sprites, each on its own spot (the Voidgrubs one by one, the dragon in the look of its
-   * element). One that is up shows its health while it is hit; an empty pit shows what comes there next dimmed and
-   * grey with the time left, the same way as a cleared camp.
+   * element). One that is up always has its health bar under it, gold going orange and then red as it falls toward
+   * smite range; an empty pit shows what comes there next dimmed and grey with the time left, the same way as a
+   * cleared camp.
    */
   private drawObjectives() {
     const e = this.e;
@@ -1444,7 +1470,8 @@ export class MatchRenderer {
       for (const k of up) {
         const o = e.obj[k];
         const b = draw(k, true);
-        if (o.hp < o.maxHp) this.bar(b, o.hp / o.maxHp, "#ffe28a");
+        const f = o.hp / o.maxHp;
+        this.bar(b, f, MatchRenderer.monsterHp(f), [18, 30]);
       }
       if (up.length) continue;
       const next = pit.filter((k) => e.obj[k].spawnAt !== null && e.obj[k].spawnAt! > e.t).sort((a, b) => e.obj[a].spawnAt! - e.obj[b].spawnAt!)[0];

@@ -35,7 +35,10 @@ const MINUTES = [3, 5, 8, 10, 15, 20, 25];
 type Acc = { cs: number; lvl: number; gold: number; n: number };
 const acc = new Map<string, Acc>();
 const cleared = [new Map<string, number>(), new Map<string, number>()];
-let blueWins = 0, dur = 0, kills = 0;
+let blueWins = 0, dur = 0, kills = 0, steals = 0;
+// epic monsters taken: count per game and the median minute of the first one (moving a pit moves where they are fought)
+const OBJ_EV = ["dragon", "elder", "grubs", "herald", "baron", "steal"];
+const objN = new Map<string, number>(), objT = new Map<string, number[]>(), objFirst = new Map<string, number>();
 const teamCs = [0, 0], teamGold15 = [0, 0];
 for (let g = 0; g < N; g++) {
   const a = s.lck[rng.int(0, s.lck.length - 1)];
@@ -69,6 +72,11 @@ for (let g = 0; g < N; g++) {
     }
   }
   if (e.winner === 0) blueWins++;
+  for (const ev of e.events) if (OBJ_EV.includes(ev.type)) {
+    objN.set(ev.type, (objN.get(ev.type) ?? 0) + 1);
+    if (!objFirst.has(`${g}:${ev.type}`)) { objFirst.set(`${g}:${ev.type}`, ev.t); objT.set(ev.type, [...(objT.get(ev.type) ?? []), ev.t]); }
+    if (ev.type === "steal") steals++;
+  }
   dur += e.t / 60;
   kills += e.units.reduce((x, u) => x + u.k, 0);
   for (const u of e.units) teamCs[u.side] += u.cs / (e.t / 60);
@@ -82,6 +90,8 @@ for (const m of MINUTES) {
   const f = (x: Acc) => `${(x.cs / x.n).toFixed(1).padStart(6)} ${(x.lvl / x.n).toFixed(2).padStart(6)} ${(x.gold / x.n).toFixed(0).padStart(6)}`;
   console.log(`${String(m).padStart(5)}    ${f(b)}          |  ${f(r)}        |  ${((r.cs / r.n) - (b.cs / b.n)).toFixed(1).padStart(5)}`);
 }
+const med = (a: number[] = []) => (a.length ? a.slice().sort((x, y) => x - y)[Math.floor(a.length / 2)] / 60 : NaN);
+console.log(`epic monsters per game (median minute of the first): ${["dragon", "elder", "grubs", "herald", "baron"].map((k) => `${k} ${((objN.get(k) ?? 0) / N).toFixed(2)} (${med(objT.get(k)).toFixed(1)})`).join("  ")}  steals ${(steals / N).toFixed(2)}`);
 console.log("camps cleared per game by the jungler standing on them (own and enemy camps):");
 for (const sd of [0, 1]) {
   const m = cleared[sd];
