@@ -697,6 +697,9 @@ const BIG_ICON: Partial<Record<GameEvent["type"], string>> = {
   ace: "에이스", steal: "스틸!", baron: "바론", soul: "드래곤의 영혼", elder: "장로 드래곤", inhib: "억제기", first_turret: "첫 포탑",
 };
 
+// a jungler in Smite's reach that did not get the monster (engine event "steal_fail", match/objsmite.ts)
+BIG_ICON.steal_fail = "스틸 실패";
+
 export function MatchView({ e, userSide, series, tactic, setTactic, onEnd }: { e: Engine; userSide: 0 | 1; series?: SeriesInfo; tactic: Tactic; setTactic: (t: Tactic) => void; onEnd: () => void }) {
   const s = S();
   const data = D();

@@ -24,6 +24,7 @@ import type { SideLoadout } from "./items";
 import * as Matchup from "./matchup";
 import * as Stats from "./stats";
 import * as Summoners from "./summoners";
+import * as ObjSmite from "./objsmite";
 import type { SummonerName } from "./summoners.gen";
 import type { Strategy } from "./strategy";
 import { defaultStrategy } from "./strategy";
@@ -81,7 +82,7 @@ export const EARLY_TUNE = {
 export function applyEarlyTune(spec: string | undefined) {
   applyTune(EARLY_TUNE, "EARLY_TUNE", spec);
 }
-function applyTune(target: Record<string, number>, name: string, spec: string | undefined) {
+export function applyTune(target: Record<string, number>, name: string, spec: string | undefined) {
   for (const kv of (spec ?? "").split(",").filter(Boolean)) {
     const [k, v] = kv.split(":");
     const n = Number(v);
@@ -135,9 +136,12 @@ export function applyGrowthTune(spec: string | undefined) {
  * Set 2026-11-27 after turret shots outside fights and sieges that wait for the wave (SIM_TUNE) made games 34.6-37.2
  * min with first towers at 16.7-17.2 and too few kills from 10 to 30 min (2.8 / 6.4 / 9.7 per 10-min block); with
  * these, EARLY_TUNE and SIM_TUNE.siegePush 3.2: 31.9 min, 28.8 kills, first tower 15.9 (200 games, roster seed 3).
+ * 2026-11-27 (T08): engage 3.8 -> 2.4. Fights over epic monsters (macro.ts OBJ_TUNE) now bring 10 kills a game where
+ * they brought 3; chance meetings of two groups are cut by as much so kills stay at 29.7 (120 games, seed 3: 32.7
+ * kills at 3.8, kills from such meetings 11.5 -> 5.5 a game).
  * Scripts can override them with PACE_TUNE=key:value,...
  */
-export const PACE_TUNE = { towerDmg: 1.6, minionDmg: 1.3, engage: 3.8 };
+export const PACE_TUNE = { towerDmg: 1.6, minionDmg: 1.3, engage: 2.4 };
 export function applyPaceTune(spec: string | undefined) {
   applyTune(PACE_TUNE, "PACE_TUNE", spec);
 }
@@ -216,11 +220,16 @@ export interface Unit {
   elderUntil: number;
   dmg: number;
   fightId: number;
+  /** how fast the player's hands are (mechanics and consistency, about 60-96; 73 is the median LCK jungler): the Smite
+   *  fights over epic monsters read it (objsmite.ts) */
+  reflex?: number;
 }
 
 export type ObjKey = "dragon" | "grubs" | "herald" | "baron" | "elder";
 export const OBJ_KO: Record<ObjKey, string> = { dragon: "드래곤", grubs: "공허 유충", herald: "협곡의 전령", baron: "내셔 남작", elder: "장로 드래곤" };
 
+/** an epic monster heals unless a champion within this distance is fighting or walking in on it (objectivesTick) */
+const OBJ_LEASH = 1300;
 export interface ObjState { key: ObjKey; alive: boolean; spawnAt: number | null; hp: number; maxHp: number; pos: Vec; takenBy?: SideN; type?: string; left?: number }
 export interface CampState { id: number; side: SideN; kind: CampKind | "scuttle"; pos: Vec; alive: boolean; spawnAt: number; hp: number; maxHp: number }
 export interface TurretState { side: SideN; lane: LaneId | "nexus"; tier: number; pos: Vec; hp: number; maxHp: number; alive: boolean; u: number; plates: number }
@@ -259,7 +268,9 @@ export interface Fx {
 
 export type EvType =
   | "kill" | "first_blood" | "solo" | "double" | "triple" | "quadra" | "penta" | "ace" | "shutdown"
-  | "dragon" | "soul" | "elder" | "grubs" | "herald" | "baron" | "steal" | "turret" | "first_turret" | "inhib" | "nexus" | "info";
+  | "dragon" | "soul" | "elder" | "grubs" | "herald" | "baron" | "steal" | "turret" | "first_turret" | "inhib" | "nexus" | "info"
+  /** a jungler stood in Smite's reach of an epic monster the other team was taking and did not get it (objsmite.ts) */
+  | "steal_fail";
 
 export interface GameEvent { t: number; type: EvType; side: SideN; text: string; actor?: number; victim?: number; big: boolean; x?: number; y?: number }
 
@@ -356,6 +367,7 @@ export class Engine {
           hp: 1, maxHp: 1, alive: true, respawnAt: 0, level: 1, xp: 0, gold: 500, cs: 0, k: 0, d: 0, a: 0, streak: 0,
           multi: { n: 0, last: -99 }, cds: [0, 0, 0, R_LOCKED], stunUntil: 0, shield: 0, task: "lane", taskUntil: 0, goal: null,
           lastHitBy: new Map(), baronUntil: 0, elderUntil: 0, dmg: 0, fightId: 0,
+          reflex: p ? p.attrs.mechanics * 0.7 + p.attrs.consistency * 0.3 + p.form * 0.3 : undefined,
         };
         this.units.push(u);
       });
@@ -1071,6 +1083,9 @@ export class Engine {
     // cost 2.6x as much per camp and junglers went home at 28 % hp after 2-4 camps)
     const hurt = (c.maxHp / (GROWTH.campHp * GROWTH.campHp)) * 0.004 * DT * 4 * GROWTH.campHurt;
     u.hp = Math.max(u.maxHp * 0.25, u.hp - hurt);
+    // the jungler finishes the camp with Smite once it is within Smite's damage (summoners.ts: charges, upgrades and
+    // when a charge is kept for an epic monster)
+    if (c.hp > 0 && Summoners.wantsCampSmite(this, u, c)) Summoners.smite(this, u, { camp: c });
     if (c.hp > 0) return;
     c.alive = false;
     const timing = c.kind === "scuttle" ? this.meta.camps.scuttle : this.meta.camps[c.kind];
@@ -1079,6 +1094,8 @@ export class Engine {
     u.gold += (big ? 100 : c.kind === "scuttle" ? 120 : 75) * GROWTH.campGold;
     u.xp += big ? GROWTH.campXpBig : GROWTH.campXpSmall;
     u.cs += 4;
+    // every camp has one large monster: the jungle pet's treat (Smite's upgrades)
+    Summoners.feedPet(this, u);
   }
 
   /**
@@ -1719,40 +1736,45 @@ export class Engine {
       if (!o.alive) continue;
       const at = this.units.filter((u) => u.alive && !u.fightId && dist(u, o.pos) < 650 && (!ENGINE_FLAGS.macro || Macro.hitsObjective(this, u, k)));
       if (!at.length) {
-        o.hp = Math.min(o.maxHp, o.hp + o.maxHp * 0.02 * DT);
+        // nobody is hitting it (a fight over it): a jungler in reach whose Smite covers what is left still takes it
+        const fin = ObjSmite.finish(this, k, at, [0, 0]);
+        if (fin) { this.takeObjective(k, fin); continue; }
+        // it does not heal while it is being fought over: champions in a fight at the pit (nobody in a fight can hit
+        // it) or walking in on it. It keeps the damage it has taken, so the side that wins the fight finishes it.
+        // Before, it healed 2 % a second through the fight (30 % over a 15 s fight) and the take started over.
+        // Bystanders do not count (both river scuttles are 1,000 u from a pit).
+        if (!this.units.some((u) => u.alive && (u.fightId !== 0 || u.task === "obj") && dist(u, o.pos) < OBJ_LEASH)) o.hp = Math.min(o.maxHp, o.hp + o.maxHp * 0.02 * DT);
         continue;
       }
       const bySide = [0, 0];
       for (const u of at) bySide[u.side] += this.aaDps(u) * 1.2 + 30;
       const contested = bySide[0] > 0 && bySide[1] > 0;
-      o.hp -= (bySide[0] + bySide[1]) * DT * (contested ? 0.5 : 1);
+      const mul = DT * (contested ? 0.5 : 1);
+      o.hp -= (bySide[0] + bySide[1]) * mul;
+      ObjSmite.dealt(this, k, [bySide[0] * mul, bySide[1] * mul]);
       if (this.rng.chance(0.15)) {
         const hitter = at[Math.floor(this.rng.next() * at.length)];
         this.fx_({ kind: "objhit", side: hitter.side, x: hitter.x, y: hitter.y, tx: o.pos.x, ty: o.pos.y, color: "#ffd36b", r: 0, w: 0, from: hitter.i });
       }
-      if (o.hp <= 0) {
-        // last hit: smite fight between junglers near the pit
-        let side: SideN = bySide[0] >= bySide[1] ? 0 : 1;
-        const jg = [0, 1].map((sd) => this.units.find((u) => u.side === sd && u.role === "Jungle" && u.alive && dist(u, o.pos) < 900));
-        let steal = false;
-        const other = (1 - side) as SideN;
-        if (jg[other] && (contested || this.rng.chance(0.3))) {
-          // no jungler on the taking side: an average-ish rating of 60 on the raw scale (unit ratings are compressed)
-          const noJg = RATING_REF + (60 - RATING_REF) * RATING_SPREAD;
-          const pSteal = clamp(0.12 + (jg[other]!.rating - (jg[side]?.rating ?? noJg)) / 120 + (jg[side] ? 0 : 0.35), 0.03, 0.6);
-          if (this.rng.chance(pSteal)) {
-            side = other;
-            steal = true;
-          }
-        }
-        const taker = jg[side] ?? at.find((u) => u.side === side) ?? at[0];
-        // the jungler's Smite takes the last hit (anyone else's is just the last hit: no spell to show)
-        const smote = Summoners.has(taker, "smite");
-        if (smote) Summoners.spend(this, taker, "smite", { quiet: true });
-        this.fx_({ kind: "smite", side, x: o.pos.x, y: o.pos.y, tx: o.pos.x, ty: o.pos.y, color: "#ffe28a", r: 320, w: 0, from: taker.i, sum: smote ? "smite" : undefined });
-        this.secure(k, side, taker, steal);
-      }
+      // last hit: a Smite fight between the junglers in reach, or the team's damage (objsmite.ts; T12's rule was the
+      // taking side's jungler finishing it at its Smite damage, with a flat steal roll for the other jungler)
+      const fin = ObjSmite.finish(this, k, at, bySide);
+      if (fin) this.takeObjective(k, fin);
     }
+  }
+
+  /** The last hit on an epic monster: the taker's Smite if it was one, the effect, the reward and the pet's treat. */
+  takeObjective(k: ObjKey, fin: ObjSmite.Finish) {
+    const o = this.obj[k];
+    const { side, taker, steal } = fin;
+    // the jungler's Smite takes the last hit (anyone else's, or one with no charge left, is just the last hit: no
+    // spell to show)
+    const smote = fin.smote && Summoners.smite(this, taker, { obj: k }, { quiet: true, why: steal ? "steal" : "obj" }) > 0;
+    this.fx_({ kind: "smite", side, x: o.pos.x, y: o.pos.y, tx: o.pos.x, ty: o.pos.y, color: "#ffe28a", r: 320, w: 0, from: taker.i, sum: smote ? "smite" : undefined });
+    // the jungle pet eats a treat for an epic monster its team takes with the jungler there
+    const pet = this.units.find((u) => u.side === side && u.role === "Jungle" && u.alive && dist(u, o.pos) < 1500);
+    this.secure(k, side, taker, steal);
+    if (pet) Summoners.feedPet(this, pet);
   }
 
   secure(k: ObjKey, side: SideN, taker: Unit, steal: boolean) {
