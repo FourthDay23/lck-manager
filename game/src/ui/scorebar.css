@@ -69,9 +69,11 @@
 .sb-team.red .sb-stat { flex-direction: row-reverse; }
 .sb-stat.gold b { min-width: 76px; text-align: right; }
 .sb-team.red .sb-stat.gold b { text-align: left; }
+/* line-height 14px: the digits are 10px tall and sit 2px under the top of their line box, so a 14px box leaves 2px
+   above and below them (13px left 2 above and 1 below: the text sat low in the tag) */
 .sb-diff {
   position: absolute; left: 50%; top: calc(100% + 3px); transform: translateX(-50%);
-  font-family: "Galmuri11B", "Galmuri11"; font-size: 11px; line-height: 13px; padding: 0 5px; color: #fff; white-space: nowrap;
+  font-family: "Galmuri11B", "Galmuri11"; font-size: 11px; line-height: 14px; padding: 0 5px; color: #fff; white-space: nowrap;
 }
 .sb-team.blue .sb-diff { background: #1f6fd0; }
 .sb-team.red .sb-diff { background: #c83434; }

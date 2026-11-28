@@ -18,7 +18,7 @@ import type { GameEvent, ObjKey, Tactic } from "../../match/engine";
 import { OBJ_KO } from "../../match/engine";
 import { STRATEGIES, STRATEGY_DESC, STRATEGY_KO } from "../../match/strategy";
 import type { Strategy } from "../../match/strategy";
-import { MatchRenderer } from "../../match/render";
+import { MatchRenderer, RES } from "../../match/render";
 import { DEFAULT_SPEED, Pacer, SPEEDS } from "../../match/pacing";
 import "../caption.css";
 import "../draft.css";
@@ -39,7 +39,7 @@ import { META_LABEL, metaTier } from "../../core/meta";
 import { searchRank } from "../../core/hangul";
 import { tutSpot } from "../Tutorial";
 import { EventModal, EventResultModal } from "../Overlays";
-import { appH, localRect, onScale, toLocal } from "../scale";
+import { appH, localRect, onScale, toLocal, uiZoom } from "../scale";
 import { chooseSetBreak, setBreakDue, setBreakOptions } from "../../core/events";
 import { MatchStake, SeriesPayout, WinStake, incomeNow, showIncomeSince } from "../WinBonus";
 
@@ -967,6 +967,11 @@ export function MatchView({ e, userSide, series, seriesNote, tactic, setTactic, 
       const size = withCtrl >= 420 ? withCtrl : visH - top - 8;
       // up to 800 px when the window has room (the map got smaller on screens the crisp zoom shrinks)
       b.style.maxWidth = `${Math.max(300, Math.min(800, Math.floor(size)))}px`;
+      // The map is a 512 px buffer shown at any size. Scaled up it keeps its hard pixels; on fewer screen pixels than
+      // it has (a small window), nearest-neighbour drops rows and columns, which eats outlines and digits and shifts
+      // small marks by a pixel: there the browser's smooth scaling is used instead.
+      const cv = canvas.current;
+      if (cv) cv.style.imageRendering = cv.clientWidth * uiZoom() * (window.devicePixelRatio || 1) < RES ? "auto" : "";
     };
     fit();
     // again once the scoreboard's fonts and logos have laid out
