@@ -1124,7 +1124,8 @@ function siegeCand(e: Engine, M: MacroState, b: Brain, V: View): Plan | null {
       const stand = lanePoint(lane, u0 + (b.side === 0 ? -0.017 : 0.017));
       // with the baron buff the siege is kept for the rest of the buff (LCK: games end a median 6.2 min after the
       // first baron; with a 20 s commitment the engine needed 8.8 min and took a second/third baron far too often)
-      const buffLeft = V.baron ? Math.max(...pool.map((u) => u.baronUntil - e.t)) : 0;
+      // (0 when nobody in the pool carries it: the buff is lost on death, so the buffed champion may be outside it)
+      const buffLeft = V.baron ? Math.max(0, ...pool.map((u) => u.baronUntil - e.t)) : 0;
       best = mkPlan(e, "siege", `siege:${lane}`, v + (V.baron ? 0.5 : 0), pool.map((u) => u.i), {
         lane, target: snap(stand), until: e.t + Math.max(baseOpen ? 40 : 20, Math.min(90, buffLeft)), expires: e.t + Math.max(70, buffLeft + 20),
         engage: ratio >= 1.05 - b.P.fight, ratio, final: baseOpen, emergency: endCall, call: endCall, trade: far ? b.trade!.k : undefined,
