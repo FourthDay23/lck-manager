@@ -99,7 +99,7 @@ export function FinanceScreen() {
                 const i = Object.values(l.income).reduce((a, b) => a + b, 0);
                 const e = Object.values(l.expense).reduce((a, b) => a + b, 0);
                 return (
-                  <tr title={[...Object.entries(l.income).map(([k, v]) => `+${k} ${money(v)}`), ...Object.entries(l.expense).map(([k, v]) => `-${k} ${money(v)}`)].join("\n")}>
+                  <tr data-tip={[`${l.month} 내역`, ...Object.entries(l.income).map(([k, v]) => `+${k} ${money(v)}`), ...Object.entries(l.expense).map(([k, v]) => `-${k} ${money(v)}`)].join("\n")}>
                     <td>{l.month}</td><td class="num pos">{money(i)}</td><td class="num">{l.income["승리 수당"] ? <span class="pos">{money(l.income["승리 수당"])}</span> : <span class="dim">-</span>}</td><td class="num neg">{money(e)}</td><td class={`num ${i - e >= 0 ? "pos" : "neg"}`}>{money(i - e)}</td>
                   </tr>
                 );

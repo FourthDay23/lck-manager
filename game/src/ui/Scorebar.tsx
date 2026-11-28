@@ -29,7 +29,7 @@ const ELEMENT: Record<string, string> = {
 };
 
 function Ico({ src, size, title }: { src: string; size: number; title: string }) {
-  return <img class="sb-ico" src={`assets/hud/${src}`} width={size} height={size} alt={title} title={title} draggable={false} />;
+  return <img class="sb-ico" src={`assets/hud/${src}`} width={size} height={size} alt={title} data-tip={title} draggable={false} />;
 }
 export const DrakeIcon = ({ type, size = 20 }: { type: string; size?: number }) =>
   <Ico src={`drake_${ELEMENT[type] ?? "elder"}.png`} size={size} title={`${type} 드래곤`} />;
@@ -106,7 +106,7 @@ export function Scorebar({ e, series }: { e: Engine; series?: SeriesInfo }) {
     return (
       <div class={`sb-team ${side ? "red" : "blue"}`}>
         {series && series.bo > 1 && (
-          <div class="sb-pips" title={`시리즈 ${w}승 (Bo${series.bo})`}>
+          <div class="sb-pips" data-tip={`시리즈 ${w}승 (Bo${series.bo})`}>
             {Array.from({ length: need }, (_, i) => <i class={i < w ? "on" : ""} />)}
           </div>
         )}
@@ -137,8 +137,8 @@ export function Scorebar({ e, series }: { e: Engine; series?: SeriesInfo }) {
           {e.dragons[side].map((d) => <DrakeIcon type={d} />)}
           {soul && <span class="sb-soul"><SoulIcon type={e.soulType} /></span>}
         </span>
-        {baron > 0 && <span class="sb-buff baron" title="내셔 남작 버프 남은 시간"><BaronIcon size={16} />{fmtClock(baron)}</span>}
-        {elder > 0 && <span class="sb-buff elder" title="장로 드래곤 버프 남은 시간"><DrakeIcon type="장로" size={16} />{fmtClock(elder)}</span>}
+        {baron > 0 && <span class="sb-buff baron" data-tip="내셔 남작 버프 남은 시간"><BaronIcon size={16} />{fmtClock(baron)}</span>}
+        {elder > 0 && <span class="sb-buff elder" data-tip="장로 드래곤 버프 남은 시간"><DrakeIcon type="장로" size={16} />{fmtClock(elder)}</span>}
       </div>
     );
   };

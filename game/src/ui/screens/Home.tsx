@@ -94,7 +94,7 @@ export function HomeScreen() {
                     <Avatar pid={p.id} size={24} />
                     <span style={{ width: 110 }}><PName pid={p.id} /></span>
                     <Ovr v={ovr(p)} />
-                    {top.map(([c]) => <ChampIcon id={c} size={20} />)}
+                    {top.map(([c, m]) => <ChampIcon id={c} size={20} mastery={m} />)}
                     <span class="muted" style={{ fontSize: 11 }}>사기 {Math.round(p.morale)} · 피로 {Math.round(p.fatigue)}</span>
                   </>
                 ) : <span class="neg">비어 있음</span>}

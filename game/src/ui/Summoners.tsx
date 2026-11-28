@@ -20,7 +20,7 @@ export function SummonerSpells({ e, u }: { e: Engine; u: Unit }) {
         const tier = s.tier ?? 0;
         const extra = s.charges !== undefined ? `${TIER_KO[tier]} · 충전 ${s.charges}/${SMITE.max} · 몬스터 피해 ${SMITE.dmg[tier]}` : "";
         return (
-          <span class={`sum ${left > 0 ? "cd" : ""} ${s.busy ? "busy" : ""} ${tier ? `tier${tier}` : ""}`} title={`${SUMMONER_KO[s.name]}${extra} · ${state}`}>
+          <span class={`sum ${left > 0 ? "cd" : ""} ${s.busy ? "busy" : ""} ${tier ? `tier${tier}` : ""}`} data-tip={`${SUMMONER_KO[s.name]}${extra} · ${state}`}>
             <img src={spellImg(ver, SUMMONER_ICON[s.name])} alt="" />
             {left > 0 && !s.busy && <b>{left}</b>}
             {s.charges !== undefined && s.charges > 0 && <i>{s.charges}</i>}
