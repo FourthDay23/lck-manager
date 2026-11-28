@@ -113,6 +113,20 @@ const CAMP_UP_MS = 900;
  */
 const INHIB_HP = 3000;
 const NEXUS_HP = 4000;
+
+// ---------- recall and the Baron / Elder buffs on the champions ----------
+/** seconds a recall channel lasts (engine unitTick: recallEnd = t + 8) */
+const RECALL_S = 8;
+const RECALL = { col: "#7fd3ff", light: "#d8f4ff", ground: "rgba(127,211,255,0.2)" };
+/** ms the flash of a finished (or broken) recall lasts */
+const RECALL_FLASH_MS = 700;
+/** The aura of a buffed champion: a glowing frame round its icon and flames rising off it. */
+interface Aura { col: string; light: string; glow: string }
+const BARON_AURA: Aura = { col: "#b06cff", light: "#e6ccff", glow: "rgba(176,108,255,0.45)" };
+// the Elder dragon's burn (the scoreboard's elder timer is gold too)
+const ELDER_AURA: Aura = { col: "#ffa53c", light: "#fff1b8", glow: "rgba(255,165,60,0.45)" };
+/** minions near a Baron-buffed champion (minions.ts baronAura) */
+const EMP_COL = "#c08cff";
 interface Box { x: number; y: number; w: number; h: number }
 
 export class MatchRenderer {
@@ -162,6 +176,12 @@ export class MatchRenderer {
    * soon as the engine changes them.
    */
   private structFull = new Map<string, number>();
+  /** champions in a recall channel at the last frame: where they stood and when it ends (to see it finish) */
+  private recalling = new Map<number, { x: number; y: number; end: number }>();
+  /** game time each champion's latest recall started (the engine's "recall" effect), for the progress ring */
+  private recallStart = new Map<number, number>();
+  /** flashes of recalls that just finished ("done", at the spot it left, and "home", where it arrived) or broke */
+  private recallFx: { x: number; y: number; kind: "done" | "home" | "break"; born: number }[] = [];
   cam: Cam = { ...PRESETS.all };
   fxSeen = 0;
   live: LiveFx[] = [];
@@ -216,6 +236,9 @@ export class MatchRenderer {
     this.spread = [];
     this.campUp.clear();
     this.structFull.clear();
+    this.recalling.clear();
+    this.recallStart.clear();
+    this.recallFx = [];
     this.prevPos = null;
     this.upCache = null;
     this.snap = true;
@@ -1005,6 +1028,7 @@ export class MatchRenderer {
       if (f.kind === "blink") { this.burst(f.x, f.y, "#fff3a0", 8, now); this.burst(f.tx, f.ty, "#fff3a0", 8, now); }
       if (f.kind === "heal") this.burst(f.tx, f.ty, "#7dff8a", 6, now, -1);
       // a single voidgrub's last hit (r 200) is a small pop; the other epic monsters shake the screen
+      if (f.kind === "recall" && f.from !== undefined) this.recallStart.set(f.from, f.t);
       if (f.kind === "smite") { this.burst(f.x, f.y, "#ffe28a", f.r < 300 ? 8 : 18, now); if (f.r >= 300) this.shake = 6; }
       if (f.kind === "global") this.shake = Math.max(this.shake, 3);
     }
@@ -1072,6 +1096,8 @@ export class MatchRenderer {
     this.drawDeaths(now);
     this.skills.under(this.e, this.live, now);
     this.drawWork(now);
+    this.trackRecalls(now);
+    this.drawRecallFx(now);
     this.drawUnits(now);
     this.skills.over(this.e, this.live, now);
     this.drawParticles(now);
@@ -1331,10 +1357,17 @@ export class MatchRenderer {
     }
     for (const u of this.e.units) {
       if (!u.alive) continue;
-      c.fillStyle = "#05070d";
-      c.fillRect(Math.floor(mx(u.x)) - 2, Math.floor(my(u.y)) - 2, 5, 5);
+      const ux = Math.floor(mx(u.x)), uy = Math.floor(my(u.y));
+      // the dot's rim in the colour of a buff it carries, and a light blue ring while it recalls
+      c.fillStyle = u.baronUntil > this.e.t ? BARON_AURA.col : u.elderUntil > this.e.t ? ELDER_AURA.col : "#05070d";
+      c.fillRect(ux - 2, uy - 2, 5, 5);
       c.fillStyle = u.side ? RED : BLUE;
-      c.fillRect(Math.floor(mx(u.x)) - 1, Math.floor(my(u.y)) - 1, 3, 3);
+      c.fillRect(ux - 1, uy - 1, 3, 3);
+      if (u.recallEnd !== undefined && Math.sin(now / 120) > -0.3) {
+        c.strokeStyle = RECALL.col;
+        c.lineWidth = 1;
+        c.strokeRect(ux - 3.5, uy - 3.5, 8, 8);
+      }
     }
     // fights and deaths anywhere on the map, so what happens off screen is not missed
     for (const [id, f] of this.e.fights) {
@@ -1453,7 +1486,15 @@ export class MatchRenderer {
       const big = m.kind === "siege" || m.kind === "super";
       const s = zoom ? (big ? 7 : 5) : far ? (big ? 3 : 2) : big ? 4 : 3;
       const px = Math.round(x - s / 2), py = Math.round(y - s / 2);
-      c.fillStyle = m.kind === "super" ? "#ffd36b" : "#05070d";
+      if (m.emp) {
+        // empowered by a Baron-buffed champion nearby (minions.ts baronAura): a purple glow round it
+        c.globalAlpha = 0.6 + 0.3 * Math.sin(now / 200 + m.id);
+        c.fillStyle = EMP_COL;
+        c.fillRect(px - 3, py - 3, s + 6, s + 6);
+        c.globalAlpha = 1;
+      }
+      // (an empowered super minion keeps its gold rim inside the purple glow)
+      c.fillStyle = m.kind === "super" ? "#ffd36b" : m.emp ? EMP_COL : "#05070d";
       c.fillRect(px - 1, py - 1, s + 2, s + 2);
       c.fillStyle = m.side === 0 ? "#7cc4ff" : "#ff8c8c";
       c.fillRect(px, py, s, s);
@@ -1697,8 +1738,15 @@ export class MatchRenderer {
       for (const f of this.live) if (f.kind === "stealth" && f.from === u.i) alpha = 0.35;
       c.globalAlpha = alpha;
       const ring = u.side ? RED : BLUE;
-      // team ring (dark edge first, so two icons side by side stay two icons)
       const rw = zoomed ? 2 : 1;
+      // under the icon: a recall's circle on the ground, the glow of a Baron / Elder buff
+      const baron = u.baronUntil > this.e.t, elder = u.elderUntil > this.e.t;
+      if (u.recallEnd !== undefined) this.recallUnder(u, x, y, size, zoomed);
+      // (all of it at the icon's own alpha: a stealthed champion stays faint, its buff included)
+      if (elder) this.auraUnder(x, y, size + rw * 2, ELDER_AURA, baron ? 4 : 2, now, alpha);
+      if (baron) this.auraUnder(x, y, size + rw * 2, BARON_AURA, 2, now, alpha);
+      c.globalAlpha = alpha;
+      // team ring (dark edge first, so two icons side by side stay two icons)
       c.fillStyle = "#05070d";
       c.fillRect(x - size / 2 - rw - 1, y - size / 2 - rw - 1, size + rw * 2 + 2, size + rw * 2 + 2);
       c.fillStyle = ring;
@@ -1734,10 +1782,9 @@ export class MatchRenderer {
       c.fillRect(x - bw / 2, y - size / 2 - 5, bw, 3);
       c.fillStyle = u.side ? "#ff6b6b" : "#5ad07a";
       c.fillRect(x - bw / 2, y - size / 2 - 5, Math.max(1, Math.round(bw * (u.hp / u.maxHp))), 3);
-      if (u.baronUntil > this.e.t) {
-        c.fillStyle = "#b06cff";
-        c.fillRect(x + size / 2 - 2, y + size / 2 - 2, 4, 4);
-      }
+      // flames rising off a buffed champion (the 4 px purple dot in the corner that marked Baron could not be seen)
+      if (baron) this.auraFlames(u.i, x, y, size + rw * 2, BARON_AURA, zoomed, now, 0);
+      if (elder) this.auraFlames(u.i, x, y, size + rw * 2, ELDER_AURA, zoomed, now, baron ? 1 : 0);
       // carrying the Rift Herald's eye: the charge comes when this team reaches an enemy turret (engine heraldTick)
       if (this.e.heraldHeld?.taker === u.i) {
         c.fillStyle = "#05070d";
@@ -1755,15 +1802,192 @@ export class MatchRenderer {
         c.fillStyle = "#e8ecf5";
         c.fillText(u.name, x, y + size / 2 + 8);
       }
-      // recall column
-      if (u.recallEnd !== undefined) {
-        c.strokeStyle = "#7fd3ff";
-        c.globalAlpha = 0.5 + Math.sin(now / 100) * 0.3;
-        c.beginPath();
-        c.arc(x, y, size / 2 + 4, 0, Math.PI * 2 * (1 - (u.recallEnd - this.e.t) / 8));
-        c.stroke();
-      }
+      // recall: the column of light over the champion and the progress ring
+      if (u.recallEnd !== undefined) this.recallOver(u, x, y, size, zoomed, now, alpha);
       c.globalAlpha = 1;
+    }
+  }
+
+  // ---------- recall ----------
+  /** 0..1 through a recall channel: from the engine's "recall" effect (its start) to recallEnd, or over RECALL_S if
+   *  the start was not seen (a renderer made in the middle of a channel, a fast-forward) */
+  private recallK(u: Unit): number {
+    const end = u.recallEnd ?? 0;
+    const start = this.recallStart.get(u.i);
+    const span = start !== undefined && end - start > 0.5 && end - start < 30 ? end - start : RECALL_S;
+    return Math.max(0, Math.min(1, 1 - (end - this.e.t) / span));
+  }
+
+  /** A recall's circle on the ground, under the icon: a light blue disc with a pixel rim. */
+  private recallUnder(u: Unit, x: number, y: number, size: number, zoomed: boolean) {
+    const c = this.ctx;
+    const r = Math.round(size / 2 + (zoomed ? 11 : 7));
+    const k = this.recallK(u);
+    const cx = Math.floor(x), cy = Math.floor(y);
+    for (let d = -r; d <= r; d++) {
+      const half = Math.floor(Math.sqrt((r + 0.5) ** 2 - d * d));
+      // the disc, and its two outermost pixels of each row brighter: a rim that reads on any ground
+      c.fillStyle = RECALL.ground;
+      c.fillRect(cx - half, cy + d, half * 2 + 1, 1);
+      c.fillStyle = "rgba(127,211,255,0.55)";
+      c.fillRect(cx - half, cy + d, 1, 1);
+      c.fillRect(cx + half, cy + d, 1, 1);
+    }
+    // the ring the progress runs on: a dark track, the part done in light blue (2 px, 3 in a close-up), the edge of
+    // the part done brightest
+    const lw = zoomed ? 3 : 2;
+    const a0 = -Math.PI / 2, a1 = a0 + Math.PI * 2 * k;
+    c.lineWidth = lw + 2;
+    c.strokeStyle = "rgba(5,7,13,0.75)";
+    c.beginPath();
+    c.arc(x, y, r, 0, Math.PI * 2);
+    c.stroke();
+    c.lineWidth = lw;
+    c.strokeStyle = RECALL.col;
+    c.beginPath();
+    c.arc(x, y, r, a0, a1);
+    c.stroke();
+    c.fillStyle = RECALL.light;
+    c.fillRect(Math.round(x + Math.cos(a1) * r) - 1, Math.round(y + Math.sin(a1) * r) - 1, 3, 3);
+  }
+
+  /** Over the icon: a column of light rising from the champion, brighter as the channel nears its end, and specks drifting up it. */
+  private recallOver(u: Unit, x: number, y: number, size: number, zoomed: boolean, now: number, alpha: number) {
+    const c = this.ctx;
+    const k = this.recallK(u);
+    const w = zoomed ? 7 : 3, h = (zoomed ? 34 : 20) + Math.round(k * (zoomed ? 12 : 6));
+    const top = Math.round(y - size / 2 - 7 - h), left = Math.round(x - w / 2);
+    const pulse = 0.65 + 0.2 * Math.sin(now / (k > 0.8 ? 60 : 140)) + 0.15 * k;
+    // the column fades out toward its top: drawn in 3 bands, a dark edge round the bottom one so it reads on the
+    // pale ground, and a white core
+    const bh = Math.round(h / 3);
+    c.globalAlpha = 0.6 * alpha;
+    c.fillStyle = "#05070d";
+    c.fillRect(left - 1, top + h - bh, w + 2, bh);
+    for (let b = 0; b < 3; b++) {
+      c.globalAlpha = alpha * Math.max(0, Math.min(1, pulse * (1 - b * 0.3)));
+      c.fillStyle = RECALL.col;
+      c.fillRect(left, top + h - (b + 1) * bh, w, bh);
+      c.fillStyle = RECALL.light;
+      c.fillRect(left + Math.floor(w / 2) - (zoomed ? 1 : 0), top + h - (b + 1) * bh, zoomed ? 3 : 1, bh);
+    }
+    // specks drifting up beside the column
+    c.globalAlpha = 0.9 * alpha;
+    c.fillStyle = RECALL.light;
+    const s = zoomed ? 2 : 1;
+    for (let i = 0; i < 4; i++) {
+      const t = ((now / 900 + i / 4 + u.i * 0.13) % 1);
+      const sx = Math.round(x + (i % 2 ? 1 : -1) * (w / 2 + 2 + ((i * 3) % 4)));
+      const sy = Math.round(y + size / 2 - t * (size + h));
+      c.globalAlpha = 0.9 * alpha * (1 - t);
+      c.fillRect(sx, sy, s, s);
+    }
+    c.globalAlpha = alpha;
+  }
+
+  /**
+   * Champions starting, finishing or breaking a recall, found by comparing with the last frame (the engine only
+   * says when one starts): a finished one flashes where it stood and where it arrives, a broken one fizzles out.
+   */
+  private trackRecalls(now: number) {
+    const e = this.e;
+    for (const u of e.units) {
+      const was = this.recalling.get(u.i);
+      if (u.alive && u.recallEnd !== undefined) {
+        this.recalling.set(u.i, { x: u.x, y: u.y, end: u.recallEnd });
+        continue;
+      }
+      if (!was) continue;
+      this.recalling.delete(u.i);
+      this.recallStart.delete(u.i);
+      // (a jump over the end, a skip to the end of the game, is not shown)
+      if (e.t >= was.end - 0.01) {
+        if (e.t - was.end > 2) continue;
+        this.recallFx.push({ x: was.x, y: was.y, kind: "done", born: now }, { x: u.x, y: u.y, kind: "home", born: now });
+        this.burst(was.x, was.y, RECALL.light, 12, now, 1);
+      } else if (u.alive) {
+        this.recallFx.push({ x: was.x, y: was.y, kind: "break", born: now });
+      }
+    }
+  }
+
+  /** The flashes trackRecalls queued: a ring of light widening and a column shooting up, or a grey ring closing in. */
+  private drawRecallFx(now: number) {
+    const c = this.ctx;
+    const zoomed = this.cam.size < 9000;
+    this.recallFx = this.recallFx.filter((f) => now - f.born < RECALL_FLASH_MS);
+    for (const f of this.recallFx) {
+      const k = (now - f.born) / RECALL_FLASH_MS;
+      const x = this.sx(f.x), y = this.sy(f.y);
+      if (x < -40 || y < -40 || x > RES + 40 || y > RES + 40) continue;
+      const base = zoomed ? 20 : 13;
+      c.lineWidth = zoomed ? 3 : 2;
+      if (f.kind === "break") {
+        c.globalAlpha = 0.8 * (1 - k);
+        c.strokeStyle = "#8a93a8";
+        c.beginPath();
+        c.arc(x, y, base * (1 - 0.6 * k), 0, Math.PI * 2);
+        c.stroke();
+        continue;
+      }
+      c.globalAlpha = 1 - k;
+      c.strokeStyle = f.kind === "done" ? RECALL.light : RECALL.col;
+      c.beginPath();
+      c.arc(x, y, base * (0.6 + 1.2 * k), 0, Math.PI * 2);
+      c.stroke();
+      if (f.kind === "done") {
+        // the column, shooting up and thinning out
+        const w = Math.max(1, Math.round((zoomed ? 7 : 5) * (1 - k)));
+        const h = (zoomed ? 70 : 44) * (0.5 + k);
+        c.fillStyle = RECALL.light;
+        c.fillRect(Math.round(x - w / 2), Math.round(y - h), w, Math.round(h));
+      }
+    }
+    c.globalAlpha = 1;
+  }
+
+  // ---------- Baron / Elder buff ----------
+  /**
+   * Under a buffed champion's icon: a frame `gap` px out from its team ring (`box` px across) in the buff's colour,
+   * with its lighter shade on the inner edge and a soft glow round it that breathes, so it reads on the whole map
+   * where an icon is 15 px. (The frame keeps its colour: a pale frame looked like a shield's white one.)
+   */
+  private auraUnder(x: number, y: number, box: number, a: Aura, gap: number, now: number, alpha: number) {
+    const c = this.ctx;
+    const pulse = 0.5 + 0.5 * Math.sin(now / 260);
+    const o = box / 2 + gap + 1;
+    const x0 = Math.round(x - o), y0 = Math.round(y - o), w = Math.round(o * 2);
+    c.fillStyle = a.glow;
+    c.globalAlpha = alpha * (0.45 + 0.55 * pulse);
+    c.fillRect(x0 - 3, y0 - 3, w + 6, w + 6);
+    c.globalAlpha = alpha;
+    c.fillStyle = "#05070d";
+    c.fillRect(x0 - 1, y0 - 1, w + 2, w + 2);
+    c.fillStyle = a.col;
+    c.fillRect(x0, y0, w, w);
+    c.fillStyle = a.light;
+    c.fillRect(x0 + gap - 1, y0 + gap - 1, w - gap * 2 + 2, w - gap * 2 + 2);
+  }
+
+  /**
+   * Flames on top of a buffed champion's icon, above its health bar: a row of pixel tongues in the buff's colour,
+   * each flickering in height, light at the root. `lane` 1 is a second buff, set between the first one's tongues.
+   */
+  private auraFlames(i: number, x: number, y: number, box: number, a: Aura, zoomed: boolean, now: number, lane: number) {
+    const c = this.ctx;
+    const s = zoomed ? 3 : 2;
+    const n = zoomed ? 4 : 3;
+    const base = Math.round(y - box / 2 - 6);
+    for (let j = 0; j < n; j++) {
+      const fx = Math.round(x - box / 2 + ((j + 0.5 + lane * 0.5) / (n + lane * 0.5)) * box - s / 2);
+      const flick = 0.55 + 0.45 * Math.sin(now / 110 + j * 1.9 + i * 0.7 + lane);
+      const h = Math.max(s, Math.round((zoomed ? 9 : 6) * flick));
+      c.fillStyle = "#05070d";
+      c.fillRect(fx - 1, base - h - 1, s + 2, h + 1);
+      c.fillStyle = a.col;
+      c.fillRect(fx, base - h, s, h);
+      c.fillStyle = a.light;
+      c.fillRect(fx, base - Math.ceil(h / 2), s, Math.ceil(h / 2));
     }
   }
 
