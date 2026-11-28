@@ -17,7 +17,6 @@ import { gameWinProb, teamPower } from "../src/core/quick";
 import { ROLES } from "../src/data/types";
 import { ITEM_TUNE } from "../src/match/items";
 import { applyObjTune } from "../src/match/macro";
-import { par, engineSnap } from "./lib/par";
 
 const dir = existsSync("public/data/champions.json") && existsSync("public/data/players.json") ? "data" : "data-sample";
 const j = (f: string) => {
