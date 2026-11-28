@@ -1687,6 +1687,10 @@ export class Engine {
     v.fightId = 0;
     v.task = "return";
     v.path = [];
+    // the baron and elder buffs are lost on death (they were kept: a champion that died with 127 s of baron left
+    // came back with the 79 s that remained, with its damage, speed and minion aura)
+    v.baronUntil = 0;
+    v.elderUntil = 0;
     const lvl = v.level;
     const timer = Math.min(75, 6 + lvl * 2.5 + Math.max(0, (this.t - 900) / 60) * 0.9);
     v.respawnAt = this.t + timer;
