@@ -38,6 +38,7 @@ import * as Matchup from "../../match/matchup";
 import { META_LABEL, metaTier } from "../../core/meta";
 import { searchRank } from "../../core/hangul";
 import { tutSpot } from "../Tutorial";
+import { EventModal, EventResultModal } from "../Overlays";
 import { appH, localRect, onScale, toLocal } from "../scale";
 import { chooseSetBreak, setBreakDue, setBreakOptions } from "../../core/events";
 import { MatchStake, SeriesPayout, WinStake, incomeNow, showIncomeSince } from "../WinBonus";
@@ -126,18 +127,26 @@ export function SeriesScreen() {
   const over = sr.wa >= need || sr.wb >= need;
   const opp = sr.a === s.user ? sr.b! : sr.a!;
   const userSide: 0 | 1 = L.blue === s.user ? 0 : 1;
-  const seedBase = (s.seed ^ (sr.day * 131) ^ (sr.games.length * 7919)) >>> 0;
+  const seedOf = (games: number) => (s.seed ^ (sr.day * 131) ^ (games * 7919)) >>> 0;
+  const seedBase = seedOf(sr.games.length);
+  // a choice event of this morning (match-day ones, low morale, aftermaths) is answered before a game starts:
+  // App keeps popups off this screen, so they show here (below) and hold the start until answered
+  const eventWaiting = () => s.events.length > 0 || !!s.ev?.result?.title;
 
   const startDraft = () => {
+    if (eventWaiting()) return;
     L.draft = newDraft(L.blue, L.red, fearlessOf(sr));
     L.phase = "draft";
     bump();
   };
   const quickGame = () => {
+    if (eventWaiting()) return;
+    // read the game number now: "시리즈 끝까지 결과만" plays the next games from this same closure
+    const seed = seedOf(sr.games.length);
     const d = newDraft(L.blue, L.red, fearlessOf(sr));
-    autoDraft(s, D(), d, new Rng(seedBase));
+    autoDraft(s, D(), d, new Rng(seed));
     L.draft = d;
-    const e = makeEngine(d, L.tactic, userSide, seedBase + 1, L.strategy);
+    const e = makeEngine(d, L.tactic, userSide, seed + 1, L.strategy);
     e.runToEnd();
     finishGame(e, d);
   };
@@ -156,7 +165,9 @@ export function SeriesScreen() {
     }
     const doneNow = sr.wa >= need || sr.wb >= need;
     L.phase = doneNow ? "done" : "post";
-    if (L.skipAll && !doneNow) {
+    // "시리즈 끝까지 결과만" stops for the set-break talk (N15): its choice moves the next games, so it is not
+    // skipped past; choosing goes on with the run (set-break buttons below)
+    if (L.skipAll && !doneNow && !setBreakDue(s, sr)) {
       L.phase = "pre";
       quickGame();
       return;
@@ -219,14 +230,15 @@ export function SeriesScreen() {
           <h2>세트 사이 대기실</h2>
           <div class="speech">세트를 내줬습니다. 대기실 분위기가 무겁습니다. 다음 세트 전에 한마디 해야 합니다.</div>
           {setBreakOptions().map((o, i) => (
-            <button class="btn qbtn ev-opt" onClick={() => { chooseSetBreak(s, sr, i); autosave(); bump(); }}>
+            <button class="btn qbtn ev-opt" onClick={() => { chooseSetBreak(s, sr, i); autosave(); if (L.skipAll) quickGame(); else bump(); }}>
               <b>{o.label}</b>
               {o.hints.map((h) => <div class="ev-hint">{h}</div>)}
             </button>
           ))}
+          {L.skipAll && <div class="muted" style={{ fontSize: 11, marginTop: 6 }}>고르면 남은 세트를 이어서 결과만 봅니다.</div>}
         </div>
       )}
-      {!breakNow && L.phase === "post" && breakDone && <div class="frame pad muted" style={{ marginBottom: 8 }}>대기실: {breakDone.join(", ")}</div>}
+      {!breakNow && (L.phase === "post" || L.phase === "done") && breakDone && <div class="frame pad muted" style={{ marginBottom: 8 }}>대기실: {breakDone.join(", ")}</div>}
       {breakNow ? null : L.phase === "done" ? (
         <div class="frame pad center">
           <h1 class={sr.wa > sr.wb === (sr.a === s.user) ? "gold" : "neg"}>{(sr.wa > sr.wb) === (sr.a === s.user) ? "시리즈 승리" : "시리즈 패배"}</h1>
@@ -278,6 +290,8 @@ export function SeriesScreen() {
           </div>
         </div>
       )}
+      {s.events.length > 0 && !s.ev?.result?.title && <EventModal />}
+      {!!s.ev?.result?.title && <EventResultModal />}
     </div>
   );
 }
