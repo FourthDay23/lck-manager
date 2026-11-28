@@ -102,7 +102,7 @@ export function App() {
             <div class="muted" style={{ fontSize: 11 }}>{s.managerName && s.managerName !== "단장" ? `단장 ${s.managerName}` : "단장"}</div>
           </div>
         </div>
-        <div class="stat"><span>날짜</span>{fmtDate(s.day)}</div>
+        <div class="stat" tabIndex={0} {...tip("date")}><span>날짜</span>{fmtDate(s.day)}</div>
         <div class="stat" tabIndex={0} {...tip("season")}><span>시즌</span>{s.season} · {phaseLabel(s)}</div>
         <div class="stat" tabIndex={0} {...tip("cash")}><span>자금{me.cash < 0 && " · 게임 오버 위험"}</span><b class={me.cash < 0 ? "neg" : "gold"}>{money(me.cash)}</b></div>
         <div class="stat" tabIndex={0} {...tip("wages")}><span>월 급여 (25일)</span><span class="neg">-{money(monthlyWages(s))}</span></div>

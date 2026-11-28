@@ -1,9 +1,11 @@
-// Tooltips of the top bar's 시즌 / 자금 / 월 급여 / 명성 · 팬 stats (shared bubble, ui/Tip.tsx). Read-only views of
+// Tooltips of the top bar's 날짜 / 시즌 / 자금 / 월 급여 / 명성 · 팬 stats (shared bubble, ui/Tip.tsx). Read-only views of
 // values core already keeps: the season calendar, the monthly ledger, the wage bill, fame and fans.
 import { dayOfDate, dateOf, dayOfMonth, fmtDate, money, monthKey } from "../core/format";
 import { monthlyExpensePreview, monthlyIncomePreview, sponsorFor } from "../core/economy";
-import { nextUserSeries, phaseLabel } from "../core/game";
+import { nextUserSeries, phaseLabel, stageName } from "../core/game";
 import { monthlyWages } from "../core/ledger";
+import { windowCountdown } from "../core/market";
+import { patchDays } from "../core/meta";
 import { appealWord, teamAppeal } from "../core/player";
 import { seasonDates } from "../core/schedule";
 import { COMP_NAME } from "../core/types";
@@ -27,6 +29,53 @@ function nextPhase(s: GameState): { day: number; label: string } | null {
   }
   return null;
 }
+
+interface Upcoming { day: number; label: string; sub?: string }
+
+/**
+ * Coming dates from the existing calendar, nearest first: competition openings and finals, the transfer window
+ * opening / closing, the user's next match, new patches and the season's end. A day's own events count ("D-DAY").
+ */
+function upcoming(s: GameState): Upcoming[] {
+  const out: Upcoming[] = [];
+  const game = nextUserSeries(s);
+  if (game) {
+    const opp = s.teams[game.a === s.user ? game.b! : game.a!]?.name ?? "미정";
+    out.push({ day: game.day, label: `다음 경기 vs ${opp}`, sub: `${COMP_NAME[game.comp]} ${stageName(game.stage)} · Bo${game.bo}` });
+  }
+  for (const c of s.comps) if (c.start >= s.day && !c.done) out.push({ day: c.start, label: `${COMP_NAME[c.id]} 개막` });
+  for (const sr of s.series) {
+    if (sr.stage === "F" && !sr.done && sr.day >= s.day && sr.id !== game?.id) out.push({ day: sr.day, label: `${COMP_NAME[sr.comp]} 결승` });
+  }
+  const w = windowCountdown(s);
+  if (w.days) out.push({ day: w.day, label: w.open ? "이적시장 마감" : "이적시장 개장", sub: w.open ? `${fmtDate(w.day - 1, false)}까지 열림` : undefined });
+  // a patch is rolled as its day ends (core/game dayTick), so it shows from the next day
+  for (const season of [s.season, s.season + 1]) for (const d of patchDays(season)) if (d + 1 >= s.day) out.push({ day: d + 1, label: "새 패치 적용" });
+  const end = seasonDates(s.season).end;
+  if (end >= s.day) out.push({ day: end, label: `${s.season} 시즌 종료` });
+  // earliest first; on the same day the user's match comes first
+  return out.sort((a, b) => a.day - b.day || (b.label.startsWith("다음 경기") ? 1 : 0) - (a.label.startsWith("다음 경기") ? 1 : 0));
+}
+
+const dday = (n: number) => (n === 0 ? "D-DAY" : `D-${n}`);
+
+defineTip("date", () => {
+  const s = store.s;
+  if (!s) return null;
+  const xs = upcoming(s);
+  const [first, ...rest] = xs;
+  if (!first) return { body: <span class="tip-main">다가오는 일정이 없습니다</span> };
+  return {
+    body: (
+      <>
+        <span class="tip-main">{first.label} <b>{dday(first.day - s.day)}</b></span>
+        <span class="tip-sub">{fmtDate(first.day, false)}{first.sub ? ` · ${first.sub}` : ""}</span>
+        {rest.length > 0 && <span class="tip-sec">그다음 일정</span>}
+        {rest.slice(0, 3).map((x) => <Row k={x.label} v={`${dday(x.day - s.day)} · ${fmtDate(x.day, false)}`} />)}
+      </>
+    ),
+  };
+});
 
 defineTip("season", () => {
   const s = store.s;
